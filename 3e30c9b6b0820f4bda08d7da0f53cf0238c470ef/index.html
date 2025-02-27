@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact The Spirit World</title>
+    <title>Tarot Mediumship Spread</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -44,10 +44,16 @@
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
             text-align: left;
         }
+        .card img {
+            width: 100%;
+            max-width: 200px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>Mediumship Tarot Spread</h1>
+    <h1>Contact The Spirits</h1>
     <button onclick="drawSpread()">Draw Spread</button>
     <div id="spread"></div>
 
@@ -93,13 +99,14 @@
         function drawSpread() {
             const deck = [...tarotDeck];
             const spreadDiv = document.getElementById("spread");
-            spreadDiv.innerHTML = "<h2>Spirit World</h2>";
+            spreadDiv.innerHTML = "<h2>Mediumship Tarot</h2>";
 
             mediumshipPositions.forEach(position => {
                 const card = drawCard(deck);
                 const cardElement = document.createElement("div");
                 cardElement.className = "card";
-                cardElement.innerHTML = `<strong>${position}</strong><br>Card: ${card}`;
+                const imgSrc = `images/${card.replace(/ /g, '_')}.jpg`;
+                cardElement.innerHTML = `<strong>${position}</strong><br>Card: ${card}<br><img src="${imgSrc}" alt="${card}">`;
                 spreadDiv.appendChild(cardElement);
             });
         }
