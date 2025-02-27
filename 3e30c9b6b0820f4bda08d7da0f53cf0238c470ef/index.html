@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarot Mediumship Spread</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        h1, h2 {
+            font-size: 1.5em;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #spread {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card {
+            margin: 10px;
+            padding: 15px;
+            width: 90%;
+            max-width: 400px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tarot Mediumship Spread</h1>
+    <button onclick="drawSpread()">Draw Spread</button>
+    <div id="spread"></div>
+
+    <script>
+        const majorArcana = [
+            "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor",
+            "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit",
+            "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
+            "The Devil", "The Tower", "The Star", "The Moon", "The Sun", "Judgement", "The World"
+        ];
+
+        const minorArcana = [
+            "Ace of Wands", "Two of Wands", "Three of Wands", "Four of Wands", "Five of Wands",
+            "Six of Wands", "Seven of Wands", "Eight of Wands", "Nine of Wands", "Ten of Wands",
+            "Page of Wands", "Knight of Wands", "Queen of Wands", "King of Wands",
+            "Ace of Cups", "Two of Cups", "Three of Cups", "Four of Cups", "Five of Cups",
+            "Six of Cups", "Seven of Cups", "Eight of Cups", "Nine of Cups", "Ten of Cups",
+            "Page of Cups", "Knight of Cups", "Queen of Cups", "King of Cups",
+            "Ace of Swords", "Two of Swords", "Three of Swords", "Four of Swords", "Five of Swords",
+            "Six of Swords", "Seven of Swords", "Eight of Swords", "Nine of Swords", "Ten of Swords",
+            "Page of Swords", "Knight of Swords", "Queen of Swords", "King of Swords",
+            "Ace of Pentacles", "Two of Pentacles", "Three of Pentacles", "Four of Pentacles", "Five of Pentacles",
+            "Six of Pentacles", "Seven of Pentacles", "Eight of Pentacles", "Nine of Pentacles", "Ten of Pentacles",
+            "Page of Pentacles", "Knight of Pentacles", "Queen of Pentacles", "King of Pentacles"
+        ];
+
+        const tarotDeck = [...majorArcana, ...minorArcana];
+
+        const mediumshipPositions = [
+            "1. Spirit with me right now.",
+            "2. Card to describe the spirit's personality.",
+            "3. Card to describe the spirit's appearance.",
+            "4. Card to describe the spirit's lifetime.",
+            "5. Why this spirit is currently with me.",
+            "6. A message this spirit would like to give me."
+        ];
+
+        function drawCard(deck) {
+            const index = Math.floor(Math.random() * deck.length);
+            return deck.splice(index, 1)[0];
+        }
+
+        function drawSpread() {
+            const deck = [...tarotDeck];
+            const spreadDiv = document.getElementById("spread");
+            spreadDiv.innerHTML = "<h2>Mediumship Spread</h2>";
+
+            mediumshipPositions.forEach(position => {
+                const card = drawCard(deck);
+                const cardElement = document.createElement("div");
+                cardElement.className = "card";
+                cardElement.innerHTML = `<strong>${position}</strong><br>Card: ${card}`;
+                spreadDiv.appendChild(cardElement);
+            });
+        }
+    </script>
+</body>
+</html>
