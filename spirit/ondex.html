@@ -3,82 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tarot Spread</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Simple Daily Spread</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        h1, h2 {
+            font-size: 1.5em;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #spread {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card {
+            margin: 10px;
+            padding: 15px;
+            width: 90%;
+            max-width: 400px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: scale(1.02);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        .card img {
+            width: 100%;
+            max-width: 200px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        
         .modal {
             display: none;
             position: fixed;
-            z-index: 1;
+            z-index: 1000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            overflow: auto;
-            background-color: rgb(0,0,0);
-            background-color: rgba(0,0,0,0.4);
-            padding-top: 60px;
+            background-color: rgba(0, 0, 0, 0.5);
         }
+        
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto;
+            margin: 50px auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 80%;
-            animation: modalanim 0.4s;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.3);
         }
-        @keyframes modalanim {
-            from {opacity: 0}
-            to {opacity: 1}
-        }
+        
         .close {
-            color: #aaaaaa;
+            color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
-        }
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
             cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            margin-top: 10px;
+            color: #007bff;
+        }
+        
+        .modal-description {
+            font-size: 1em;
+            line-height: 1.6;
+            color: #333;
         }
     </style>
 </head>
 <body>
-    <h1>Tarot Card Spread</h1>
-    <div class="tarot-spread">
-        <!-- 78 tarot cards should be displayed here -->
-        <div class="card" onclick="openModal('The Fool', 'The Fool represents new beginnings, spontaneity, and taking leaps of faith.');">The Fool</div>
-        <div class="card" onclick="openModal('The Magician', 'The Magician represents willpower, resourcefulness, and the ability to manifest.');">The Magician</div>
-        <div class="card" onclick="openModal('The High Priestess', 'The High Priestess represents intuition, unconscious knowledge, and mystery.');">The High Priestess</div>
-        <div class="card" onclick="openModal('The Empress', 'The Empress represents feminine energy, fertility, and nurturing.');">The Empress</div>
-        <div class="card" onclick="openModal('The Emperor', 'The Emperor represents authority, structure, and control.');">The Emperor</div>
-        <!-- Add the rest of the cards here -->
-    </div>
+    <h1>3 Card Daily Tarot Spread</h1>
+    <button id="drawButton">Draw Spread</button>
+    <div id="spread"></div>
 
-    <div id="myModal" class="modal">
+    <div id="cardModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="cardTitle"></h2>
-            <p id="cardDescription"></p>
+            <span class="close" id="closeButton">&times;</span>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-description" id="modalDescription"></div>
         </div>
     </div>
 
     <script>
-        function openModal(title, description) {
-            document.getElementById('cardTitle').innerText = title;
-            document.getElementById('cardDescription').innerText = description;
-            document.getElementById('myModal').style.display = 'block';
+        const majorArcana = [
+            "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor",
+            "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit",
+            "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
+            "The Devil", "The Tower", "The Star", "The Moon", "The Sun", "Judgement", "The World"
+        ];
+
+        const minorArcana = [
+            "Ace of Wands", "Two of Wands", "Three of Wands", "Four of Wands", "Five of Wands",
+            "Six of Wands", "Seven of Wands", "Eight of Wands", "Nine of Wands", "Ten of Wands",
+            "Page of Wands", "Knight of Wands", "Queen of Wands", "King of Wands",
+            "Ace of Cups", "Two of Cups", "Three of Cups", "Four of Cups", "Five of Cups",
+            "Six of Cups", "Seven of Cups", "Eight of Cups", "Nine of Cups", "Ten of Cups",
+            "Page of Cups", "Knight of Cups", "Queen of Cups", "King of Cups",
+            "Ace of Swords", "Two of Swords", "Three of Swords", "Four of Swords", "Five of Swords",
+            "Six of Swords", "Seven of Swords", "Eight of Swords", "Nine of Swords", "Ten of Swords",
+            "Page of Swords", "Knight of Swords", "Queen of Swords", "King of Swords",
+            "Ace of Pentacles", "Two of Pentacles", "Three of Pentacles", "Four of Pentacles", "Five of Pentacles",
+            "Six of Pentacles", "Seven of Pentacles", "Eight of Pentacles", "Nine of Pentacles", "Ten of Pentacles",
+            "Page of Pentacles", "Knight of Pentacles", "Queen of Pentacles", "King of Pentacles"
+        ];
+
+        const tarotDeck = [...majorArcana, ...minorArcana];
+
+        const cardDescriptions = {
+            "The Fool": "New beginnings, spontaneity, taking a leap of faith. Embrace adventure and trust the journey ahead.",
+            "The Magician": "Manifestation, resourcefulness, personal power. You have the tools and skills to create your reality.",
+            "The High Priestess": "Intuition, mystery, inner wisdom. Listen to your subconscious and trust your instincts.",
+            "The Empress": "Nurturing, abundance, fertility, creative potential. A period of growth and material blessings.",
+            "The Emperor": "Authority, structure, leadership, stability. Take command and establish order in your life.",
+            "The Hierophant": "Tradition, learning, spiritual guidance, mentorship. Seek wisdom from established sources.",
+            "The Lovers": "Love, partnership, choices, alignment. Important decisions about relationships and values.",
+            "The Chariot": "Determination, control, willpower, victory. Your drive and focus will lead to success.",
+            "Strength": "Courage, inner strength, compassion, patience. Gentle power overcomes obstacles.",
+            "The Hermit": "Solitude, introspection, wisdom, soul-searching. Time for reflection and inner guidance.",
+            "Wheel of Fortune": "Change, cycles, destiny, good luck. The wheel turns—embrace natural rhythms of life.",
+            "Justice": "Fairness, law, truth, accountability. Balance is restored through honest action.",
+            "The Hanged Man": "Surrender, new perspective, pause, enlightenment. Release control to gain clarity.",
+            "Death": "Transformation, endings, rebirth, new beginnings. Necessary change clears the way for renewal.",
+            "Temperance": "Balance, moderation, harmony, patience. Find equilibrium through blending opposites.",
+            "The Devil": "Temptation, bondage, addiction, materialism. Recognize what holds you back and break free.",
+            "The Tower": "Sudden change, upheaval, revelation, breakdown. Destruction leads to essential truth.",
+            "The Star": "Hope, inspiration, serenity, clarity. Trust and optimism guide you toward your dreams.",
+            "The Moon": "Illusion, fear, intuition, the unconscious. Navigate confusion by trusting inner guidance.",
+            "The Sun": "Joy, success, positivity, vitality. Clarity, happiness, and success shine through.",
+            "Judgement": "Rebirth, reckoning, inner calling, awakening. Answer your higher purpose and transform.",
+            "The World": "Completion, accomplishment, fulfillment, wholeness. Cycles end; integration and success achieved.",
+            "Ace of Wands": "New inspiration, growth, potential. Creative fire and passion ignite new opportunities.",
+            "Two of Wands": "Planning, possible routes, leaving home. Consider your options and prepare for adventure.",
+            "Three of Wands": "Foresight, enterprise, expansion. Your efforts are expanding; new horizons await.",
+            "Four of Wands": "Harmony, celebration, home. Joy, stability, and community bring contentment.",
+            "Five of Wands": "Conflict, competition, tension. Navigate disagreements with patience and diplomacy.",
+            "Six of Wands": "Success, public recognition, leadership. Your efforts earn acknowledgment and respect.",
+            "Seven of Wands": "Perseverance, defensive, standing your ground. Push through challenges with determination.",
+            "Eight of Wands": "Swift action, movement, progress. Momentum builds; things move quickly forward.",
+            "Nine of Wands": "Resilience, persistence, last stand. Nearly there—stay strong despite obstacles.",
+            "Ten of Wands": "Burden, responsibility, completion. You carry weight; delegate or find relief.",
+            "Page of Wands": "Enthusiasm, exploration, discovery. Youthful energy brings new perspectives.",
+            "Knight of Wands": "Energy, passion, adventure, impulsiveness. Take bold action with fiery determination.",
+            "Queen of Wands": "Confidence, independence, determination. Creative fire and strong will shine through.",
+            "King of Wands": "Leadership, vision, high energy. Command through passion and inspirational power.",
+            "Ace of Cups": "Emotional beginnings, love, compassion. New emotional connections bring fulfillment.",
+            "Two of Cups": "Partnership, unity, connection. Reciprocal love and deep emotional bonds form.",
+            "Three of Cups": "Celebration, community, gatherings. Joy shared with others multiplies happiness.",
+            "Four of Cups": "Contemplation, apathy, reevaluation. Pause to reflect on what truly matters.",
+            "Five of Cups": "Loss, grief, sorrow. Acknowledge sadness; healing comes through acceptance.",
+            "Six of Cups": "Nostalgia, innocence, reunion. Reconnect with joy, playfulness, and fond memories.",
+            "Seven of Cups": "Illusion, desire, choices. Be discerning; distinguish reality from fantasy.",
+            "Eight of Cups": "Abandonment, seeking, moving on. Release what no longer serves your growth.",
+            "Nine of Cups": "Contentment, fulfillment, wishes granted. Emotional satisfaction and abundance.",
+            "Ten of Cups": "Harmony, happiness, family. Lasting happiness and emotional fulfillment achieved.",
+            "Page of Cups": "Innocence, curiosity, new feelings. Openness to emotional discovery and wonder.",
+            "Knight of Cups": "Romance, idealism, following the heart. Let emotion and intuition guide decisions.",
+            "Queen of Cups": "Compassion, calm, intuition. Emotional balance and nurturing wisdom prevail.",
+            "King of Cups": "Emotional balance, control, diplomacy. Master your feelings with maturity and grace.",
+            "Ace of Swords": "Truth, new ideas, breakthroughs. Clear thinking cuts through confusion.",
+            "Two of Swords": "Difficult choices, indecision, stalemate. You face a decision requiring clarity.",
+            "Three of Swords": "Heartbreak, sorrow, painful truth. Difficult truths emerge; pain leads to growth.",
+            "Four of Swords": "Rest, respite, contemplation. Pause and recover before moving forward.",
+            "Five of Swords": "Defeat, discord, shame. Conflict resolves; learn from this challenging period.",
+            "Six of Swords": "Transition, moving forward, departure. Leave behind difficulties and move toward peace.",
+            "Seven of Swords": "Deception, betrayal, cunning. Question motives; protect yourself wisely.",
+            "Eight of Swords": "Restriction, confusion, powerlessness. You're trapped by circumstances—seek freedom.",
+            "Nine of Swords": "Anxiety, nightmares, stress. Release worry; things are less dire than they appear.",
+            "Ten of Swords": "Betrayal, ruin, painful ending. This cycle ends; renewal follows devastation.",
+            "Page of Swords": "Curiosity, communication, mental energy. Questions arise; seek truthful answers.",
+            "Knight of Swords": "Action, impulsiveness, conflict. Direct communication and swift action prevail.",
+            "Queen of Swords": "Clarity, perception, independence. Sharp intellect and honest truth-telling.",
+            "King of Swords": "Intellect, authority, truth. Mastery through wisdom, logic, and clear judgment.",
+            "Ace of Pentacles": "New opportunities, prosperity, potential. Financial and material blessings arrive.",
+            "Two of Pentacles": "Flexibility, adaptation, time management. Balance multiple priorities skillfully.",
+            "Three of Pentacles": "Teamwork, collaboration, learning. Combined effort produces excellent results.",
+            "Four of Pentacles": "Security, control, stability. Hold what you've built; be cautious with resources.",
+            "Five of Pentacles": "Hardship, poverty, struggle. Difficult times pass; help is available if sought.",
+            "Six of Pentacles": "Generosity, charity, sharing. Give freely; abundance flows through gratitude.",
+            "Seven of Pentacles": "Patience, assessment, investment. Your efforts will bear fruit with persistence.",
+            "Eight of Pentacles": "Apprenticeship, skill development, craft. Dedicate yourself to mastering your trade.",
+            "Nine of Pentacles": "Abundance, luxury, self-sufficiency. Reap rewards of disciplined effort and planning.",
+            "Ten of Pentacles": "Wealth, family, legacy, inheritance. Security and generational prosperity achieved.",
+            "Page of Pentacles": "Opportunity, manifestation, diligence. Practical gifts and reliable assistance arrive.",
+            "Knight of Pentacles": "Responsibility, dependability, loyalty. Steady progress through diligent effort.",
+            "Queen of Pentacles": "Nurturing, practicality, abundance. Nurture with generosity and practical wisdom.",
+            "King of Pentacles": "Success, abundance, leadership. Master material realm with wisdom and prosperity."
+        };
+
+        const mediumshipPositions = [
+            "1. Card to describe my day as a whole.",
+            "2. Something important I should be mindful of today.",
+            "3. What to embrace to have the best day possible."
+        ];
+
+        function drawCard(deck) {
+            const index = Math.floor(Math.random() * deck.length);
+            return deck.splice(index, 1)[0];
         }
+
+        function openModal(cardName) {
+            document.getElementById("modalTitle").textContent = cardName;
+            document.getElementById("modalDescription").textContent = cardDescriptions[cardName] || "Description not available.";
+            document.getElementById("cardModal").style.display = "block";
+        }
+
         function closeModal() {
-            document.getElementById('myModal').style.display = 'none';
+            document.getElementById("cardModal").style.display = "none";
         }
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('myModal')) {
+
+        function drawSpread() {
+            const deck = [...tarotDeck];
+            const spreadDiv = document.getElementById("spread");
+            spreadDiv.innerHTML = "<h2>Today's Reading</h2>";
+
+            mediumshipPositions.forEach(position => {
+                const card = drawCard(deck);
+                const cardElement = document.createElement("div");
+                cardElement.className = "card";
+                cardElement.addEventListener("click", function() {
+                    openModal(card);
+                });
+                const imgSrc = `images/${card.replace(/ /g, '_')}.jpg`;
+                cardElement.innerHTML = `<strong>${position}</strong><br>Card: ${card}<br><img src="${imgSrc}" alt="${card}">`;
+                spreadDiv.appendChild(cardElement);
+            });
+        }
+
+        // Event listeners instead of inline onclick
+        document.getElementById("drawButton").addEventListener("click", drawSpread);
+        document.getElementById("closeButton").addEventListener("click", closeModal);
+        
+        window.addEventListener("click", function(event) {
+            const modal = document.getElementById("cardModal");
+            if (event.target === modal) {
                 closeModal();
             }
-        }
+        });
     </script>
 </body>
 </html>
