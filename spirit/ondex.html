@@ -1,1 +1,84 @@
-<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Tarot Card Modal</title>\n    <style>\n        /* Modal styles */\n        .modal {\n            display: none;\n            position: fixed;\n            z-index: 1;\n            left: 0;\n            top: 0;\n            width: 100%;\n            height: 100%;\n            overflow: auto;\n            background-color: rgb(0,0,0);\n            background-color: rgba(0,0,0,0.4);\n        }\n        .modal-content {\n            background-color: #fefefe;\n            margin: 15% auto;\n            padding: 20px;\n            border: 1px solid #888;\n            width: 80%;\n        }\n        .close {\n            color: #aaa;\n            float: right;\n            font-size: 28px;\n            font-weight: bold;\n        }\n        .close:hover,\n        .close:focus {\n            color: black;\n            text-decoration: none;\n            cursor: pointer;\n        }\n    </style>\n</head>\n<body>\n    <h2>Tarot Cards</h2>\n    <button id="cardButton" onclick="showModal()">View Tarot Card</button>\n\n    <div id="myModal" class="modal">\n        <div class="modal-content">\n            <span class="close" onclick="closeModal()">&times;</span>\n            <h2>Tarot Card Name</h2>\n            <p>Description of the tarot card goes here. Detailed information about the card.</p>\n        </div>\n    </div>\n\n    <script>\n        function showModal() {\n            document.getElementById('myModal').style.display = 'block';\n        }\n\n        function closeModal() {\n            document.getElementById('myModal').style.display = 'none';\n        }\n\n        window.onclick = function(event) {\n            if (event.target == document.getElementById('myModal')) {\n                closeModal();\n            }\n        }\n    </script>\n</body>\n</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarot Spread</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            animation: modalanim 0.4s;
+        }
+        @keyframes modalanim {
+            from {opacity: 0}
+            to {opacity: 1}
+        }
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tarot Card Spread</h1>
+    <div class="tarot-spread">
+        <!-- 78 tarot cards should be displayed here -->
+        <div class="card" onclick="openModal('The Fool', 'The Fool represents new beginnings, spontaneity, and taking leaps of faith.');">The Fool</div>
+        <div class="card" onclick="openModal('The Magician', 'The Magician represents willpower, resourcefulness, and the ability to manifest.');">The Magician</div>
+        <div class="card" onclick="openModal('The High Priestess', 'The High Priestess represents intuition, unconscious knowledge, and mystery.');">The High Priestess</div>
+        <div class="card" onclick="openModal('The Empress', 'The Empress represents feminine energy, fertility, and nurturing.');">The Empress</div>
+        <div class="card" onclick="openModal('The Emperor', 'The Emperor represents authority, structure, and control.');">The Emperor</div>
+        <!-- Add the rest of the cards here -->
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="cardTitle"></h2>
+            <p id="cardDescription"></p>
+        </div>
+    </div>
+
+    <script>
+        function openModal(title, description) {
+            document.getElementById('cardTitle').innerText = title;
+            document.getElementById('cardDescription').innerText = description;
+            document.getElementById('myModal').style.display = 'block';
+        }
+        function closeModal() {
+            document.getElementById('myModal').style.display = 'none';
+        }
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('myModal')) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
