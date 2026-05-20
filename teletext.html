@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEEFAX CSV</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.cdnfonts.com/css/ds-digital');
+
+:root {
+  --tt-black: #000000;
+  --tt-blue: #0000ff;
+  --tt-red: #ff0000;
+  --tt-magenta: #ff00ff;
+  --tt-green: #00ff00;
+  --tt-cyan: #00ffff;
+  --tt-yellow: #ffff00;
+  --tt-white: #ffffff;
+  --remote-bg: #2a2a2a;
+  --remote-btn: #3a3a3a;
+  --remote-border: #555;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: #0a0a0a;
+  font-family: 'DS-Digital', 'Courier New', monospace;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+.main-wrapper {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.teletext-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.teletext-container {
+  background: var(--tt-black);
+  padding: 20px;
+  border-radius: 4px;
+  box-shadow: 0 0 60px rgba(0, 255, 255, 0.1), 
+              inset 0 0 120px rgba(0, 0, 0, 0.5);
+}
+
+.teletext-screen {
+  width: 40ch;
+  background: var(--tt-black);
+  position: relative;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+}
+
+.scanlines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+.header-line {
+  display: flex;
+  justify-content: space-between;
+  background: var(--tt-blue);
+  color: var(--tt-white);
+  padding: 0 1ch;
+  height: 1.2em;
+}
+
+.content-line {
+  height: 1.2em;
+  padding: 0 1ch;
+  white-space: pre;
+  overflow: hidden;
+}
+
+.double-height {
+  height: 2.4em;
+  line-height: 2.4em;
+  font-size: 1em;
+  transform: scaleY(2);
+  transform-origin: top;
+  margin-bottom: 1.2em;
+}
+
+.black { color: var(--tt-black); }
+.red { color: var(--tt-red); }
+.green { color: var(--tt-green); }
+.yellow { color: var(--tt-yellow); }
+.blue { color: var(--tt-blue); }
+.magenta { color: var(--tt-magenta); }
+.cyan { color: var(--tt-cyan); }
+.white { color: var(--tt-white); }
+
+.bg-black { background: var(--tt-black); }
+.bg-red { background: var(--tt-red); }
+.bg-green { background: var(--tt-green); }
+.bg-yellow { background: var(--tt-yellow); }
+.bg-blue { background: var(--tt-blue); }
+.bg-magenta { background: var(--tt-magenta); }
+.bg-cyan { background: var(--tt-cyan); }
+.bg-white { background: var(--tt-white); }
+
+.flash {
+  animation: flash 1s step-end infinite;
+}
+
+@keyframes flash {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+.cursor {
+  display: inline-block;
+  width: 1ch;
+  background: var(--tt-white);
+  animation: flash 1s step-end infinite;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 40ch;
+}
+
+.btn {
+  font-family: 'DS-Digital', 'Courier New', monospace;
+  background: var(--tt-blue);
+  color: var(--tt-white);
+  border: 2px solid var(--tt-cyan);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.1s;
+}
+
+.btn:hover {
+  background: var(--tt-cyan);
+  color: var(--tt-black);
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.page-nav {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  color: var(--tt-white);
+  font-size: 16px;
+}
+
+.page-input {
+  width: 4ch;
+  background: var(--tt-black);
+  color: var(--tt-white);
+  border: 2px solid var(--tt-cyan);
+  font-family: 'DS-Digital', 'Courier New', monospace;
+  font-size: 16px;
+  padding: 4px;
+  text-align: center;
+}
+
+.info-text {
+  color: var(--tt-yellow);
+  font-size: 12px;
+  text-align: center;
+  max-width: 40ch;
+  line-height: 1.4;
+}
+
+.error-text {
+  color: var(--tt-red);
+  font-size: 12px;
+  text-align: center;
+  max-width: 40ch;
+  min-height: 1.2em;
+}
+
+.debug-text {
+  color: var(--tt-cyan);
+  font-size: 12px;
+  text-align: center;
+  max-width: 40ch;
+  min-height: 1.2em;
+  word-break: break-word;
+}
+
+/* TV Remote Styles */
+.remote-container {
+  background: linear-gradient(145deg, #333, #1a1a1a);
+  padding: 25px 20px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8), 
+              inset 0 1px 0 rgba(255,255,255,0.1),
+              inset 0 -2px 8px rgba(0,0,0,0.6);
+  width: 280px;
+  border: 2px solid #444;
+  flex-shrink: 0;
+}
+
+.remote-title {
+  color: #aaa;
+  font-size: 10px;
+  text-align: center;
+  margin-bottom: 15px;
+  letter-spacing: 2px;
+  font-family: Arial, sans-serif;
+}
+
+.remote-display {
+  background: #001a00;
+  color: var(--tt-green);
+  padding: 8px;
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 15px;
+  border-radius: 3px;
+  border: 1px solid #003300;
+  min-height: 35px;
+  letter-spacing: 3px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+}
+
+.remote-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.remote-btn {
+  background: linear-gradient(145deg, #4a4a4a, #2f2f2f);
+  color: var(--tt-white);
+  border: none;
+  border-radius: 8px;
+  padding: 15px 10px;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #1a1a1a, 
+              0 5px 5px rgba(0,0,0,0.4),
+              inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: all 0.1s;
+  user-select: none;
+}
+
+.remote-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #1a1a1a, 
+              0 3px 3px rgba(0,0,0,0.4);
+}
+
+.remote-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.fastext-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.fastext-btn {
+  padding: 12px 5px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.5), 
+              0 4px 4px rgba(0,0,0,0.3);
+  transition: all 0.1s;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+}
+
+.fastext-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.5);
+}
+
+.fastext-btn:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.fastext-red { background: linear-gradient(145deg, #cc0000, #990000); color: white; }
+.fastext-green { background: linear-gradient(145deg, #00cc00, #009900); color: white; }
+.fastext-yellow { background: linear-gradient(145deg, #cccc00, #999900); color: black; }
+.fastext-blue { background: linear-gradient(145deg, #0000cc, #000099); color: white; }
+
+.nav-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.nav-btn {
+  padding: 10px 5px;
+  font-size: 11px;
+  background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+  color: var(--tt-white);
+}
+
+@media (max-width: 1024px) {
+  .main-wrapper {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 10px;
+  }
+  .teletext-screen {
+    font-size: 14px;
+  }
+  .controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  .btn {
+    width: 100%;
+  }
+  .remote-container {
+    width: 260px;
+  }
+  .main-wrapper {
+    gap: 20px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="main-wrapper">
+  <div class="teletext-section">
+    <div class="teletext-container">
+      <div class="teletext-screen scanlines" id="screen">
+        <div class="header-line">
+          <span id="pageNum">P100</span>
+          <span id="serviceName">CEEFAX</span>
+          <span id="dayTime">MON 12:00:00</span>
+        </div>
+        <div id="content"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label for="csvFile" class="btn">UPLOAD CSV</label>
+      <input type="file" id="csvFile" accept=".csv,.txt">
+      <button class="btn" id="loadDefault">LOAD DEMO CSV</button>
+      <button class="btn" id="prevPage">PREV</button>
+      <div class="page-nav">
+        <input type="text" class="page-input" id="pageInput" value="100" maxlength="3">
+      </div>
+      <button class="btn" id="nextPage">NEXT</button>
+    </div>
+    
+    <div class="info-text">
+      CSV FORMAT: page,header,line1,line2,line3,line4,line5,color,red,green,yellow,blue<br>
+      Each row = one full page. Fastext buttons link to optional page numbers.<br>
+      Color: white,red,green,yellow,blue,magenta,cyan. Add 'flash' for flashing text.
+    </div>
+    <div class="error-text" id="errorMsg"></div>
+    <div class="debug-text" id="debugMsg"></div>
+  </div>
+
+  <div class="remote-container">
+    <div class="remote-title">CEEFAX REMOTE</div>
+    <div class="remote-display" id="remoteDisplay">---</div>
+    
+    <div class="fastext-row">
+      <button class="fastext-btn fastext-red" id="fastext-red" data-color="red">RED</button>
+      <button class="fastext-btn fastext-green" id="fastext-green" data-color="green">GREEN</button>
+      <button class="fastext-btn fastext-yellow" id="fastext-yellow" data-color="yellow">YELLOW</button>
+      <button class="fastext-btn fastext-blue" id="fastext-blue" data-color="blue">BLUE</button>
+    </div>
+
+    <div class="remote-grid">
+      <button class="remote-btn" data-num="1">1</button>
+      <button class="remote-btn" data-num="2">2</button>
+      <button class="remote-btn" data-num="3">3</button>
+      <button class="remote-btn" data-num="4">4</button>
+      <button class="remote-btn" data-num="5">5</button>
+      <button class="remote-btn" data-num="6">6</button>
+      <button class="remote-btn" data-num="7">7</button>
+      <button class="remote-btn" data-num="8">8</button>
+      <button class="remote-btn" data-num="9">9</button>
+      <button class="remote-btn" id="numClear">C</button>
+      <button class="remote-btn" data-num="0">0</button>
+      <button class="remote-btn" id="numEnter">→</button>
+    </div>
+
+    <div class="nav-row">
+      <button class="remote-btn nav-btn" id="remotePrev">PREV</button>
+      <button class="remote-btn nav-btn" id="remoteTop">TOP</button>
+      <button class="remote-btn nav-btn" id="remoteNext">NEXT</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Demo CSV with fastext links
+const DEMO_CSV = `page,header,line1,line2,line3,line4,line5,color,red,green,yellow,blue
+100,BBC NEWS,PM announces national holiday,,,People need more time off.,,white,199,300,400,500
+101,WORLD NEWS,PEACE BREAKS OUT!,,,,Pigs fly.,white,100,300,400,500
+199,CEEFAX INDEX,100-199  News Headlines,200-299  News Regional,300-399  Sport,400-499  Weather,500-599  TV & Radio Guide,yellow,100,300,400,500
+300,SPORT,FOOTBALL,,Scotland will win the World Cup,says a local lunatic.,,white,100,199,400,500
+400,WEATHER,TODAY,,GLASGOW      Showers    17°C,TOMORROW  Showers   19°C,FRIDAY  Showers     20°C,cyan,100,199,300,500
+500,TV GUIDE,BBC1  19:00  News,BBC2  19:30  University Challenge,ITV1  20:00  Coronation Street,,CH4   21:00  Film,yellow,100,199,300,400
+600,LOTTERY,TONIGHT'S NUMBERS:,,,4  5  12  28  42  46,Bonus: 9,flash yellow,100,199,300,400`;
+
+class CeefaxCSV {
+  constructor() {
+    this.pages = new Map();
+    this.currentPage = 100;
+    this.clockInterval = null;
+    this.numberBuffer = '';
+    this.init();
+  }
+
+  init() {
+    this.loadDemoData();
+    this.startClock();
+    this.bindEvents();
+    this.bindRemoteEvents();
+  }
+
+  loadDemoData() {
+    this.clearError();
+    try {
+      this.parseCSV(DEMO_CSV);
+      this.renderPage(100);
+      this.updateLoadedPages();
+      this.updateFastextButtons();
+    } catch (err) {
+      this.showError('Failed to load demo: ' + err.message);
+      console.error('Demo load error:', err);
+    }
+  }
+
+  bindEvents() {
+    document.getElementById('csvFile').addEventListener('change', (e) => this.handleFileUpload(e));
+    document.getElementById('loadDefault').addEventListener('click', () => this.loadDemoData());
+    document.getElementById('prevPage').addEventListener('click', () => this.navigate(-1));
+    document.getElementById('nextPage').addEventListener('click', () => this.navigate(1));
+    document.getElementById('pageInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const page = parseInt(e.target.value.trim(), 10);
+        if (!isNaN(page)) this.renderPage(page);
+      }
+    });
+    document.getElementById('pageInput').addEventListener('blur', (e) => {
+      const page = parseInt(e.target.value.trim(), 10);
+      if (!isNaN(page)) this.renderPage(page);
+    });
+  }
+
+  bindRemoteEvents() {
+    // Number buttons
+    document.querySelectorAll('.remote-btn[data-num]').forEach(btn => {
+      btn.addEventListener('click', () => this.handleNumberInput(btn.dataset.num));
+    });
+
+    // Clear button
+    document.getElementById('numClear').addEventListener('click', () => this.clearNumberBuffer());
+
+    // Enter/Go button
+    document.getElementById('numEnter').addEventListener('click', () => this.goToBufferedPage());
+
+    // Fastext buttons
+    document.querySelectorAll('.fastext-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.handleFastext(btn.dataset.color));
+    });
+
+    // Nav buttons
+    document.getElementById('remotePrev').addEventListener('click', () => this.navigate(-1));
+    document.getElementById('remoteNext').addEventListener('click', () => this.navigate(1));
+    document.getElementById('remoteTop').addEventListener('click', () => this.goToTop());
+  }
+
+  handleNumberInput(num) {
+    if (this.numberBuffer.length >= 3) {
+      this.numberBuffer = '';
+    }
+    this.numberBuffer += num;
+    this.updateRemoteDisplay();
+    
+    if (this.numberBuffer.length === 3) {
+      setTimeout(() => this.goToBufferedPage(), 200);
+    }
+  }
+
+  clearNumberBuffer() {
+    this.numberBuffer = '';
+    this.updateRemoteDisplay();
+  }
+
+  goToBufferedPage() {
+    if (this.numberBuffer.length === 3) {
+      const pageNum = parseInt(this.numberBuffer, 10);
+      this.renderPage(pageNum);
+      this.numberBuffer = '';
+      this.updateRemoteDisplay();
+    }
+  }
+
+  updateRemoteDisplay() {
+    const display = document.getElementById('remoteDisplay');
+    if (this.numberBuffer.length === 0) {
+      display.textContent = '---';
+    } else {
+      display.textContent = this.numberBuffer.padEnd(3, '-');
+    }
+  }
+
+  handleFastext(color) {
+    const page = this.pages.get(this.currentPage);
+    if (!page || !page.fastext || !page.fastext[color]) return;
+    
+    const targetPage = page.fastext[color];
+    if (this.pages.has(targetPage)) {
+      this.renderPage(targetPage);
+    }
+  }
+
+  goToTop() {
+    const pageNums = Array.from(this.pages.keys()).sort((a, b) => a - b);
+    if (pageNums.length > 0) {
+      this.renderPage(pageNums[0]);
+    }
+  }
+
+  updateFastextButtons() {
+    const page = this.pages.get(this.currentPage);
+    const colors = ['red', 'green', 'yellow', 'blue'];
+    
+    colors.forEach(color => {
+      const btn = document.getElementById(`fastext-${color}`);
+      const targetPage = page?.fastext?.[color];
+      if (targetPage && this.pages.has(targetPage)) {
+        btn.disabled = false;
+        btn.title = `Go to page ${targetPage}`;
+      } else {
+        btn.disabled = true;
+        btn.title = 'Not set';
+      }
+    });
+  }
+
+  startClock() {
+    const updateTime = () => {
+      const now = new Date();
+      const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      const day = days[now.getDay()];
+      const time = now.toTimeString().split(' ')[0];
+      document.getElementById('dayTime').textContent = `${day} ${time}`;
+    };
+    updateTime();
+    if (this.clockInterval) clearInterval(this.clockInterval);
+    this.clockInterval = setInterval(updateTime, 1000);
+  }
+
+  handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    this.clearError();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvContent = e.target.result.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        this.parseCSV(csvContent);
+        
+        console.log(`CSV parsed successfully. Found ${this.pages.size} pages:`, Array.from(this.pages.keys()).sort((a,b) => a-b));
+        
+        if (this.pages.size === 0) {
+          throw new Error('No valid pages found in CSV');
+        }
+
+        const pageNums = Array.from(this.pages.keys()).sort((a, b) => a - b);
+        const defaultPage = this.pages.has(100) ? 100 : pageNums[0];
+        this.renderPage(defaultPage);
+        this.updateLoadedPages();
+      } catch (err) {
+        console.error('CSV parse error:', err);
+        this.showError('CSV Error: ' + err.message);
+        this.render404(this.currentPage);
+      }
+    };
+    reader.onerror = () => {
+      this.showError('Failed to read file');
+      console.error('File read error');
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  parseCSVRow(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+      
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++; 
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result.map(s => s.trim());
+  }
+
+  isHeaderRow(columns) {
+    if (columns.length === 0) return false;
+    const firstCol = columns[0].toLowerCase();
+    return isNaN(parseInt(firstCol, 10)) || firstCol === 'page';
+  }
+
+  parseCSV(csvText) {
+    this.pages.clear();
+    const lines = csvText.split('\n').map(l => l.trim()).filter(line => line.length > 0);
+    
+    console.log(`Parsing ${lines.length} lines from CSV`);
+    
+    if (lines.length === 0) {
+      throw new Error('CSV file is empty');
+    }
+
+    let startIdx = 0;
+    let firstRow = this.parseCSVRow(lines[0]);
+    
+    if (this.isHeaderRow(firstRow)) {
+      console.log('Header row detected, skipping:', firstRow);
+      startIdx = 1;
+      if (lines.length === 1) {
+        throw new Error('CSV contains only headers');
+      }
+    }
+
+    let validRowCount = 0;
+    let errorCount = 0;
+
+    for (let i = startIdx; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      
+      try {
+        const cols = this.parseCSVRow(line);
+        
+        if (cols.length < 2) {
+          console.warn(`Line ${i + 1}: Insufficient columns (${cols.length}), expected at least page,header. Skipping:`, line);
+          errorCount++;
+          continue;
+        }
+
+        const page = parseInt(String(cols[0]).trim(), 10);
+        const header = String(cols[1] || 'CEEFAX').trim();
+        const line1 = String(cols[2] || '').trim();
+        const line2 = String(cols[3] || '').trim();
+        const line3 = String(cols[4] || '').trim();
+        const line4 = String(cols[5] || '').trim();
+        const line5 = String(cols[6] || '').trim();
+        const color = String(cols[7] || 'white').trim() || 'white';
+        
+        // Fastext page links
+        const redLink = parseInt(String(cols[8] || '').trim(), 10) || null;
+        const greenLink = parseInt(String(cols[9] || '').trim(), 10) || null;
+        const yellowLink = parseInt(String(cols[10] || '').trim(), 10) || null;
+        const blueLink = parseInt(String(cols[11] || '').trim(), 10) || null;
+        
+        if (isNaN(page) || page < 100 || page > 999) {
+          console.warn(`Line ${i + 1}: Invalid page number "${cols[0]}". Skipping`);
+          errorCount++;
+          continue;
+        }
+        
+        this.pages.set(page, {
+          title: header || 'CEEFAX',
+          lines: [line1, line2, line3, line4, line5],
+          color: color,
+          fastext: {
+            red: redLink,
+            green: greenLink,
+            yellow: yellowLink,
+            blue: blueLink
+          }
+        });
+        
+        validRowCount++;
+      } catch (err) {
+        console.error(`Line ${i + 1} parse error:`, err, line);
+        errorCount++;
+      }
+    }
+
+    console.log(`Parse complete: ${validRowCount} valid pages, ${errorCount} errors, ${this.pages.size} total pages`);
+    
+    if (validRowCount === 0) {
+      throw new Error('No valid data rows found. Check CSV format');
+    }
+
+    return { valid: validRowCount, errors: errorCount };
+  }
+
+  renderPage(pageNum) {
+    const parsed = parseInt(String(pageNum).trim(), 10);
+    if (isNaN(parsed)) {
+      this.render404(pageNum);
+      return;
+    }
+    
+    const page = this.pages.get(parsed);
+    if (!page) {
+      console.warn(`Page ${parsed} not found in data. Available:`, Array.from(this.pages.keys()));
+      this.render404(parsed);
+      return;
+    }
+
+    this.currentPage = parsed;
+    document.getElementById('pageNum').textContent = `P${parsed}`;
+    document.getElementById('serviceName').textContent = page.title;
+    document.getElementById('pageInput').value = parsed;
+
+    const content = document.getElementById('content');
+    content.innerHTML = '';
+    
+    const pageColor = page.color || 'white';
+    const classes = [];
+    
+    if (pageColor.includes('flash')) {
+      classes.push('flash');
+      const baseColor = pageColor.replace(/\s*flash\s*/g, '').trim() || 'white';
+      classes.push(baseColor);
+    } else {
+      classes.push(pageColor);
+    }
+
+    // Render 22 lines: title bar + empty + 5 content + padding
+    const titleLine = document.createElement('div');
+    titleLine.className = 'content-line yellow bg-blue';
+    titleLine.textContent = this.padLine(page.title.padStart(20 + Math.floor(page.title.length / 2)));
+    content.appendChild(titleLine);
+
+    content.appendChild(this.createEmptyLine());
+
+    page.lines.forEach((textLine, idx) => {
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'content-line ' + classes.join(' ');
+      lineDiv.textContent = this.padLine(textLine || '');
+      content.appendChild(lineDiv);
+    });
+
+    const usedLines = 2 + 5;
+    for (let i = usedLines; i < 22; i++) {
+      content.appendChild(this.createEmptyLine());
+    }
+
+    this.updateFastextButtons();
+  }
+
+  createEmptyLine() {
+    const lineDiv = document.createElement('div');
+    lineDiv.className = 'content-line';
+    lineDiv.textContent = ' '.repeat(40);
+    return lineDiv;
+  }
+
+  render404(pageNum) {
+    const parsed = parseInt(String(pageNum).trim(), 10) || pageNum;
+    document.getElementById('pageNum').textContent = `P${parsed}`;
+    document.getElementById('serviceName').textContent = 'CEEFAX';
+    document.getElementById('pageInput').value = parsed;
+    
+    const content = document.getElementById('content');
+    content.innerHTML = '';
+    
+    for (let i = 0; i < 11; i++) {
+      content.appendChild(this.createEmptyLine());
+    }
+    
+    const msg1 = document.createElement('div');
+    msg1.className = 'content-line double-height yellow';
+    msg1.textContent = this.padLine('   PAGE NOT FOUND');
+    content.appendChild(msg1);
+    
+    for (let i = 0; i < 9; i++) {
+      content.appendChild(this.createEmptyLine());
+    }
+
+    this.updateFastextButtons();
+  }
+
+  padLine(text) {
+    text = String(text).substring(0, 40);
+    return text + ' '.repeat(Math.max(0, 40 - text.length));
+  }
+
+  navigate(direction) {
+    const pageNums = Array.from(this.pages.keys()).sort((a, b) => a - b);
+    if (pageNums.length === 0) return;
+    
+    const currentIdx = pageNums.indexOf(this.currentPage);
+    
+    if (currentIdx === -1) {
+      this.renderPage(pageNums[0]);
+      return;
+    }
+    
+    let newIdx = currentIdx + direction;
+    if (newIdx < 0) newIdx = pageNums.length - 1;
+    if (newIdx >= pageNums.length) newIdx = 0;
+    
+    this.renderPage(pageNums[newIdx]);
+  }
+
+  updateLoadedPages() {
+    const pageNums = Array.from(this.pages.keys()).sort((a, b) => a - b);
+    if (pageNums.length > 0) {
+      this.showDebug(`Loaded ${pageNums.length} pages: ${pageNums.join(', ')}`);
+    } else {
+      this.showDebug('');
+    }
+  }
+
+  showError(msg) {
+    document.getElementById('errorMsg').textContent = msg;
+  }
+
+  clearError() {
+    document.getElementById('errorMsg').textContent = '';
+  }
+
+  showDebug(msg) {
+    document.getElementById('debugMsg').textContent = msg;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  new CeefaxCSV();
+});
+</script>
+</body>
+</html>
