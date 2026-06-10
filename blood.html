@@ -1,0 +1,2551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reign of Blood — Glasgow</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #080010;
+  color: #b89aaa;
+  font-family: Georgia, 'Times New Roman', serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+#sky {
+  height: 4px;
+  transition: background 2s;
+  background: linear-gradient(90deg, #0a0020, #220044, #0a0020);
+}
+
+#header {
+  background: linear-gradient(180deg, #1a0020 0%, #0d000f 100%);
+  border-bottom: 2px solid #4a0030;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#header h1 {
+  color: #cc2244;
+  font-size: 26px;
+  text-shadow: 0 0 20px #880022;
+  letter-spacing: 3px;
+}
+
+#header-right { text-align: right; }
+#player-name-display { color: #aa7788; font-size: 13px; margin-bottom: 2px; }
+#phase-display { font-size: 15px; color: #aa88cc; }
+
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+#panel-left {
+  width: 215px;
+  background: #0e0018;
+  border-right: 1px solid #3a0028;
+  padding: 12px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+#panel-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#panel-right {
+  width: 235px;
+  background: #0e0018;
+  border-left: 1px solid #3a0028;
+  padding: 12px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.panel-title {
+  color: #cc2244;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: 1px solid #3a0028;
+  padding-bottom: 5px;
+  margin-bottom: 8px;
+}
+
+.section { margin-bottom: 14px; }
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #9a8090;
+}
+.stat-row .val { color: #d0aabb; font-weight: bold; }
+
+.bar-container { margin-bottom: 7px; }
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 2px;
+  color: #9a8090;
+}
+.bar {
+  height: 7px;
+  background: #1a0028;
+  border: 1px solid #3a0030;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.bar-hp   .bar-fill { background: linear-gradient(90deg, #880022, #cc2244); }
+.bar-blood .bar-fill { background: linear-gradient(90deg, #550011, #990033); }
+.bar-xp   .bar-fill { background: linear-gradient(90deg, #220044, #6600cc); }
+.bar-ap   .bar-fill { background: linear-gradient(90deg, #003344, #0088cc); }
+
+.building-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #1a0020;
+  font-size: 12px;
+}
+.building-name { color: #9a8090; }
+.building-lv { color: #cc2244; }
+
+/* Center */
+#combat-area {
+  display: none;
+  background: #0a0015;
+  border: 2px solid #660022;
+  padding: 12px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+#combat-area.active { display: block; }
+
+#combat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.combatant { text-align: center; flex: 1; }
+.combatant-name { color: #cc2244; font-size: 15px; margin-bottom: 4px; }
+.combatant-name.enemy { color: #cc6622; }
+.combatant-hp { font-size: 12px; color: #9a8090; margin-bottom: 4px; }
+.vs-text { font-size: 22px; color: #660022; padding: 0 10px; }
+
+#combat-msg {
+  text-align: center;
+  color: #cc9933;
+  font-style: italic;
+  margin-bottom: 8px;
+  font-size: 13px;
+  min-height: 20px;
+}
+#combat-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+
+#log {
+  flex: 1;
+  background: #080012;
+  border: 1px solid #2a0020;
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.le { padding: 1px 0; color: #9a8898; }
+.le.imp  { color: #cc9933; }
+.le.cbt  { color: #cc5555; }
+.le.good { color: #55cc77; }
+.le.dark { color: #9966dd; }
+.le.sep  { color: #3a0028; border-top: 1px solid #1e0018; margin-top: 2px; padding-top: 3px; }
+
+/* Buttons */
+.btn {
+  background: linear-gradient(180deg, #1e0028 0%, #0e0018 100%);
+  border: 1px solid #5a0040;
+  color: #c0a0b0;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  border-radius: 2px;
+  transition: background 0.12s, border-color 0.12s;
+  text-align: left;
+  width: 100%;
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+.btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #2e0038 0%, #1e0028 100%);
+  border-color: #cc2244;
+  color: #eeccdd;
+}
+.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.btn-cost { display: block; font-size: 10px; color: #7a6070; margin-top: 1px; }
+
+.btn-sm { width: auto; display: inline-block; padding: 5px 14px; margin: 0 3px 4px; }
+.btn-cbt { border-color: #880022; background: linear-gradient(180deg, #220010,#110008); }
+.btn-cbt:hover:not(:disabled) { background: linear-gradient(180deg,#330018,#220010); border-color:#ff2244; }
+
+/* Right panel tabs */
+#right-tabs { display: flex; gap: 2px; margin-bottom: 10px; }
+.tab-btn {
+  flex: 1; background: #0e0018; border: 1px solid #3a0028;
+  color: #7a6070; padding: 5px 2px; cursor: pointer;
+  font-size: 10px; text-align: center; letter-spacing: 0.5px;
+}
+.tab-btn.active { background: #200030; border-color: #880044; color: #cc88aa; }
+
+.tab-c { display: none; }
+.tab-c.active { display: block; }
+
+#loc-list { list-style: none; }
+#loc-list li { margin-bottom: 4px; }
+
+/* Overlay */
+#overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.88); z-index: 100;
+  align-items: center; justify-content: center;
+}
+#overlay.on { display: flex; }
+#overlay-box {
+  background: #0e0018; border: 2px solid #880044;
+  padding: 30px; max-width: 400px; text-align: center;
+}
+#overlay-title { color: #cc2244; font-size: 22px; margin-bottom: 12px; letter-spacing: 2px; }
+#overlay-text { color: #9a8090; margin-bottom: 20px; line-height: 1.7; white-space: pre-line; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #0a0010; }
+::-webkit-scrollbar-thumb { background: #4a0030; }
+
+/* ── MOBILE ─────────────────────────────────────────────────────────────── */
+#mobile-nav { display: none; }
+
+@media (max-width: 640px) {
+  body { height: 100vh; overflow: hidden; }
+
+  #sky { height: 3px; }
+
+  #header {
+    padding: 6px 10px;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: flex-start;
+  }
+  #header h1 { font-size: 15px; letter-spacing: 1px; }
+  #header h1 span { font-size: 10px; letter-spacing: 0; display: block; margin-top: 1px; }
+  #player-name-display { font-size: 10px; margin-bottom: 1px; }
+  #phase-display { font-size: 11px; }
+  #header-right > div:last-child {
+    margin-top: 3px !important;
+    gap: 3px !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap;
+    display: flex !important;
+  }
+  #header-right > div:last-child > button {
+    font-size: 10px !important;
+    padding: 2px 5px !important;
+  }
+
+  #main { position: relative; overflow: hidden; }
+
+  #panel-left, #panel-center, #panel-right {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: auto !important;
+    border: none !important;
+    display: none;
+    padding-bottom: 58px;
+    -webkit-overflow-scrolling: touch;
+  }
+  #panel-left  { overflow-y: auto; }
+  #panel-right { overflow-y: auto; }
+
+  #panel-left.mob-active   { display: block; }
+  #panel-center.mob-active { display: flex; }
+  #panel-right.mob-active  { display: block; }
+
+  .btn     { min-height: 44px; font-size: 13px; padding: 8px 10px; }
+  .btn-sm  { min-height: 40px; padding: 8px 14px; }
+  .tab-btn { min-height: 36px; padding: 8px 4px; font-size: 11px; }
+
+  #overlay, #sl-overlay, #lb-overlay { z-index: 110 !important; }
+
+  #mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    background: #0a0012;
+    border-top: 2px solid #4a0030;
+    z-index: 55;
+  }
+  .mob-nav-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-top: 3px solid transparent;
+    color: #5a4860;
+    font-family: Georgia, serif;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    padding: 6px 4px 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mob-nav-btn .nav-icon { font-size: 20px; line-height: 1; }
+  .mob-nav-btn.active { color: #cc88aa; border-top-color: #cc2244; }
+}
+</style>
+</head>
+<body>
+
+<div id="sky"></div>
+
+<div id="header">
+  <h1>&#x26B0; REIGN OF BLOOD &#x26B0;<span style="font-size:13px;letter-spacing:1px;color:#882244;display:block;margin-top:2px;">Glasgow, 1745</span></h1>
+  <div id="header-right">
+    <div id="player-name-display"></div>
+    <div id="phase-display"></div>
+    <div style="margin-top:6px;display:flex;gap:5px;justify-content:flex-end;">
+      <button onclick="showLeaderboard()" style="background:none;border:1px solid #4a0030;color:#9a6077;font-size:11px;padding:3px 9px;cursor:pointer;font-family:Georgia,serif;">Leaderboard</button>
+      <button onclick="retireGame()" style="background:none;border:1px solid #4a0030;color:#9a6077;font-size:11px;padding:3px 9px;cursor:pointer;font-family:Georgia,serif;">Retire</button>
+      <button onclick="openSave()" style="background:none;border:1px solid #4a0030;color:#9a6077;font-size:11px;padding:3px 9px;cursor:pointer;font-family:Georgia,serif;">Save</button>
+      <button onclick="openLoad()" style="background:none;border:1px solid #4a0030;color:#9a6077;font-size:11px;padding:3px 9px;cursor:pointer;font-family:Georgia,serif;">Load</button>
+      <button onclick="resetGame()" style="background:none;border:1px solid #440022;color:#6a4050;font-size:11px;padding:3px 9px;cursor:pointer;font-family:Georgia,serif;">New Game</button>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- LEFT: Stats -->
+  <div id="panel-left">
+    <div class="section">
+      <div class="bar-container">
+        <div class="bar-label"><span>HP</span><span id="hp-t"></span></div>
+        <div class="bar bar-hp"><div class="bar-fill" id="hp-b"></div></div>
+      </div>
+      <div class="bar-container">
+        <div class="bar-label"><span>Blood</span><span id="bl-t"></span></div>
+        <div class="bar bar-blood"><div class="bar-fill" id="bl-b"></div></div>
+      </div>
+      <div class="bar-container">
+        <div class="bar-label"><span>Wanted</span><span id="wt-t">0/100</span></div>
+        <div class="bar" style="border-color:#440020"><div class="bar-fill" id="wt-b" style="background:linear-gradient(90deg,#882200,#cc4400);width:0%"></div></div>
+      </div>
+      <div class="bar-container">
+        <div class="bar-label"><span>XP</span><span id="xp-t"></span></div>
+        <div class="bar bar-xp"><div class="bar-fill" id="xp-b"></div></div>
+      </div>
+      <div class="bar-container">
+        <div class="bar-label"><span>Action Points</span><span id="ap-t"></span></div>
+        <div class="bar bar-ap"><div class="bar-fill" id="ap-b"></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="panel-title">Attributes</div>
+      <div class="stat-row"><span>Level</span><span class="val" id="s-lv">1</span></div>
+      <div class="stat-row"><span>Strength</span><span class="val" id="s-str">10</span></div>
+      <div class="stat-row"><span>Speed</span><span class="val" id="s-spd">3</span></div>
+      <div class="stat-row"><span>Cunning</span><span class="val" id="s-cun">10</span></div>
+      <div class="stat-row"><span>Dark Power</span><span class="val" id="s-dp">5</span></div>
+    </div>
+
+    <div class="section">
+      <div class="panel-title">Domain</div>
+      <div class="stat-row"><span>Gold</span><span class="val" id="s-gold">20</span></div>
+      <div class="stat-row"><span>Souls</span><span class="val" id="s-souls">0</span></div>
+      <div class="stat-row"><span>Thralls</span><span class="val" id="s-thralls">0/5</span></div>
+      <div class="stat-row"><span>Night</span><span class="val" id="s-night">1</span></div>
+    </div>
+
+    <div class="section">
+      <div class="panel-title">Stronghold</div>
+      <div class="building-row"><span class="building-name">Necropolis Vault</span><span class="building-lv" id="b-crypt">Lv 1</span></div>
+      <div class="building-row"><span class="building-name">Stone Cisterns</span><span class="building-lv" id="b-vault">Lv 0</span></div>
+      <div class="building-row"><span class="building-name">Thrall Tenements</span><span class="building-lv" id="b-keep">Lv 0</span></div>
+      <div class="building-row"><span class="building-name">Hidden Study</span><span class="building-lv" id="b-lib">Lv 0</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER: Combat + Log -->
+  <div id="panel-center">
+    <div id="combat-area">
+      <div id="combat-header">
+        <div class="combatant">
+          <div class="combatant-name" id="c-p-name">You</div>
+          <div class="combatant-hp" id="c-p-hp"></div>
+          <div class="bar bar-hp" style="max-width:140px;margin:0 auto;">
+            <div class="bar-fill" id="c-p-bar" style="width:100%"></div>
+          </div>
+        </div>
+        <div class="vs-text">&#x2694;</div>
+        <div class="combatant">
+          <div class="combatant-name enemy" id="c-e-name">Enemy</div>
+          <div class="combatant-hp" id="c-e-hp"></div>
+          <div class="bar bar-hp" style="max-width:140px;margin:0 auto;">
+            <div class="bar-fill" id="c-e-bar" style="width:100%;background:linear-gradient(90deg,#884400,#cc6600)"></div>
+          </div>
+        </div>
+      </div>
+      <div id="combat-msg"></div>
+      <div id="combat-btns"></div>
+    </div>
+
+    <div class="panel-title" style="margin-bottom:7px;flex-shrink:0;">Chronicle of Darkness</div>
+    <div id="log"></div>
+  </div>
+
+  <!-- RIGHT: Actions -->
+  <div id="panel-right">
+    <div id="right-tabs">
+      <div class="tab-btn active" onclick="switchTab('actions',this)">Actions</div>
+      <div class="tab-btn" onclick="switchTab('hunt',this)">Hunt</div>
+      <div class="tab-btn" onclick="switchTab('build',this)">Build</div>
+      <div class="tab-btn" onclick="switchTab('domain',this)">Domain</div>
+    </div>
+
+    <div id="tab-actions" class="tab-c active">
+      <div class="panel-title">Night Actions</div>
+      <button class="btn" id="btn-sleep" onclick="endNight()">
+        Sleep Until Dawn
+        <span class="btn-cost">End this night</span>
+      </button>
+      <button class="btn" id="btn-rest" onclick="doRest()">
+        Rest &amp; Feed
+        <span class="btn-cost">1 AP &middot; 10 Blood &middot; Heal 20 HP</span>
+      </button>
+      <button class="btn" id="btn-convert" onclick="doConvert()">
+        Convert Thrall
+        <span class="btn-cost">2 AP &middot; 30 Blood &middot; +1 Thrall</span>
+      </button>
+      <button class="btn" id="btn-ritual" onclick="doRitual()">
+        Dark Ritual
+        <span class="btn-cost">2 AP &middot; 20 Blood &middot; Gain Souls</span>
+      </button>
+      <button class="btn" id="btn-sire-coven" onclick="sireCoven()">
+        Sire Coven Member
+        <span class="btn-cost">150 Blood &middot; 10 Souls &middot; Max 2</span>
+      </button>
+      <button class="btn" id="btn-victory" onclick="performRitual()" style="border-color:#cc9900;display:none;">
+        ✦ Claim Glasgow Eternal ✦
+        <span class="btn-cost">500 Blood &middot; 200 Souls &middot; 50 Gold &middot; Level 10 &middot; Night 75+</span>
+      </button>
+      <div id="ability-section" style="display:none;margin-top:10px;">
+        <div class="panel-title">Dark Abilities</div>
+        <div id="ability-btns"></div>
+      </div>
+    </div>
+
+    <div id="tab-hunt" class="tab-c">
+      <div class="panel-title">Hunt Grounds</div>
+      <ul id="loc-list"></ul>
+      <div id="market-section" style="display:none;">
+        <div class="panel-title" style="margin-top:10px;">⚖ Black Market — Dockside Fence</div>
+        <div id="market-list"></div>
+      </div>
+    </div>
+
+    <div id="tab-build" class="tab-c">
+      <div class="panel-title">Upgrade Stronghold</div>
+      <div id="build-btns"></div>
+    </div>
+
+    <div id="tab-domain" class="tab-c">
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Nav -->
+<div id="mobile-nav">
+  <button id="mob-nav-stats" class="mob-nav-btn" onclick="switchMobilePanel('left')">
+    <span class="nav-icon">☽</span><span>Stats</span>
+  </button>
+  <button id="mob-nav-log" class="mob-nav-btn active" onclick="switchMobilePanel('center')">
+    <span class="nav-icon">⚰</span><span>Chronicle</span>
+  </button>
+  <button id="mob-nav-actions" class="mob-nav-btn" onclick="switchMobilePanel('right')">
+    <span class="nav-icon">⚔</span><span>Actions</span>
+  </button>
+</div>
+
+<!-- Overlay -->
+<div id="overlay">
+  <div id="overlay-box">
+    <div id="overlay-title"></div>
+    <div id="overlay-text"></div>
+    <div id="overlay-choices" style="display:none;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px;"></div>
+    <button class="btn btn-sm" onclick="closeOverlay()">Continue</button>
+  </div>
+</div>
+
+<!-- Save/Load Overlay -->
+<div id="sl-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:101;align-items:center;justify-content:center;">
+  <div style="background:#0e0018;border:2px solid #880044;padding:24px;width:480px;max-width:95vw;">
+    <div id="sl-title" style="color:#cc2244;font-size:18px;letter-spacing:2px;margin-bottom:12px;"></div>
+    <div id="sl-desc" style="color:#9a8090;font-size:12px;margin-bottom:10px;line-height:1.5;"></div>
+    <textarea id="sl-text" spellcheck="false"
+      style="width:100%;height:120px;background:#06000e;border:1px solid #4a0030;color:#c0a0b0;
+             font-family:monospace;font-size:11px;padding:8px;resize:vertical;outline:none;"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end;">
+      <button class="btn btn-sm" id="sl-action-btn" onclick="slAction()"></button>
+      <button class="btn btn-sm" onclick="closeSL()">Cancel</button>
+    </div>
+    <div id="sl-msg" style="color:#55cc77;font-size:11px;margin-top:6px;min-height:14px;text-align:right;"></div>
+  </div>
+</div>
+
+<!-- Leaderboard Overlay -->
+<div id="lb-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:102;align-items:center;justify-content:center;">
+  <div style="background:#0a0012;border:2px solid #880044;padding:24px;width:600px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;">
+    <div style="color:#cc2244;font-size:20px;letter-spacing:3px;margin-bottom:4px;text-align:center;">CHRONICLES OF THE DAMNED</div>
+    <div style="color:#552233;font-size:11px;letter-spacing:1px;text-align:center;margin-bottom:16px;">Glasgow's Most Feared Vampire Lords</div>
+    <div style="overflow-y:auto;flex:1;">
+      <table id="lb-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="color:#cc2244;font-size:10px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #4a0030;">
+            <th style="padding:5px 8px;text-align:left;width:28px;">#</th>
+            <th style="padding:5px 8px;text-align:left;">Name</th>
+            <th style="padding:5px 8px;text-align:center;">Fate</th>
+            <th style="padding:5px 8px;text-align:center;">Lv</th>
+            <th style="padding:5px 8px;text-align:center;">Nights</th>
+            <th style="padding:5px 8px;text-align:center;">Gold</th>
+            <th style="padding:5px 8px;text-align:center;">Souls</th>
+            <th style="padding:5px 8px;text-align:right;">Score</th>
+          </tr>
+        </thead>
+        <tbody id="lb-body"></tbody>
+      </table>
+      <div id="lb-empty" style="display:none;text-align:center;color:#552233;padding:30px;font-style:italic;">No vampire lords have risen yet. Be the first.</div>
+    </div>
+    <div style="margin-top:14px;text-align:center;">
+      <div id="lb-cur-score" style="color:#9a8090;font-size:11px;margin-bottom:10px;"></div>
+      <button class="btn btn-sm" onclick="closeLB()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const SCOTTISH_NAMES = [
+  'Seumas','Fearchar','Alasdair','Donnchadh','Tormod','Coinneach','Ruaraidh','Diarmad',
+  'Uilleam','Calum','Eoghan','Raghnall','Domhnall','Iain','Aonghas','Cailean',
+  'Marsaili','Seonaid','Catriona','Morag','Iseabail','Fionnuala','Beathag','Siobhan'
+];
+
+const ITEM_DEFS = [
+  {id:'dragoon_pistol',  name:"Dragoon's Pistol",       rarity:'uncommon', str:5,              desc:'+5 Strength.'},
+  {id:'surgeons_kit',    name:"Surgeon's Kit",           rarity:'uncommon', onWin:15,           desc:'Heal 15 HP on victory.'},
+  {id:'stolen_crucifix', name:'Stolen Silver Crucifix',  rarity:'rare',     def:3, holyRes:5,   desc:'+3 Def, -5 holy dmg.'},
+  {id:'cavalry_sabre',   name:'Cavalry Sabre',           rarity:'uncommon', str:7,              desc:'+7 Strength.'},
+  {id:'silk_cloak',      name:'Silk Cloak',              rarity:'common',   cun:4,              desc:'+4 Cunning.'},
+  {id:'alchemist_vial',  name:"Alchemist's Vial",        rarity:'rare',     bloodDrainBonus:10, desc:'Blood Drain heals 10 extra.'},
+  {id:'revenue_badge',   name:"Revenue Badge",           rarity:'uncommon', heatMult:0.6,       desc:'Heat gain -40%.'},
+  {id:'brigandine',      name:'Brigandine Armour',       rarity:'uncommon', def:5,              desc:'+5 Defence.'},
+  {id:'loaded_dice',     name:'Loaded Dice',             rarity:'common',   cun:5,              desc:'+5 Cunning.'},
+  {id:'jacobite_ledger', name:'Jacobite Ledger',         rarity:'rare',     thrallGold:3,       desc:'Each thrall earns +3 gold/day.'},
+  {id:'necropolis_key',  name:'Necropolis Key',          rarity:'rare',     soulsPerKill:1,     desc:'+1 Soul on every victory.'},
+  {id:'plague_mask',     name:"Plague Doctor's Mask",    rarity:'uncommon', def:2, bloodPerKill:5, desc:'+2 Def, +5 Blood on wins.'},
+  {id:'writ',            name:'Forged Parliament Writ',  rarity:'rare',     wantedMult:0.5,     desc:'Wanted rises 50% slower.'},
+  {id:'grapeshot',       name:'Grapeshot Fragment',      rarity:'rare',     str:10,             desc:'+10 Strength.'},
+  {id:'ivory_horn',      name:'Ivory Horn',              rarity:'uncommon', bgShield:true,      desc:'Bodyguard blocks one hit per fight.'},
+];
+
+const NIGHT_EVENTS = [
+  {id:'plague',         prob:0.08, title:'Plague Sweeps the Wynds',      text:'The sick come to you willingly.',
+   fn:()=>{ const b=5+Math.floor(Math.random()*10); G.blood=Math.min(G.blood+b,bloodMax()); return `+${b} Blood from plague victims`; }, cls:'good'},
+  {id:'fog',            prob:0.10, title:'Haar Thick as a Shroud',         text:'The fog is your ally tonight.',
+   fn:()=>{ G.ap=Math.min(G.ap+1,apMax()+1); return '+1 AP this night'; }, cls:'good'},
+  {id:'witchfinder',    prob:0.07, title:'Witchfinder Patrols the Streets',text:'Eyes are watching the shadows.',
+   fn:()=>{ G.wanted=Math.min(100,G.wanted+15); return 'Wanted +15'; }, cls:'cbt'},
+  {id:'thrall_spotted', prob:0.06, title:'A Thrall is Recognised',         text:'One of yours is seen in suspicious company.',
+   fn:()=>{ G.wanted=Math.min(100,G.wanted+10); if(G.thrallList.length>0){ const t=G.thrallList[Math.floor(Math.random()*G.thrallList.length)]; t.loyalty=Math.max(0,t.loyalty-15); } return 'Wanted +10, random thrall loyalty -15'; }, cls:'cbt'},
+  {id:'merchant_dies',  prob:0.08, title:'A Merchant Found Dead',          text:'His purse remains unclaimed in the alley.',
+   fn:()=>{ const g=15+Math.floor(Math.random()*21); G.gold+=g; return `+${g} Gold`; }, cls:'good'},
+  {id:'body_discovered',prob:0.09, title:'A Body is Discovered',           text:'The city grows suspicious.',
+   fn:()=>{ G.wanted=Math.min(100,G.wanted+8); return 'Wanted +8'; }, cls:'cbt'},
+  {id:'jacobite_riot',  prob:0.06, title:'Jacobite Riot on the High Street',text:'The authorities are distracted.',
+   fn:()=>{ G.wanted=Math.max(0,G.wanted-12); return 'Wanted -12'; }, cls:'good'},
+  {id:'execution',      prob:0.07, title:'Public Execution at the Cross',  text:'Fresh souls linger near the scaffold.',
+   fn:()=>{ const s=1+Math.floor(Math.random()*2); G.souls+=s; G.blood=Math.min(G.blood+15,bloodMax()); return `+${s} Souls, +15 Blood`; }, cls:'dark'},
+  {id:'storm',          prob:0.07, title:'Storm Off the Clyde',            text:'The tempest hampers your movements.',
+   fn:()=>{ G.ap=Math.max(0,G.ap-1); return '-1 AP this night'; }, cls:'cbt'},
+  {id:'new_grave',      prob:0.07, title:'Fresh Graves in the Kirkyard',   text:'New earth, new power.',
+   fn:()=>{ const s=1+Math.floor(Math.random()*3); G.souls+=s; return `+${s} Souls`; }, cls:'dark'},
+  {id:'church_bells',   prob:0.05, title:'The Church Bells Ring at Midnight',text:'Holy resonance fills the night air.',
+   fn:()=>{ G.bellsActive=true; return 'Dark abilities disabled this night'; }, cls:'cbt'},
+  {id:'masquerade',     prob:0.05, title:'A Masquerade Ball in the Merchant City',text:'Your thralls move freely among the guests.',
+   fn:()=>{ const g=G.thrallList.length*5; G.gold+=g; return `+${g} Gold`; }, cls:'good'},
+  {id:'gold_find',      prob:0.08, title:'Fallen Coin Purse',              text:'A merchant dropped it in his haste.',
+   fn:()=>{ const g=10+Math.floor(Math.random()*16); G.gold+=g; return `+${g} Gold`; }, cls:'good'},
+  {id:'brawl',          prob:0.07, title:'A Tavern Brawl Spills Outside',  text:'Wounded men lie in the gutter.',
+   fn:()=>{ G.blood=Math.min(G.blood+20,bloodMax()); return '+20 Blood'; }, cls:'good'},
+  {id:'thaw',           prob:0.05, title:'The Authorities Distracted',     text:'Attention turns elsewhere.',
+   fn:()=>{ G.wanted=Math.max(0,G.wanted-18); return 'Wanted -18'; }, cls:'good'},
+];
+
+const STORY_BEATS = [
+  {id:'letter_south', night:10,  title:'A Letter from the South',
+   text:"A sealed letter arrives by night courier — no return address. Inside, a warning in old Scots hand:\n\n\"The Conclave knows of Glasgow. They come. Prepare thyself.\"\n\nThe words carry dark power of their own. Your senses sharpen.",
+   fn:()=>{ G.darkPower+=2; log('Dark Power +2 from the Letter from the South.','dark'); }, choices:[]},
+  {id:'lord_provost',  night:25,  title:"The Lord Provost's Proposal",
+   text:"A sealed note from the Lord Provost of Glasgow:\n\n\"I know what you are. I also know what I need. Pay the sum and I shall ensure the city watch looks elsewhere for a season.\"\n\nWhat do you do?",
+   fn:null,
+   choices:[
+     {label:'Pay 80 Gold', fn:()=>{ if(G.gold>=80){G.gold-=80;G.wanted=Math.max(0,G.wanted-25);log('Paid 80 Gold. Wanted -25.','good');}else{log('Not enough gold to pay the Provost.','cbt');} }},
+     {label:'Ignore Him',  fn:()=>{ G.wanted=Math.min(100,G.wanted+15); log('You ignore the Provost. Wanted +15.','cbt'); }},
+   ]},
+  {id:'rival_appears',  night:30,  title:'Another Shadow in Glasgow',
+   text:"Your thralls bring disturbing word: another creature hunts this city's veins. Old. Territorial. Furious at your intrusion.\n\nEvery kill they make inflames the city's fear — and YOUR wanted level. They were here long before you.\n\nThey must be found and destroyed.",
+   fn:()=>{ G.rivalActive=true; G.rivalName=RIVAL_NAMES[Math.floor(Math.random()*RIVAL_NAMES.length)]; log(`Your rival: ${G.rivalName}. Hunt them down.`,'dark'); }, choices:[]},
+  {id:'inquisitor',    night:50,  title:'The Grand Inquisitor Arrives',
+   text:"Church bells ring across Glasgow as a figure in black robes arrives from Edinburgh. The Grand Inquisitor has come — and he has your name.\n\nThe city trembles. So do your thralls.",
+   fn:()=>{ G.wanted=Math.min(100,G.wanted+30); log('The Grand Inquisitor arrives. Wanted +30.','cbt'); }, choices:[]},
+  {id:'legend',        night:100, title:'You Are Legend',
+   text:"A century of nights over Glasgow. They write your name on walls in blood. Parents frighten children with your title. The city is yours — body, soul, and shadow.\n\nYour power transcends mortal reckoning.",
+   fn:()=>{ G.strength+=5; G.darkPower+=5; G.cunning+=5; log('Strength +5, Dark Power +5, Cunning +5.','imp'); }, choices:[]},
+];
+
+const RIVAL_NAMES = [
+  'Serafina MacBeth','Donncha the Grey','Lady Morag Vane','Iain Darkwater','The Cailleach of Cowcaddens',
+];
+
+const BLOOD_MEMORY_CATS = [
+  { id:'soldier',   keywords:['Dragoon','Redcoat','Soldier','Guard','Garrison','Artillery','Cavalry','Private','Corporal','Sergeant','Major','Officer','Captain','Mounted','Conscript','Veteran'],
+    text:'Soldier\'s vigour absorbed. Strength +1.', effect:g=>{ g.strength+=1; } },
+  { id:'scholar',   keywords:['Professor','Philosopher','Demonstrator','Alchemist','Librarian','Anatomist'],
+    text:'Scholar\'s wit absorbed. Cunning +1.',    effect:g=>{ g.cunning+=1; } },
+  { id:'clergy',    keywords:['Priest','Kirk','Precentor','Beadle','Deacon','Bishop','Archbishop','Canon','Abbot','Brother','Chaplain','Covenanting','Exorcist','Inquisitor','Templar','Paladin','Friar','Relic'],
+    text:'Stolen faith — Dark Power +2, holy vulnerability increases.', effect:g=>{ g.darkPower+=2; g.holyVuln=(g.holyVuln||0)+2; } },
+  { id:'criminal',  keywords:['Cutpurse','Fence','Resurrectionist','Robber','Thief','Outlaw','Reiver','Footpad','Deserter'],
+    text:'Criminal cunning absorbed. Cunning +1.',  effect:g=>{ g.cunning+=1; } },
+  { id:'physician', keywords:['Physician','Surgeon','Apothecary','Doctor','Orderly'],
+    text:'Physician\'s knowledge absorbed. Blood Max +20.', effect:g=>{ g.bloodBonus=(g.bloodBonus||0)+20; } },
+  { id:'noble',     keywords:['Tobacco Lord','Gentleman','Colonel','Advocate','Merchant','Factor','Secretary','Provost'],
+    text:'Noble vitality absorbed. Cunning +1, +10 Gold.', effect:g=>{ g.cunning+=1; g.gold+=10; } },
+];
+
+const BLOODLINE_POWERS = [
+  { id:'mist_form',          name:'Mist Form',           cost:8,  desc:'Once per night, flee combat instantly — no check, no blood cost.' },
+  { id:'blood_frenzy',       name:'Blood Frenzy',         cost:10, desc:'When your HP falls below 30%, attacks deal 50% more damage.' },
+  { id:'domination',         name:'Domination',           cost:12, desc:'20% chance each strike: enemy is charmed — skips their turn and takes 8 self-damage.' },
+  { id:'ancient_resilience', name:'Ancient Resilience',   cost:10, desc:'Regenerate 4 HP at the start of each combat round.' },
+  { id:'plague_carrier',     name:'Plague Carrier',       cost:8,  desc:'Enemies in corrupted districts suffer an extra -3 ATK.' },
+  { id:'shadow_step',        name:'Shadow Step',          cost:15, desc:'Heat gain permanently reduced by 30%.' },
+];
+
+const RUMOUR_DEFS = [
+  { id:'militia_doubled',  tag:'⚔ Militia Doubled',    heatAdd:12,  atkAdd:4,   desc:'Extra patrols — enemies hit harder, heat rises.' },
+  { id:'grave_robbers',    tag:'💀 Grave Robbers',      heatAdd:-5,  soulBonus:1, desc:'Grave robbers distract the watch. Bonus soul if you hunt here.' },
+  { id:'cholera_scare',    tag:'☠ Cholera Scare',       hpMult:0.8,  bloodBonus:12, desc:'The sick crowd the closes — enemies weakened, blood plentiful.' },
+  { id:'fresh_victims',    tag:'🩸 Fresh Victims',      bloodBonus:18, desc:'Travellers passing through after dark. Rich feeding tonight.' },
+  { id:'bribed_watch',     tag:'💰 Bribed Watch',       heatMult:0.4, desc:'Constables look away. Heat gain greatly reduced here.' },
+  { id:'holy_procession',  tag:'✝ Holy Procession',     holyTag:true, atkAdd:3, desc:'A religious march — enemies carry blessed arms tonight.' },
+];
+
+const BOUNTY_HUNTER_DEFS = [
+  {name:'Redcoat Squad',         hp:90,  atk:28, def:7,  xp:140, blood:8,  gold:55, souls:10},
+  {name:"Thief-Taker Knox",      hp:100, atk:30, def:8,  xp:160, blood:6,  gold:65, souls:12},
+  {name:"Magistrate's Guards",   hp:95,  atk:26, def:10, xp:130, blood:5,  gold:50, souls:8 },
+  {name:"Lord Advocate's Men",   hp:110, atk:32, def:9,  xp:180, blood:4,  gold:75, souls:15},
+];
+
+const COVEN_NAMES = [
+  'Morag the Pale','Seumas Nightblood','Catriona of Govan','Ewan the Silent',
+  'Fiona Duskmantle','Ruari Ashvein','Ishbel Grimwater','Tormod the Red',
+];
+
+const LOCATIONS = [
+  // ── LEVEL 1 ──────────────────────────────────────────────────────────────────
+  { id:'closes', name:"The Gorbals Closes", ap:2, minLv:1,
+    desc:"Narrow tenement alleys reeking of tallow and despair. Glasgow's wretched underbelly.",
+    pool:[
+      {name:'Frightened Weaver',         hp:18, atk:3,  def:0, xp:12, blood:10, gold:2,  souls:0},
+      {name:'Gin-Soused Navvy',          hp:22, atk:5,  def:0, xp:14, blood:14, gold:3,  souls:0},
+      {name:'Desperate Hawker',          hp:16, atk:4,  def:0, xp:10, blood:8,  gold:2,  souls:0},
+      {name:'Night Soil Collector',      hp:20, atk:4,  def:1, xp:13, blood:11, gold:2,  souls:0},
+      {name:'Starving Urchin Gang',      hp:14, atk:6,  def:0, xp:11, blood:7,  gold:1,  souls:0},
+      {name:'Tallow-Chandler',           hp:19, atk:3,  def:0, xp:12, blood:9,  gold:3,  souls:0},
+    ]},
+  { id:'candleriggs', name:"Candleriggs Warehouses", ap:2, minLv:1,
+    desc:"Merchants' bonded stores in the dark. Packed with goods — and men paid to protect them.",
+    pool:[
+      {name:'Warehouse Night-Watch',     hp:30, atk:7,  def:1, xp:20, blood:12, gold:5,  souls:0},
+      {name:'Journeyman Porter',         hp:25, atk:6,  def:0, xp:16, blood:10, gold:4,  souls:0},
+      {name:'Bonded Store Keeper',       hp:28, atk:5,  def:1, xp:18, blood:11, gold:6,  souls:0},
+      {name:'Coal Heaver',               hp:32, atk:8,  def:1, xp:22, blood:13, gold:4,  souls:0},
+      {name:'Packman with Cudgel',       hp:22, atk:7,  def:0, xp:15, blood:9,  gold:3,  souls:0},
+    ]},
+  { id:'green', name:"Glasgow Green", ap:2, minLv:1,
+    desc:"The ancient common beside the Clyde. Fog rolls in off the black water.",
+    pool:[
+      {name:'Parish Constable',          hp:32, atk:7,  def:1, xp:22, blood:13, gold:5,  souls:0},
+      {name:'River Watchman',            hp:28, atk:6,  def:1, xp:18, blood:11, gold:4,  souls:0},
+      {name:'Tollbooth Guard',           hp:35, atk:8,  def:2, xp:26, blood:15, gold:6,  souls:0},
+      {name:'Lamplighter',               hp:20, atk:5,  def:0, xp:16, blood:9,  gold:3,  souls:0},
+      {name:'Washerwife with Bat',       hp:18, atk:6,  def:0, xp:14, blood:8,  gold:2,  souls:0},
+      {name:'Footpad & Accomplice',      hp:26, atk:7,  def:0, xp:19, blood:12, gold:5,  souls:0},
+    ]},
+
+  // ── LEVEL 2 ──────────────────────────────────────────────────────────────────
+  { id:'vennel', name:"The Vennel & Havannah Street", ap:2, minLv:2,
+    desc:"A maze of closes off the High Street. Criminals, debtors, and worse lurk here.",
+    pool:[
+      {name:'Cutpurse Ringleader',       hp:30, atk:9,  def:1, xp:26, blood:10, gold:8,  souls:0},
+      {name:'Fence & Receiver',          hp:27, atk:8,  def:1, xp:23, blood:8,  gold:9,  souls:0},
+      {name:'Broken Soldier',            hp:38, atk:10, def:2, xp:30, blood:13, gold:7,  souls:0},
+      {name:'Linkboy (turned thief)',    hp:20, atk:7,  def:0, xp:20, blood:9,  gold:6,  souls:0},
+      {name:'Deserter from the 42nd',    hp:42, atk:11, def:2, xp:34, blood:14, gold:8,  souls:0},
+    ]},
+  { id:'merchant', name:"Merchant City", ap:2, minLv:2,
+    desc:"The tobacco lords' domain. Wealth beyond reckoning behind locked doors.",
+    pool:[
+      {name:"Tobacco Lord's Factor",     hp:38, atk:9,  def:2, xp:30, blood:12, gold:12, souls:0},
+      {name:"Merchant's Footman",        hp:30, atk:7,  def:2, xp:25, blood:10, gold:10, souls:0},
+      {name:'Customs Officer',           hp:35, atk:8,  def:3, xp:28, blood:11, gold:11, souls:0},
+      {name:'Exciseman',                 hp:32, atk:9,  def:2, xp:32, blood:12, gold:13, souls:0},
+      {name:'Tobacco Lord in his Sedan', hp:28, atk:5,  def:1, xp:22, blood:14, gold:18, souls:0},
+      {name:'Counting-House Clerk',      hp:24, atk:6,  def:1, xp:20, blood:9,  gold:9,  souls:0},
+    ]},
+  { id:'kirkyard', name:"Barony Kirkyard", ap:2, minLv:2,
+    desc:"An old graveyard behind the Barony Kirk. The ground itself seems to resist you.",
+    pool:[
+      {name:'Kirkyard Warden',           hp:35, atk:7,  def:2, xp:28, blood:9,  gold:7,  souls:2},
+      {name:'Sexton',                    hp:28, atk:6,  def:1, xp:22, blood:8,  gold:6,  souls:1},
+      {name:'Body Sniffer',              hp:25, atk:8,  def:1, xp:25, blood:10, gold:5,  souls:2},
+      {name:'Resurrectionist',           hp:30, atk:7,  def:1, xp:24, blood:9,  gold:8,  souls:2},
+      {name:'Barony Kirk Deacon',        hp:33, atk:9,  def:2, xp:29, blood:7,  gold:8,  souls:4, holy:true},
+      {name:'Midnight Grave Robber',     hp:26, atk:7,  def:1, xp:21, blood:8,  gold:7,  souls:3},
+    ]},
+  { id:'stEnoch', name:"St Enoch's Square", ap:2, minLv:2,
+    desc:"Polite society takes the evening air. Sedan chairs, powdered wigs, and hidden blades.",
+    pool:[
+      {name:'Sedan Chair Carrier',       hp:36, atk:9,  def:1, xp:27, blood:11, gold:8,  souls:0},
+      {name:'Gentleman with Sword-Cane', hp:32, atk:10, def:2, xp:30, blood:9,  gold:14, souls:0},
+      {name:'Lady with Poison Ring',     hp:22, atk:12, def:1, xp:28, blood:8,  gold:16, souls:1},
+      {name:'Town Guard Officer',        hp:40, atk:10, def:3, xp:34, blood:12, gold:10, souls:0},
+      {name:'Footman with Pistol',       hp:30, atk:11, def:1, xp:28, blood:10, gold:9,  souls:0},
+    ]},
+
+  // ── LEVEL 3 ──────────────────────────────────────────────────────────────────
+  { id:'blackbull', name:"The Black Bull Inn, Argyle St", ap:2, minLv:3,
+    desc:"Coaches clatter in after dark. Gamblers, ostlers, thieves, and armed travellers fill the yard.",
+    pool:[
+      {name:'Coach Guard with Blunderbuss', hp:52, atk:13, def:3, xp:44, blood:15, gold:16, souls:0},
+      {name:'Crooked Ostler',            hp:40, atk:10, def:2, xp:36, blood:14, gold:12, souls:0},
+      {name:'Card-Sharp & Bodyguard',    hp:44, atk:11, def:2, xp:38, blood:13, gold:14, souls:0},
+      {name:'Travelling Armourer',       hp:48, atk:12, def:4, xp:42, blood:14, gold:15, souls:0},
+      {name:'Post-Rider',                hp:38, atk:10, def:2, xp:34, blood:12, gold:11, souls:0},
+      {name:'Inn Bouncer',               hp:55, atk:12, def:3, xp:46, blood:16, gold:13, souls:0},
+    ]},
+  { id:'calton', name:"Calton Weavers' Quarter", ap:2, minLv:3,
+    desc:"The weavers are restless — and the militia is here to keep them that way.",
+    pool:[
+      {name:'Militia Pikeman',           hp:46, atk:11, def:3, xp:40, blood:15, gold:12, souls:0},
+      {name:'Angry Weaver with Shuttle', hp:35, atk:10, def:1, xp:33, blood:16, gold:8,  souls:0},
+      {name:'Loom-Breaker Ringleader',   hp:50, atk:12, def:2, xp:44, blood:17, gold:10, souls:0},
+      {name:'Militia Sergeant',          hp:56, atk:13, def:4, xp:48, blood:14, gold:14, souls:0},
+      {name:'Journeyman Dye-Worker',     hp:38, atk:10, def:2, xp:35, blood:15, gold:9,  souls:0},
+      {name:'Crop-Eared Informer',       hp:30, atk:9,  def:1, xp:30, blood:11, gold:13, souls:0},
+    ]},
+  { id:'broomielaw', name:"The Broomielaw Docks", ap:2, minLv:3,
+    desc:"River Clyde dockside. Hard men from the Highlands unload coal by torchlight.",
+    pool:[
+      {name:'Dock Sergeant',             hp:50, atk:11, def:3, xp:42, blood:17, gold:14, souls:0},
+      {name:'Highland Dockhand',         hp:45, atk:10, def:2, xp:36, blood:16, gold:11, souls:0},
+      {name:'Press Gang Leader',         hp:52, atk:12, def:3, xp:44, blood:18, gold:15, souls:0},
+      {name:'Revenue Cutter Skipper',    hp:48, atk:11, def:4, xp:40, blood:15, gold:14, souls:0},
+      {name:'River Pilot',               hp:42, atk:10, def:2, xp:37, blood:14, gold:12, souls:0},
+      {name:'Harbour Master',            hp:54, atk:12, def:4, xp:45, blood:16, gold:16, souls:0},
+    ]},
+  { id:'dragoons', name:"Dragoon Barracks, Gallowgate", ap:2, minLv:3,
+    desc:"King George's redcoats quarter here. Sabres and muskets in the lamplight.",
+    pool:[
+      {name:'Redcoat Private',           hp:45, atk:11, def:3, xp:38, blood:14, gold:12, souls:0},
+      {name:'Dragoon Corporal',          hp:55, atk:13, def:4, xp:46, blood:16, gold:15, souls:0},
+      {name:'Sergeant of Foot',          hp:58, atk:12, def:5, xp:48, blood:15, gold:16, souls:0},
+      {name:'Mounted Dragoon',           hp:60, atk:14, def:4, xp:50, blood:17, gold:17, souls:0},
+      {name:'Regimental Quartermaster',  hp:44, atk:11, def:3, xp:40, blood:13, gold:18, souls:0},
+      {name:'Musket Drill Instructor',   hp:52, atk:13, def:4, xp:44, blood:14, gold:14, souls:0},
+    ]},
+
+  // ── LEVEL 4 ──────────────────────────────────────────────────────────────────
+  { id:'tolbooth', name:"The Tolbooth Gaol", ap:2, minLv:4,
+    desc:"The old prison at the Trongate. The jailers are as brutal as any inmate.",
+    pool:[
+      {name:'Head Turnkey',              hp:55, atk:13, def:4, xp:60, blood:11, gold:15, souls:3},
+      {name:'Gaol Warder',               hp:48, atk:12, def:3, xp:54, blood:10, gold:13, souls:2},
+      {name:'Convicted Bravo',           hp:52, atk:14, def:2, xp:57, blood:13, gold:11, souls:2},
+      {name:'Sheriff Officer',           hp:58, atk:13, def:5, xp:62, blood:10, gold:16, souls:3},
+      {name:'Condemned Jacobite',        hp:44, atk:12, def:2, xp:52, blood:12, gold:8,  souls:5},
+      {name:'Informer & Thief-Taker',   hp:46, atk:13, def:3, xp:55, blood:9,  gold:14, souls:2},
+    ]},
+  { id:'hospital', name:"The Town Hospital, Clyde St", ap:2, minLv:4,
+    desc:"Fever wards and dissection tables. The physicians here ask no questions about fresh corpses.",
+    pool:[
+      {name:'Regimental Surgeon',        hp:50, atk:13, def:3, xp:58, blood:10, gold:18, souls:5},
+      {name:'Anatomist with Bone-Saw',   hp:48, atk:14, def:2, xp:60, blood:9,  gold:17, souls:7},
+      {name:'Hospital Apothecary',       hp:44, atk:12, def:2, xp:54, blood:8,  gold:16, souls:4},
+      {name:'Night Orderly',             hp:40, atk:11, def:2, xp:50, blood:10, gold:12, souls:3},
+      {name:'Plague Doctor (masked)',    hp:55, atk:13, def:4, xp:63, blood:7,  gold:15, souls:6},
+      {name:'Body-Purchase Agent',       hp:42, atk:11, def:2, xp:52, blood:8,  gold:20, souls:5},
+    ]},
+  { id:'kirk', name:"The High Kirk of Glasgow", ap:2, minLv:4,
+    desc:"The great medieval kirk looms. Presbyterian elders know the old words against your kind.",
+    pool:[
+      {name:'Kirk Elder',                hp:48, atk:14, def:3, xp:60, blood:8,  gold:14, souls:8,  holy:true},
+      {name:'Precentor',                 hp:42, atk:12, def:2, xp:52, blood:7,  gold:12, souls:6,  holy:true},
+      {name:'Armed Beadle',              hp:50, atk:11, def:4, xp:55, blood:10, gold:13, souls:5},
+      {name:'Session Clerk',             hp:40, atk:13, def:2, xp:50, blood:8,  gold:11, souls:7,  holy:true},
+      {name:'Covenanting Preacher',      hp:45, atk:15, def:2, xp:62, blood:6,  gold:12, souls:9,  holy:true},
+      {name:'Sword-Bearing Deacon',      hp:52, atk:12, def:4, xp:57, blood:9,  gold:13, souls:6},
+    ]},
+  { id:'necropolis', name:"The Glasgow Necropolis", ap:2, minLv:4,
+    desc:"The city of the dead on Cathedral Hill. Something ancient stirs here besides you.",
+    pool:[
+      {name:'Necropolis Keeper',         hp:55, atk:13, def:3, xp:65, blood:12, gold:16, souls:10},
+      {name:'Grave Robber Band',         hp:48, atk:12, def:2, xp:58, blood:10, gold:14, souls:8},
+      {name:'Hired Resurrectionist',     hp:52, atk:11, def:3, xp:60, blood:11, gold:15, souls:9},
+      {name:'Midnight Anatomist',        hp:50, atk:14, def:4, xp:62, blood:10, gold:15, souls:10},
+      {name:'Gothic Antiquarian',        hp:44, atk:12, def:2, xp:56, blood:9,  gold:16, souls:8},
+      {name:'Watchman with Silver Shot', hp:54, atk:14, def:3, xp:63, blood:11, gold:14, souls:7},
+    ]},
+
+  // ── LEVEL 5 ──────────────────────────────────────────────────────────────────
+  { id:'university', name:"Glasgow University, High Street", ap:2, minLv:5,
+    desc:"The old college. Natural philosophers here have been studying things that should not be studied.",
+    pool:[
+      {name:'Natural Philosopher',       hp:56, atk:16, def:3, xp:70, blood:7,  gold:24, souls:8,  holy:true},
+      {name:'Professor of Divinity',     hp:52, atk:17, def:3, xp:74, blood:6,  gold:22, souls:10, holy:true},
+      {name:'College Porter',            hp:60, atk:14, def:4, xp:67, blood:10, gold:18, souls:4},
+      {name:'Anatomy Demonstrator',      hp:55, atk:15, def:3, xp:70, blood:8,  gold:20, souls:7},
+      {name:'Alchemist (private study)', hp:50, atk:16, def:2, xp:72, blood:7,  gold:25, souls:10},
+      {name:'Librarian of Forbidden Texts', hp:46, atk:15, def:2, xp:68, blood:6, gold:22, souls:12, holy:true},
+    ]},
+  { id:'wynd', name:"The Trongate & Saltmarket", ap:2, minLv:5,
+    desc:"The old mercantile heart of Glasgow. Witch-finders still operate in the wynds.",
+    pool:[
+      {name:'Witch-Finder',              hp:62, atk:18, def:4, xp:78, blood:6,  gold:22, souls:10, holy:true},
+      {name:'Puritan Thief-Taker',       hp:65, atk:17, def:5, xp:80, blood:5,  gold:20, souls:8},
+      {name:'Covenant Enforcer',         hp:68, atk:16, def:5, xp:75, blood:6,  gold:18, souls:9,  holy:true},
+      {name:'Militia Captain',           hp:70, atk:15, def:6, xp:72, blood:8,  gold:20, souls:6},
+      {name:'Government Spy',            hp:58, atk:17, def:4, xp:76, blood:7,  gold:24, souls:5},
+      {name:'Jacobite Hunter',           hp:64, atk:16, def:5, xp:78, blood:7,  gold:21, souls:7},
+    ]},
+  { id:'kelvin', name:"Kelvingrove & Woodlands", ap:2, minLv:5,
+    desc:"Wealthy terraces above the wooded River Kelvin. Physicians and advocates live here.",
+    pool:[
+      {name:'Surgeon-Apothecary',        hp:60, atk:16, def:4, xp:75, blood:9,  gold:24, souls:6},
+      {name:"Advocate's Clerk",          hp:55, atk:15, def:3, xp:68, blood:8,  gold:22, souls:5},
+      {name:'University Professor',      hp:58, atk:17, def:3, xp:72, blood:7,  gold:25, souls:8,  holy:true},
+      {name:'Gentleman Physician',       hp:62, atk:16, def:5, xp:76, blood:10, gold:26, souls:7},
+      {name:'Retired Army Colonel',      hp:66, atk:17, def:6, xp:79, blood:9,  gold:28, souls:4},
+      {name:'Private Secretary',         hp:50, atk:14, def:3, xp:65, blood:7,  gold:23, souls:4},
+    ]},
+
+  // ── LEVEL 6 ──────────────────────────────────────────────────────────────────
+  { id:'hogganfield', name:"Hogganfield Loch", ap:2, minLv:6,
+    desc:"A dark loch north of the city. MacGregor outlaws and witch-hunters both use this ground.",
+    pool:[
+      {name:'MacGregor Clansman',        hp:75, atk:20, def:5, xp:95,  blood:12, gold:20, souls:4},
+      {name:'Outlawed Jacobite',         hp:70, atk:19, def:4, xp:88,  blood:11, gold:18, souls:5},
+      {name:'Witch-Finder General',      hp:78, atk:22, def:5, xp:102, blood:5,  gold:28, souls:14, holy:true},
+      {name:'Rowan-Wood Staker',         hp:72, atk:23, def:4, xp:98,  blood:4,  gold:24, souls:12, holy:true},
+      {name:'Highland Reiver',           hp:68, atk:19, def:5, xp:90,  blood:13, gold:19, souls:3},
+      {name:'Blackwood Hermit (armed)',  hp:65, atk:18, def:4, xp:85,  blood:10, gold:16, souls:8},
+    ]},
+  { id:'paisley', name:"Paisley Abbey Road", ap:2, minLv:6,
+    desc:"The road to Paisley Abbey runs through dark country. The monks carry older knowledge than the Kirk.",
+    pool:[
+      {name:'Abbey Brother',             hp:70, atk:19, def:5, xp:92,  blood:7,  gold:20, souls:12, holy:true},
+      {name:'Abbot of Paisley',          hp:85, atk:22, def:7, xp:108, blood:5,  gold:35, souls:18, holy:true},
+      {name:'Monk-Archivist',            hp:65, atk:18, def:4, xp:88,  blood:6,  gold:22, souls:14, holy:true},
+      {name:'Abbey Lay-Brother',         hp:68, atk:17, def:4, xp:86,  blood:8,  gold:18, souls:10},
+      {name:'Pilgrimage Guard',          hp:72, atk:19, def:5, xp:92,  blood:9,  gold:20, souls:8},
+      {name:'Relic-Keeper',              hp:74, atk:21, def:6, xp:96,  blood:5,  gold:25, souls:15, holy:true},
+    ]},
+  { id:'dumbarton', name:"Dumbarton Castle Road", ap:2, minLv:6,
+    desc:"The military road toward the rock fortress. Heavily patrolled.",
+    pool:[
+      {name:'Castle Garrison Sergeant',  hp:80, atk:20, def:6, xp:100, blood:8,  gold:28, souls:5},
+      {name:'Artillery Lieutenant',      hp:75, atk:22, def:5, xp:95,  blood:6,  gold:30, souls:6},
+      {name:'Highlander Conscript',      hp:72, atk:19, def:5, xp:90,  blood:9,  gold:25, souls:4},
+      {name:'Garrison Chaplain',         hp:68, atk:20, def:4, xp:92,  blood:5,  gold:26, souls:10, holy:true},
+      {name:'Regimental Surgeon-Major',  hp:70, atk:19, def:5, xp:93,  blood:7,  gold:27, souls:6},
+      {name:'Cavalry Troop Commander',   hp:82, atk:21, def:6, xp:102, blood:8,  gold:30, souls:4},
+    ]},
+
+  // ── LEVEL 7 ──────────────────────────────────────────────────────────────────
+  { id:'stirling', name:"Stirling Road Garrison", ap:2, minLv:7,
+    desc:"The road north is barricaded. A full garrison holds the crossing — veterans of Culloden.",
+    pool:[
+      {name:'Culloden Veteran',          hp:92, atk:24, def:7, xp:120, blood:8,  gold:35, souls:6},
+      {name:'Dragoon Major',             hp:95, atk:26, def:8, xp:128, blood:6,  gold:40, souls:7},
+      {name:'Redcoat Field Officer',     hp:88, atk:23, def:8, xp:118, blood:7,  gold:36, souls:5},
+      {name:'Regimental Chaplain',       hp:80, atk:22, def:6, xp:112, blood:5,  gold:34, souls:12, holy:true},
+      {name:'Fortifications Engineer',   hp:85, atk:21, def:9, xp:115, blood:7,  gold:38, souls:5},
+      {name:'Government Informant-General', hp:78, atk:23, def:6, xp:118, blood:8, gold:40, souls:8},
+    ]},
+  { id:'bishops', name:"The Bishop's Castle Ruins", ap:2, minLv:7,
+    desc:"The ruined castle behind the Cathedral. Something has been using it long before you.",
+    pool:[
+      {name:'Templar Remnant',           hp:100, atk:25, def:9, xp:140, blood:6, gold:44, souls:18, holy:true},
+      {name:'Witch-Finder Commander',    hp:95,  atk:26, def:8, xp:138, blood:5, gold:42, souls:15, holy:true},
+      {name:'Exorcist-General',          hp:98,  atk:27, def:8, xp:145, blood:4, gold:46, souls:20, holy:true},
+      {name:'Ancient Vampire Hunter',    hp:105, atk:24, def:9, xp:148, blood:5, gold:45, souls:16},
+      {name:'Order of St Mungo Knight',  hp:102, atk:26, def:10,xp:142, blood:5, gold:44, souls:18, holy:true},
+      {name:'Shadow-Lore Scholar',       hp:88,  atk:24, def:7, xp:132, blood:7, gold:40, souls:20},
+    ]},
+  { id:'cathedral', name:"Glasgow Cathedral", ap:2, minLv:7,
+    desc:"The oldest building in Glasgow. Every stone is consecrated. The Archbishop himself dwells within.",
+    pool:[
+      {name:'Archbishop of Glasgow',     hp:110, atk:28, def:9,  xp:160, blood:5, gold:60, souls:25, holy:true},
+      {name:'Cathedral Canon',           hp:90,  atk:24, def:8,  xp:140, blood:6, gold:50, souls:20, holy:true},
+      {name:'Chapter Deacon',            hp:95,  atk:22, def:9,  xp:135, blood:7, gold:45, souls:18, holy:true},
+      {name:'Relic-Bearer Knight',       hp:100, atk:25, def:10, xp:145, blood:8, gold:48, souls:22, holy:true},
+      {name:'Crusader Ghost (bound)',    hp:88,  atk:26, def:7,  xp:138, blood:3, gold:42, souls:24, holy:true},
+      {name:'Papal Legate',              hp:105, atk:27, def:9,  xp:155, blood:5, gold:55, souls:22, holy:true},
+    ]},
+];
+
+const BUILDINGS = {
+  crypt:      { name:'Necropolis Vault',   maxLv:5, cost:lv=>({gold:lv*30, souls:lv*2}),          eff:lv=>`+${lv*20} max HP · +${lv*5} nightly heal`},
+  bloodVault: { name:'Stone Cisterns',    maxLv:5, cost:lv=>({gold:(lv+1)*25, blood:lv*10}),     eff:lv=>`Max Blood +${lv*50}`},
+  thrallKeep: { name:'Thrall Tenements',  maxLv:5, cost:lv=>({gold:(lv+1)*20, blood:lv*5}),      eff:lv=>`Thrall cap +${lv*3}`},
+  darkLib:    { name:'Hidden Study',      maxLv:3, cost:lv=>({gold:(lv+1)*40, souls:(lv+1)*5}),  eff:lv=>`Unlock Lv ${lv} abilities`},
+};
+
+const ABILITIES = [
+  {id:'bloodDrain', name:'Blood Drain',   libLv:1, dpMin:0,  cost:{blood:15}, desc:'Drain 15 HP from foe, heal 10.'},
+  {id:'shadowStep', name:'Shadow Step',   libLv:1, dpMin:0,  cost:{blood:20}, desc:'Guaranteed hit for 20+ damage.'},
+  {id:'dominate',   name:'Dominate Will', libLv:2, dpMin:5,  cost:{blood:25}, desc:'40% chance to end combat (half XP).'},
+  {id:'bloodFrenzy',name:'Blood Frenzy',  libLv:2, dpMin:0,  cost:{blood:30}, desc:'35+ dmg — but take 10 back.'},
+  {id:'deathShroud',name:'Death Shroud',  libLv:3, dpMin:0,  cost:{blood:20}, desc:'Negate the next enemy hit.'},
+  {id:'soulRend',   name:'Soul Rend',     libLv:3, dpMin:10, cost:{blood:35, souls:1}, desc:'45+ dark damage + 1 Soul.'},
+];
+
+const XP_TABLE = [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 99999];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+
+let G;
+
+function newGame(name) {
+  G = {
+    name: name || 'Alasdair Dubh',
+    level: 1, xp: 0, night: 1,
+    phase: 'night',           // 'night' | 'day' | 'combat'
+    hp: 100, blood: 50, gold: 20, souls: 0,
+    strength: 10, speed: 3, cunning: 10, darkPower: 5,
+    ap: 3, thralls: 0,
+    buildings: { crypt:1, bloodVault:0, thrallKeep:0, darkLib:0 },
+    unlockedAbilities: [],
+    combat: null,
+    thrallList: [],
+    heat: {},
+    wanted: 0,
+    inventory: [],
+    storySeen: [],
+    bellsActive: false,
+    weather: 'clear',
+    bloodMemory: [],
+    bloodBonus: 0,
+    holyVuln: 0,
+    corruption: {},
+    rivalActive: false,
+    rivalDefeated: false,
+    rivalName: '',
+    inquisitorFought: false,
+    powers: [],
+    mistUsed: false,
+    marketStock: [],
+    marketNight: 0,
+    rumours: {},
+    coven: [],
+    gameWon: false,
+  };
+}
+
+// Derived stats
+const hpMax    = () => 80  + G.buildings.crypt      * 20;
+const bloodMax = () => 100 + G.buildings.bloodVault * 50 + (G.bloodBonus || 0);
+const thrallMax= () => 5   + G.buildings.thrallKeep  * 3;
+const apMax    = () => G.speed;
+const libLv    = () => G.buildings.darkLib;
+const xpNeeded = () => XP_TABLE[G.level] || 99999;
+const dailyGold= () => {
+  const ledger = getBonus('thrallGold');
+  return G.thrallList.reduce((sum, t) => sum + (t.job === 'Earner' ? 8 : 5) + ledger, 0);
+};
+const nightHeal= () => G.buildings.crypt * 5;
+
+function getBonus(stat) {
+  return G.inventory.reduce((sum, id) => {
+    const def = ITEM_DEFS.find(d => d.id === id);
+    return sum + (def && def[stat] ? def[stat] : 0);
+  }, 0);
+}
+
+function hasItem(id) { return G.inventory.includes(id); }
+
+function tryDropItem(enemy) {
+  if (G.inventory.length >= 8) return;
+  const minLv = Math.floor(enemy.xp / 30);
+  const pool = ITEM_DEFS.filter(d => {
+    if (G.inventory.includes(d.id)) return false;
+    return true;
+  });
+  if (!pool.length) return;
+  const roll = Math.random();
+  let chosen = null;
+  if (roll < 0.04) {
+    const rare = pool.filter(d => d.rarity === 'rare');
+    if (rare.length) chosen = rare[Math.floor(Math.random() * rare.length)];
+  } else if (roll < 0.14) {
+    chosen = pool[Math.floor(Math.random() * pool.length)];
+  }
+  if (chosen) {
+    G.inventory.push(chosen.id);
+    log(`You find a ${chosen.name} among the wreckage! (${chosen.desc})`, 'good');
+  }
+}
+
+function discardItem(id) {
+  const idx = G.inventory.indexOf(id);
+  if (idx < 0) return;
+  G.inventory.splice(idx, 1);
+  const def = ITEM_DEFS.find(d => d.id === id);
+  log(`You discard the ${def ? def.name : id}.`, 'imp');
+  save(); render();
+}
+
+function dismissThrall(idx) {
+  if (idx < 0 || idx >= G.thrallList.length) return;
+  const t = G.thrallList[idx];
+  G.thrallList.splice(idx, 1);
+  G.thralls = G.thrallList.length;
+  log(`${t.name} is dismissed from your service.`, 'imp');
+  save(); render();
+}
+
+function changeThrallJob(idx, job) {
+  if (idx < 0 || idx >= G.thrallList.length) return;
+  G.thrallList[idx].job = job;
+  save(); render();
+}
+
+const unlockedAbilities = () =>
+  ABILITIES.filter(a => a.libLv <= libLv() && G.darkPower >= a.dpMin);
+
+// ── SAVE / LOAD ───────────────────────────────────────────────────────────────
+
+function save()  { try { localStorage.setItem('rob2', JSON.stringify(G)); } catch(e){} }
+function trySave() { save(); }
+
+function tryLoad() {
+  try {
+    const s = localStorage.getItem('rob2');
+    if (s) {
+      G = JSON.parse(s);
+      // Patch missing fields from older saves
+      if (!G.thrallList) {
+        G.thrallList = [];
+        for (let i = 0; i < (G.thralls || 0); i++) {
+          G.thrallList.push({name: SCOTTISH_NAMES[i % SCOTTISH_NAMES.length], loyalty: 70, job: 'Earner'});
+        }
+      }
+      G.thralls = G.thrallList.length;
+      if (!G.heat)        G.heat = {};
+      if (G.wanted === undefined) G.wanted = 0;
+      if (!G.inventory)   G.inventory = [];
+      if (!G.storySeen)   G.storySeen = [];
+      if (G.bellsActive === undefined) G.bellsActive = false;
+      if (!G.weather)     G.weather = 'clear';
+      if (!G.bloodMemory) G.bloodMemory = [];
+      if (!G.bloodBonus)  G.bloodBonus = 0;
+      if (!G.holyVuln)    G.holyVuln = 0;
+      if (!G.corruption)  G.corruption = {};
+      if (G.rivalActive === undefined)   G.rivalActive = false;
+      if (G.rivalDefeated === undefined) G.rivalDefeated = false;
+      if (!G.rivalName)   G.rivalName = '';
+      if (G.inquisitorFought === undefined) G.inquisitorFought = false;
+      G.thrallList.forEach(t => { if (t.onMission === undefined) t.onMission = false; });
+      if (!G.powers)        G.powers = [];
+      if (G.mistUsed === undefined) G.mistUsed = false;
+      if (!G.marketStock)   G.marketStock = [];
+      if (!G.marketNight)   G.marketNight = 0;
+      if (!G.rumours)       G.rumours = {};
+      if (!G.coven)         G.coven = [];
+      if (G.gameWon === undefined) G.gameWon = false;
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// ── LOG ───────────────────────────────────────────────────────────────────────
+
+function log(txt, cls='') {
+  const el = document.getElementById('log');
+  const d  = document.createElement('div');
+  d.className = 'le ' + cls;
+  d.textContent = txt;
+  el.appendChild(d);
+  while (el.children.length > 100) el.removeChild(el.firstChild);
+  el.scrollTop = el.scrollHeight;
+}
+
+function sep() { log('', 'sep'); }
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+
+function doRest() {
+  if (G.ap < 1)      { log('No action points remain.'); return; }
+  if (G.blood < 10)  { log('Insufficient blood to feed.'); return; }
+  G.ap--; G.blood -= 10;
+  const heal = Math.min(20, hpMax() - G.hp);
+  G.hp += heal;
+  log(`You withdraw into the shadows of the close, feeding from stored blood. +${heal} HP.`, 'good');
+  save(); render();
+}
+
+function doConvert() {
+  if (G.ap < 2)                  { log('Need 2 action points.'); return; }
+  if (G.blood < 30)              { log('Need 30 Blood to enthrall a mortal.'); return; }
+  if (G.thralls >= thrallMax())  { log('Thrall Keep is full. Upgrade it first.'); return; }
+  G.ap -= 2; G.blood -= 30;
+  const rndName = SCOTTISH_NAMES[Math.floor(Math.random() * SCOTTISH_NAMES.length)];
+  G.thrallList.push({name: rndName, loyalty: 70, job: 'Earner'});
+  G.thralls = G.thrallList.length;
+  log(`A wretch wandering the wynds falls beneath your gaze. Their will breaks like cheap glass. ${rndName} is sworn to you.`, 'dark');
+  log(`Thralls: ${G.thralls}/${thrallMax()}. Earners gain 8 gold per day.`, 'good');
+  save(); render();
+}
+
+function doRitual() {
+  if (G.ap < 2)     { log('Need 2 action points.'); return; }
+  if (G.blood < 20) { log('Need 20 Blood for the ritual.'); return; }
+  G.ap -= 2; G.blood -= 20;
+  const gained = 1 + Math.floor(G.darkPower / 10);
+  G.souls += gained;
+  log(`You scratch Pictish sigils in spilled blood on the cobblestones. The veil thins. +${gained} Soul${gained>1?'s':''} torn from the Glasgow dead.`, 'dark');
+  save(); render();
+}
+
+function endNight() {
+  if (G.phase !== 'night') return;
+  G.phase = 'day';
+  sep();
+  log('Dawn breaks over the Necropolis. You retreat into the earth beneath Glasgow.', 'imp');
+
+  // Roll weather for the coming night
+  rollWeather();
+
+  // Decay heat
+  for (const k of Object.keys(G.heat)) G.heat[k] = Math.max(0, (G.heat[k]||0) - 8);
+
+  // Passive income from corrupted districts
+  let passiveGold = 0;
+  for (const lvl of Object.values(G.corruption)) if (lvl >= 1) passiveGold += 5;
+  if (passiveGold > 0) { G.gold += passiveGold; log(`Corrupted districts yield +${passiveGold} Gold.`, 'good'); }
+
+  // Decay wanted
+  G.wanted = Math.max(0, G.wanted - 3);
+  G.bellsActive = false;
+
+  // Spy reports
+  const spies = G.thrallList.filter(t => t.job === 'Spy');
+  if (spies.length > 0) {
+    const hotLocs = Object.keys(G.heat).filter(k => (G.heat[k]||0) > 0);
+    if (hotLocs.length > 0) {
+      const rk = hotLocs[Math.floor(Math.random()*hotLocs.length)];
+      const locDef = LOCATIONS.find(l => l.id === rk);
+      log(`Spy report: ${locDef ? locDef.name : rk} heat is ${G.heat[rk]}.`, 'imp');
+    }
+  }
+
+  const g = dailyGold(), h = nightHeal();
+  if (g > 0) { G.gold += g; log(`Your thralls earn their keep. +${g} Gold.`, 'good'); }
+  if (h > 0) { G.hp = Math.min(G.hp + h, hpMax()); log(`The old clay of Glasgow cradles you. +${h} HP.`, 'good'); }
+  G.blood = Math.min(G.blood + 5, bloodMax());
+  log(`— ${weatherDesc()} Assign thrall missions in the Domain tab, then Wake at Dusk. —`, 'imp');
+  save(); render();
+}
+
+function wakeAtDusk() {
+  if (G.phase !== 'day') return;
+
+  // Resolve missions
+  resolveMissions();
+
+  // Roll market stock and rumours for the coming night
+  rollMarket();
+  rollRumours();
+  G.mistUsed = false;
+
+  // Rival stirs
+  if (G.rivalActive && !G.rivalDefeated && Math.random() < 0.30) {
+    const inc = 5 + Math.floor(Math.random() * 6);
+    G.wanted = Math.min(100, G.wanted + inc);
+    log(`${G.rivalName} hunts tonight — city suspicion rises. Wanted +${inc}.`, 'dark');
+  }
+
+  G.phase = 'night';
+  G.night++;
+
+  // Apply weather AP modifier
+  let ap = apMax();
+  if (G.weather === 'fog')   ap += 1;
+  if (G.weather === 'storm') ap = Math.max(1, ap - 1);
+  G.ap = ap;
+
+  sep();
+  log(`Night ${G.night}. ${weatherDesc()} Glasgow is yours.`, 'imp');
+
+  if (Math.random() < 0.20) rollNightEvent();
+  checkStoryBeats();
+
+  // Grand Inquisitor forced fight
+  if (G.wanted >= 100 && !G.inquisitorFought) {
+    triggerInquisitor();
+    return;
+  }
+
+  save(); render();
+}
+
+function rollWeather() {
+  const r = Math.random();
+  G.weather = r < 0.25 ? 'fog' : r < 0.42 ? 'storm' : 'clear';
+}
+function weatherDesc() {
+  if (G.weather === 'fog')   return '🌫 Haar off the Clyde (+1 AP, heat gains halved).';
+  if (G.weather === 'storm') return '⛈ Storm from the Firth (-1 AP, enemies take shelter).';
+  return '🌙 Clear night.';
+}
+
+function resolveMissions() {
+  G.thrallList.forEach(t => {
+    if (!t.onMission) return;
+    t.onMission = false;
+    if (t.job === 'Earner') {
+      const r = Math.random();
+      if (r < 0.50)      { const g=30+Math.floor(Math.random()*31); G.gold+=g; log(`${t.name} returns with coin. +${g} Gold.`,'good'); }
+      else if (r < 0.80) { log(`${t.name} found nothing of value.`,''); }
+      else               { t.loyalty=Math.max(0,t.loyalty-15); G.gold+=8; log(`${t.name} was nearly caught. +8 Gold, -15 loyalty.`,'cbt'); }
+    } else if (t.job === 'Spy') {
+      const hot = LOCATIONS.filter(l => (G.heat[l.id]||0) > 0);
+      if (hot.length > 0) {
+        const tgt = hot[Math.floor(Math.random()*hot.length)];
+        G.heat[tgt.id] = Math.max(0, (G.heat[tgt.id]||0) - 25);
+        log(`${t.name} bribed the right constables. ${tgt.name} heat -25.`,'good');
+      } else {
+        G.wanted = Math.max(0, G.wanted - 6);
+        log(`${t.name} spread disinformation through the city. Wanted -6.`,'good');
+      }
+    } else if (t.job === 'Bodyguard') {
+      const d = 8 + Math.floor(Math.random()*5);
+      G.wanted = Math.max(0, G.wanted - d);
+      if (Math.random() < 0.25) { t.loyalty=Math.max(0,t.loyalty-10); log(`${t.name} dealt with a patrol — took some injury. Wanted -${d}, loyalty -10.`,'dark'); }
+      else                       { log(`${t.name} quietly eliminated a patrol. Wanted -${d}.`,'dark'); }
+    }
+  });
+}
+
+function assignMission(idx) {
+  const t = G.thrallList[idx];
+  if (!t) return;
+  if (G.phase !== 'day') { log('You can only assign missions during the day.'); return; }
+  t.onMission = !t.onMission;
+  const mDesc = t.job==='Earner' ? 'robbing merchants' : t.job==='Spy' ? 'bribing constables' : 'waylaying patrols';
+  log(t.onMission ? `${t.name} assigned to ${mDesc}.` : `${t.name}'s mission cancelled.`, 'dark');
+  save(); render();
+}
+
+function corruptDistrict(locId) {
+  const curLv = G.corruption[locId] || 0;
+  if (curLv >= 3) { log('This district is fully corrupted.'); return; }
+  const costs = [{gold:50,souls:3},{gold:80,souls:5},{gold:120,souls:8}];
+  const c = costs[curLv];
+  if (G.gold  < c.gold)  { log(`Need ${c.gold} Gold.`);  return; }
+  if (G.souls < c.souls) { log(`Need ${c.souls} Souls.`); return; }
+  G.gold -= c.gold; G.souls -= c.souls;
+  G.corruption[locId] = curLv + 1;
+  const loc = LOCATIONS.find(l => l.id === locId);
+  const effs = ['5 gold/night passive','Enemies weakened (-20% HP/ATK)','Hunts cost 1 AP'];
+  log(`${loc ? loc.name : locId} corrupted to Lv ${G.corruption[locId]}. ${effs[curLv]}.`, 'dark');
+  save(); render();
+}
+
+function triggerInquisitor() {
+  G.inquisitorFought = true;
+  const enemy = {name:'Grand Inquisitor', hp:150, atk:35, def:12, xp:300, blood:5, gold:100, souls:40, holy:true, curHp:150};
+  log('☩ The Grand Inquisitor has come for you personally. There is no escape.', 'cbt');
+  log('Defeat him or face the Final Death.', 'cbt');
+  G.combat = { enemy, locId:null, shroud:false, bgUsed:false,
+    pendXP:300, pendBlood:5, pendGold:100, pendSouls:40, isInquisitor:true };
+  G.phase = 'combat';
+  save(); render();
+}
+
+function checkBloodMemory(enemy) {
+  for (const cat of BLOOD_MEMORY_CATS) {
+    if (G.bloodMemory.includes(cat.id)) continue;
+    if (cat.keywords.some(kw => enemy.name.includes(kw))) {
+      G.bloodMemory.push(cat.id);
+      cat.effect(G);
+      log(`⚗ Blood Memory: ${cat.text}`, 'dark');
+      break;
+    }
+  }
+}
+
+// ── BLOODLINE POWERS ─────────────────────────────────────────────────────────
+
+function hasPower(id) { return (G.powers || []).includes(id); }
+
+function buyPower(id) {
+  const pw = BLOODLINE_POWERS.find(p => p.id === id);
+  if (!pw) return;
+  if (hasPower(id)) { log(`${pw.name} already absorbed into your bloodline.`); return; }
+  if (G.souls < pw.cost) { log(`Need ${pw.cost} Souls to unlock ${pw.name}.`); return; }
+  G.souls -= pw.cost;
+  G.powers.push(id);
+  log(`✦ ${pw.name} unlocked. ${pw.desc}`, 'dark');
+  save(); render();
+}
+
+// ── BLACK MARKET ──────────────────────────────────────────────────────────────
+
+function rollMarket() {
+  const owned = G.inventory;
+  const pool  = ITEM_DEFS.filter(d => !owned.includes(d.id));
+  const stock = [];
+  const prices = { common:50, uncommon:90, rare:150 };
+  for (let i = 0; i < 3 && pool.length > 0; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    const def = pool.splice(idx, 1)[0];
+    const base = prices[def.rarity] || 80;
+    const price = base + Math.floor(Math.random() * 31) - 15;
+    stock.push({ id: def.id, price });
+  }
+  G.marketStock = stock;
+  G.marketNight = G.night + 1;
+}
+
+function buyMarketItem(id, price) {
+  if (G.phase !== 'night') { log('The market only opens after dark.'); return; }
+  if (G.gold < price) { log(`Need ${price} Gold.`); return; }
+  if (G.inventory.length >= 8) { log('Inventory full (8/8).'); return; }
+  const def = ITEM_DEFS.find(d => d.id === id);
+  if (!def) return;
+  G.gold -= price;
+  G.inventory.push(id);
+  G.marketStock = G.marketStock.filter(s => s.id !== id);
+  log(`You acquire ${def.name} from the fence for ${price} Gold.`, 'good');
+  save(); render();
+}
+
+function sellMarketItem(id) {
+  if (G.phase !== 'night') { log('The market only opens after dark.'); return; }
+  const idx = G.inventory.indexOf(id);
+  if (idx === -1) return;
+  const def = ITEM_DEFS.find(d => d.id === id);
+  if (!def) return;
+  const prices = { common:25, uncommon:45, rare:75 };
+  const price = prices[def.rarity] || 40;
+  G.inventory.splice(idx, 1);
+  G.gold += price;
+  log(`You sell ${def.name} for ${price} Gold.`, 'good');
+  save(); render();
+}
+
+// ── DISTRICT RUMOURS ──────────────────────────────────────────────────────────
+
+function rollRumours() {
+  G.rumours = {};
+  const locs = LOCATIONS.filter(l => G.level >= l.minLv);
+  const shuffled = locs.sort(() => Math.random() - 0.5).slice(0, 3);
+  shuffled.forEach(l => {
+    const r = RUMOUR_DEFS[Math.floor(Math.random() * RUMOUR_DEFS.length)];
+    G.rumours[l.id] = r.id;
+  });
+}
+
+function getRumour(locId) {
+  const rid = G.rumours[locId];
+  return rid ? RUMOUR_DEFS.find(r => r.id === rid) : null;
+}
+
+// ── COVEN ─────────────────────────────────────────────────────────────────────
+
+function sireCoven() {
+  if (G.phase !== 'night') { log('You can only sire during the night.'); return; }
+  const alive = G.coven.filter(c => c.hp > 0).length;
+  if (alive >= 2) { log('Your coven is at full strength (2 members).'); return; }
+  if (G.blood < 150) { log('Need 150 Blood.'); return; }
+  if (G.souls < 10)  { log('Need 10 Souls.'); return; }
+  G.blood -= 150;
+  G.souls -= 10;
+  const usedNames = G.coven.map(c => c.name);
+  const avail = COVEN_NAMES.filter(n => !usedNames.includes(n));
+  const name = avail.length ? avail[Math.floor(Math.random()*avail.length)] : 'A Pale Servant';
+  G.coven.push({ name, hp:20, maxHp:20 });
+  log(`You pour your blood into ${name}, raising them as a creature of the night.`, 'dark');
+  save(); render();
+}
+
+// ── VICTORY CONDITION ─────────────────────────────────────────────────────────
+
+function performRitual() {
+  if (G.level < 10)    { log('You must reach Level 10 first.'); return; }
+  if (G.night < 75)    { log('The ritual requires at least 75 nights of dominion.'); return; }
+  if (G.blood < 500)   { log('Need 500 Blood.'); return; }
+  if (G.souls < 200)   { log('Need 200 Souls.'); return; }
+  if (G.gold < 50)     { log('Need 50 Gold.'); return; }
+  G.blood -= 500; G.souls -= 200; G.gold -= 50;
+  G.gameWon = true;
+  save();
+  showVictory();
+}
+
+function showVictory() {
+  const score = G.level * 500 + G.night * 25 + G.gold + G.souls * 20;
+  // Add to leaderboard
+  try {
+    const lb = JSON.parse(localStorage.getItem('rob2_lb') || '[]');
+    lb.push({ name: G.name, score, night: G.night, level: G.level, ts: Date.now(), won: true });
+    lb.sort((a,b) => b.score - a.score);
+    lb.splice(10);
+    localStorage.setItem('rob2_lb', JSON.stringify(lb));
+  } catch(e) {}
+  showOverlay('✦ Glasgow is Yours ✦',
+    `After ${G.night} nights of blood and shadow, you have broken every chain that bound this city.\n\n` +
+    `The Church bows. The Covenant trembles. The Clyde runs dark with your power.\n\n` +
+    `${G.name} — the Eternal Lord of Glasgow.\n\n` +
+    `Score: ${score.toLocaleString()}  ·  Night ${G.night}  ·  Level ${G.level}\n\nYour legend is entered in the leaderboard.`,
+    [{label:'See Leaderboard', fn:()=>{ showLeaderboard(); }},
+     {label:'Play Again',      fn:()=>{ localStorage.removeItem('rob2'); location.reload(); }}]
+  );
+}
+
+function rollNightEvent() {
+  const total = NIGHT_EVENTS.reduce((s, e) => s + e.prob, 0);
+  let r = Math.random() * total;
+  let chosen = null;
+  for (const ev of NIGHT_EVENTS) {
+    r -= ev.prob;
+    if (r <= 0) { chosen = ev; break; }
+  }
+  if (!chosen) chosen = NIGHT_EVENTS[0];
+  log(`— ${chosen.title} —`, 'imp');
+  log(chosen.text, '');
+  const result = chosen.fn();
+  log(result, chosen.cls);
+}
+
+function checkStoryBeats() {
+  for (const beat of STORY_BEATS) {
+    if (G.night === beat.night && !G.storySeen.includes(beat.id)) {
+      G.storySeen.push(beat.id);
+      if (beat.fn) beat.fn();
+      showOverlay(beat.title, beat.text, beat.choices || []);
+      break;
+    }
+  }
+}
+
+// ── COMBAT ────────────────────────────────────────────────────────────────────
+
+function hunt(locId) {
+  if (G.phase !== 'night') { log('You cannot act during daylight.'); return; }
+  const loc = LOCATIONS.find(l => l.id === locId);
+  if (!loc) return;
+  if (G.level < loc.minLv) { log(`Your power is insufficient for ${loc.name}.`); return; }
+  const corrLv = G.corruption[locId] || 0;
+  const apCost = corrLv >= 3 ? 1 : loc.ap;
+  if (G.ap < apCost) { log('Not enough action points.'); return; }
+
+  G.ap -= apCost;
+
+  // Heat gain — fog halves it, shadow step -30%, item bonus
+  const heatMult   = getBonus('heatMult') > 0 ? getBonus('heatMult') : 1.0;
+  const fogMult    = G.weather === 'fog' ? 0.5 : 1.0;
+  const shadowMult = hasPower('shadow_step') ? 0.7 : 1.0;
+  const rumour     = getRumour(locId);
+  const rumourHeatMult = rumour && rumour.heatMult ? rumour.heatMult : 1.0;
+  const rumourHeatAdd  = rumour && rumour.heatAdd  ? rumour.heatAdd  : 0;
+  const heatGain = Math.max(0, Math.round(15 * heatMult * fogMult * shadowMult * rumourHeatMult) + rumourHeatAdd);
+  G.heat[locId] = Math.min(100, (G.heat[locId] || 0) + heatGain);
+
+  // Bounty hunters at Wanted 60+
+  const bhChance = G.wanted >= 60 ? 0.20 + (G.wanted - 60) * 0.005 : 0;
+  let base;
+  if (G.wanted >= 50 && Math.random() < 0.20 && !(Math.random() < bhChance)) {
+    base = {name:'Vampire Hunter General', hp:80, atk:22, def:6, xp:100, blood:5, gold:30, souls:8};
+  } else if (Math.random() < bhChance) {
+    const bh = BOUNTY_HUNTER_DEFS[Math.floor(Math.random() * BOUNTY_HUNTER_DEFS.length)];
+    base = { ...bh, isBounty:true };
+    log('☠ A bounty hunter squad is waiting for you in the shadows!', 'cbt');
+  } else {
+    base = loc.pool[Math.floor(Math.random() * loc.pool.length)];
+  }
+
+  // Collect rumour loot bonuses (applied to pend values later)
+  const rumourBloodBonus = rumour && rumour.bloodBonus ? rumour.bloodBonus : 0;
+  const rumourSoulBonus  = rumour && rumour.soulBonus  ? rumour.soulBonus  : 0;
+
+  // Apply heat modifiers
+  let eHp  = base.hp;
+  let eAtk = base.atk;
+  let eDef = base.def;
+  const heat = G.heat[locId] || 0;
+  if (heat >= 80) {
+    eHp  = Math.round(eHp  * 1.40);
+    eAtk = Math.round(eAtk * 1.20);
+    eDef += 2;
+  } else if (heat >= 50) {
+    eHp  = Math.round(eHp  * 1.20);
+    eAtk = Math.round(eAtk * 1.10);
+  }
+
+  // Corruption lv2: enemies weakened in the district
+  if (corrLv >= 2) {
+    eHp  = Math.round(eHp  * 0.80);
+    eAtk = Math.round(eAtk * 0.90);
+  }
+
+  // Apply wanted 75+ modifier
+  if (G.wanted >= 75) {
+    eHp  = Math.round(eHp  * 1.15);
+    eAtk = Math.round(eAtk * 1.10);
+  }
+
+  // Rumour effects on enemy stats
+  if (rumour) {
+    if (rumour.hpMult)  eHp  = Math.round(eHp  * rumour.hpMult);
+    if (rumour.atkAdd)  eAtk = Math.max(1, eAtk + rumour.atkAdd);
+  }
+
+  // Plague Carrier power: -3 ATK in corrupted districts
+  if (hasPower('plague_carrier') && corrLv >= 1) eAtk = Math.max(1, eAtk - 3);
+
+  const enemy = { ...base, hp: eHp, atk: eAtk, def: eDef, curHp: eHp };
+  if (rumour && rumour.holyTag) enemy.holy = true;
+
+  log(`You slip through the fog toward ${loc.name}. ${loc.desc}`, 'imp');
+  if (rumour) log(`[${rumour.tag}] ${rumour.desc}`, 'dark');
+  log(`A ${enemy.name} spots you in the lamplight!`, 'cbt');
+
+  G.combat = {
+    enemy,
+    locId,
+    shroud: false,
+    bgUsed: false,
+    pendXP:    base.xp,
+    pendBlood: (base.blood || 0) + rumourBloodBonus,
+    pendGold:  base.gold,
+    pendSouls: (base.souls || 0) + rumourSoulBonus,
+  };
+  G.phase = 'combat';
+  save(); render();
+}
+
+function doAttack() {
+  if (!G.combat) return;
+  const c = G.combat, e = c.enemy;
+
+  // Ancient Resilience: regen HP each round
+  if (hasPower('ancient_resilience')) {
+    const regen = Math.min(4, hpMax() - G.hp);
+    if (regen > 0) { G.hp += regen; log(`Ancient Resilience: +${regen} HP.`, 'good'); }
+  }
+
+  const strBonus = getBonus('str');
+  const cunBonus = getBonus('cun');
+  const hit = 0.72 + (G.cunning + cunBonus) * 0.012;
+  if (Math.random() < hit) {
+    let dmg = Math.max(1, G.strength + strBonus + Math.floor(Math.random()*8) - e.def);
+    // Blood Frenzy: +50% dmg when below 30% HP
+    if (hasPower('blood_frenzy') && G.hp < hpMax() * 0.30) {
+      dmg = Math.round(dmg * 1.5);
+      log(`Blood Frenzy surges through you!`, 'dark');
+    }
+    e.curHp -= dmg;
+    log(`You strike ${e.name} for ${dmg} damage.`, 'cbt');
+  } else {
+    log(`Your attack misses — ${e.name} sidesteps.`, 'cbt');
+  }
+  if (e.curHp <= 0) { combatWin(); return; }
+
+  // Domination: 20% chance to charm (enemy takes 8 self-dmg, skips turn)
+  if (hasPower('domination') && Math.random() < 0.20) {
+    e.curHp -= 8;
+    log(`Your gaze dominates ${e.name}! They strike themselves for 8 damage.`, 'dark');
+    if (e.curHp <= 0) { combatWin(); return; }
+    // Coven still attacks, but enemy skips their turn
+    covenAttack(c, e);
+    if (e.curHp <= 0) { combatWin(); return; }
+    save(); render();
+    return;
+  }
+
+  // Coven attack
+  covenAttack(c, e);
+  if (e.curHp <= 0) { combatWin(); return; }
+
+  enemyTurn();
+}
+
+function covenAttack(c, e) {
+  G.coven.forEach(cv => {
+    if (cv.hp <= 0) return;
+    const dmg = 8 + Math.floor(Math.random()*5);
+    e.curHp -= dmg;
+    log(`${cv.name} tears at ${e.name} for ${dmg} damage.`, 'cbt');
+  });
+}
+
+function enemyTurn() {
+  const c = G.combat, e = c.enemy;
+  const defBonus  = getBonus('def');
+  const holyRes   = getBonus('holyRes');
+  const stormPen  = G.weather === 'storm' ? 2 : 0;
+  const eDmg  = Math.max(0, e.atk + Math.floor(Math.random()*6) - 3 - defBonus - stormPen);
+  const holyVuln  = G.holyVuln || 0;
+  const holy  = e.holy ? Math.max(0, Math.floor((G.darkPower + holyVuln) * 0.3) - holyRes) : 0;
+  const total = eDmg + holy;
+
+  if (c.shroud) {
+    c.shroud = false;
+    log(`${e.name} strikes — but your Death Shroud dissolves the blow!`, 'dark');
+  } else {
+    // 30% chance per alive coven member to intercept the attack
+    const aliveCoven = G.coven.filter(cv => cv.hp > 0);
+    const interceptor = aliveCoven.find(() => Math.random() < 0.30);
+    if (interceptor) {
+      const cDmg = Math.round(total * 0.6);
+      interceptor.hp -= cDmg;
+      if (interceptor.hp <= 0) {
+        interceptor.hp = 0;
+        log(`${interceptor.name} throws themselves in front of ${e.name}'s blow — and is destroyed!`, 'dark');
+      } else {
+        log(`${interceptor.name} intercepts ${e.name}'s attack! (${cDmg} damage to them)`, 'good');
+      }
+    } else {
+      // Bodyguard block
+      const bgThralls = G.thrallList.filter(t => t.job === 'Bodyguard');
+      const bgHorn    = hasItem('ivory_horn');
+      if (bgThralls.length > 0 && !c.bgUsed && Math.random() < 0.25) {
+        c.bgUsed = true;
+        log(`${bgThralls[0].name} throws themselves in front of the blow! Hit blocked.`, 'good');
+      } else if (bgHorn && !c.bgUsed) {
+        c.bgUsed = true;
+        log(`The Ivory Horn's magic turns the strike aside!`, 'good');
+      } else {
+        G.hp -= total;
+        let msg = `${e.name} attacks for ${total} damage.`;
+        if (holy > 0) msg += ` Holy light burns you for ${holy} extra!`;
+        log(msg, 'cbt');
+      }
+    }
+  }
+  if (G.hp <= 0) { combatLose(); return; }
+  save(); render();
+}
+
+function useAbility(id) {
+  if (!G.combat) return;
+  if (G.bellsActive) { log('The church bells ring! Dark abilities are suppressed tonight.', 'cbt'); return; }
+  const ab = ABILITIES.find(a => a.id === id);
+  if (!ab) return;
+  for (const [r,v] of Object.entries(ab.cost)) {
+    if ((G[r] || 0) < v) { log(`Not enough ${r} for ${ab.name}.`); return; }
+  }
+  for (const [r,v] of Object.entries(ab.cost)) G[r] -= v;
+
+  const c = G.combat, e = c.enemy;
+  log(`You invoke ${ab.name}!`, 'dark');
+
+  switch (id) {
+    case 'bloodDrain': {
+      const d = 15 + Math.floor(G.darkPower * 0.5);
+      e.curHp -= d;
+      const bonus = getBonus('bloodDrainBonus');
+      const h = Math.min(10 + bonus, hpMax() - G.hp); G.hp += h;
+      log(`Dark tendrils drain ${d} HP. You recover ${h} HP.`, 'dark');
+      break;
+    }
+    case 'shadowStep': {
+      const d = 20 + Math.floor(G.cunning * 0.5);
+      e.curHp -= d;
+      log(`You blur between shadows and drive ${d} damage into ${e.name}.`, 'dark');
+      break;
+    }
+    case 'dominate': {
+      if (Math.random() < 0.4) {
+        log(`${e.name}'s eyes go blank. Their will is yours. Combat ends.`, 'dark');
+        c.pendXP    = Math.floor(c.pendXP / 2);
+        c.pendBlood = 0;
+        combatWin();
+        return;
+      } else {
+        log(`${e.name} shakes free of your gaze — the domination fails!`, 'cbt');
+      }
+      break;
+    }
+    case 'bloodFrenzy': {
+      const d = 35 + Math.floor(G.strength * 0.5);
+      e.curHp -= d; G.hp -= 10;
+      log(`In frenzied rage you deal ${d} damage — but expose yourself, taking 10.`, 'dark');
+      break;
+    }
+    case 'deathShroud': {
+      c.shroud = true;
+      log(`A spectral shroud envelops you. The next attack will be negated.`, 'dark');
+      break;
+    }
+    case 'soulRend': {
+      const d = 45 + G.darkPower;
+      e.curHp -= d; G.souls++;
+      log(`You rend ${e.name}'s soul — ${d} damage! A soul coalesces for you.`, 'dark');
+      break;
+    }
+  }
+
+  if (G.hp   <= 0)      { combatLose(); return; }
+  if (e.curHp <= 0)     { combatWin();  return; }
+  enemyTurn();
+}
+
+function doFlee() {
+  // Mist Form: guaranteed free flee once per night
+  if (hasPower('mist_form') && !G.mistUsed) {
+    G.mistUsed = true;
+    log('You dissolve into mist — no mortal eye can follow. (Mist Form used)', 'dark');
+    G.phase = 'night'; G.combat = null;
+    save(); render();
+    return;
+  }
+  const cunBonus = getBonus('cun');
+  const chance = 0.5 + (G.cunning + cunBonus) * 0.02;
+  if (Math.random() < chance) {
+    log('You dissolve into the Glasgow fog and vanish into the closes.', 'imp');
+    G.phase = 'night'; G.combat = null;
+  } else {
+    log('You try to melt into the fog — but they cut off the close!', 'cbt');
+    enemyTurn();
+    return;
+  }
+  save(); render();
+}
+
+function huntRival() {
+  if (G.phase !== 'night') { log('You cannot act during daylight.'); return; }
+  if (!G.rivalActive || G.rivalDefeated) return;
+  if (G.level < 6) { log('You are not yet powerful enough to challenge your rival.'); return; }
+  if (G.ap < 3) { log('Not enough action points (need 3).'); return; }
+  G.ap -= 3;
+  const enemy = { name: G.rivalName, hp:120, atk:26, def:8, xp:200, blood:30, gold:80, souls:15, curHp:120 };
+  log(`You stalk ${G.rivalName} through the closes of Glasgow...`, 'dark');
+  log(`${G.rivalName} turns, their eyes burning crimson. "You dare challenge me?"`, 'cbt');
+  G.combat = { enemy, locId:null, shroud:false, bgUsed:false,
+    pendXP:200, pendBlood:30, pendGold:80, pendSouls:15, isRival:true };
+  G.phase = 'combat';
+  save(); render();
+}
+
+function combatWin() {
+  const c = G.combat;
+
+  // Special win conditions
+  if (c.isInquisitor) {
+    log('The Grand Inquisitor falls, his silver cross crumbling to ash. Glasgow is yours again.', 'good');
+    G.wanted = 40;
+    log('Infamy drops as word spreads — even God\'s soldiers could not destroy you. Wanted → 40.', 'dark');
+    gainXP(c.pendXP);
+    G.blood = Math.min(G.blood + c.pendBlood, bloodMax());
+    G.gold  += c.pendGold;
+    G.souls += c.pendSouls;
+    G.phase = 'night'; G.combat = null;
+    save(); render();
+    return;
+  }
+  if (c.isRival) {
+    log(`${c.enemy.name} dissolves into ancient ash. Glasgow has only one vampire lord.`, 'good');
+    G.rivalDefeated = true;
+    G.wanted = Math.max(0, G.wanted - 20);
+    log('Wanted -20. Your rival\'s schemes die with them.', 'dark');
+    gainXP(c.pendXP);
+    G.blood = Math.min(G.blood + c.pendBlood, bloodMax());
+    G.gold  += c.pendGold;
+    G.souls += c.pendSouls;
+    G.phase = 'night'; G.combat = null;
+    save(); render();
+    return;
+  }
+
+  log(`${c.enemy.name} crumples on the cobblestones. Another Glaswegian who will not see morning.`, 'good');
+
+  // Check blood memory
+  checkBloodMemory(c.enemy);
+
+  // Wanted gain on combat win
+  const wantedMult = hasItem('writ') ? 0.5 : 1.0;
+  G.wanted = Math.min(100, G.wanted + Math.round(8 * wantedMult));
+
+  let pendBlood = c.pendBlood;
+  let pendSouls = c.pendSouls;
+
+  // Item bonuses on win
+  const bpk = getBonus('bloodPerKill');
+  const spk = getBonus('soulsPerKill');
+  if (bpk > 0) pendBlood += bpk;
+  if (spk > 0) pendSouls += spk;
+
+  if (pendBlood) { G.blood = Math.min(G.blood + pendBlood, bloodMax()); log(`+${pendBlood} Blood.`, 'good'); }
+  if (c.pendGold)  { G.gold  += c.pendGold;  log(`+${c.pendGold} Gold.`,  'good'); }
+  if (pendSouls) { G.souls += pendSouls; log(`+${pendSouls} Soul${pendSouls>1?'s':''}.`, 'dark'); }
+
+  // onWin heal
+  const onWin = getBonus('onWin');
+  if (onWin > 0) {
+    const h = Math.min(onWin, hpMax() - G.hp);
+    G.hp += h;
+    log(`+${h} HP from Surgeon's Kit.`, 'good');
+  }
+
+  tryDropItem(c.enemy);
+  gainXP(c.pendXP);
+  G.phase = 'night'; G.combat = null;
+  save(); render();
+}
+
+function combatLose() {
+  const c = G.combat;
+  if ((c && c.isInquisitor) || G.blood < 20) {
+    G.hp = 0; G.blood = 0;
+    G.phase = 'night'; G.combat = null;
+    save(); render();
+    trueDefeat();
+    return;
+  }
+  G.hp    = Math.max(1, Math.floor(hpMax() * 0.15));
+  G.blood -= 20;
+  log('You are driven back into the wynds, barely escaping into the fog.', 'cbt');
+  log(`You lose 20 Blood and crawl back beneath the Necropolis with 15% HP. (${G.blood} Blood remaining)`, 'cbt');
+  G.phase = 'night'; G.combat = null;
+  save(); render();
+}
+
+// ── LEVEL UP ──────────────────────────────────────────────────────────────────
+
+function gainXP(amount) {
+  G.xp += amount;
+  log(`+${amount} XP.`, 'good');
+  const needed = xpNeeded();
+  if (G.xp >= needed && G.level < 10) {
+    G.xp -= needed;
+    G.level++;
+    G.strength  += 2;
+    G.cunning   += 2;
+    G.darkPower += 2;
+    const spdUp = G.level % 2 === 0;
+    if (spdUp) G.speed++;
+    G.hp = Math.min(G.hp + 30, hpMax());
+    log(`✦ You ascend to Level ${G.level}! Ancient Scottish blood stirs in your veins — power beyond mortal reckoning.`, 'imp');
+    showOverlay(
+      'ASCENDED',
+      `You have reached Level ${G.level}.\n\nStrength, Cunning, and Dark Power each +2.` +
+      (spdUp ? '\nYour Speed increases by 1.' : '') +
+      '\nYou partially heal.'
+    );
+  }
+}
+
+// ── BUILD ─────────────────────────────────────────────────────────────────────
+
+function upgrade(key) {
+  const def  = BUILDINGS[key];
+  const curLv = G.buildings[key];
+  if (curLv >= def.maxLv) { log(`${def.name} is already at maximum level.`); return; }
+  const nextLv = curLv + 1;
+  const cost   = def.cost(nextLv);
+  if (G.gold  < (cost.gold  || 0)) { log(`Need ${cost.gold} Gold to upgrade ${def.name}.`);  return; }
+  if (G.blood < (cost.blood || 0)) { log(`Need ${cost.blood} Blood to upgrade ${def.name}.`); return; }
+  if (G.souls < (cost.souls || 0)) { log(`Need ${cost.souls} Souls to upgrade ${def.name}.`); return; }
+  G.gold  -= (cost.gold  || 0);
+  G.blood -= (cost.blood || 0);
+  G.souls -= (cost.souls || 0);
+  G.buildings[key]++;
+  log(`${def.name} upgraded to Level ${G.buildings[key]}. ${def.eff(G.buildings[key])}`, 'good');
+  save(); render();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+
+function pct(v, m) { return `${Math.max(0, Math.min(100, (v/m)*100)).toFixed(1)}%`; }
+function $t(id, v) { const e = document.getElementById(id); if(e) e.textContent = v; }
+
+function setBar(pfx, val, max) {
+  $t(`${pfx}-t`, `${Math.max(0,val)} / ${max}`);
+  document.getElementById(`${pfx}-b`).style.width = pct(val, max);
+}
+
+function render() {
+  const inCombat = G.phase === 'combat';
+  const isDay    = G.phase === 'day';
+  const canAct   = G.phase === 'night';
+
+  if (isMobile()) {
+    const anyActive = document.querySelector('#panel-left.mob-active,#panel-center.mob-active,#panel-right.mob-active');
+    if (!anyActive) switchMobilePanel('center');
+    if (inCombat && !lastCombatPhase) switchMobilePanel('center');
+    lastCombatPhase = inCombat;
+  }
+
+  setBar('hp', G.hp, hpMax());
+  setBar('bl', G.blood, bloodMax());
+  setBar('xp', G.xp, xpNeeded());
+  setBar('ap', G.ap, apMax());
+  setBar('wt', G.wanted, 100);
+
+  $t('s-lv',   G.level);
+  $t('s-str',  G.strength);
+  $t('s-spd',  G.speed);
+  $t('s-cun',  G.cunning);
+  $t('s-dp',   G.darkPower);
+  $t('s-gold', G.gold);
+  $t('s-souls',G.souls);
+  $t('s-thralls', `${G.thrallList.length}/${thrallMax()}`);
+  $t('s-night',G.night);
+  $t('player-name-display', G.name);
+
+  $t('b-crypt', `Lv ${G.buildings.crypt}`);
+  $t('b-vault', `Lv ${G.buildings.bloodVault}`);
+  $t('b-keep',  `Lv ${G.buildings.thrallKeep}`);
+  $t('b-lib',   `Lv ${G.buildings.darkLib}`);
+
+  // Phase display + sky
+  const phEl = document.getElementById('phase-display');
+  const sky  = document.getElementById('sky');
+  if (inCombat) {
+    phEl.textContent = '⚔ COMBAT';
+    phEl.style.color = '#cc4444';
+    sky.style.background = 'linear-gradient(90deg,#220000,#440000,#220000)';
+  } else if (isDay) {
+    phEl.textContent = '☀ DAYLIGHT — Assign missions in Domain tab';
+    phEl.style.color = '#cc9933';
+    sky.style.background = 'linear-gradient(90deg,#442200,#884400,#442200)';
+  } else {
+    phEl.textContent = `🌙 Night ${G.night}  ·  ${G.ap}/${apMax()} AP  ·  ${G.weather==='fog'?'🌫 Fog':G.weather==='storm'?'⛈ Storm':'Clear'}`;
+    phEl.style.color = '#aa88cc';
+    sky.style.background = 'linear-gradient(90deg,#0a0020,#220044,#0a0020)';
+  }
+
+  // Sleep/Wake button
+  const btnSleep = document.getElementById('btn-sleep');
+  if (btnSleep) {
+    if (isDay) {
+      btnSleep.innerHTML = 'Wake at Dusk<span class="btn-cost">Begin Night ' + (G.night+1) + '</span>';
+      btnSleep.onclick = wakeAtDusk;
+      btnSleep.disabled = false;
+    } else {
+      btnSleep.innerHTML = 'Sleep Until Dawn<span class="btn-cost">End this night</span>';
+      btnSleep.onclick = endNight;
+      btnSleep.disabled = !canAct;
+    }
+  }
+
+  // Main action buttons
+  dis('btn-rest',    !canAct || G.ap < 1 || G.blood < 10);
+  dis('btn-convert', !canAct || G.ap < 2 || G.blood < 30 || G.thralls >= thrallMax());
+  dis('btn-ritual',  !canAct || G.ap < 2 || G.blood < 20);
+  dis('btn-sire-coven', !canAct || G.blood < 150 || G.souls < 10 || G.coven.filter(c=>c.hp>0).length >= 2);
+
+  // Victory ritual button
+  const btnVic = document.getElementById('btn-victory');
+  if (btnVic) {
+    const canWin = G.level >= 10 && G.night >= 75;
+    btnVic.style.display = canWin ? 'block' : 'none';
+    btnVic.disabled = !canAct || G.blood < 500 || G.souls < 200 || G.gold < 50;
+  }
+
+  // Abilities panel (non-combat view)
+  const abilitySection = document.getElementById('ability-section');
+  const ablBtns        = document.getElementById('ability-btns');
+  const unlocked       = unlockedAbilities();
+  if (unlocked.length > 0) {
+    abilitySection.style.display = 'block';
+    ablBtns.innerHTML = '';
+    unlocked.forEach(a => {
+      const costStr = Object.entries(a.cost).map(([k,v])=>`${v} ${k}`).join(', ');
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.disabled  = !inCombat || !canAfford(a.cost);
+      btn.innerHTML = `${a.name}<span class="btn-cost">${costStr} — ${a.desc}</span>`;
+      btn.onclick   = () => useAbility(a.id);
+      ablBtns.appendChild(btn);
+    });
+  } else {
+    abilitySection.style.display = 'none';
+  }
+
+  // Hunt locations
+  const locList = document.getElementById('loc-list');
+  locList.innerHTML = '';
+
+  // Rival hunt button
+  if (G.rivalActive && !G.rivalDefeated) {
+    const li = document.createElement('li');
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.style.borderColor = '#880000';
+    btn.disabled = !canAct || G.level < 6 || G.ap < 3;
+    btn.innerHTML = `☽ Hunt ${esc(G.rivalName)} <span style="color:#cc2244">[RIVAL]</span>` +
+      `<span class="btn-cost">3 AP · Level 6+ · Defeat your rival vampire</span>`;
+    btn.onclick = huntRival;
+    li.appendChild(btn);
+    locList.appendChild(li);
+  }
+
+  LOCATIONS.forEach(loc => {
+    const li  = document.createElement('li');
+    const locked = G.level < loc.minLv;
+    const heat  = G.heat[loc.id] || 0;
+    const corrLv = G.corruption[loc.id] || 0;
+    const apCost = corrLv >= 3 ? 1 : loc.ap;
+    const rumDef = getRumour(loc.id);
+    let heatTag = '';
+    if (heat >= 80)      heatTag = ' <span style="color:#ff2244">&#x2620; Lockdown</span>';
+    else if (heat >= 50) heatTag = ' <span style="color:#ff8800">&#x26A0; Alert</span>';
+    else if (heat >= 30) heatTag = ' <span style="color:#cc6600">&#x1F525;</span>';
+    let corrTag  = corrLv > 0 ? ` <span style="color:#aa44cc">★${corrLv}</span>` : '';
+    let rumourTag = rumDef ? ` <span style="color:#cc9900;font-size:10px;">${esc(rumDef.tag)}</span>` : '';
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.disabled  = !canAct || locked || G.ap < apCost;
+    btn.innerHTML = `${loc.name}${heatTag}${corrTag}${rumourTag}<span class="btn-cost">${apCost} AP` +
+      (locked ? ` · Requires Level ${loc.minLv}` : ` · ${loc.desc}`) + `</span>`;
+    btn.onclick   = () => hunt(loc.id);
+    li.appendChild(btn);
+
+    // Corruption button
+    if (!locked) {
+      const costs = [{gold:50,souls:3},{gold:80,souls:5},{gold:120,souls:8}];
+      if (corrLv < 3) {
+        const c = costs[corrLv];
+        const cBtn = document.createElement('button');
+        cBtn.className = 'btn';
+        cBtn.style.fontSize = '10px';
+        cBtn.style.marginLeft = '4px';
+        cBtn.disabled = !canAct || G.gold < c.gold || G.souls < c.souls;
+        cBtn.innerHTML = `Corrupt Lv${corrLv+1}<span class="btn-cost">${c.gold}G ${c.souls}S</span>`;
+        cBtn.onclick = () => corruptDistrict(loc.id);
+        li.appendChild(cBtn);
+      }
+    }
+
+    locList.appendChild(li);
+  });
+
+  // Black Market (Night 5+)
+  const marketSection = document.getElementById('market-section');
+  const marketList    = document.getElementById('market-list');
+  if (marketSection && marketList) {
+    if (G.night >= 5) {
+      marketSection.style.display = 'block';
+      marketList.innerHTML = '';
+      if (!G.marketStock || G.marketStock.length === 0) {
+        marketList.innerHTML = '<div style="color:#554455;font-size:12px;">The fence has nothing tonight.</div>';
+      } else {
+        G.marketStock.forEach(s => {
+          const def = ITEM_DEFS.find(d => d.id === s.id);
+          if (!def) return;
+          const rarColor = def.rarity === 'rare' ? '#aa66dd' : def.rarity === 'uncommon' ? '#cc9933' : '#9a8090';
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
+          const buyBtn = document.createElement('button');
+          buyBtn.className = 'btn';
+          buyBtn.style.flex = '1';
+          buyBtn.disabled = !canAct || G.gold < s.price || G.inventory.length >= 8;
+          buyBtn.innerHTML = `<span style="color:${rarColor};">${esc(def.name)}</span> — ${s.price}g<span class="btn-cost">${esc(def.desc)}</span>`;
+          buyBtn.onclick = () => buyMarketItem(s.id, s.price);
+          row.appendChild(buyBtn);
+          marketList.appendChild(row);
+        });
+      }
+      // Sell section
+      if (G.inventory.length > 0) {
+        const sellHeader = document.createElement('div');
+        sellHeader.style.cssText = 'color:#7a6070;font-size:10px;margin:6px 0 3px;';
+        sellHeader.textContent = 'Sell relics (half-price):';
+        marketList.appendChild(sellHeader);
+        G.inventory.forEach(id => {
+          const def = ITEM_DEFS.find(d => d.id === id);
+          if (!def) return;
+          const prices = {common:25,uncommon:45,rare:75};
+          const sp = prices[def.rarity] || 40;
+          const sb = document.createElement('button');
+          sb.className = 'btn';
+          sb.style.fontSize = '10px';
+          sb.disabled = !canAct;
+          sb.innerHTML = `Sell ${esc(def.name)} → ${sp}g`;
+          sb.onclick = () => sellMarketItem(id);
+          marketList.appendChild(sb);
+        });
+      }
+    } else {
+      marketSection.style.display = 'none';
+    }
+  }
+
+  // Build panel
+  const buildDiv = document.getElementById('build-btns');
+  buildDiv.innerHTML = '';
+  for (const [key, def] of Object.entries(BUILDINGS)) {
+    const curLv = G.buildings[key];
+    const maxed = curLv >= def.maxLv;
+    const nextLv = curLv + 1;
+    const cost   = maxed ? {} : def.cost(nextLv);
+    const costStr = maxed ? 'MAXIMUM' : Object.entries(cost).map(([k,v])=>`${v} ${k}`).join(', ');
+    const afforded = maxed ? false : canAfford(cost);
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.disabled  = maxed || isDay || inCombat || !afforded;
+    btn.innerHTML = `${def.name} → Lv ${Math.min(nextLv, def.maxLv)}` +
+      `<span class="btn-cost">${costStr}${!maxed ? ' · ' + def.eff(nextLv) : ''}</span>`;
+    btn.onclick = () => upgrade(key);
+    buildDiv.appendChild(btn);
+  }
+
+  // Domain tab
+  const domainTab = document.getElementById('tab-domain');
+  if (domainTab) {
+    let domHTML = '<div class="panel-title">Thralls</div>';
+    if (G.thrallList.length === 0) {
+      domHTML += '<div style="color:#554455;font-size:12px;margin-bottom:8px;">No thralls yet.</div>';
+    } else {
+      G.thrallList.forEach((t, i) => {
+        const loyPct = Math.max(0, Math.min(100, t.loyalty));
+        const loyColor = loyPct >= 60 ? '#55cc77' : loyPct >= 30 ? '#cc9933' : '#cc4444';
+        const missionLabel = t.onMission ? ' <span style="color:#cc9933;">[On Mission]</span>' : '';
+        domHTML += `<div style="background:#130020;border:1px solid #2a0028;padding:6px 8px;margin-bottom:5px;font-size:12px;">` +
+          `<div style="display:flex;justify-content:space-between;align-items:center;">` +
+          `<span style="color:#d0aabb;">${esc(t.name)}${missionLabel}</span>` +
+          `<button onclick="dismissThrall(${i})" style="background:none;border:1px solid #440022;color:#7a4050;font-size:10px;padding:1px 6px;cursor:pointer;font-family:Georgia,serif;">Dismiss</button>` +
+          `</div>` +
+          `<div style="margin:3px 0 3px;"><span style="font-size:10px;color:#7a6070;">Loyalty </span>` +
+          `<span style="color:${loyColor};font-size:10px;">${loyPct}%</span>` +
+          `<div style="height:4px;background:#1a0028;border:1px solid #2a0028;border-radius:2px;overflow:hidden;margin-top:2px;">` +
+          `<div style="height:100%;background:${loyColor};width:${loyPct}%;border-radius:2px;transition:width 0.3s;"></div></div></div>` +
+          `<select onchange="changeThrallJob(${i},this.value)" style="background:#0e0018;border:1px solid #3a0028;color:#9a8090;font-size:10px;width:100%;padding:2px;">` +
+          `<option value="Earner"${t.job==='Earner'?' selected':''}>Earner (8 gold/day)</option>` +
+          `<option value="Spy"${t.job==='Spy'?' selected':''}>Spy (5 gold/day + heat reports)</option>` +
+          `<option value="Bodyguard"${t.job==='Bodyguard'?' selected':''}>Bodyguard (5 gold/day + block hits)</option>` +
+          `</select>`;
+        if (isDay) {
+          const mBtnLabel = t.onMission ? 'Cancel Mission' : 'Send on Mission';
+          const mBtnColor = t.onMission ? '#664422' : '#224466';
+          domHTML += `<button onclick="assignMission(${i})" style="background:${mBtnColor};border:1px solid #3a0028;color:#ccbbaa;font-size:10px;width:100%;margin-top:4px;padding:3px;cursor:pointer;font-family:Georgia,serif;">${mBtnLabel}</button>`;
+        }
+        domHTML += `</div>`;
+      });
+    }
+
+    // Blood Memory
+    domHTML += '<div class="panel-title" style="margin-top:10px;">Blood Memory</div>';
+    if ((G.bloodMemory || []).length === 0) {
+      domHTML += '<div style="color:#554455;font-size:12px;margin-bottom:8px;">No memories absorbed yet.</div>';
+    } else {
+      G.bloodMemory.forEach(id => {
+        const cat = BLOOD_MEMORY_CATS.find(c => c.id === id);
+        if (!cat) return;
+        domHTML += `<div style="background:#0e0018;border:1px solid #2a002a;padding:4px 8px;margin-bottom:3px;font-size:11px;color:#bb88cc;">⚗ ${esc(cat.text)}</div>`;
+      });
+    }
+
+    domHTML += '<div class="panel-title" style="margin-top:10px;">Relics</div>';
+    if (G.inventory.length === 0) {
+      domHTML += '<div style="color:#554455;font-size:12px;">No relics carried.</div>';
+    } else {
+      G.inventory.forEach(id => {
+        const def = ITEM_DEFS.find(d => d.id === id);
+        if (!def) return;
+        const rarColor = def.rarity === 'rare' ? '#aa66dd' : def.rarity === 'uncommon' ? '#cc9933' : '#9a8090';
+        domHTML += `<div style="background:#130020;border:1px solid #2a0028;padding:5px 8px;margin-bottom:4px;font-size:12px;">` +
+          `<div style="display:flex;justify-content:space-between;align-items:center;">` +
+          `<span style="color:${rarColor};">${esc(def.name)}</span>` +
+          `<button onclick="discardItem('${def.id}')" style="background:none;border:1px solid #440022;color:#7a4050;font-size:10px;padding:1px 6px;cursor:pointer;font-family:Georgia,serif;">Discard</button>` +
+          `</div>` +
+          `<div style="color:#7a6070;font-size:10px;margin-top:2px;">${esc(def.desc)}</div>` +
+          `</div>`;
+      });
+    }
+    domHTML += `<div style="color:#554455;font-size:10px;margin-top:4px;">Inventory: ${G.inventory.length}/8</div>`;
+
+    // Coven
+    domHTML += '<div class="panel-title" style="margin-top:10px;">Coven</div>';
+    const aliveCoven = (G.coven || []).filter(c => c.hp > 0);
+    if (aliveCoven.length === 0) {
+      domHTML += '<div style="color:#554455;font-size:12px;margin-bottom:4px;">No coven members. Sire one during the night (150 Blood, 10 Souls).</div>';
+    } else {
+      aliveCoven.forEach(cv => {
+        const hpPct = Math.round((cv.hp / cv.maxHp) * 100);
+        const hpClr = hpPct >= 60 ? '#55cc77' : hpPct >= 30 ? '#cc9933' : '#cc4444';
+        domHTML += `<div style="background:#130020;border:1px solid #2a0028;padding:5px 8px;margin-bottom:4px;font-size:12px;">` +
+          `<span style="color:#cc88bb;">${esc(cv.name)}</span>` +
+          ` <span style="color:${hpClr};font-size:10px;">${cv.hp}/${cv.maxHp} HP</span>` +
+          `<div style="height:4px;background:#1a0028;border:1px solid #2a0028;border-radius:2px;overflow:hidden;margin-top:3px;">` +
+          `<div style="height:100%;background:${hpClr};width:${hpPct}%;border-radius:2px;"></div></div>` +
+          `<div style="color:#554455;font-size:10px;margin-top:2px;">Attacks in combat · may intercept enemy hits</div></div>`;
+      });
+    }
+
+    // Bloodline Powers
+    domHTML += '<div class="panel-title" style="margin-top:10px;">Bloodline Powers</div>';
+    BLOODLINE_POWERS.forEach(pw => {
+      const owned = hasPower(pw.id);
+      const clr = owned ? '#aa66dd' : '#554455';
+      const costLabel = owned ? '✦ Absorbed' : `${pw.cost} Souls`;
+      domHTML += `<div style="background:#130020;border:1px solid ${owned?'#440066':'#2a0028'};padding:5px 8px;margin-bottom:4px;font-size:12px;">` +
+        `<div style="display:flex;justify-content:space-between;align-items:center;">` +
+        `<span style="color:${clr};">${esc(pw.name)}</span>` +
+        (!owned
+          ? `<button onclick="buyPower('${pw.id}')" style="background:none;border:1px solid #440066;color:#9966cc;font-size:10px;padding:1px 6px;cursor:pointer;font-family:Georgia,serif;">${pw.cost}S</button>`
+          : `<span style="color:#aa66dd;font-size:10px;">✦</span>`
+        ) +
+        `</div><div style="color:#7a6070;font-size:10px;margin-top:2px;">${esc(pw.desc)}</div></div>`;
+    });
+
+    domainTab.innerHTML = domHTML;
+  }
+
+  // Combat area
+  const area = document.getElementById('combat-area');
+  if (inCombat && G.combat) {
+    area.classList.add('active');
+    const c = G.combat, e = c.enemy;
+    $t('c-p-name', G.name);
+    $t('c-e-name', e.name);
+    $t('c-p-hp', `${Math.max(0, G.hp)} / ${hpMax()} HP`);
+    $t('c-e-hp', `${Math.max(0, e.curHp)} / ${e.hp} HP`);
+    document.getElementById('c-p-bar').style.width = pct(G.hp, hpMax());
+    document.getElementById('c-e-bar').style.width = pct(Math.max(0, e.curHp), e.hp);
+
+    const btnsEl = document.getElementById('combat-btns');
+    btnsEl.innerHTML = '';
+
+    [['Strike', doAttack], ['Flee into Shadow', doFlee]].forEach(([label, fn]) => {
+      const b = document.createElement('button');
+      b.className = 'btn btn-cbt btn-sm';
+      b.textContent = label;
+      b.onclick = fn;
+      btnsEl.appendChild(b);
+    });
+
+    unlocked.forEach(a => {
+      const costStr = Object.entries(a.cost).map(([k,v])=>`${v} ${k}`).join(', ');
+      const b = document.createElement('button');
+      b.className = 'btn btn-cbt btn-sm';
+      b.disabled  = !canAfford(a.cost);
+      b.textContent = `${a.name} (${costStr})`;
+      b.onclick = () => useAbility(a.id);
+      btnsEl.appendChild(b);
+    });
+
+    // Coven HP in combat
+    const aliveCvn = (G.coven || []).filter(cv => cv.hp > 0);
+    if (aliveCvn.length > 0) {
+      const cvDiv = document.createElement('div');
+      cvDiv.style.cssText = 'margin-top:6px;font-size:11px;color:#bb88cc;text-align:center;';
+      cvDiv.textContent = 'Coven: ' + aliveCvn.map(cv => `${cv.name} (${cv.hp}hp)`).join(' · ');
+      btnsEl.appendChild(cvDiv);
+    }
+  } else {
+    area.classList.remove('active');
+  }
+}
+
+function dis(id, v) { const e = document.getElementById(id); if(e) e.disabled = v; }
+function canAfford(cost) { return Object.entries(cost).every(([k,v]) => (G[k]||0) >= v); }
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-c').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── MOBILE ───────────────────────────────────────────────────────────────────
+
+function isMobile() { return window.matchMedia('(max-width: 640px)').matches; }
+
+function switchMobilePanel(name) {
+  ['panel-left','panel-center','panel-right'].forEach(id => {
+    document.getElementById(id).classList.remove('mob-active');
+  });
+  ['mob-nav-stats','mob-nav-log','mob-nav-actions'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const panels = { left:'panel-left', center:'panel-center', right:'panel-right' };
+  const navs   = { left:'mob-nav-stats', center:'mob-nav-log', right:'mob-nav-actions' };
+  document.getElementById(panels[name]).classList.add('mob-active');
+  const navEl = document.getElementById(navs[name]);
+  if (navEl) navEl.classList.add('active');
+}
+
+// ── OVERLAY ───────────────────────────────────────────────────────────────────
+
+function showOverlay(title, text, choices) {
+  $t('overlay-title', title);
+  $t('overlay-text', text);
+  const choicesEl = document.getElementById('overlay-choices');
+  if (choicesEl) {
+    choicesEl.innerHTML = '';
+    if (choices && choices.length > 0) {
+      choicesEl.style.display = 'flex';
+      choices.forEach(ch => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-sm';
+        b.textContent = ch.label;
+        b.onclick = () => { ch.fn(); closeOverlay(); save(); render(); };
+        choicesEl.appendChild(b);
+      });
+    } else {
+      choicesEl.style.display = 'none';
+    }
+  }
+  document.getElementById('overlay').classList.add('on');
+}
+function closeOverlay() {
+  const choicesEl = document.getElementById('overlay-choices');
+  if (choicesEl) { choicesEl.style.display = 'none'; choicesEl.innerHTML = ''; }
+  document.getElementById('overlay').classList.remove('on');
+}
+
+// ── SAVE / LOAD UI ───────────────────────────────────────────────────────────
+
+let slMode = 'save';
+let lastCombatPhase = false;
+
+function openSave() {
+  slMode = 'save';
+  document.getElementById('sl-title').textContent   = 'EXPORT SAVE';
+  document.getElementById('sl-desc').textContent    = 'Copy the text below to keep a backup of your game. Paste it back using Load Game to restore.';
+  document.getElementById('sl-text').value          = JSON.stringify(G);
+  document.getElementById('sl-text').readOnly       = true;
+  document.getElementById('sl-action-btn').textContent = 'Copy to Clipboard';
+  document.getElementById('sl-msg').textContent     = '';
+  document.getElementById('sl-overlay').style.display = 'flex';
+  document.getElementById('sl-text').select();
+}
+
+function openLoad() {
+  slMode = 'load';
+  document.getElementById('sl-title').textContent   = 'IMPORT SAVE';
+  document.getElementById('sl-desc').textContent    = 'Paste a previously exported save string below, then click Load.';
+  document.getElementById('sl-text').value          = '';
+  document.getElementById('sl-text').readOnly       = false;
+  document.getElementById('sl-action-btn').textContent = 'Load Game';
+  document.getElementById('sl-msg').textContent     = '';
+  document.getElementById('sl-overlay').style.display = 'flex';
+  document.getElementById('sl-text').focus();
+}
+
+function slAction() {
+  if (slMode === 'save') {
+    const txt = document.getElementById('sl-text');
+    txt.select();
+    try {
+      navigator.clipboard.writeText(txt.value).then(() => {
+        document.getElementById('sl-msg').textContent = '✓ Copied to clipboard.';
+      }).catch(() => {
+        document.getElementById('sl-msg').textContent = 'Select all and copy manually (Ctrl+A, Ctrl+C).';
+      });
+    } catch(e) {
+      document.getElementById('sl-msg').textContent = 'Select all and copy manually (Ctrl+A, Ctrl+C).';
+    }
+  } else {
+    const raw = document.getElementById('sl-text').value.trim();
+    if (!raw) { document.getElementById('sl-msg').style.color = '#cc4444'; document.getElementById('sl-msg').textContent = 'Nothing to load.'; return; }
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed.name || parsed.level === undefined) throw new Error('bad');
+      G = parsed;
+      save();
+      closeSL();
+      document.getElementById('log').innerHTML = '';
+      log(`Save imported. Welcome back, ${G.name}. Night ${G.night}.`, 'imp');
+      render();
+    } catch(e) {
+      document.getElementById('sl-msg').style.color = '#cc4444';
+      document.getElementById('sl-msg').textContent = 'Invalid save data. Make sure you pasted the full string.';
+    }
+  }
+}
+
+function closeSL() {
+  document.getElementById('sl-overlay').style.display = 'none';
+}
+
+// ── LEADERBOARD ──────────────────────────────────────────────────────────────
+
+const LB_KEY  = 'rob2_lb';
+const LB_MAX  = 15;
+
+function calcScore() {
+  return G.level * 500 + G.night * 25 + G.gold + G.souls * 20;
+}
+
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem(LB_KEY)) || []; } catch(e) { return []; }
+}
+
+function recordScore(fate) {
+  const entry = {
+    name:  G.name,
+    level: G.level,
+    night: G.night,
+    gold:  G.gold,
+    souls: G.souls,
+    score: calcScore(),
+    fate,
+    date:  new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'2-digit'}),
+  };
+  const scores = loadScores();
+  scores.push(entry);
+  scores.sort((a, b) => b.score - a.score);
+  scores.splice(LB_MAX);
+  try { localStorage.setItem(LB_KEY, JSON.stringify(scores)); } catch(e) {}
+  return entry;
+}
+
+function showLeaderboard() {
+  const scores = loadScores();
+  const tbody  = document.getElementById('lb-body');
+  const empty  = document.getElementById('lb-empty');
+  tbody.innerHTML = '';
+
+  if (scores.length === 0) {
+    empty.style.display = 'block';
+    tbody.style.display = 'none';
+  } else {
+    empty.style.display = 'none';
+    tbody.style.display = '';
+    const rowColors = ['#1a0028','#130020','#0e0018'];
+    scores.forEach((s, i) => {
+      const tr = document.createElement('tr');
+      tr.style.cssText = `background:${rowColors[i % 3]};border-bottom:1px solid #1e0020;`;
+      const rankColor  = i === 0 ? '#cc9900' : i === 1 ? '#999999' : i === 2 ? '#cc6633' : '#554455';
+      const fateColor  = s.fate === 'Slain' ? '#cc4444' : s.fate === 'Retired' ? '#55cc77' : '#aa88cc';
+      const fateGlyph  = s.fate === 'Slain' ? '†' : s.fate === 'Retired' ? '⚜' : '?';
+      tr.innerHTML = `
+        <td style="padding:6px 8px;color:${rankColor};font-weight:bold;">${i+1}</td>
+        <td style="padding:6px 8px;color:#d0aabb;">${esc(s.name)}</td>
+        <td style="padding:6px 8px;text-align:center;color:${fateColor};" title="${esc(s.fate)} · ${esc(s.date)}">${fateGlyph}</td>
+        <td style="padding:6px 8px;text-align:center;color:#cc2244;">${s.level}</td>
+        <td style="padding:6px 8px;text-align:center;color:#9a8090;">${s.night}</td>
+        <td style="padding:6px 8px;text-align:center;color:#aa8833;">${s.gold}</td>
+        <td style="padding:6px 8px;text-align:center;color:#8844cc;">${s.souls}</td>
+        <td style="padding:6px 8px;text-align:right;color:#cc9933;font-weight:bold;">${s.score.toLocaleString()}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  const cur = `Current run: ${G.name} · Level ${G.level} · Night ${G.night} · Score ${calcScore().toLocaleString()}`;
+  document.getElementById('lb-cur-score').textContent = cur;
+  document.getElementById('lb-overlay').style.display = 'flex';
+}
+
+function closeLB() {
+  const el = document.getElementById('lb-overlay');
+  el.style.display = 'none';
+  if (el.dataset.newgame) {
+    delete el.dataset.newgame;
+    localStorage.removeItem('rob2');
+    location.reload();
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function retireGame() {
+  if (!confirm(`Retire ${G.name} and submit this run to the leaderboard?\n\nScore: ${calcScore().toLocaleString()}`)) return;
+  recordScore('Retired');
+  localStorage.removeItem('rob2');
+  showLeaderboard();
+  document.getElementById('lb-overlay').dataset.newgame = '1';
+}
+
+function trueDefeat() {
+  recordScore('Slain');
+  log('Your blood runs dry on the Glasgow cobblestones. The final death takes you.', 'cbt');
+  G.phase = 'night'; G.combat = null;
+  save(); render();
+  // Show leaderboard then force new game
+  showLeaderboard();
+  document.getElementById('lb-overlay').dataset.newgame = '1';
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+
+function resetGame() {
+  if (!confirm('Abandon your reign over Glasgow and begin anew?')) return;
+  localStorage.removeItem('rob2');
+  location.reload();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+(function init() {
+  if (!tryLoad()) {
+    const name = prompt('Name your vampire lord (Gaelic or Scots name):', 'Alasdair Dubh') || 'Alasdair Dubh';
+    newGame(name);
+    log(`The haar rolls in off the Clyde. Glasgow sleeps — unaware you have risen.`, 'imp');
+    log(`${G.name}, the city is yours to feed upon. Hunt its citizens. Corrupt its institutions. Let none stand against you.`, '');
+    log('— Hunt tab: stalk the streets. Build tab: expand your lair beneath the Necropolis. —', '');
+  } else {
+    log(`The haar settles over Glasgow. Welcome back, ${G.name}. Night ${G.night} begins.`, 'imp');
+  }
+  render();
+})();
+</script>
+</body>
+</html>
