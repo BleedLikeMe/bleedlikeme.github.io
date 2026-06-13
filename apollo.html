@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Apollo Mission Simulation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#c8c8c8;font-family:'Courier New',monospace;overflow:hidden;height:100vh;width:100vw}
+#topbar{position:fixed;top:0;left:0;right:0;height:36px;background:#0d0d0d;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:1000}
+#topbar .title{color:#ff6600;font-size:13px;font-weight:bold;letter-spacing:2px}
+#topbar .views{display:flex;gap:4px}
+#topbar button{background:#1a1a1a;border:1px solid #333;color:#aaa;padding:4px 16px;font-family:'Courier New',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s}
+#topbar button.active{background:#2a1800;color:#ff6600;border-color:#ff6600}
+#topbar button:hover{border-color:#555;color:#ccc}
+#met-display{color:#00ff88;font-size:13px;letter-spacing:3px;font-weight:bold}
+.view{display:none;position:fixed;top:36px;left:0;right:0;bottom:0;flex-direction:column}
+.view.active{display:flex}
+
+/* ── CREW PANELS ── */
+#window-area{flex:0 0 24%;position:relative;background:#000;border-bottom:2px solid #1a1a1a;overflow:hidden}
+#window-canvas{position:absolute;inset:0;width:100%;height:100%}
+.window-frame{position:absolute;inset:0;border:10px solid #181010;pointer-events:none;box-shadow:inset 0 0 60px rgba(0,0,0,.9)}
+.win-bolt{position:absolute;width:10px;height:10px;border-radius:50%;background:#222;border:1px solid #333}
+.win-bolt.tl{top:14px;left:14px}.win-bolt.tr{top:14px;right:14px}
+.win-bolt.bl{bottom:14px;left:14px}.win-bolt.br{bottom:14px;right:14px}
+.window-label{position:absolute;bottom:14px;right:18px;font-size:8px;color:#3a2a2a;letter-spacing:3px;text-transform:uppercase}
+#instruments{flex:1;display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:2px;background:#060606;padding:3px;min-height:0;overflow:hidden}
+.panel{background:#0e0e0e;border:1px solid #1e1e1e;padding:7px;overflow:hidden}
+.panel-label{font-size:8px;color:#888;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;border-bottom:1px solid #222;padding-bottom:3px}
+#dsky{background:#080808;border:2px solid #252525;padding:8px;margin-bottom:5px}
+.vn-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-end}
+.vn-box{text-align:center}
+.vn-lbl{font-size:7px;color:#444;letter-spacing:1px;margin-bottom:2px}
+.vn-val{background:#000;border:1px solid #1c1c1c;padding:2px 8px;color:#00ff41;font-size:15px;letter-spacing:2px;min-width:36px;text-align:center}
+.dsky-r{display:flex;align-items:center;gap:6px;margin-top:5px}
+.dsky-rlbl{font-size:8px;color:#383838;width:18px}
+.dsky-rval{background:#000;border:1px solid #1c1c1c;padding:3px 8px;color:#00ff41;font-size:13px;letter-spacing:2px;flex:1;text-align:right;font-variant-numeric:tabular-nums}
+/* DSKY keypad */
+#dsky-keys{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin-top:6px}
+.dkey{background:#111;border:1px solid #222;color:#555;font-size:7px;padding:2px 0;text-align:center;cursor:default;letter-spacing:0.5px;border-radius:1px;transition:all .1s}
+.dkey:hover{border-color:#444;color:#888}
+.dkey.verb{color:#0088ff;border-color:#004488}
+.dkey.noun{color:#ff8800;border-color:#664400}
+.dkey.entr{color:#00ff41;border-color:#226600;grid-column:span 2}
+.dkey.rset{color:#ff3300;border-color:#660000}
+#event-log{height:60px;overflow-y:auto;background:#000;border:1px solid #141414;padding:4px;font-size:8px;color:#00aa44;scrollbar-width:none}
+.ev{padding:1px 0;border-bottom:1px solid #080808}.ev .t{color:#3a3a3a;margin-right:5px}
+.ev.warn{color:#ffb000}.ev.ok{color:#00ff41}
+.clights{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:4px}
+.cl{background:#0a0a0a;border:1px solid #181818;padding:2px 3px;font-size:6.5px;text-align:center;color:#2a2a2a;letter-spacing:0.5px;text-transform:uppercase}
+.cl.warn{background:#2a1800;border-color:#885500;color:#ffb000}
+.cl.alert{background:#2a0000;border-color:#880000;color:#ff3300;animation:blink .4s infinite}
+.cl.ok{background:#00180a;border-color:#004820;color:#00cc44}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.gauge-pair{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px}
+.gauge-item{text-align:center}
+.gauge-lbl{font-size:7px;color:#404040;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.gauge-val{font-size:10px;color:#00ff41;margin-top:2px;letter-spacing:1px}
+.fbar-wrap{margin-bottom:3px}
+.fbar-header{display:flex;justify-content:space-between;font-size:7px;color:#404040;margin-bottom:2px}
+.fbar-track{height:5px;background:#080808;border:1px solid #181818}
+.fbar-fill{height:100%;transition:width .4s}
+.eng-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:5px}
+.eng-cell{padding:2px 4px;background:#0a0a0a;border:1px solid #181818;color:#2a2a2a;font-size:7px;letter-spacing:.5px}
+.eng-cell.on{background:#0a1c00;border-color:#225500;color:#00ff41;animation:engpulse .8s infinite}
+@keyframes engpulse{0%,100%{opacity:1}50%{opacity:.7}}
+.ls-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.ls-cell{padding:2px 4px;font-size:7px;background:#000d05;border:1px solid #001e0a;color:#00aa44}
+/* Extra right panel meters */
+.mini-meter{display:flex;align-items:center;gap:4px;margin-bottom:3px}
+.mm-lbl{font-size:7px;color:#383838;width:40px;text-align:right;letter-spacing:.5px}
+.mm-bar{flex:1;height:4px;background:#080808;border:1px solid #141414}
+.mm-fill{height:100%}
+.mm-val{font-size:7px;color:#00aa66;width:32px}
+
+/* ── FLIP SWITCHES ── */
+#switch-panel{flex:0 0 auto;background:#0b0b0b;border-top:2px solid #1c1c1c;padding:4px 6px;overflow:hidden}
+.sw-rows{display:flex;gap:0;align-items:stretch}
+.sw-section{display:flex;align-items:flex-end;gap:4px;padding:2px 6px;border-right:1px solid #181818}
+.sw-section:last-child{border-right:none}
+.sw-sec-lbl{font-size:6px;color:#282828;letter-spacing:1.5px;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);padding-right:3px;border-right:1px solid #181818;margin-right:2px;align-self:stretch;display:flex;align-items:center}
+.fsw-wrap{display:flex;flex-direction:column;align-items:center;gap:1px}
+.fsw-lbl2{font-size:6px;color:#2e2e2e;letter-spacing:.5px;text-align:center;line-height:1.3;text-transform:uppercase;white-space:nowrap}
+.fsw{width:13px;height:26px;background:#0e0e0e;border:1px solid #1e1e1e;border-radius:2px;position:relative;box-shadow:inset 0 1px 3px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.03)}
+.fsw-lever{position:absolute;width:9px;height:11px;left:1px;top:1px;background:linear-gradient(160deg,#3a3a3a,#1c1c1c);border:1px solid #3a3a3a;border-radius:1px;transition:top .12s,background .12s,border-color .12s}
+.fsw.on .fsw-lever{top:13px;background:linear-gradient(160deg,#1c3a00,#0e1e00);border-color:#2a5500}
+.fsw-led{width:5px;height:3px;border-radius:1px;background:#0d0d0d;margin:0 auto}
+.fsw.on .fsw-led{background:#00dd44;box-shadow:0 0 3px #00dd44}
+/* Rotary knob */
+.knob-wrap{display:flex;flex-direction:column;align-items:center;gap:1px}
+.knob-lbl{font-size:6px;color:#2e2e2e;letter-spacing:.5px;text-align:center;line-height:1.3;text-transform:uppercase}
+/* Big square push buttons */
+.push-btn{width:22px;height:16px;background:#111;border:1px solid #2a2a2a;color:#444;font-size:6px;text-align:center;padding:2px 0;letter-spacing:.5px;cursor:default;border-radius:1px;box-shadow:inset 0 2px 3px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.04)}
+.push-btn.lit{background:#1a0800;border-color:#884400;color:#ff8800;box-shadow:inset 0 2px 3px rgba(0,0,0,.4),0 0 6px rgba(255,100,0,.3)}
+.push-btn.green{background:#001a08;border-color:#224400;color:#00ff41;box-shadow:inset 0 2px 3px rgba(0,0,0,.4),0 0 4px rgba(0,255,50,.2)}
+/* Separator */
+.sw-sep{width:1px;background:#181818;align-self:stretch;margin:0 2px}
+/* Old-style sw-grp retained for warp/abort */
+.sw-grp{display:flex;flex-direction:column;align-items:center;gap:2px}
+.sw-lbl{font-size:7px;color:#3a3a3a;letter-spacing:1px;text-transform:uppercase}
+.sw-btn{background:#141414;border:1px solid #2a2a2a;color:#606060;padding:3px 8px;font-size:8px;font-family:'Courier New',monospace;cursor:pointer;min-width:50px;letter-spacing:.5px;transition:all .2s}
+.sw-btn:hover{border-color:#555;color:#aaa}
+.sw-btn.on{background:#0f2200;border-color:#2a5500;color:#00ff41}
+.sw-btn.active-phase{background:#2a1000;border-color:#884400;color:#ff8800;animation:blink 1s infinite}
+.sw-btn.danger{border-color:#440000;color:#440000}
+#phase-disp{text-align:right;margin-left:auto;padding-left:8px}
+.phase-lbl{font-size:7px;color:#404040;letter-spacing:2px}
+.phase-val{font-size:11px;color:#ff6600;letter-spacing:2px;font-weight:bold}
+/* misc crew */
+#att-canvas{display:block;margin:2px auto}
+
+/* ── GROUND CONTROL ── */
+#gc-view{background:#030308}
+#mission-screen{flex:1;position:relative;background:#000;border-bottom:1px solid #12121a;overflow:hidden;min-height:0}
+#map-canvas{position:absolute;inset:0;width:100%;height:100%}
+.screen-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.12) 3px,rgba(0,0,0,.12) 4px);pointer-events:none}
+.screen-title{position:absolute;top:10px;left:50%;transform:translateX(-50%);color:#ffaa00;font-size:10px;letter-spacing:4px;text-transform:uppercase;pointer-events:none;text-shadow:0 0 8px #ff8800}
+/* Chatter strip */
+#chatter-strip{flex:0 0 auto;background:#040409;border-top:1px solid #0e0e18;border-bottom:1px solid #0e0e18;padding:4px 10px;min-height:56px;overflow:hidden}
+.chatter-hdr{font-size:7px;color:#303038;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px}
+#chatter-log{height:40px;overflow:hidden}
+.cm{font-size:8px;padding:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
+.cm .cms{font-weight:bold;margin-right:5px;letter-spacing:.5px}
+.cm.flight .cms{color:#ff8800}
+.cm.guido .cms{color:#00aaff}
+.cm.fido .cms{color:#00ff88}
+.cm.retro .cms{color:#aa66ff}
+.cm.eecom .cms{color:#ffee00}
+.cm.inco .cms{color:#ff66aa}
+.cm.booster .cms{color:#ff9944}
+.cm.surgeon .cms{color:#44ffcc}
+.cm.network .cms{color:#88aaff}
+.cm .cmt{color:#888}
+/* Consoles */
+.console{flex:1;background:#090910;border:1px solid #16162a;padding:4px;display:flex;flex-direction:column;gap:2px}
+.console-name{font-size:8px;color:#ffaa00;letter-spacing:2px;text-align:center;border-bottom:1px solid #16162a;padding-bottom:2px;text-transform:uppercase}
+.console-screen{background:#00000c;border:1px solid #10102a;flex:1;padding:3px;font-size:8px;overflow:hidden}
+.cr{display:flex;justify-content:space-between;padding:1px 0;border-bottom:1px solid #040408}
+.ck{color:#003855}.cv{color:#00ff88;font-variant-numeric:tabular-nums}
+.cv.warn{color:#ffb000}.cv.ok{color:#00ff41}.cv.alert{color:#ff4444}
+.console-dots{display:flex;gap:2px;margin-top:2px;flex-wrap:wrap}
+.dot{width:7px;height:7px;border-radius:50%;background:#0d0d0d}
+.dot.on{background:#00ff41;box-shadow:0 0 4px #00ff41}
+.dot.warn{background:#ffb000;box-shadow:0 0 4px #ffb000}
+#capcom-log{font-size:8px;color:#00ff88;height:68px;overflow-y:auto;scrollbar-width:none;line-height:1.5}
+.capcom-entry{padding:1px 0;border-bottom:1px solid #04040a}
+.capcom-entry.crew{color:#aaddff}
+/* ── CAPCOM strips (crew & LM views) ── */
+#crew-capcom-strip,#lm-capcom-strip{flex:0 0 auto;background:#030303;border-top:1px solid #181818;border-bottom:1px solid #0e0e0e;padding:3px 10px;display:flex;align-items:center;gap:0;overflow:hidden;min-height:26px}
+.cc-strip-lbl{font-size:7px;color:#666;letter-spacing:3px;text-transform:uppercase;white-space:nowrap;padding-right:8px;border-right:1px solid #303030;margin-right:8px;flex-shrink:0}
+#lm-capcom-strip .cc-strip-lbl{color:#4a6a4a;border-right-color:#2a3a2a}
+.cc-msgs{display:flex;gap:12px;flex:1;overflow:hidden}
+.cc-entry{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.cc-who{font-weight:bold;margin-right:4px;letter-spacing:.5px}
+.cc-entry.cc-hou .cc-who{color:#ff8800}
+.cc-entry.cc-crew .cc-who{color:#88ccff}
+#lm-capcom-strip .cc-entry.cc-hou .cc-who{color:#ffaa44}
+#lm-capcom-strip .cc-entry.cc-crew .cc-who{color:#aaffcc}
+.cc-txt{color:#999}
+#lm-capcom-strip .cc-txt{color:#7aaa7a}
+/* ── GC speed control ── */
+#chatter-strip{display:flex;flex-direction:column}
+.chatter-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.chatter-hdr{font-size:7px;color:#303038;letter-spacing:3px;text-transform:uppercase}
+.speed-ctrl{display:flex;gap:2px;align-items:center}
+.speed-ctrl-lbl{font-size:7px;color:#282830;letter-spacing:2px;text-transform:uppercase;margin-right:4px}
+.spd-btn{background:#080810;border:1px solid #181828;color:#303048;font-family:'Courier New',monospace;font-size:8px;padding:2px 7px;cursor:pointer;letter-spacing:.5px;transition:all .15s}
+.spd-btn:hover{border-color:#444;color:#aaa}
+.spd-btn.spd-active{background:#2a1000;border-color:#884400;color:#ff8800;font-weight:bold}
+/* ── 2ND CONSOLE ROW ── */
+.console-row{display:flex;gap:2px}
+#consoles{flex:0 0 auto;background:#06060c;border-top:1px solid #10101a;display:flex;flex-direction:column;gap:2px;padding:4px}
+.console-row-1{min-height:100px}
+.console-row-2{min-height:72px;border-top:1px solid #0d0d18;padding-top:2px}
+.cm.prop .cms{color:#ff66ff}.cm.control .cms{color:#66ffff}
+/* ── LM VIEW ── */
+#lm-window-area{flex:0 0 26%;position:relative;background:#000;border-bottom:2px solid #1a2a1a;overflow:hidden}
+#lm-canvas{position:absolute;inset:0;width:100%;height:100%}
+.lm-frame{position:absolute;inset:0;border:10px solid #101a10;pointer-events:none;box-shadow:inset 0 0 60px rgba(0,0,0,.9)}
+.lm-bolt{position:absolute;width:10px;height:10px;border-radius:50%;background:#1a2a1a;border:1px solid #2a3a2a}
+.lm-bolt.tl{top:14px;left:14px}.lm-bolt.tr{top:14px;right:14px}
+.lm-bolt.bl{bottom:14px;left:14px}.lm-bolt.br{bottom:14px;right:14px}
+.lm-win-label{position:absolute;bottom:14px;right:18px;font-size:8px;color:#2a3a2a;letter-spacing:3px;text-transform:uppercase}
+#lm-instruments{flex:1;display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:2px;background:#060a06;padding:3px;min-height:0;overflow:hidden}
+#lm-dsky{background:#030803;border:2px solid #1a2a1a;padding:8px;margin-bottom:5px}
+#lm-dsky .vn-val{color:#44ff44}
+#lm-dsky .dsky-rval{color:#44ff44}
+#lm-event-log{height:54px;overflow-y:auto;background:#000;border:1px solid #0c140c;padding:4px;font-size:8px;color:#44dd44;scrollbar-width:none}
+.lm-clights{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:4px}
+#lm-switch-row{flex:0 0 auto;background:#060a06;border-top:2px solid #1a2a1a;padding:3px 6px;display:flex;align-items:center;gap:6px}
+.lm-sw-sec{display:flex;align-items:flex-end;gap:4px;padding:2px 6px;border-right:1px solid #182018}
+.lm-sw-lbl{font-size:6px;color:#2a3a2a;letter-spacing:1.5px;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);padding-right:3px;border-right:1px solid #182018;margin-right:2px;align-self:stretch;display:flex;align-items:center}
+.lm-fbar-fill{background:#00ff41!important}
+.lm-fbar-fill-a{background:#44ff88!important}
+.lm-status-box{margin-left:auto;padding:4px 12px;border:1px solid #1a2a1a;text-align:center}
+.lm-status-lbl{font-size:7px;color:#6a9a6a;letter-spacing:2px;text-transform:uppercase}
+.lm-status-val{font-size:11px;color:#00ff88;letter-spacing:2px;font-weight:bold}
+/* ── HOLD OVERLAY ── */
+#hold-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center}
+#hold-box{background:#060606;border:2px solid #ff8800;padding:28px 48px;text-align:center;max-width:500px;box-shadow:0 0 60px rgba(255,120,0,.3),0 0 120px rgba(255,80,0,.1)}
+#hold-title{font-size:9px;color:#664400;letter-spacing:4px;text-transform:uppercase;margin-bottom:5px}
+#hold-label{font-size:15px;color:#ff8800;letter-spacing:3px;font-weight:bold;margin-bottom:6px}
+#hold-detail{font-size:9px;color:#555;letter-spacing:2px;margin-bottom:20px;line-height:1.9}
+#hold-btns{display:flex;gap:16px;justify-content:center}
+.hold-go{background:#001a08;border:2px solid #00ff41;color:#00ff41;font-family:'Courier New',monospace;font-size:14px;padding:8px 44px;cursor:pointer;letter-spacing:3px;font-weight:bold;transition:all .15s}
+.hold-go:hover{background:#002a0f;box-shadow:0 0 20px rgba(0,255,68,.4)}
+.hold-wait{background:#1a0800;border:2px solid #884400;color:#884400;font-family:'Courier New',monospace;font-size:10px;padding:8px 22px;cursor:pointer;letter-spacing:2px}
+.hold-wait:hover{background:#2a1000;color:#ff8800;border-color:#ff8800}
+.hold-wait:disabled{opacity:.3;cursor:default}
+.hold-go:disabled{opacity:.3;cursor:default;box-shadow:none}
+#poll-list{display:none;text-align:left;margin:14px 0 18px;max-height:200px;overflow-y:auto;border:1px solid #1c1c1c;background:#020202;padding:6px 12px;scrollbar-width:thin;scrollbar-color:#333 #000}
+.poll-entry{font-size:9px;padding:3px 0;border-bottom:1px solid #0c0c0c;display:flex;gap:10px;align-items:baseline;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.poll-stn{font-weight:bold;letter-spacing:1px;min-width:68px;flex-shrink:0}
+.poll-arrow{color:#333;flex-shrink:0}
+.poll-go{color:#00ff41;letter-spacing:2px;font-weight:bold}
+.poll-note{color:#666;font-size:8px;margin-left:4px}
+.poll-flight-row{border-top:1px solid #2a2a2a!important;margin-top:2px;padding-top:5px!important}
+.poll-flight-row .poll-stn{color:#ff8800}
+.poll-flight-row .poll-go{color:#ff8800;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div id="topbar">
+  <div class="title">★ APOLLO MISSION SIMULATION</div>
+  <div class="views">
+    <button id="btn-crew" class="active" onclick="switchView('crew')">CREW VIEW</button>
+    <button id="btn-gc" onclick="switchView('gc')">MISSION CONTROL</button>
+    <button id="btn-lm" onclick="switchView('lm')">LM VIEW</button>
+  </div>
+  <div id="met-display">T-00:30</div>
+</div>
+
+<!-- ══ CREW VIEW ══ -->
+<div id="crew-view" class="view active">
+
+  <div id="window-area">
+    <canvas id="window-canvas"></canvas>
+    <div class="window-frame"></div>
+    <div class="win-bolt tl"></div><div class="win-bolt tr"></div>
+    <div class="win-bolt bl"></div><div class="win-bolt br"></div>
+    <div class="window-label">CMD MODULE — WINDOW 1</div>
+  </div>
+
+  <div id="instruments">
+    <!-- LEFT: ATT & NAV -->
+    <div class="panel">
+      <div class="panel-label">Attitude / Navigation</div>
+      <canvas id="att-canvas" width="116" height="116"></canvas>
+      <div class="gauge-pair" style="margin-top:4px">
+        <div class="gauge-item">
+          <div class="gauge-lbl">PITCH</div>
+          <canvas id="pitch-gauge" width="56" height="56"></canvas>
+          <div class="gauge-val" id="pitch-val">90.0°</div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-lbl">ROLL</div>
+          <canvas id="roll-gauge" width="56" height="56"></canvas>
+          <div class="gauge-val" id="roll-val">0.0°</div>
+        </div>
+      </div>
+      <div class="gauge-pair" style="margin-top:2px">
+        <div class="gauge-item">
+          <div class="gauge-lbl">YAW</div>
+          <canvas id="yaw-gauge" width="56" height="56"></canvas>
+          <div class="gauge-val" id="yaw-val">0.0°</div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-lbl">G-FORCE</div>
+          <canvas id="gf-gauge" width="56" height="56"></canvas>
+          <div class="gauge-val" id="gf-val">1.00 G</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: DSKY + EVENTS + LIGHTS -->
+    <div class="panel">
+      <div class="panel-label">Guidance Computer — DSKY</div>
+      <div id="dsky">
+        <div class="vn-row">
+          <div class="vn-box"><div class="vn-lbl">VERB</div><div class="vn-val" id="dv">06</div></div>
+          <div class="vn-box"><div class="vn-lbl">NOUN</div><div class="vn-val" id="dn">33</div></div>
+          <div class="vn-box" style="margin-left:auto"><div class="vn-lbl">PROG</div><div class="vn-val" id="dp">00</div></div>
+        </div>
+        <div class="dsky-r"><span class="dsky-rlbl">R1</span><div class="dsky-rval" id="dr1">+00000</div></div>
+        <div class="dsky-r"><span class="dsky-rlbl">R2</span><div class="dsky-rval" id="dr2">+00000</div></div>
+        <div class="dsky-r"><span class="dsky-rlbl">R3</span><div class="dsky-rval" id="dr3">+00000</div></div>
+        <div id="dsky-keys">
+          <div class="dkey verb">VERB</div><div class="dkey noun">NOUN</div><div class="dkey">+</div><div class="dkey">−</div><div class="dkey">CLR</div>
+          <div class="dkey">7</div><div class="dkey">8</div><div class="dkey">9</div><div class="dkey entr">ENTR</div>
+          <div class="dkey">4</div><div class="dkey">5</div><div class="dkey">6</div><div class="dkey rset">RSET</div>
+          <div class="dkey">1</div><div class="dkey">2</div><div class="dkey">3</div><div class="dkey">PRO</div>
+          <div class="dkey" style="grid-column:span 2">0</div><div class="dkey">KEY</div><div class="dkey">REL</div>
+        </div>
+      </div>
+      <div class="panel-label">Mission Events</div>
+      <div id="event-log"></div>
+      <div class="panel-label" style="margin-top:4px">Caution & Warning</div>
+      <div class="clights">
+        <div class="cl" id="cl-maxq">MAX Q</div>
+        <div class="cl" id="cl-sep">STAGE SEP</div>
+        <div class="cl" id="cl-fuel">FUEL LOW</div>
+        <div class="cl" id="cl-abort">ABORT</div>
+        <div class="cl ok" id="cl-o2">O₂ NOM</div>
+        <div class="cl ok" id="cl-pres">PRES OK</div>
+        <div class="cl ok" id="cl-guid">GUID OK</div>
+        <div class="cl" id="cl-comms">COMMS</div>
+        <div class="cl ok" id="cl-ecs">ECS OK</div>
+        <div class="cl ok" id="cl-eps">EPS OK</div>
+        <div class="cl ok" id="cl-rcs">RCS OK</div>
+        <div class="cl" id="cl-cryog">CRYO</div>
+        <div class="cl ok" id="cl-imu">IMU OK</div>
+        <div class="cl ok" id="cl-sps">SPS OK</div>
+        <div class="cl ok" id="cl-fc">FC 1·2·3</div>
+        <div class="cl" id="cl-mfail">MAST ALRM</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: PROPULSION & SYSTEMS -->
+    <div class="panel">
+      <div class="panel-label">Propulsion</div>
+      <div class="gauge-pair">
+        <div class="gauge-item">
+          <div class="gauge-lbl">ALTITUDE</div>
+          <canvas id="alt-gauge" width="64" height="64"></canvas>
+          <div class="gauge-val" id="alt-val">0 m</div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-lbl">VELOCITY</div>
+          <canvas id="vel-gauge" width="64" height="64"></canvas>
+          <div class="gauge-val" id="vel-val">0 m/s</div>
+        </div>
+      </div>
+      <div class="panel-label">Propellant</div>
+      <div class="fbar-wrap"><div class="fbar-header"><span>S-IC</span><span id="fp-s1">100%</span></div><div class="fbar-track"><div class="fbar-fill" id="fb-s1" style="width:100%;background:#ff6600"></div></div></div>
+      <div class="fbar-wrap"><div class="fbar-header"><span>S-II</span><span id="fp-s2">100%</span></div><div class="fbar-track"><div class="fbar-fill" id="fb-s2" style="width:100%;background:#ffaa00"></div></div></div>
+      <div class="fbar-wrap"><div class="fbar-header"><span>S-IVB</span><span id="fp-s3">100%</span></div><div class="fbar-track"><div class="fbar-fill" id="fb-s3" style="width:100%;background:#ffee00"></div></div></div>
+      <div class="fbar-wrap"><div class="fbar-header"><span>SPS</span><span id="fp-sm">100%</span></div><div class="fbar-track"><div class="fbar-fill" id="fb-sm" style="width:100%;background:#00ff88"></div></div></div>
+      <div class="panel-label">Engines</div>
+      <div class="eng-grid">
+        <div class="eng-cell" id="eng-s1">S-IC: OFF</div>
+        <div class="eng-cell" id="eng-s2">S-II: OFF</div>
+        <div class="eng-cell" id="eng-s3">S-IVB: OFF</div>
+        <div class="eng-cell" id="eng-sm">SPS: OFF</div>
+      </div>
+      <div class="panel-label">Systems</div>
+      <div class="mini-meter"><span class="mm-lbl">O₂ PRESS</span><div class="mm-bar"><div class="mm-fill" id="mm-o2" style="width:88%;background:#00cc44"></div></div><span class="mm-val" id="mv-o2">900 PSI</span></div>
+      <div class="mini-meter"><span class="mm-lbl">H₂ PRESS</span><div class="mm-bar"><div class="mm-fill" id="mm-h2" style="width:82%;background:#00aaff"></div></div><span class="mm-val" id="mv-h2">230 PSI</span></div>
+      <div class="mini-meter"><span class="mm-lbl">GLYCOL T°</span><div class="mm-bar"><div class="mm-fill" id="mm-gl" style="width:50%;background:#ffaa00"></div></div><span class="mm-val" id="mv-gl">55°F</span></div>
+      <div class="mini-meter"><span class="mm-lbl">CABIN P</span><div class="mm-bar"><div class="mm-fill" id="mm-cp" style="width:60%;background:#00ff88"></div></div><span class="mm-val" id="mv-cp">5.0 PSI</span></div>
+      <div class="mini-meter"><span class="mm-lbl">SUIT FLOW</span><div class="mm-bar"><div class="mm-fill" id="mm-sf" style="width:70%;background:#44ffcc"></div></div><span class="mm-val" id="mv-sf">5.0 lb/h</span></div>
+      <div class="mini-meter"><span class="mm-lbl">BAT VOLT</span><div class="mm-bar"><div class="mm-fill" id="mm-bv" style="width:92%;background:#ffee44"></div></div><span class="mm-val" id="mv-bv">28.8 V</span></div>
+    </div>
+  </div><!-- /instruments -->
+
+  <!-- CAPCOM STRIP -->
+  <div id="crew-capcom-strip">
+    <span class="cc-strip-lbl">CAPCOM</span>
+    <div class="cc-msgs" id="crew-capcom-msgs">
+      <div class="cc-entry cc-hou"><span class="cc-who">HOUSTON</span><span class="cc-txt">Awaiting launch</span></div>
+      <div class="cc-entry cc-crew" style="opacity:.4"><span class="cc-who">CDR</span><span class="cc-txt">—</span></div>
+    </div>
+  </div>
+
+  <!-- ══ SWITCH PANEL ══ -->
+  <div id="switch-panel">
+    <div class="sw-rows">
+
+      <!-- PYRO / SEP -->
+      <div class="sw-section">
+        <span class="sw-sec-lbl">PYRO/SEP</span>
+        <div class="fsw-wrap"><div class="fsw-lbl2">SECS<br>A</div><div class="fsw on" id="fsw-sa"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">SECS<br>B</div><div class="fsw on" id="fsw-sb"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">PYRO<br>A</div><div class="fsw" id="fsw-pa"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">PYRO<br>B</div><div class="fsw" id="fsw-pb"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">S-IC<br>SEP</div><div class="fsw" id="fsw-s1s"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">S-II<br>SEP</div><div class="fsw" id="fsw-s2s"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">LES<br>JET</div><div class="fsw" id="fsw-les"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">CM/SM<br>SEP</div><div class="fsw" id="fsw-cmsm"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      </div>
+
+      <!-- RCS / PROP -->
+      <div class="sw-section">
+        <span class="sw-sec-lbl">RCS/PROP</span>
+        <div class="fsw-wrap"><div class="fsw-lbl2">RCS<br>A</div><div class="fsw" id="fsw-rcsa"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">RCS<br>B</div><div class="fsw" id="fsw-rcsb"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">PRPLNT<br>ISO A</div><div class="fsw on" id="fsw-pia"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">PRPLNT<br>ISO B</div><div class="fsw on" id="fsw-pib"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">ULLAGE<br>ARM</div><div class="fsw" id="fsw-ulg"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">SPS<br>GIMBAL</div><div class="fsw on" id="fsw-spsg"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      </div>
+
+      <!-- EPS -->
+      <div class="sw-section">
+        <span class="sw-sec-lbl">ELECTR</span>
+        <div class="fsw-wrap"><div class="fsw-lbl2">BAT<br>A</div><div class="fsw on" id="fsw-bata"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">BAT<br>B</div><div class="fsw on" id="fsw-batb"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">BAT<br>C</div><div class="fsw" id="fsw-batc"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">FC<br>1</div><div class="fsw on" id="fsw-fc1"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">FC<br>2</div><div class="fsw on" id="fsw-fc2"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">FC<br>3</div><div class="fsw on" id="fsw-fc3"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">BUS<br>TIE</div><div class="fsw on" id="fsw-bust"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">INVERTR<br>1</div><div class="fsw on" id="fsw-inv"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      </div>
+
+      <!-- ECS -->
+      <div class="sw-section">
+        <span class="sw-sec-lbl">ECS/LS</span>
+        <div class="fsw-wrap"><div class="fsw-lbl2">O₂<br>FLOW</div><div class="fsw on" id="fsw-o2f"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">SUIT<br>CIRC</div><div class="fsw on" id="fsw-suit"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">GLYCOL<br>PUMP</div><div class="fsw on" id="fsw-glyc"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">H₂O<br>ACCUM</div><div class="fsw on" id="fsw-h2o"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">CO₂<br>ABSORB</div><div class="fsw on" id="fsw-co2"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">CABIN<br>VENT</div><div class="fsw" id="fsw-vent"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">SUIT<br>HTR</div><div class="fsw on" id="fsw-shtr"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      </div>
+
+      <!-- GNC -->
+      <div class="sw-section">
+        <span class="sw-sec-lbl">GNC</span>
+        <div class="fsw-wrap"><div class="fsw-lbl2">CMC<br>PWR</div><div class="fsw on" id="fsw-cmc"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">IMU<br>HEAT</div><div class="fsw on" id="fsw-imuht"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">IMU<br>CAGE</div><div class="fsw" id="fsw-cage"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">FDAI<br>PWR</div><div class="fsw on" id="fsw-fdai"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">SCS<br>ELC</div><div class="fsw on" id="fsw-scs"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">EMS<br>FUNC</div><div class="fsw on" id="fsw-ems"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">OPTICS<br>ZRO</div><div class="fsw" id="fsw-opt"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      </div>
+
+      <!-- COMMS -->
+      <div class="sw-section">
+        <span class="sw-sec-lbl">COMMS</span>
+        <div class="fsw-wrap"><div class="fsw-lbl2">S-BND<br>AUX</div><div class="fsw on" id="fsw-sband"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">VHF<br>A</div><div class="fsw on" id="fsw-vhfa"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">VHF<br>B</div><div class="fsw" id="fsw-vhfb"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">HGA<br>TRK</div><div class="fsw" id="fsw-hga"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">PCM<br>BIT</div><div class="fsw on" id="fsw-pcm"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">VOICE<br>REC</div><div class="fsw on" id="fsw-vrec"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      </div>
+
+      <!-- PUSH BUTTONS -->
+      <div class="sw-section">
+        <span class="sw-sec-lbl">PROC</span>
+        <div class="fsw-wrap"><div class="fsw-lbl2">GDC<br>ALIGN</div><div class="push-btn" id="pb-gdc">GDC</div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">IMU<br>ALIGN</div><div class="push-btn" id="pb-imu">IMU</div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">AGS<br>INIT</div><div class="push-btn" id="pb-ags">AGS</div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">CMC<br>RESET</div><div class="push-btn" id="pb-cmc">CMC</div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">STAB<br>CTRL</div><div class="push-btn green" id="pb-stab">SCS</div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">AUTO<br>RCS</div><div class="push-btn" id="pb-arcs">RCS</div></div>
+        <div class="fsw-wrap"><div class="fsw-lbl2">TVC<br>SERVO</div><div class="push-btn green" id="pb-tvc">TVC</div></div>
+      </div>
+
+      <!-- ROTARY KNOBS -->
+      <div class="sw-section">
+        <span class="sw-sec-lbl">DIAL</span>
+        <div class="knob-wrap"><div class="knob-lbl">TEMP<br>CTRL</div><canvas id="knob-temp" width="24" height="24"></canvas><div class="knob-lbl" id="kv-temp">MED</div></div>
+        <div class="knob-wrap"><div class="knob-lbl">O₂<br>RATE</div><canvas id="knob-o2" width="24" height="24"></canvas><div class="knob-lbl" id="kv-o2">NOM</div></div>
+        <div class="knob-wrap"><div class="knob-lbl">DAP<br>CTRL</div><canvas id="knob-dap" width="24" height="24"></canvas><div class="knob-lbl" id="kv-dap">AUTO</div></div>
+        <div class="knob-wrap"><div class="knob-lbl">ROLL<br>RATE</div><canvas id="knob-roll" width="24" height="24"></canvas><div class="knob-lbl" id="kv-roll">0.5°</div></div>
+        <div class="knob-wrap"><div class="knob-lbl">COMM<br>CH</div><canvas id="knob-comm" width="24" height="24"></canvas><div class="knob-lbl" id="kv-comm">A</div></div>
+      </div>
+
+      <!-- ABORT + WARP + PHASE -->
+      <div class="sw-section" style="flex:1;border-right:none;justify-content:flex-end;align-items:center;gap:8px">
+        <div class="sw-grp"><div class="sw-lbl">ABORT</div><div class="sw-btn danger">LES</div></div>
+        <div class="sw-grp"><div class="sw-lbl">TIME WARP</div><button class="sw-btn" id="sw-warp" onclick="toggleWarp()">1×</button></div>
+        <div id="phase-disp">
+          <div class="phase-lbl">MISSION PHASE</div>
+          <div class="phase-val" id="phase-val">PRE-LAUNCH</div>
+        </div>
+      </div>
+
+    </div><!-- /sw-rows -->
+  </div><!-- /switch-panel -->
+
+</div><!-- /crew-view -->
+
+<!-- ══ GROUND CONTROL ══ -->
+<div id="gc-view" class="view">
+
+  <div id="mission-screen">
+    <canvas id="map-canvas"></canvas>
+    <div class="screen-scanlines"></div>
+    <div class="screen-title">APOLLO — MANNED SPACECRAFT CENTER · HOUSTON, TEXAS</div>
+  </div>
+
+  <div id="chatter-strip">
+    <div class="chatter-top">
+      <div class="chatter-hdr">FLIGHT DIRECTOR LOOP — INTER-CONSOLE</div>
+      <div class="speed-ctrl">
+        <span class="speed-ctrl-lbl">SIM SPEED</span>
+        <button class="spd-btn spd-active" id="spd-1" onclick="setWarp(0)">1×</button>
+        <button class="spd-btn" id="spd-10" onclick="setWarp(1)">10×</button>
+        <button class="spd-btn" id="spd-100" onclick="setWarp(2)">100×</button>
+        <button class="spd-btn" id="spd-1000" onclick="setWarp(3)">1000×</button>
+      </div>
+    </div>
+    <div id="chatter-log"></div>
+  </div>
+
+  <div id="consoles">
+    <div class="console-row console-row-1">
+      <div class="console">
+        <div class="console-name">FLIGHT</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">MET</span><span class="cv" id="gc-met">00:00:00</span></div>
+          <div class="cr"><span class="ck">PHASE</span><span class="cv" id="gc-phase">PRE-LAUNCH</span></div>
+          <div class="cr"><span class="ck">GO/NOGO</span><span class="cv ok" id="gc-gonogo">GO</span></div>
+          <div class="cr"><span class="ck">RANGE</span><span class="cv" id="gc-range">0 km</span></div>
+        </div>
+      </div>
+      <div class="console">
+        <div class="console-name">GUIDO</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">ALT</span><span class="cv" id="gc-alt">0 m</span></div>
+          <div class="cr"><span class="ck">VEL</span><span class="cv" id="gc-vel">0 m/s</span></div>
+          <div class="cr"><span class="ck">G</span><span class="cv" id="gc-g">1.00</span></div>
+          <div class="cr"><span class="ck">ORBT P</span><span class="cv" id="gc-period">—</span></div>
+        </div>
+      </div>
+      <div class="console">
+        <div class="console-name">FIDO</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">STAGE</span><span class="cv" id="gc-stage">S-IC</span></div>
+          <div class="cr"><span class="ck">FUEL</span><span class="cv" id="gc-fuel">100%</span></div>
+          <div class="cr"><span class="ck">THRUST</span><span class="cv" id="gc-thrust">0%</span></div>
+          <div class="cr"><span class="ck">Δv TOT</span><span class="cv" id="gc-dv">0 m/s</span></div>
+        </div>
+        <div class="console-dots">
+          <div class="dot on" id="dot-s1"></div><div class="dot" id="dot-s2"></div>
+          <div class="dot" id="dot-s3"></div><div class="dot" id="dot-sm"></div>
+        </div>
+      </div>
+      <div class="console">
+        <div class="console-name">RETRO</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">TLI</span><span class="cv" id="gc-tli">PENDING</span></div>
+          <div class="cr"><span class="ck">LOI</span><span class="cv" id="gc-loi">PENDING</span></div>
+          <div class="cr"><span class="ck">TEI</span><span class="cv" id="gc-tei">PENDING</span></div>
+          <div class="cr"><span class="ck">ABORT</span><span class="cv ok">SAFE</span></div>
+        </div>
+      </div>
+      <div class="console">
+        <div class="console-name">EECOM</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">EPS</span><span class="cv ok" id="gc-eps">NOMINAL</span></div>
+          <div class="cr"><span class="ck">O₂ P</span><span class="cv" id="gc-o2p">900 PSI</span></div>
+          <div class="cr"><span class="ck">H₂ P</span><span class="cv" id="gc-h2p">230 PSI</span></div>
+          <div class="cr"><span class="ck">CRYO</span><span class="cv ok" id="gc-cryo">GO</span></div>
+        </div>
+      </div>
+      <div class="console">
+        <div class="console-name">INCO</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">S-BAND</span><span class="cv ok">LOCK</span></div>
+          <div class="cr"><span class="ck">VHF</span><span class="cv ok">LOCK</span></div>
+          <div class="cr"><span class="ck">DSN</span><span class="cv ok" id="gc-dsn">GOLDSTONE</span></div>
+          <div class="cr"><span class="ck">DELAY</span><span class="cv" id="gc-delay">0.00s</span></div>
+        </div>
+      </div>
+      <div class="console">
+        <div class="console-name">CAPCOM</div>
+        <div class="console-screen">
+          <div id="capcom-log"></div>
+        </div>
+      </div>
+    </div>
+    <div class="console-row console-row-2">
+      <div class="console">
+        <div class="console-name">BOOSTER</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">S/C</span><span class="cv" id="gc-bst-sc">SATURN V</span></div>
+          <div class="cr"><span class="ck">ENGINES</span><span class="cv ok" id="gc-bst-eng">5/5 NOM</span></div>
+          <div class="cr"><span class="ck">STRUCT</span><span class="cv ok" id="gc-bst-str">NOMINAL</span></div>
+        </div>
+      </div>
+      <div class="console">
+        <div class="console-name">SURGEON</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">CDR HR</span><span class="cv ok" id="gc-surg-cdr">72 bpm</span></div>
+          <div class="cr"><span class="ck">CMP HR</span><span class="cv ok" id="gc-surg-cmp">68 bpm</span></div>
+          <div class="cr"><span class="ck">LMP HR</span><span class="cv ok" id="gc-surg-lmp">70 bpm</span></div>
+        </div>
+      </div>
+      <div class="console">
+        <div class="console-name">NETWORK</div>
+        <div class="console-screen">
+          <div class="cr"><span class="ck">PRIMARY</span><span class="cv ok" id="gc-net-pri">GOLDSTONE</span></div>
+          <div class="cr"><span class="ck">BACKUP</span><span class="cv ok" id="gc-net-bak">MADRID</span></div>
+          <div class="cr"><span class="ck">AQUISTN</span><span class="cv ok" id="gc-net-acq">NOMINAL</span></div>
+        </div>
+      </div>
+      <div class="console" style="flex:2">
+        <div class="console-name">PROP / LM</div>
+        <div class="console-screen" style="display:flex;gap:8px">
+          <div style="flex:1">
+            <div class="cr"><span class="ck">CSM SPS</span><span class="cv" id="gc-prop-sps">100%</span></div>
+            <div class="cr"><span class="ck">RCS A</span><span class="cv ok" id="gc-prop-rcsa">NOM</span></div>
+          </div>
+          <div style="flex:1">
+            <div class="cr"><span class="ck">LM DESC</span><span class="cv" id="gc-lm-desc">100%</span></div>
+            <div class="cr"><span class="ck">LM ASC</span><span class="cv" id="gc-lm-asc">100%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="console" style="flex:3">
+        <div class="console-name">CONTROL / GNC</div>
+        <div class="console-screen" style="display:flex;gap:8px">
+          <div style="flex:1">
+            <div class="cr"><span class="ck">PITCH</span><span class="cv" id="gc-ctrl-pitch">90.0°</span></div>
+            <div class="cr"><span class="ck">ROLL</span><span class="cv" id="gc-ctrl-roll">0.0°</span></div>
+          </div>
+          <div style="flex:1">
+            <div class="cr"><span class="ck">YAW</span><span class="cv" id="gc-ctrl-yaw">0.0°</span></div>
+            <div class="cr"><span class="ck">GFORCE</span><span class="cv" id="gc-ctrl-g">1.00</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /gc-view -->
+
+<!-- ══ LM VIEW ══ -->
+<div id="lm-view" class="view">
+  <div id="lm-window-area">
+    <canvas id="lm-canvas"></canvas>
+    <div class="lm-frame"></div>
+    <div class="lm-bolt tl"></div><div class="lm-bolt tr"></div>
+    <div class="lm-bolt bl"></div><div class="lm-bolt br"></div>
+    <div class="lm-win-label">LUNAR MODULE — FORWARD WINDOW</div>
+  </div>
+  <div id="lm-instruments">
+    <!-- LEFT: LM ATTITUDE & ALT -->
+    <div class="panel" style="background:#060a06;border-color:#182018">
+      <div class="panel-label" style="color:#6a9a6a">LM Guidance</div>
+      <canvas id="lm-att-canvas" width="116" height="116" style="display:block;margin:2px auto"></canvas>
+      <div class="gauge-pair" style="margin-top:4px">
+        <div class="gauge-item">
+          <div class="gauge-lbl" style="color:#3a5a3a">ALTITUDE</div>
+          <canvas id="lm-alt-gauge" width="56" height="56"></canvas>
+          <div class="gauge-val" style="color:#44ff44" id="lm-alt-val">0 m</div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-lbl" style="color:#3a5a3a">VRATE</div>
+          <canvas id="lm-vr-gauge" width="56" height="56"></canvas>
+          <div class="gauge-val" style="color:#44ff44" id="lm-vr-val">0 m/s</div>
+        </div>
+      </div>
+      <div class="gauge-pair" style="margin-top:2px">
+        <div class="gauge-item">
+          <div class="gauge-lbl" style="color:#3a5a3a">HVEL</div>
+          <canvas id="lm-hv-gauge" width="56" height="56"></canvas>
+          <div class="gauge-val" style="color:#44ff44" id="lm-hv-val">0 m/s</div>
+        </div>
+        <div class="gauge-item">
+          <div class="gauge-lbl" style="color:#3a5a3a">G-FORCE</div>
+          <canvas id="lm-gf-gauge" width="56" height="56"></canvas>
+          <div class="gauge-val" style="color:#44ff44" id="lm-gf-val">0.00 G</div>
+        </div>
+      </div>
+    </div>
+    <!-- CENTER: LM DSKY + EVENTS + LIGHTS -->
+    <div class="panel" style="background:#060a06;border-color:#182018">
+      <div class="panel-label" style="color:#6a9a6a">LM Guidance Computer — AGC</div>
+      <div id="lm-dsky">
+        <div class="vn-row">
+          <div class="vn-box"><div class="vn-lbl">VERB</div><div class="vn-val" id="ldv">06</div></div>
+          <div class="vn-box"><div class="vn-lbl">NOUN</div><div class="vn-val" id="ldn">33</div></div>
+          <div class="vn-box" style="margin-left:auto"><div class="vn-lbl">PROG</div><div class="vn-val" id="ldp">00</div></div>
+        </div>
+        <div class="dsky-r"><span class="dsky-rlbl">R1</span><div class="dsky-rval" id="ldr1">+00000</div></div>
+        <div class="dsky-r"><span class="dsky-rlbl">R2</span><div class="dsky-rval" id="ldr2">+00000</div></div>
+        <div class="dsky-r"><span class="dsky-rlbl">R3</span><div class="dsky-rval" id="ldr3">+00000</div></div>
+      </div>
+      <div class="panel-label" style="color:#6a9a6a;margin-top:3px">LM Events</div>
+      <div id="lm-event-log"></div>
+      <div class="panel-label" style="color:#6a9a6a;margin-top:4px">LM Caution & Warning</div>
+      <div class="lm-clights">
+        <div class="cl" id="lm-cl-abort">ABORT</div>
+        <div class="cl ok" id="lm-cl-desc">DESC ENG</div>
+        <div class="cl" id="lm-cl-asc">ASC ENG</div>
+        <div class="cl" id="lm-cl-alt">ALT LOW</div>
+        <div class="cl" id="lm-cl-fuel">FUEL LOW</div>
+        <div class="cl" id="lm-cl-1202">1202</div>
+        <div class="cl ok" id="lm-cl-ags">AGS OK</div>
+        <div class="cl ok" id="lm-cl-rcs">RCS OK</div>
+        <div class="cl" id="lm-cl-land">LANDED</div>
+      </div>
+    </div>
+    <!-- RIGHT: LM PROPULSION & SYSTEMS -->
+    <div class="panel" style="background:#060a06;border-color:#182018">
+      <div class="panel-label" style="color:#6a9a6a">LM Propulsion</div>
+      <div class="fbar-wrap">
+        <div class="fbar-header" style="color:#3a5a3a"><span>DESCENT</span><span id="lm-fp-d">100%</span></div>
+        <div class="fbar-track"><div class="fbar-fill lm-fbar-fill" id="lm-fb-d" style="width:100%"></div></div>
+      </div>
+      <div class="fbar-wrap">
+        <div class="fbar-header" style="color:#3a5a3a"><span>ASCENT</span><span id="lm-fp-a">100%</span></div>
+        <div class="fbar-track"><div class="fbar-fill lm-fbar-fill-a" id="lm-fb-a" style="width:100%"></div></div>
+      </div>
+      <div class="panel-label" style="color:#6a9a6a">LM Engines</div>
+      <div class="eng-grid">
+        <div class="eng-cell" id="lm-eng-d" style="border-color:#182018">DESC: OFF</div>
+        <div class="eng-cell" id="lm-eng-a" style="border-color:#182018">ASC: OFF</div>
+      </div>
+      <div class="panel-label" style="color:#6a9a6a">LM Systems</div>
+      <div class="mini-meter"><span class="mm-lbl" style="color:#6a9a6a">O₂ PRESS</span><div class="mm-bar"><div class="mm-fill" id="lm-mm-o2" style="width:88%;background:#44cc44"></div></div><span class="mm-val" style="color:#44cc44" id="lm-mv-o2">880 PSI</span></div>
+      <div class="mini-meter"><span class="mm-lbl" style="color:#6a9a6a">CABIN P</span><div class="mm-bar"><div class="mm-fill" id="lm-mm-cp" style="width:62%;background:#44ff88"></div></div><span class="mm-val" style="color:#44ff88" id="lm-mv-cp">4.8 PSI</span></div>
+      <div class="mini-meter"><span class="mm-lbl" style="color:#6a9a6a">BAT VOLT</span><div class="mm-bar"><div class="mm-fill" id="lm-mm-bv" style="width:90%;background:#aaffaa"></div></div><span class="mm-val" style="color:#aaffaa" id="lm-mv-bv">28.5 V</span></div>
+      <div class="mini-meter"><span class="mm-lbl" style="color:#6a9a6a">RCS TEMP</span><div class="mm-bar"><div class="mm-fill" id="lm-mm-rt" style="width:55%;background:#88ffaa"></div></div><span class="mm-val" style="color:#88ffaa" id="lm-mv-rt">68°F</span></div>
+    </div>
+  </div><!-- /lm-instruments -->
+
+  <!-- LM CAPCOM STRIP -->
+  <div id="lm-capcom-strip">
+    <span class="cc-strip-lbl">CAPCOM / EAGLE</span>
+    <div class="cc-msgs" id="lm-capcom-msgs">
+      <div class="cc-entry cc-hou"><span class="cc-who">HOUSTON</span><span class="cc-txt">LM not yet deployed</span></div>
+      <div class="cc-entry cc-crew" style="opacity:.4"><span class="cc-who">EAGLE</span><span class="cc-txt">—</span></div>
+    </div>
+  </div>
+
+  <!-- LM SWITCH ROW -->
+  <div id="lm-switch-row">
+    <div class="lm-sw-sec">
+      <span class="lm-sw-lbl">PROPUL</span>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">DESC<br>ENG</div><div class="fsw" id="lm-fsw-desc"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">ASC<br>ENG</div><div class="fsw" id="lm-fsw-asc"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">ABORT<br>STG</div><div class="fsw" id="lm-fsw-abort"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+    </div>
+    <div class="lm-sw-sec">
+      <span class="lm-sw-lbl">GUID</span>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">LGC<br>PWR</div><div class="fsw on" id="lm-fsw-lgc"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">AGS<br>ARM</div><div class="fsw on" id="lm-fsw-ags"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">REND<br>RDR</div><div class="fsw" id="lm-fsw-rdr"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+    </div>
+    <div class="lm-sw-sec">
+      <span class="lm-sw-lbl">ECS</span>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">O₂<br>FLOW</div><div class="fsw on" id="lm-fsw-o2"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">SUIT<br>FAN</div><div class="fsw on" id="lm-fsw-suit"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">H₂O<br>SEPR</div><div class="fsw on" id="lm-fsw-h2o"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+    </div>
+    <div class="lm-sw-sec">
+      <span class="lm-sw-lbl">COMMS</span>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">VHF<br>A</div><div class="fsw on" id="lm-fsw-vhfa"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">VHF<br>B</div><div class="fsw" id="lm-fsw-vhfb"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+      <div class="fsw-wrap"><div class="fsw-lbl2" style="color:#2a3a2a">EVA<br>COMM</div><div class="fsw" id="lm-fsw-eva"><div class="fsw-lever"></div><div class="fsw-led"></div></div></div>
+    </div>
+    <div class="lm-status-box">
+      <div class="lm-status-lbl">LM STATUS</div>
+      <div class="lm-status-val" id="lm-status-val">INACTIVE</div>
+    </div>
+  </div>
+
+</div><!-- /lm-view -->
+
+<!-- ══ GO/NOGO HOLD OVERLAY ══ -->
+<div id="hold-overlay">
+  <div id="hold-box">
+    <div id="hold-title">FLIGHT DIRECTOR — GO / NO-GO POLL</div>
+    <div id="hold-label">TRANS-LUNAR INJECTION</div>
+    <div id="hold-detail">ALL STATIONS POLLED<br>AWAITING FLIGHT DIRECTOR DECISION</div>
+    <div id="poll-list"></div>
+    <div id="hold-btns">
+      <button class="hold-go" id="hold-go-btn" onclick="goDecision()">GO</button>
+      <button class="hold-wait" id="hold-wait-btn" onclick="holdWait()">POLL ROOM</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+//  SIMULATION ENGINE
+// ═══════════════════════════════════
+const WARP=[1,10,100,1000];
+let warpIdx=0,warpLevel=1;
+
+const S={
+  met:-30,phase:'prelaunch',
+  alt:0,vel:0,gforce:1,pitch:90,roll:0,yaw:0,
+  f_s1:100,f_s2:100,f_s3:100,f_sm:100,
+  pos:0,returnPos:0,homebound:false,
+  maxq:false,sep:false,
+  lm_alt:0,lm_vrate:0,lm_hvel:0,lm_fuel_d:100,lm_fuel_a:100,
+  firedEv:new Set(),firedCC:new Set(),firedMC:new Set(),
+  lastTs:null
+};
+
+// ── Hold / Go-NoGo system ──
+let holdActive=false;
+const HOLD_POINTS=[
+  {met:-10,cleared:false,label:'GO / NO-GO FOR LAUNCH',detail:'T MINUS 10 SECONDS\nFINAL LAUNCH COMMIT — FLIGHT DIRECTOR'},
+  {met:10750,cleared:false,label:'GO / NO-GO FOR TLI',detail:'TRANS-LUNAR INJECTION\nBURN TIME 5 MIN 47 SEC — COMMIT TO MOON'},
+  {met:270000,cleared:false,label:'GO / NO-GO FOR LOI',detail:'LUNAR ORBIT INSERTION\n6 MIN SPS BURN — NO RETURN AFTER COMMIT'},
+  {met:361000,cleared:false,label:'GO / NO-GO FOR PDI',detail:'POWERED DESCENT INITIATION\nEAGLE COMMITS TO LANDING — ABORT AVAILABLE'},
+  {met:457000,cleared:false,label:'GO / NO-GO FOR TEI',detail:'TRANS-EARTH INJECTION\nCOMMIT TO RETURN — LEAVE LUNAR ORBIT'},
+];
+function checkHold(){
+  for(const h of HOLD_POINTS){
+    if(!h.cleared&&S.met>=h.met){
+      if(!holdActive){
+        holdActive=true;
+        document.getElementById('hold-label').textContent=h.label;
+        document.getElementById('hold-detail').textContent=h.detail;
+        // Reset poll state for fresh hold
+        const list=document.getElementById('poll-list');
+        list.innerHTML=''; list.style.display='none';
+        const goBtn=document.getElementById('hold-go-btn');
+        const waitBtn=document.getElementById('hold-wait-btn');
+        if(goBtn){goBtn.disabled=false;}
+        if(waitBtn){waitBtn.disabled=false;waitBtn.textContent='POLL ROOM';}
+        document.getElementById('hold-overlay').style.display='flex';
+      }
+      return true;
+    }
+  }
+  return false;
+}
+function goDecision(){
+  for(const h of HOLD_POINTS){if(!h.cleared&&S.met>=h.met){h.cleared=true;break;}}
+  holdActive=false;
+  document.getElementById('hold-overlay').style.display='none';
+  addChatter('flight','ALL','We are GO. All stations GO. Counting.');
+}
+const POLL_STATIONS=[
+  {id:'booster', label:'BOOSTER', color:'#ff9944', notes:['Propulsion nominal.','Vehicle performance nominal.','Stage systems nominal.']},
+  {id:'guido',   label:'GUIDO',   color:'#00aaff', notes:['Guidance nominal.','Navigation solution nominal.','CMC performing nominally.']},
+  {id:'fido',    label:'FIDO',    color:'#00ff88', notes:['Trajectory nominal.','On profile.','Flight dynamics nominal.']},
+  {id:'retro',   label:'RETRO',   color:'#aa66ff', notes:['Abort modes verified.','Return corridor available.','TEI window nominal.']},
+  {id:'eecom',   label:'EECOM',   color:'#ffee00', notes:['EPS nominal.','Consumables ahead of schedule.','All systems nominal.']},
+  {id:'inco',    label:'INCO',    color:'#ff66aa', notes:['All links nominal.','S-band tracking nominal.','Comm coverage continuous.']},
+  {id:'surgeon', label:'SURGEON', color:'#44ffcc', notes:['Crew biomed nominal.','All vitals excellent.','Crew ready.']},
+  {id:'network', label:'NETWORK', color:'#88aaff', notes:['All stations nominal.','MSFN coverage confirmed.','Tracking nominal.']},
+];
+function holdWait(){
+  const goBtn=document.getElementById('hold-go-btn');
+  const waitBtn=document.getElementById('hold-wait-btn');
+  goBtn.disabled=true;
+  waitBtn.disabled=true;
+  waitBtn.textContent='POLLING...';
+  document.getElementById('hold-detail').textContent='GOING AROUND THE ROOM — STAND BY';
+  const list=document.getElementById('poll-list');
+  list.innerHTML='';
+  list.style.display='block';
+  addChatter('flight','ALL','All stations — going around the room for GO/NO-GO. Booster?');
+  let i=0;
+  function pollNext(){
+    if(i>=POLL_STATIONS.length){
+      // Final FLIGHT summary entry
+      setTimeout(()=>{
+        const row=document.createElement('div');
+        row.className='poll-entry poll-flight-row';
+        row.innerHTML='<span class="poll-stn" style="color:#ff8800">FLIGHT</span><span class="poll-arrow">→</span><span class="poll-go" style="color:#ff8800;letter-spacing:1px">ALL STATIONS GO — FLIGHT DIRECTOR, YOUR CALL</span>';
+        list.appendChild(row);
+        list.scrollTop=list.scrollHeight;
+        addChatter('flight','ALL','We are unanimous GO. Flight Director, your call.');
+        document.getElementById('hold-detail').textContent='ALL STATIONS: GO\nAWAITING FLIGHT DIRECTOR';
+        goBtn.disabled=false;
+        waitBtn.textContent='POLL ROOM';
+        waitBtn.disabled=false;
+      },400);
+      return;
+    }
+    const stn=POLL_STATIONS[i];
+    const note=stn.notes[Math.floor(Math.random()*stn.notes.length)];
+    const row=document.createElement('div');
+    row.className='poll-entry';
+    row.innerHTML=`<span class="poll-stn" style="color:${stn.color}">${stn.label}</span><span class="poll-arrow">→</span><span class="poll-go">GO</span><span class="poll-note">${note}</span>`;
+    list.appendChild(row);
+    list.scrollTop=list.scrollHeight;
+    addChatter(stn.id,'FLIGHT','GO. '+note);
+    i++;
+    setTimeout(pollNext,450+Math.random()*350);
+  }
+  setTimeout(pollNext,350);
+}
+
+// ── Mission events (crew log) ──
+const EVENTS=[
+  [-10,'INTERNAL POWER — NOMINAL','info'],
+  [-6,'GUIDANCE SYSTEM — INTERNAL','info'],
+  [-3,'ALL SYSTEMS GO — LAUNCH SEQUENCE','info'],
+  [0,'IGNITION SEQUENCE START','info'],
+  [3,'LIFTOFF! ALL ENGINES RUNNING','ok'],
+  [12,'ROLL AND PITCH PROGRAM','info'],
+  [76,'MAX DYNAMIC PRESSURE','warn'],
+  [95,'THROUGH MAX-Q — NOMINAL','ok'],
+  [162,'S-IC ENGINE CUTOFF','info'],
+  [163,'S-IC SEPARATION — CONFIRMED','ok'],
+  [165,'S-II IGNITION','info'],
+  [170,'LES JETTISON — TOWER CLEAR','info'],
+  [553,'S-II CUTOFF','info'],
+  [555,'S-II SEPARATION — CONFIRMED','ok'],
+  [556,'S-IVB IGNITION','info'],
+  [702,'S-IVB CUTOFF — ORBIT INSERTION','ok'],
+  [710,'EARTH ORBIT: 100×100 NM — NOMINAL','ok'],
+  [10750,'TLI MANEUVER — GO FLIGHT','ok'],
+  [10800,'S-IVB REIGNITION — TLI BURN','info'],
+  [11147,'TLI COMPLETE — TRANSLUNAR INJECTION','ok'],
+  [11300,'TRANSPOSITION DOCKING AND EXTRACTION','info'],
+  [270000,'LUNAR SPHERE OF INFLUENCE — LOI PREP','info'],
+  [271500,'LOI BURN IGNITION — 6 MIN BURN','info'],
+  [271867,'LOI COMPLETE — LUNAR ORBIT 60×170 NM','ok'],
+  [361000,'LM UNDOCKING — EAGLE IS FREE','ok'],
+  [362200,'PDI — POWERED DESCENT INITIATION','info'],
+  [363000,'HIGH GATE — P63 BRAKING PHASE','info'],
+  [363500,'PROGRAM ALARM: 1202 — EXECUTIVE OVERFLOW','warn'],
+  [363506,'1202 ALARM — ACKNOWLEDGED, CONTINUE','ok'],
+  [363510,'PROGRAM ALARM: 1202 — SECOND OCCURRENCE','warn'],
+  [363514,'GO ON ALARM — GUIDANCE NOMINAL, CONTINUE','ok'],
+  [364000,'P64 APPROACH PHASE — 300 FEET','info'],
+  [364200,'THE EAGLE HAS LANDED — TRANQUILITY BASE','ok'],
+  [370000,'MOONWALK — EVA IN PROGRESS','info'],
+  [440000,'ASCENT ENGINE IGNITION — EAGLE RISING','ok'],
+  [441700,'LM ORBIT INSERTION CONFIRMED','ok'],
+  [443500,'CSM/LM DOCKING CONFIRMED — CREW TRANSFER','ok'],
+  [443700,'LM JETTISONED','info'],
+  [457000,'TEI BURN IGNITION — HOMEWARD BOUND','ok'],
+  [457720,'TEI COMPLETE — FREE-RETURN TO EARTH','ok'],
+  [697000,'CM/SM SEPARATION — ENTRY PREP','info'],
+  [697400,'ENTRY INTERFACE — 400,000 FT','warn'],
+  [697800,'COMM BLACKOUT — IONIZATION SHIELD','warn'],
+  [698000,'MAIN CHUTES DEPLOYED — SPLASHDOWN','ok'],
+];
+
+// ── CAPCOM crew ↔ ground comms ──
+const CAPCOM=[
+  [0,'HOUSTON','Ignition confirmed. T zero. The clock is running.'],
+  [3,'HOUSTON','Liftoff! We have liftoff of Apollo.'],
+  [12,'CREW','Roger Houston, roll program. Everything looks good.'],
+  [76,'HOUSTON','You are go through max-Q.'],
+  [162,'HOUSTON','You are go for staging.'],
+  [163,'CREW','Staging confirmed. S-II ignition. All looks good up here.'],
+  [700,'HOUSTON','You are in a good orbit. You are go for T+2 orbit.'],
+  [705,'CREW','Roger, Houston. Beautiful view of Earth from up here.'],
+  [10750,'HOUSTON','Apollo, you are go for TLI. Burn time 5 minutes 47 seconds.'],
+  [10755,'CREW','Understood. Go for TLI. Here we go to the Moon.'],
+  [11147,'HOUSTON','TLI complete, trajectory nominal. You are on your way.'],
+  [11148,'CREW','Roger Houston. Earth is getting smaller already. Spectacular.'],
+  [11300,'CREW','Transposition complete. CSM docking nominal. LM looks good.'],
+  [50000,'CREW','Houston, we are at 50,000 seconds. Midcourse looks clean.'],
+  [50005,'HOUSTON','Copy that. No midcourse required. You are right down the middle.'],
+  [150000,'CREW','Houston, it is hard to believe we are halfway to the Moon.'],
+  [150005,'HOUSTON','You are exactly halfway. Velocity now 4,200 feet per second.'],
+  [270000,'HOUSTON','Forty minutes to LOI. All systems nominal. You are go.'],
+  [271500,'CREW','LOI burn ignition. Clock running. SPS sounds good.'],
+  [271867,'HOUSTON','LOI complete. Welcome to lunar orbit. How does it look?'],
+  [271870,'CREW','Houston, the Moon is absolutely spectacular from here. We are in orbit.'],
+  [361000,'HOUSTON','Eagle, you are go for undocking. Good luck.'],
+  [361005,'CREW','Columbia is free. Eagle has separated. See you in orbit.'],
+  [362200,'CREW','Houston, PDI. Eagle is go for powered descent.'],
+  [362205,'HOUSTON','Roger Eagle, you are go for PDI. All systems nominal.'],
+  [363500,'CREW','Program alarm! It is a 1202. Give us a GO or NOGO.'],
+  [363502,'HOUSTON','Roger, we are GO on that alarm. Continue descent.'],
+  [363510,'CREW','1202 again.'],
+  [363512,'HOUSTON','Roger 1202, GO. We are GO on that alarm. Not a constraint.'],
+  [364000,'CREW','400 feet, down at 9. Got the shadow out there. 75 feet. Picking up some dust.'],
+  [364180,'CREW','30 seconds of fuel. Contact light.'],
+  [364200,'CREW','Houston, Tranquility Base here. The Eagle has landed.'],
+  [364205,'HOUSTON','Roger Tranquility. We copy you on the ground. You got a bunch of guys about to turn blue. We are breathing again. Thanks a lot.'],
+  [440000,'CREW','Houston, Eagle is go for liftoff. Ascent engine armed.'],
+  [440005,'HOUSTON','Roger Eagle, you are go for liftoff. Go at throttle up.'],
+  [441700,'HOUSTON','Eagle, we confirm orbit insertion. Rendezvous on track.'],
+  [443500,'CREW','Houston, docking complete. Crew transfer nominal. Bringing home some Moon rocks.'],
+  [443505,'HOUSTON','Outstanding. Welcome back. You have made history today.'],
+  [457000,'HOUSTON','Columbia, you are go for TEI. Burn time 2 minutes 28 seconds.'],
+  [457005,'CREW','Understood. Go for TEI. Heading home.'],
+  [457720,'HOUSTON','TEI complete. Trajectory nominal. Welcome home, Apollo.'],
+  [457725,'CREW','Roger Houston. The Moon is getting smaller. It is beautiful. See you in three days.'],
+  [600000,'CREW','Houston, midcourse looks clean. Beautiful view of Earth ahead of us.'],
+  [600005,'HOUSTON','Copy that. No midcourse required. Right down the middle.'],
+  [697000,'CREW','Houston, CM/SM sep complete. Entering the entry corridor now.'],
+  [697005,'HOUSTON','Roger. You are go for entry. See you on the other side.'],
+  [697400,'CREW','Entry interface. Going into blackout.'],
+  [697800,'CREW','Houston stand by—'],
+  [698000,'HOUSTON','Apollo, we have your chutes on radar. Welcome home. Mission complete. Outstanding job.'],
+];
+
+// ── Inter-controller flight director loop comms ──
+const MC_CHATTER=[
+  [-28,'booster','FLIGHT','Booster systems nominal. Hold-down bolts armed. Saturn ready.'],
+  [-22,'guido','FLIGHT','Guidance is internal. All programs loaded and verified.'],
+  [-18,'eecom','FLIGHT','Fuel cells on line. Electrical systems nominal.'],
+  [-15,'fido','FLIGHT','Trajectory nominal. Winds at 25,000 feet acceptable.'],
+  [-12,'retro','FLIGHT','All abort modes configured and verified.'],
+  [-10,'inco','FLIGHT','Goldstone tracking station ready. S-band and VHF nominal.'],
+  [-8,'surgeon','FLIGHT','Crew biomed nominal. Cardiovascular readings excellent.'],
+  [-6,'network','FLIGHT','All MSFN stations standing by. Coverage continuous.'],
+  [-5,'flight','ALL','All stations — going around the room. Booster, GO or NOGO?'],
+  [-4.8,'booster','FLIGHT','GO.'],
+  [-4.6,'guido','FLIGHT','GO.'],
+  [-4.4,'fido','FLIGHT','GO.'],
+  [-4.2,'retro','FLIGHT','GO.'],
+  [-4.0,'eecom','FLIGHT','GO.'],
+  [-3.8,'inco','FLIGHT','GO.'],
+  [-3.6,'surgeon','FLIGHT','GO.'],
+  [-3.4,'network','FLIGHT','GO.'],
+  [-3.0,'flight','ALL','We are GO for launch. CAPCOM, pass it to the crew.'],
+  [3,'booster','FLIGHT','Liftoff confirmed. All five S-IC engines in the green. Performance nominal.'],
+  [8,'eecom','FLIGHT','EPS nominal. Fuel cells performing nominally. Battery charge normal.'],
+  [12,'guido','FLIGHT','Roll program confirmed. Gravity turn initiated. Guidance nominal.'],
+  [60,'booster','FLIGHT','S-IC performance excellent. Heading for max-Q region.'],
+  [76,'booster','FLIGHT','Entering max-Q. Structural loads nominal. Standing by.'],
+  [90,'booster','FLIGHT','Through max-Q. Aerodynamic loads nominal throughout. Nominal.'],
+  [90,'fido','FLIGHT','Trajectory nominal through max-Q. No correction required.'],
+  [140,'booster','FLIGHT','S-IC propellant depletion imminent. Standing by for staging.'],
+  [162,'booster','FLIGHT','S-IC engine cutoff confirmed. Five for five. Performance nominal.'],
+  [163,'guido','FLIGHT','S-II ignition confirmed. Staging clean. Guidance nominal.'],
+  [165,'eecom','FLIGHT','S-II pressures nominal. Fuel cell output steady through staging.'],
+  [170,'inco','FLIGHT','LES jettison confirmed. Comms unaffected. All links nominal.'],
+  [300,'surgeon','FLIGHT','Crew biomed nominal. Heart rates settling post max-Q.'],
+  [400,'fido','FLIGHT','S-II trajectory nominal. On track for 100 by 100 orbit.'],
+  [553,'guido','FLIGHT','S-II cutoff confirmed. S-IVB ignition in three seconds.'],
+  [556,'booster','FLIGHT','S-IVB ignition confirmed. Single engine nominal. Booster job done.'],
+  [700,'fido','FLIGHT','Flight, FIDO — orbit insertion confirmed. 100 by 100 nautical miles.'],
+  [702,'guido','FLIGHT','Orbital mechanics confirmed. Period 88 minutes 24 seconds. Perigee stable.'],
+  [710,'retro','FLIGHT','All abort modes reconfigured for orbital phase. Abort once around available.'],
+  [720,'eecom','FLIGHT','Consumables tracking nominal. Fuel cells at full output.'],
+  [800,'surgeon','FLIGHT','Flight, SURGEON. Crew requesting meal break after first orbit.'],
+  [805,'flight','SURGEON','Concur. Keep me updated on biomed throughout.'],
+  [3600,'fido','FLIGHT','First orbit complete. Orbital parameters stable. Slight perigee decay nominal.'],
+  [5400,'inco','FLIGHT','Comms handover from Guaymas to Bermuda. Nominal.'],
+  [7200,'surgeon','FLIGHT','Crew biomed nominal after rest. All readings excellent.'],
+  [9000,'eecom','FLIGHT','Two and a half orbits complete. Consumables ahead of schedule.'],
+  [10600,'fido','FLIGHT','TLI window analysis complete. Trajectory corridor nominal. Ready.'],
+  [10700,'flight','ALL','All stations — GO or NOGO for TLI. FIDO?'],
+  [10701,'fido','FLIGHT','GO for TLI.'],
+  [10702,'retro','FLIGHT','GO for TLI.'],
+  [10703,'guido','FLIGHT','GO for TLI.'],
+  [10704,'eecom','FLIGHT','GO for TLI.'],
+  [10705,'inco','FLIGHT','GO for TLI.'],
+  [10706,'surgeon','FLIGHT','GO for TLI.'],
+  [10707,'flight','ALL','We are GO for TLI. CAPCOM, tell the crew.'],
+  [10800,'guido','FLIGHT','S-IVB reignition confirmed. TLI burn nominal.'],
+  [10900,'fido','FLIGHT','Mid-burn velocity update nominal. On TLI corridor.'],
+  [11147,'fido','FLIGHT','TLI complete. Trajectory nominal. On free-return trajectory to the Moon.'],
+  [11148,'guido','FLIGHT','Navigation update confirmed. All systems nominal for trans-lunar coast.'],
+  [11300,'guido','FLIGHT','Transposition and docking confirmed. CSM/LM interface nominal.'],
+  [11400,'inco','FLIGHT','Switching comms from S-IVB to CSM. S-band lock confirmed.'],
+  [20000,'surgeon','FLIGHT','Crew sleep period underway. Biomed nominal. Good nights all around.'],
+  [36000,'eecom','FLIGHT','Ten-hour status: consumables well ahead of schedule.'],
+  [50000,'fido','FLIGHT','No midcourse correction required. Right down the middle of the corridor.'],
+  [86400,'eecom','FLIGHT','Twenty-four hour status: O2 and H2 cryo tanks nominal. Well ahead.'],
+  [100000,'surgeon','FLIGHT','All crew awake and healthy. Meal scheduled in one hour.'],
+  [150000,'fido','FLIGHT','Halfway to the Moon. Velocity slowing as lunar gravity takes hold.'],
+  [172800,'eecom','FLIGHT','Forty-eight hour consumables check. Excellent margins throughout.'],
+  [200000,'surgeon','FLIGHT','Crew biomed nominal. Commander reported good sleep.'],
+  [240000,'guido','FLIGHT','Navigation confirms lunar sphere of influence entry. Moon is primary.'],
+  [260000,'fido','FLIGHT','LOI trajectory refined. Corridor nominal. No midcourse required.'],
+  [265000,'retro','FLIGHT','TEI return trajectory calculated. Window available post-LOI.'],
+  [269000,'inco','FLIGHT','Switching primary coverage to Honeysuckle Creek, Australia for LOI.'],
+  [270000,'flight','ALL','All stations, GO or NOGO for LOI. FIDO?'],
+  [270001,'fido','FLIGHT','GO for LOI.'],
+  [270002,'retro','FLIGHT','GO for LOI.'],
+  [270003,'guido','FLIGHT','GO for LOI.'],
+  [270004,'eecom','FLIGHT','GO for LOI.'],
+  [270005,'inco','FLIGHT','GO for LOI.'],
+  [270006,'surgeon','FLIGHT','GO for LOI.'],
+  [270007,'flight','ALL','We are GO for LOI. CAPCOM, clear the crew to burn.'],
+  [271500,'guido','FLIGHT','LOI burn ignition confirmed. SPS performing nominally.'],
+  [271650,'fido','FLIGHT','Sixty seconds into LOI burn. Trajectory nominal.'],
+  [271700,'eecom','FLIGHT','SPS chamber pressure nominal. Burn performance excellent.'],
+  [271867,'fido','FLIGHT','Flight, FIDO — LOI complete! Orbit confirmed, 60 by 170 nautical miles.'],
+  [271868,'guido','FLIGHT','Orbital mechanics confirmed. Lunar orbit stable. Magnificent.'],
+  [271870,'eecom','FLIGHT','SPS propellant margins excellent. Plenty remaining for TEI when ready.'],
+  [271900,'retro','FLIGHT','Trans-Earth injection window calculated. TEI available at 48 hours in orbit.'],
+  [272000,'surgeon','FLIGHT','Crew biomed nominal in lunar orbit. All doing exceptionally well.'],
+  [272500,'inco','FLIGHT','S-band signal strong from lunar orbit. Honeysuckle tracking nominal.'],
+  [280000,'surgeon','FLIGHT','Crew biomed nominal in lunar orbit. Rest period recommended.'],
+  [290000,'eecom','FLIGHT','LM systems checkout complete. Descent propellant nominal.'],
+  [340000,'guido','FLIGHT','LM AGS alignment complete. Guidance systems nominal for undocking.'],
+  [355000,'retro','FLIGHT','PDI targeting solution complete. Corridor nominal.'],
+  [360000,'flight','ALL','All stations, GO or NOGO for PDI. FIDO?'],
+  [360001,'fido','FLIGHT','GO for PDI.'],
+  [360002,'retro','FLIGHT','GO for PDI.'],
+  [360003,'guido','FLIGHT','GO for PDI.'],
+  [360004,'eecom','FLIGHT','GO for PDI.'],
+  [360005,'inco','FLIGHT','GO for PDI.'],
+  [360006,'surgeon','FLIGHT','GO for PDI.'],
+  [360007,'flight','ALL','GO for PDI. CAPCOM, clear Eagle for descent.'],
+  [361000,'guido','FLIGHT','Undocking confirmed. Eagle is free. Separation delta-v nominal.'],
+  [361100,'fido','FLIGHT','LM and CSM trajectories diverging nominally. Rendezvous baseline set.'],
+  [362200,'guido','FLIGHT','PDI confirmed. P63 braking phase. LGC tracking nominally.'],
+  [363000,'fido','FLIGHT','High gate nominal. Eagle on profile for landing site.'],
+  [363500,'guido','FLIGHT','Flight, GUIDO — 1202 alarm. Executive overflow. Not a constraint, LGC managing fine.'],
+  [363501,'flight','GUIDO','You GO on that alarm?'],
+  [363502,'guido','FLIGHT','GO. Guidance nominal. Continue descent.'],
+  [363510,'guido','FLIGHT','Second 1202. Still not a constraint. LGC cycling normally.'],
+  [364000,'fido','FLIGHT','Eagle at 300 feet. P64 approach phase. On profile. Looking good.'],
+  [364150,'eecom','FLIGHT','Descent fuel at 15 percent. Acceptable for landing.'],
+  [364200,'flight','ALL','TOUCHDOWN. Tranquility Base. All stations status.'],
+  [364201,'guido','FLIGHT','Navigation confirms lunar surface. Outstanding. LGC in standby.'],
+  [364202,'eecom','FLIGHT','All ECS nominal on surface. Power excellent.'],
+  [364203,'surgeon','FLIGHT','Crew biomed nominal. CDR heart rate elevated, entirely expected. Perfect.'],
+  [380000,'eecom','FLIGHT','Twelve-hour surface status. PLSS consumables nominal. Well ahead.'],
+  [420000,'fido','FLIGHT','Ascent targeting solution complete. Rendezvous nominal.'],
+  [440000,'guido','FLIGHT','Ascent engine ignition confirmed. P12 nominal. Eagle is rising.'],
+  [440100,'fido','FLIGHT','Ascent trajectory nominal. On profile for rendezvous.'],
+  [441700,'fido','FLIGHT','Eagle in orbit. Rendezvous solution confirmed. CSM intercept nominal.'],
+  [443500,'guido','FLIGHT','Docking confirmed. Crew transfer underway.'],
+  [443700,'eecom','FLIGHT','LM jettisoned. CSM power margins excellent. Ready for TEI.'],
+  [450000,'retro','FLIGHT','TEI targeting solution verified. Window nominal.'],
+  [456500,'flight','ALL','All stations, GO or NOGO for TEI. FIDO?'],
+  [456501,'fido','FLIGHT','GO for TEI.'],
+  [456502,'retro','FLIGHT','GO for TEI.'],
+  [456503,'guido','FLIGHT','GO for TEI.'],
+  [456504,'eecom','FLIGHT','GO for TEI.'],
+  [456505,'inco','FLIGHT','GO for TEI.'],
+  [456506,'surgeon','FLIGHT','GO for TEI. Crew fully rested and ready.'],
+  [456507,'flight','ALL','We are GO for TEI. Tell the crew they are coming home.'],
+  [457720,'fido','FLIGHT','TEI complete. Free-return trajectory nominal. On course for Earth.'],
+  [457721,'guido','FLIGHT','Navigation confirmed. Welcome home everyone.'],
+  [550000,'surgeon','FLIGHT','Crew in excellent condition. Morale extremely high.'],
+  [600000,'fido','FLIGHT','No midcourse required. Right down the middle of the return corridor.'],
+  [650000,'retro','FLIGHT','Entry targeting verified. Landing point nominal Pacific recovery zone.'],
+  [690000,'inco','FLIGHT','Switching primary coverage to Guaymas for entry phase.'],
+  [695000,'eecom','FLIGHT','CM/SM separation prep complete. All systems GO for entry.'],
+  [696800,'flight','ALL','All stations, GO for entry?'],
+  [696801,'fido','FLIGHT','GO.'],
+  [696802,'retro','FLIGHT','GO. Landing point nominal.'],
+  [696803,'guido','FLIGHT','GO.'],
+  [696804,'eecom','FLIGHT','GO.'],
+  [696805,'inco','FLIGHT','GO. Blackout in approximately 6 minutes.'],
+  [696806,'surgeon','FLIGHT','GO. Crew ready.'],
+  [696807,'flight','ALL','We are GO for entry. CAPCOM pass it up.'],
+  [697800,'inco','FLIGHT','Comm blackout beginning. Expected duration 3 minutes. All nominal.'],
+  [697900,'inco','FLIGHT','Acquiring signal. Chutes confirmed on radar. Recovery forces in position.'],
+  [698000,'flight','ALL','SPLASHDOWN. Outstanding mission. Welcome home Apollo.'],
+];
+
+let winC,winX,mapC,mapX,lmC,lmX,stars=[],lmTerrain=[];
+
+function init(){
+  winC=document.getElementById('window-canvas'); winX=winC.getContext('2d');
+  mapC=document.getElementById('map-canvas'); mapX=mapC.getContext('2d');
+  lmC=document.getElementById('lm-canvas'); lmX=lmC.getContext('2d');
+  for(let i=0;i<400;i++) stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.5+.2,b:Math.random()*.5+.5});
+  for(let i=0;i<=500;i++){
+    const h=Math.sin(i*.031+1.23)*55+Math.sin(i*.079+2.31)*28+Math.sin(i*.167+.87)*14+Math.sin(i*.311+3.14)*7+Math.sin(i*.733+1.59)*3;
+    lmTerrain.push(h);
+  }
+  resizeAll();
+  window.addEventListener('resize',()=>resizeAll());
+  // Flip switches clickable
+  document.querySelectorAll('.fsw').forEach(el=>{
+    el.addEventListener('click',()=>{
+      el.classList.toggle('on');
+      el.style.boxShadow='0 0 8px rgba(0,255,68,.5)';
+      setTimeout(()=>el.style.boxShadow='',250);
+    });
+  });
+  // Push buttons clickable
+  document.querySelectorAll('.push-btn').forEach(el=>{
+    el.addEventListener('click',()=>{
+      el.style.transform='scale(0.88)';
+      setTimeout(()=>el.style.transform='',120);
+      if(pbActions[el.id]) pbActions[el.id]();
+    });
+  });
+  requestAnimationFrame(loop);
+}
+const pbActions={
+  'pb-gdc':()=>addLog('GDC ALIGN — GYRO ALIGNMENT COMPLETE','ok',S.met),
+  'pb-imu':()=>addLog('IMU REALIGN — PLATFORM ALIGNED','ok',S.met),
+  'pb-ags':()=>addLog('AGS INITIALIZED — BACKUP GUID READY','ok',S.met),
+  'pb-cmc':()=>addLog('CMC RESET — GUIDANCE COMPUTER RESTART','warn',S.met),
+  'pb-stab':()=>addLog('SCS STABILITY CTRL — ENGAGED','ok',S.met),
+  'pb-arcs':()=>addLog('AUTO RCS — ARM CONFIRMED','ok',S.met),
+  'pb-tvc':()=>addLog('TVC SERVO — SYSTEM CHECK OK','ok',S.met),
+};
+
+function resizeAll(){
+  [winC,mapC,lmC].forEach(c=>{
+    if(!c)return;
+    const r=c.parentElement.getBoundingClientRect();
+    c.width=Math.floor(r.width)||c.offsetWidth;
+    c.height=Math.floor(r.height)||c.offsetHeight;
+  });
+}
+
+function loop(ts){
+  if(!S.lastTs)S.lastTs=ts;
+  const dtReal=Math.min((ts-S.lastTs)/1000,.1); S.lastTs=ts;
+  if(!checkHold()){
+    const dt=dtReal*warpLevel;
+    S.met+=dt;
+    physics(dt); fireEvents();
+  }
+  drawWindow(); drawMap(); drawLM(); hud();
+  requestAnimationFrame(loop);
+}
+
+// ── Physics ──
+function physics(dt){
+  const t=S.met; S.sep=false; S.maxq=false;
+  if(t<0){S.alt=0;S.vel=0;S.gforce=1;S.pitch=90;S.roll=0;S.pos=0;return;}
+  if(t<162){
+    const p=t/162;
+    S.alt=67*p*p; S.vel=2400*p; S.gforce=1+3.5*Math.pow(p,1.2);
+    S.pitch=t>12?90-65*Math.min((t-12)/120,1):90;
+    S.f_s1=100*(1-p); S.maxq=t>65&&t<92;
+    S.yaw=Math.sin(t/20)*0.5;
+    S.phase=t<3?'ignition':(t<76?'liftoff':'sic'); S.pos=0;
+  } else if(t<165){
+    S.gforce=.15;S.sep=true;S.f_s1=0;S.phase='sicsep';S.pos=0;
+  } else if(t<553){
+    const p=(t-165)/(553-165);
+    S.alt=67+(185-67)*p; S.vel=2400+(7700-2400)*p;
+    S.gforce=.6+2.8*p; S.pitch=25-20*p; S.f_s2=100*(1-p);
+    S.yaw=Math.sin(t/15)*0.3;
+    S.phase='sii'; S.pos=0;
+  } else if(t<558){
+    S.gforce=.05;S.sep=true;S.f_s2=0;S.phase='siisep';S.pos=0;
+  } else if(t<702){
+    const p=(t-558)/(702-558);
+    S.alt=185+(190-185)*p; S.vel=7700+(7900-7700)*p;
+    S.gforce=.5+.5*p; S.pitch=5*(1-p); S.f_s3=100-60*p;
+    S.phase='sivb'; S.pos=0;
+  } else if(t<10800){
+    const p=(t-702)/(10800-702);
+    S.alt=190+10*Math.sin(p*Math.PI*6); S.vel=7790+20*Math.sin(p*Math.PI*4);
+    S.gforce=0; S.pitch=Math.sin(p*Math.PI*3)*5; S.f_s3=40;
+    S.yaw=Math.sin(p*Math.PI*5)*2;
+    S.phase='earthorbit'; S.pos=p*.003;
+  } else if(t<11147){
+    const p=(t-10800)/347;
+    S.alt=190+400*p; S.vel=7900+(11200-7900)*p;
+    S.gforce=.3+.6*p; S.pitch=p*15; S.f_s3=40-40*p;
+    S.phase='tli'; S.pos=.003+p*.012;
+  } else if(t<270000){
+    const p=(t-11147)/(270000-11147);
+    S.alt=590+p*369400; S.vel=11200*(1-p*.93);
+    S.gforce=0; S.pitch=10+Math.sin(p*Math.PI*8)*3; S.f_s3=0; S.f_sm=100-30*p;
+    S.yaw=Math.sin(p*Math.PI*12)*2;
+    S.phase='translunar'; S.pos=.015+p*.955;
+  } else if(t<271500){
+    const p=(t-270000)/1500;
+    S.alt=100000-p*99000; S.vel=800+300*p;
+    S.gforce=0; S.f_sm=70-5*p;
+    S.phase='lunarapproach'; S.pos=.97+p*.02;
+  } else if(t<271867){
+    const p=(t-271500)/367;
+    S.alt=1000-p*940; S.vel=1100+p*500;
+    S.gforce=.2+p*.4; S.f_sm=65-20*p;
+    S.phase='loi'; S.pos=.99+p*.005;
+  } else if(t<361000){
+    const p=(t-271867)/(361000-271867);
+    S.alt=100+15*Math.sin(p*Math.PI*12); S.vel=1610+10*Math.cos(p*Math.PI*8);
+    S.gforce=0; S.f_sm=45;
+    S.phase='lunarorbit'; S.pos=Math.min(.999,.995+p*.002);
+  } else if(t<362200){
+    const p=(t-361000)/1200;
+    S.alt=18000*p; S.vel=1600; S.gforce=0;
+    S.lm_alt=18000*p; S.lm_vrate=15; S.lm_hvel=1600; S.lm_fuel_d=100;
+    S.phase='lm_sep'; S.pos=.999;
+  } else if(t<364200){
+    const p=(t-362200)/2000;
+    const ep=Math.pow(p,1.4);
+    S.lm_alt=Math.max(0,18000*(1-ep));
+    S.lm_vrate=-(18000*1.4*Math.pow(Math.max(.01,p),.4))/2000;
+    S.lm_hvel=Math.max(0,1600*Math.pow(1-p,1.8));
+    S.lm_fuel_d=Math.max(5,100-82*p);
+    S.alt=100+S.lm_alt*.001; S.vel=S.lm_hvel; S.gforce=p>.7?.3:.1;
+    S.phase='lm_descent'; S.pos=.999;
+  } else if(t<440000){
+    S.lm_alt=0; S.lm_vrate=0; S.lm_hvel=0; S.lm_fuel_d=18;
+    S.alt=100; S.vel=1610; S.gforce=0;
+    S.phase='lm_landed'; S.pos=.999;
+  } else if(t<441700){
+    const p=(t-440000)/1700;
+    S.lm_alt=p*18000; S.lm_vrate=18000/1700; S.lm_hvel=p*1600;
+    S.lm_fuel_a=Math.max(2,100-96*p);
+    S.alt=100+p*18000*.001; S.vel=p*1600; S.gforce=.1+.4*p;
+    S.phase='lm_ascent'; S.pos=.999;
+  } else if(t<443700){
+    const p=(t-441700)/2000;
+    S.lm_alt=18000-p*5000; S.lm_vrate=-2.5; S.lm_hvel=1600-p*1600;
+    S.lm_fuel_a=2; S.alt=100; S.vel=1610; S.gforce=0;
+    S.phase='lm_dock'; S.pos=.999;
+  } else if(t<457000){
+    const p=(t-443700)/(457000-443700);
+    S.alt=100+10*Math.sin(p*Math.PI*6); S.vel=1610; S.gforce=0;
+    S.f_sm=45-3*p;
+    S.phase='lunarorbit2'; S.pos=.999;
+  } else if(t<457720){
+    const p=(t-457000)/720;
+    S.alt=100+p*800; S.vel=1610+p*800; S.gforce=.2+.5*p; S.f_sm=42-20*p;
+    S.phase='tei'; S.pos=.999;
+  } else if(t<697000){
+    const p=(t-457720)/(697000-457720);
+    S.alt=384400*(1-p); S.vel=1100+p*9900; S.gforce=0; S.f_sm=22-10*p;
+    S.homebound=true; S.returnPos=p;
+    S.phase='transearth'; S.pos=.999*(1-p);
+  } else if(t<697400){
+    const p=(t-697000)/400;
+    S.alt=400000*(1-p)*.3; S.vel=11000+p*500; S.gforce=p*.5;
+    S.homebound=true; S.returnPos=1;
+    S.phase='entry_interface'; S.pos=.001;
+  } else if(t<698000){
+    const p=(t-697400)/600;
+    S.alt=Math.max(0,120000*(1-p)); S.vel=Math.max(0,11200*(1-p)*.9);
+    S.gforce=1+7*Math.sin(p*Math.PI); S.homebound=true; S.returnPos=1;
+    S.phase='reentry'; S.pos=0;
+  } else {
+    S.alt=0; S.vel=0; S.gforce=1; S.homebound=true; S.returnPos=1;
+    S.phase='splashdown'; S.pos=0;
+  }
+}
+
+// ── Event firing ──
+const LM_EVENTS_METS=new Set([361000,362200,363000,363500,363506,363510,363514,364000,364200,440000,441700,443500]);
+function fireEvents(){
+  const t=S.met;
+  for(const [m,txt,tp] of EVENTS)
+    if(!S.firedEv.has(m)&&t>=m){S.firedEv.add(m);addLog(txt,tp,m);if(LM_EVENTS_METS.has(m))addLmLog(txt,tp,m);}
+  for(const [m,who,msg] of CAPCOM)
+    if(!S.firedCC.has(m)&&t>=m){S.firedCC.add(m);addCapcom(who,msg);}
+  for(const [m,stn,to,msg] of MC_CHATTER)
+    if(!S.firedMC.has(m)&&t>=m){S.firedMC.add(m);addChatter(stn,to,msg);}
+}
+
+function addLog(text,type,met){
+  const el=document.getElementById('event-log');
+  const d=document.createElement('div');
+  d.className='ev '+(type==='warn'?'warn':type==='ok'?'ok':'');
+  d.innerHTML=`<span class="t">${fmtMET(Math.max(0,met))}</span>${text}`;
+  el.insertBefore(d,el.firstChild);
+  while(el.children.length>24)el.removeChild(el.lastChild);
+}
+
+function addLmLog(text,type,met){
+  const el=document.getElementById('lm-event-log');
+  if(!el)return;
+  const d=document.createElement('div');
+  d.className='ev '+(type==='warn'?'warn':type==='ok'?'ok':'');
+  d.innerHTML=`<span class="t">${fmtMET(Math.max(0,met))}</span>${text}`;
+  el.insertBefore(d,el.firstChild);
+  while(el.children.length>16)el.removeChild(el.lastChild);
+}
+
+function addCapcom(who,msg){
+  const el=document.getElementById('capcom-log');
+  const d=document.createElement('div');
+  d.className='capcom-entry '+(who==='CREW'?'crew':'');
+  d.textContent=`[${who}] ${msg}`;
+  el.insertBefore(d,el.firstChild);
+  while(el.children.length>14)el.removeChild(el.lastChild);
+  pushCapcomStrip(who,msg);
+}
+function pushCapcomStrip(who,msg){
+  const isCrew=(who==='CREW');
+  const cls=isCrew?'cc-entry cc-crew':'cc-entry cc-hou';
+  const label=isCrew?'CDR':who;
+  const html=`<span class="cc-who">${label}</span><span class="cc-txt">${msg}</span>`;
+  const cs=document.getElementById('crew-capcom-msgs');
+  if(cs){
+    const d=document.createElement('div');d.className=cls;d.innerHTML=html;
+    cs.insertBefore(d,cs.firstChild);
+    while(cs.children.length>2)cs.removeChild(cs.lastChild);
+  }
+  if(S.met>=361000){
+    const ls=document.getElementById('lm-capcom-msgs');
+    if(ls){
+      const d=document.createElement('div');d.className=cls;d.innerHTML=html;
+      ls.insertBefore(d,ls.firstChild);
+      while(ls.children.length>2)ls.removeChild(ls.lastChild);
+    }
+  }
+}
+
+function addChatter(stn,to,msg){
+  const el=document.getElementById('chatter-log');
+  const d=document.createElement('div');
+  d.className='cm '+stn;
+  const toStr=to==='ALL'?'→ ALL':to==='FLIGHT'?'→ FLT':`→ ${to}`;
+  d.innerHTML=`<span class="cms">${stn.toUpperCase()} ${toStr}</span><span class="cmt">${msg}</span>`;
+  el.insertBefore(d,el.firstChild);
+  while(el.children.length>4)el.removeChild(el.lastChild);
+}
+
+// ── Window canvas ──
+function drawWindow(){
+  const w=winC.width,h=winC.height;
+  if(!w||!h)return;
+  const ctx=winX,t=S.met;
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h);
+  const spaceRatio=t<3?0:Math.min(1,(t-3)/80);
+  if(t<200&&t>=-1){
+    const sa=Math.max(0,1-spaceRatio);
+    const gr=ctx.createLinearGradient(0,0,0,h);
+    gr.addColorStop(0,`rgba(0,2,15,${sa})`); gr.addColorStop(1,`rgba(15,60,150,${sa})`);
+    ctx.fillStyle=gr; ctx.fillRect(0,0,w,h);
+  }
+  if(spaceRatio>.1){
+    stars.forEach(s=>{
+      ctx.globalAlpha=s.b*Math.min(1,(spaceRatio-.1)/.5);
+      ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(s.x*w,s.y*h,s.r,0,Math.PI*2); ctx.fill();
+    }); ctx.globalAlpha=1;
+  }
+  // Earth
+  const inTL=t>11147,inLO=t>270000;
+  const inReturn=S.homebound&&t>457720&&t<697400;
+  if(!inLO||t<271867+3600||inReturn){
+    let er;
+    if(inReturn){er=8+S.returnPos*Math.min(h*.7,220);}
+    else if(t<3){er=h*4;}
+    else if(t<702){er=Math.max(18,h*4*Math.exp(-S.alt/200));}
+    else if(t<11147){er=Math.max(14,60*Math.exp(-S.alt/2000));}
+    else{er=Math.max(0,40*(1-(t-11147)/258853));}
+    if(er>0){
+      const ex=w*.3,ey=inTL?h*.65:h+er*.1;
+      const eg=ctx.createRadialGradient(ex-er*.2,ey-er*.2,er*.05,ex,ey,er);
+      eg.addColorStop(0,'#4488ff'); eg.addColorStop(.35,'#2255cc'); eg.addColorStop(.65,'#113322'); eg.addColorStop(1,'#050f1e');
+      ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(ex,ey,er,0,Math.PI*2); ctx.fill();
+      if(er>20){
+        const ag=ctx.createRadialGradient(ex,ey,er*.92,ex,ey,er*1.08);
+        ag.addColorStop(0,'rgba(40,120,255,.35)'); ag.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=ag; ctx.beginPath(); ctx.arc(ex,ey,er*1.08,0,Math.PI*2); ctx.fill();
+      }
+      if(er>60){
+        ctx.save(); ctx.beginPath(); ctx.arc(ex,ey,er,0,Math.PI*2); ctx.clip();
+        ctx.globalAlpha=.15; ctx.fillStyle='#fff';
+        [[.3,.2,er*.4,er*.08],[.7,-.1,er*.3,er*.06],[-.2,.4,er*.35,er*.07]].forEach(([dx,dy,rw,rh])=>{
+          ctx.beginPath(); ctx.ellipse(ex+dx*er,ey+dy*er,rw,rh,.3,0,Math.PI*2); ctx.fill();
+        }); ctx.restore(); ctx.globalAlpha=1;
+      }
+    }
+  }
+  // Moon
+  if(t>30000){
+    const mp=Math.min(1,(t-30000)/(271867-30000));
+    const mr=2+mp*(inLO?160:70);
+    const mx=w*.68,my=h*.3;
+    const mg=ctx.createRadialGradient(mx-mr*.2,my-mr*.25,mr*.05,mx,my,mr);
+    mg.addColorStop(0,'#ccc9b5'); mg.addColorStop(.5,'#9a9580'); mg.addColorStop(1,'#222018');
+    ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(mx,my,mr,0,Math.PI*2); ctx.fill();
+    if(mr>30){
+      ctx.save(); ctx.beginPath(); ctx.arc(mx,my,mr,0,Math.PI*2); ctx.clip();
+      ctx.globalAlpha=.2; ctx.fillStyle='#333';
+      [[.2,.1,mr*.12],[-.25,.3,mr*.08],[.4,-.2,mr*.1],[-.1,-.3,mr*.06]].forEach(([dx,dy,cr])=>{
+        ctx.beginPath(); ctx.arc(mx+dx*mr,my+dy*mr,cr,0,Math.PI*2); ctx.fill();
+      }); ctx.restore(); ctx.globalAlpha=1;
+    }
+  }
+  // Burn vibe
+  const burning=(t>=0&&t<162)||(t>=165&&t<553)||(t>=558&&t<702)||(t>=10800&&t<11147)||(t>=271500&&t<271867);
+  if(burning){
+    ctx.strokeStyle='rgba(255,100,0,.04)'; ctx.lineWidth=3;
+    const sh=Math.sin(Date.now()*.05)*2;
+    ctx.strokeRect(sh,sh,w-sh*2,h-sh*2);
+  }
+  if(t>=-30&&t<0){
+    ctx.fillStyle='rgba(0,0,0,.65)'; ctx.fillRect(0,0,w,h);
+    ctx.font=`bold ${Math.round(h*.28)}px Courier New`; ctx.fillStyle='#ff4400';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(Math.ceil(-t)).padStart(2,'0'),w/2,h/2);
+    ctx.font=`${Math.round(h*.08)}px Courier New`; ctx.fillStyle='#882200';
+    ctx.fillText('T MINUS',w/2,h*.2);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+  }
+  // ── New phase visuals ──
+  if(S.phase==='reentry'){
+    const p=Math.min(1,(t-697400)/600);
+    const plasma=ctx.createRadialGradient(w*.5,h,0,w*.5,h,h*1.8);
+    plasma.addColorStop(0,`rgba(255,60,0,${p*.95})`);
+    plasma.addColorStop(.25,`rgba(255,140,0,${p*.7})`);
+    plasma.addColorStop(.6,`rgba(255,200,50,${p*.3})`);
+    plasma.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=plasma;ctx.fillRect(0,0,w,h);
+    if(p>.45){
+      const blackout=Math.min(1,(p-.45)/.35);
+      ctx.fillStyle=`rgba(0,0,0,${blackout*.88})`;ctx.fillRect(0,0,w,h);
+      ctx.fillStyle=`rgba(255,90,0,${blackout*.9})`;
+      ctx.font=`bold ${Math.round(h*.09)}px Courier New`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('COMM BLACKOUT',w/2,h*.45);
+      ctx.font=`${Math.round(h*.055)}px Courier New`;ctx.fillStyle=`rgba(180,50,0,${blackout*.8})`;
+      ctx.fillText('IONIZATION BLACKOUT',w/2,h*.6);
+      ctx.fillText('SIGNAL LOST',w/2,h*.72);
+    }
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  }
+  if(S.phase==='splashdown'){
+    const wt=ctx.createLinearGradient(0,0,0,h);
+    wt.addColorStop(0,'#001a33');wt.addColorStop(.5,'#002244');wt.addColorStop(1,'#001122');
+    ctx.fillStyle=wt;ctx.fillRect(0,0,w,h);
+    // Waves
+    ctx.strokeStyle='rgba(0,80,160,.4)';ctx.lineWidth=1.5;
+    for(let wy=h*.3;wy<h;wy+=22){
+      ctx.beginPath();
+      for(let wx=0;wx<w;wx+=4){ctx.lineTo(wx,wy+Math.sin((wx*.02)+Date.now()*.001)*5);}ctx.stroke();
+    }
+    ctx.fillStyle='rgba(0,150,255,.15)';
+    for(let i=0;i<6;i++){ctx.fillRect(0,h*(.3+i*.12),w,8);}
+    ctx.fillStyle='#00ff88';ctx.font=`bold ${Math.round(h*.1)}px Courier New`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('MISSION COMPLETE',w/2,h*.35);
+    ctx.font=`${Math.round(h*.055)}px Courier New`;ctx.fillStyle='#00cc66';
+    ctx.fillText('RECOVERY FORCES INBOUND',w/2,h*.5);
+    ctx.fillText('APOLLO — SPLASHDOWN',w/2,h*.62);
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  }
+  if(S.phase==='entry_interface'){
+    const p=(t-697000)/400;
+    const eg=ctx.createRadialGradient(w*.5,h,0,w*.5,h,h*1.5);
+    eg.addColorStop(0,`rgba(255,180,0,${p*.4})`);eg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=eg;ctx.fillRect(0,0,w,h);
+  }
+}
+
+// ── LM window canvas ──
+function drawLM(){
+  if(!lmC||!lmC.width||!lmC.height)return;
+  const ctx=lmX,w=lmC.width,h=lmC.height,t=S.met;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+  const lmPhases=['lm_sep','lm_descent','lm_landed','lm_ascent','lm_dock'];
+  if(!lmPhases.includes(S.phase)){
+    ctx.fillStyle='#0a0a0a';ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='#2a2a2a';ctx.font='11px Courier New';ctx.textAlign='center';ctx.textBaseline='middle';
+    const msg=S.met<361000?'LM NOT YET DEPLOYED':'LM MISSION COMPLETE';
+    ctx.fillText(msg,w/2,h/2);
+    ctx.font='9px Courier New';ctx.fillStyle='#1a1a1a';
+    ctx.fillText('PHASE: '+S.phase.toUpperCase(),w/2,h/2+18);
+    return;
+  }
+  // Stars in sky
+  ctx.fillStyle='#000008';ctx.fillRect(0,0,w,h);
+  stars.slice(0,200).forEach(s=>{
+    ctx.globalAlpha=s.b*.8;ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(s.x*w,s.y*h*(S.phase==='lm_landed'?.55:.65),s.r*.8,0,Math.PI*2);ctx.fill();
+  });ctx.globalAlpha=1;
+  const alt=S.lm_alt;
+  if(S.phase==='lm_landed'){
+    // Surface view from ground
+    const horizY=h*.6;
+    // Lunar sky
+    ctx.fillStyle='rgba(0,0,8,.6)';ctx.fillRect(0,0,w,horizY);
+    // Earth in sky
+    const ex=w*.72,ey=h*.28,er=28;
+    const eg=ctx.createRadialGradient(ex-er*.2,ey-er*.2,er*.05,ex,ey,er);
+    eg.addColorStop(0,'#4488ff');eg.addColorStop(.4,'#2255cc');eg.addColorStop(1,'#050f1e');
+    ctx.fillStyle=eg;ctx.beginPath();ctx.arc(ex,ey,er,0,Math.PI*2);ctx.fill();
+    const atm=ctx.createRadialGradient(ex,ey,er,ex,ey,er*1.12);
+    atm.addColorStop(0,'rgba(40,120,255,.3)');atm.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=atm;ctx.beginPath();ctx.arc(ex,ey,er*1.12,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#3366cc';ctx.font='8px Courier New';ctx.textAlign='center';ctx.fillText('EARTH',ex,ey+er+10);
+    // Ground
+    ctx.fillStyle='#4a4740';ctx.fillRect(0,horizY,w,h-horizY);
+    ctx.strokeStyle='#5a5550';ctx.lineWidth=2;ctx.beginPath();
+    for(let x=0;x<=w;x+=4){const idx=Math.floor(x/w*200);const y=horizY+lmTerrain[idx%lmTerrain.length]*.4;x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();
+    // Craters
+    [[.18,.72,22],[.55,.8,14],[.78,.68,18],[.35,.9,28]].forEach(([fx,fy,cr])=>{
+      ctx.fillStyle='#3a3730';ctx.beginPath();ctx.arc(fx*w,fy*h,cr,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#5a5550';ctx.lineWidth=1;ctx.beginPath();ctx.arc(fx*w,fy*h,cr,0,Math.PI*2);ctx.stroke();
+    });
+    // Footpad shadows
+    ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.ellipse(w*.3,horizY+5,18,5,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(w*.7,horizY+5,18,5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.5)';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillStyle='#1a2a1a';ctx.fillText('T+'+fmtMET(t-364200)+' SURFACE',8,8);
+  } else {
+    // Descent/ascent/sep view — terrain below
+    const scaleFac=Math.max(.05,Math.min(1,1-alt/20000*.85));
+    const horizY=h*(.3+.55*scaleFac);
+    ctx.beginPath();ctx.moveTo(0,horizY);
+    for(let x=0;x<=w;x++){
+      const scroll=(t-362200)*.08;
+      const idx=(x/w*200+scroll)%lmTerrain.length;
+      const i=Math.floor(idx);const f=idx-i;
+      const hv=(lmTerrain[i%lmTerrain.length]*(1-f)+lmTerrain[(i+1)%lmTerrain.length]*f)*scaleFac;
+      ctx.lineTo(x,horizY-hv);
+    }
+    ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();
+    const tg=ctx.createLinearGradient(0,horizY,0,h);
+    tg.addColorStop(0,'#606050');tg.addColorStop(1,'#3a3730');
+    ctx.fillStyle=tg;ctx.fill();
+    // Horizon glow
+    ctx.fillStyle='rgba(80,75,60,.15)';ctx.fillRect(0,horizY-3,w,6);
+    // Altitude readout
+    ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(4,4,100,28);
+    ctx.fillStyle='#44ff44';ctx.font='bold 11px Courier New';ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText(Math.round(alt)+' m',8,6);
+    ctx.fillStyle='#228822';ctx.font='9px Courier New';
+    ctx.fillText(Math.round(S.lm_vrate)+' m/s  '+Math.round(S.lm_hvel)+' m/s',8,19);
+    // Dust during landing
+    if(alt<100&&alt>0){
+      for(let i=0;i<12;i++){
+        const dx=Math.sin(i*777.7+t*.3)*w*.3;
+        const dy=Math.cos(i*333.3+t*.2)*20;
+        ctx.globalAlpha=Math.max(0,(1-alt/100)*.4);
+        ctx.fillStyle='#a09888';
+        ctx.beginPath();ctx.arc(w*.5+dx,horizY+dy-10,3+i*.5,0,Math.PI*2);ctx.fill();
+      }ctx.globalAlpha=1;
+    }
+    if(S.phase==='lm_ascent'){
+      ctx.fillStyle='rgba(255,80,0,.06)';ctx.strokeStyle='rgba(255,80,0,.04)';ctx.lineWidth=3;
+      const sh=Math.sin(Date.now()*.05)*2;ctx.strokeRect(sh,sh,w-sh*2,h-sh*2);
+    }
+  }
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+}
+
+// ── Map canvas ──
+function drawMap(){
+  const w=mapC.width,h=mapC.height;
+  if(!w||!h)return;
+  const ctx=mapX,t=S.met;
+  ctx.fillStyle='#000008'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(0,60,30,.18)'; ctx.lineWidth=1;
+  for(let x=0;x<w;x+=w/16){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<h;y+=h/10){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  ctx.fillStyle='rgba(255,255,255,.6)';
+  stars.slice(0,80).forEach(s=>{ctx.beginPath();ctx.arc(s.x*w,s.y*h,s.r*.5,0,Math.PI*2);ctx.fill();});
+  const pad=90,cy=h*.48,ex=pad,moonX=w-pad;
+  // Earth
+  const er=38;
+  const eg=ctx.createRadialGradient(ex-10,cy-12,3,ex,cy,er);
+  eg.addColorStop(0,'#4499ff');eg.addColorStop(.4,'#1a55cc');eg.addColorStop(.75,'#0f3318');eg.addColorStop(1,'#070f1c');
+  ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(ex,cy,er,0,Math.PI*2); ctx.fill();
+  const ae=ctx.createRadialGradient(ex,cy,er,ex,cy,er+9);
+  ae.addColorStop(0,'rgba(40,120,255,.35)');ae.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=ae; ctx.beginPath(); ctx.arc(ex,cy,er+9,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#4488ff'; ctx.font='10px Courier New'; ctx.textAlign='center';
+  ctx.fillText('EARTH',ex,cy+er+15);
+  // Moon
+  const mr=24;
+  const mg=ctx.createRadialGradient(moonX-6,cy-8,2,moonX,cy,mr);
+  mg.addColorStop(0,'#d0ccb8');mg.addColorStop(.6,'#9a9580');mg.addColorStop(1,'#282618');
+  ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(moonX,cy,mr,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#aaa89a'; ctx.fillText('MOON',moonX,cy+mr+15);
+  // Trajectory
+  const cp1x=ex+(moonX-ex)*.28,cp1y=cy-h*.3,cp2x=ex+(moonX-ex)*.72,cp2y=cy-h*.15;
+  ctx.strokeStyle='rgba(0,200,100,.22)'; ctx.lineWidth=1.5; ctx.setLineDash([5,5]);
+  ctx.beginPath(); ctx.moveTo(ex,cy); ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,moonX,cy); ctx.stroke(); ctx.setLineDash([]);
+  const pos=Math.max(0,Math.min(1,S.pos));
+  if(pos>.002){
+    ctx.strokeStyle='rgba(0,255,140,.7)'; ctx.lineWidth=2.5; ctx.beginPath();
+    for(let i=0;i<=pos;i+=.004){
+      const bx=bez(ex,cp1x,cp2x,moonX,i),by=bez(cy,cp1y,cp2y,cy,i);
+      i===0?ctx.moveTo(bx,by):ctx.lineTo(bx,by);
+    } ctx.stroke();
+  }
+  if(t>=702&&t<10900){
+    ctx.strokeStyle='rgba(0,150,255,.25)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.arc(ex,cy,er+18,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  }
+  // Return arc (homebound)
+  if(S.homebound&&S.returnPos>0){
+    const rcp1x=moonX-(moonX-ex)*.28,rcp1y=cy+h*.25;
+    const rcp2x=moonX-(moonX-ex)*.72,rcp2y=cy+h*.15;
+    ctx.strokeStyle='rgba(0,150,200,.18)';ctx.lineWidth=1.5;ctx.setLineDash([5,5]);
+    ctx.beginPath();ctx.moveTo(moonX,cy);ctx.bezierCurveTo(rcp1x,rcp1y,rcp2x,rcp2y,ex,cy);ctx.stroke();
+    ctx.setLineDash([]);
+    const rp=Math.min(1,S.returnPos);
+    if(rp>.002){
+      ctx.strokeStyle='rgba(0,220,255,.7)';ctx.lineWidth=2.5;ctx.beginPath();
+      for(let i=0;i<=rp;i+=.004){
+        const bx=bez(moonX,rcp1x,rcp2x,ex,i),by=bez(cy,rcp1y,rcp2y,cy,i);
+        i===0?ctx.moveTo(bx,by):ctx.lineTo(bx,by);
+      }ctx.stroke();
+    }
+  }
+  const scx=bez(ex,cp1x,cp2x,moonX,pos),scy=bez(cy,cp1y,cp2y,cy,pos);
+  // Spacecraft dot — on return arc when homebound
+  let dotX,dotY;
+  if(S.homebound&&S.returnPos>0){
+    const rcp1x=moonX-(moonX-ex)*.28,rcp1y=cy+h*.25;
+    const rcp2x=moonX-(moonX-ex)*.72,rcp2y=cy+h*.15;
+    dotX=bez(moonX,rcp1x,rcp2x,ex,Math.min(1,S.returnPos));
+    dotY=bez(cy,rcp1y,rcp2y,cy,Math.min(1,S.returnPos));
+  } else {
+    dotX=scx; dotY=scy;
+  }
+  const pulse=1+Math.sin(Date.now()*.006)*.3;
+  const dotCol=S.homebound?'rgba(0,220,255,.7)':'rgba(255,220,0,.7)';
+  const sg=ctx.createRadialGradient(dotX,dotY,0,dotX,dotY,12*pulse);
+  sg.addColorStop(0,dotCol);sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(dotX,dotY,12*pulse,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=S.homebound?'#00eeff':'#ffcc00'; ctx.strokeStyle=S.homebound?'#0088aa':'#ff8800'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(dotX,dotY,5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=S.homebound?'#00eeff':'#ffcc00'; ctx.font='9px Courier New'; ctx.textAlign='left';
+  ctx.fillText('APOLLO',dotX+9,dotY-8);
+  ctx.fillStyle=S.homebound?'#007788':'#997700';
+  ctx.fillText(fmtAlt(S.alt),dotX+9,dotY+2); ctx.fillText(fmtVel(S.vel),dotX+9,dotY+12);
+  // Info box
+  const bw=200,bh=90;
+  ctx.fillStyle='rgba(0,0,5,.78)'; ctx.fillRect(w-bw-8,8,bw,bh);
+  ctx.strokeStyle=S.homebound?'rgba(0,160,200,.5)':'rgba(0,160,80,.5)'; ctx.lineWidth=1; ctx.strokeRect(w-bw-8,8,bw,bh);
+  ctx.fillStyle=S.homebound?'#00eeff':'#00ff88'; ctx.font='9px Courier New';
+  const rangeKm=S.homebound?(1-S.returnPos)*384400:pos*384400;
+  [`MET: ${fmtMET(Math.max(0,t))}`,`PHASE: ${phaseLabel()}`,
+   S.homebound?`RETURN: ${(S.returnPos*100).toFixed(1)}% Moon→Earth`:`POS: ${(pos*100).toFixed(2)}% Earth→Moon`,
+   `RANGE: ${fmtAlt(rangeKm)} from Earth`,`DSN: ${dsnStation()}`
+  ].forEach((l,i)=>ctx.fillText(l,w-bw,28+i*13));
+  ctx.textAlign='left';
+}
+
+function bez(p0,p1,p2,p3,t){const m=1-t;return m*m*m*p0+3*m*m*t*p1+3*m*t*t*p2+t*t*t*p3;}
+
+function dsnStation(){
+  const t=S.met;
+  if(t<120000)return 'GOLDSTONE';
+  if(t<200000)return 'MADRID';
+  return 'HONEYSUCKLE';
+}
+
+// ── HUD ──
+function hud(){
+  const t=S.met;
+  const metStr=t<0?`T-${fmtCountdown(-t)}`:`T+${fmtMET(t)}`;
+  document.getElementById('met-display').textContent=metStr;
+  const pl=phaseLabel();
+  ss('phase-val',pl); ss('gc-phase',pl); ss('gc-met',fmtMET(Math.max(0,t)));
+  ss('alt-val',fmtAlt(S.alt)); ss('vel-val',fmtVel(S.vel));
+  ss('gf-val',S.gforce.toFixed(2)+' G');
+  ss('pitch-val',S.pitch.toFixed(1)+'°'); ss('roll-val',S.roll.toFixed(1)+'°');
+  ss('yaw-val',S.yaw.toFixed(1)+'°');
+  ss('gc-alt',fmtAlt(S.alt)); ss('gc-vel',fmtVel(S.vel)); ss('gc-g',S.gforce.toFixed(2));
+  const rangeFromEarth=S.homebound?(1-S.returnPos)*384400:S.pos*384400;
+  ss('gc-range',fmtAlt(rangeFromEarth));
+  ss('gc-dsn',dsnStation()); ss('gc-delay',(rangeFromEarth/299792).toFixed(2)+'s');
+  // Period
+  const period=t>702&&t<10800?'88m 24s':(t>271867&&t<457000)?'119m 02s':'—';
+  ss('gc-period',period);
+  // DSKY
+  let verb='06',noun='33',prog='00';
+  if(t>=0&&t<702){verb='16';noun='62';prog='11';}
+  else if(t>=702&&t<10800){verb='06';noun='44';prog='15';}
+  else if(t>=10800&&t<11147){verb='16';noun='62';prog='30';}
+  else if(t>=11147&&t<457000){verb='06';noun='23';prog='15';}
+  else if(t>=457000&&t<698000){verb='16';noun='44';prog='61';}
+  ss('dv',verb); ss('dn',noun); ss('dp',prog);
+  const altNm=S.alt*.5399,velFts=S.vel*3.281,fpa=S.pitch-90;
+  ss('dr1','+'+(Math.round(altNm*10)+'').padStart(5,'0'));
+  ss('dr2','+'+(Math.round(velFts)+'').padStart(5,'0'));
+  ss('dr3',(fpa>=0?'+':'-')+(Math.abs(Math.round(fpa*100))+'').padStart(5,'0'));
+  // LM DSKY
+  let ldv='06',ldn='33',ldp='00';
+  if(t>=361000&&t<362200){ldv='06';ldn='44';ldp='00';}
+  else if(t>=362200&&t<363000){ldv='16';ldn='68';ldp='63';}
+  else if(t>=363000&&t<364000){ldv='16';ldn='68';ldp='64';}
+  else if(t>=364000&&t<364200){ldv='16';ldn='68';ldp='66';}
+  else if(t>=364200&&t<440000){ldv='06';ldn='43';ldp='68';}
+  else if(t>=440000&&t<441700){ldv='16';ldn='68';ldp='12';}
+  else if(t>=441700&&t<443700){ldv='06';ldn='44';ldp='34';}
+  ss('ldv',ldv); ss('ldn',ldn); ss('ldp',ldp);
+  const lmAltFt=Math.round(S.lm_alt*3.281);
+  ss('ldr1','+'+(Math.abs(Math.round(S.lm_alt))+'').padStart(5,'0'));
+  ss('ldr2',(S.lm_vrate>=0?'+':'-')+(Math.abs(Math.round(S.lm_vrate))+'').padStart(5,'0'));
+  ss('ldr3','+'+(Math.abs(Math.round(S.lm_hvel))+'').padStart(5,'0'));
+  // LM status label
+  const lmStatMap={lm_sep:'UNDOCKING',lm_descent:'DESCENT',lm_landed:'LANDED',lm_ascent:'ASCENT',lm_dock:'DOCKING'};
+  ss('lm-status-val',lmStatMap[S.phase]||'INACTIVE');
+  // LM lights
+  const inDescent=S.phase==='lm_descent';
+  const inLanded=S.phase==='lm_landed';
+  const inAscent=S.phase==='lm_ascent';
+  setLight('lm-cl-desc',inDescent?'ok':'');
+  setLight('lm-cl-asc',inAscent?'ok':'');
+  setLight('lm-cl-alt',inDescent&&S.lm_alt<300?'warn':'');
+  setLight('lm-cl-fuel',S.lm_fuel_d<15&&inDescent?'warn':'');
+  setLight('lm-cl-1202',(t>=363500&&t<363520)||(t>=363510&&t<363530)?'alert':'');
+  setLight('lm-cl-ags','ok');
+  setLight('lm-cl-rcs',t>361000?'ok':'');
+  setLight('lm-cl-land',inLanded?'ok':'');
+  // LM fuel bars
+  const ld=Math.max(0,Math.round(S.lm_fuel_d)),la=Math.max(0,Math.round(S.lm_fuel_a));
+  ss('lm-fp-d',ld+'%'); ss('lm-fp-a',la+'%');
+  const lmfbd=document.getElementById('lm-fb-d'),lmfba=document.getElementById('lm-fb-a');
+  if(lmfbd)lmfbd.style.width=ld+'%'; if(lmfba)lmfba.style.width=la+'%';
+  // LM engines
+  const lmEngD=document.getElementById('lm-eng-d'),lmEngA=document.getElementById('lm-eng-a');
+  if(lmEngD){lmEngD.textContent='DESC: '+(inDescent?'FIRE':'OFF');lmEngD.className='eng-cell'+(inDescent?' on':'');}
+  if(lmEngA){lmEngA.textContent='ASC: '+(inAscent?'FIRE':'OFF');lmEngA.className='eng-cell'+(inAscent?' on':'');}
+  // LM mini gauges
+  drawGauge('lm-alt-gauge',Math.min(1,S.lm_alt/20000),'#44ff44',28);
+  const vrf=Math.min(1,Math.abs(S.lm_vrate)/30);
+  drawGauge('lm-vr-gauge',vrf,S.lm_vrate<-10?'#ff8800':'#44ff44',28);
+  drawGauge('lm-hv-gauge',Math.min(1,S.lm_hvel/2000),'#44ffcc',28);
+  drawGauge('lm-gf-gauge',Math.min(1,S.gforce/4),'#44ff44',28);
+  ss('lm-alt-val',Math.round(S.lm_alt)+' m');
+  ss('lm-vr-val',S.lm_vrate.toFixed(1)+' m/s');
+  ss('lm-hv-val',Math.round(S.lm_hvel)+' m/s');
+  ss('lm-gf-val',S.gforce.toFixed(2)+' G');
+  // FIDO
+  let stg='S-IC',fuelPct=S.f_s1;
+  if(t>162){stg='S-II';fuelPct=S.f_s2;}
+  if(t>553){stg='S-IVB';fuelPct=S.f_s3;}
+  if(t>11200){stg='CSM/SM';fuelPct=S.f_sm;}
+  ss('gc-stage',stg); ss('gc-fuel',Math.round(Math.max(0,fuelPct))+'%');
+  const thOn=(t>=0&&t<162)||(t>=165&&t<553)||(t>=558&&t<702)||(t>=10800&&t<11147)||(t>=271500&&t<271867)||(t>=457000&&t<457720);
+  ss('gc-thrust',thOn?'100%':'0%'); ss('gc-dv',fmtVel(S.vel));
+  ss('gc-tli',t>=11147?'COMPLETE':t>=10800?'BURNING':'PENDING');
+  ss('gc-loi',t>=271867?'COMPLETE':t>=271500?'BURNING':'PENDING');
+  ss('gc-tei',t>=457720?'COMPLETE':t>=457000?'BURNING':'PENDING');
+  // New consoles Row 2
+  const bstEng=t>=0&&t<162?'5/5 FIRE':t>=162&&t<700?'STAGED':t<0?'5/5 NOM':'DONE';
+  ss('gc-bst-sc',t>443700?'CSM ONLY':t>361000?'CSM+LM':'SATURN V');
+  ss('gc-bst-eng',bstEng);
+  ss('gc-bst-str',S.gforce>5?'HIGH LOAD':S.maxq?'MAX-Q':'NOMINAL');
+  const baseCDR=72,baseCMP=68,baseLMP=70;
+  const hrDelta=thOn||S.phase==='lm_descent'?Math.round(Math.sin(t*.1)*8+10):Math.round(Math.sin(t*.05)*3);
+  ss('gc-surg-cdr',(baseCDR+hrDelta)+' bpm');
+  ss('gc-surg-cmp',(baseCMP+Math.round(hrDelta*.7))+' bpm');
+  ss('gc-surg-lmp',(baseLMP+Math.round(hrDelta*.8))+' bpm');
+  ss('gc-net-pri',dsnStation());
+  ss('gc-net-bak',dsnStation()==='GOLDSTONE'?'MADRID':dsnStation()==='MADRID'?'HONEYSUCKLE':'GOLDSTONE');
+  ss('gc-net-acq',t>697800&&t<698000?'BLACKOUT':'NOMINAL');
+  ss('gc-prop-sps',Math.round(Math.max(0,S.f_sm))+'%');
+  ss('gc-lm-desc',Math.round(Math.max(0,S.lm_fuel_d))+'%');
+  ss('gc-lm-asc',Math.round(Math.max(0,S.lm_fuel_a))+'%');
+  ss('gc-ctrl-pitch',S.pitch.toFixed(1)+'°');
+  ss('gc-ctrl-roll',S.roll.toFixed(1)+'°');
+  ss('gc-ctrl-yaw',S.yaw.toFixed(1)+'°');
+  ss('gc-ctrl-g',S.gforce.toFixed(2));
+  // EECOM
+  const o2p=Math.round(900-rangeFromEarth/384400*150), h2p=Math.round(230-rangeFromEarth/384400*40);
+  ss('gc-o2p',o2p+' PSI'); ss('gc-h2p',h2p+' PSI');
+  // Fuel bars
+  [['s1',S.f_s1],['s2',S.f_s2],['s3',S.f_s3],['sm',S.f_sm]].forEach(([k,v])=>{
+    const pct=Math.max(0,Math.round(v)); ss('fp-'+k,pct+'%');
+    const fb=document.getElementById('fb-'+k); if(fb)fb.style.width=pct+'%';
+  });
+  // Engines
+  setEng('eng-s1','S-IC',t>=0&&t<162); setEng('eng-s2','S-II',t>=165&&t<553);
+  setEng('eng-s3','S-IVB',(t>=558&&t<702)||(t>=10800&&t<11147));
+  setEng('eng-sm','SPS',t>=271500&&t<271867);
+  // Dots
+  setDot('dot-s1',t>=0&&t<162); setDot('dot-s2',t>=165&&t<553);
+  setDot('dot-s3',(t>=558&&t<702)||(t>=10800&&t<11147)); setDot('dot-sm',t>=271500&&t<271867);
+  // Warning lights
+  setLight('cl-maxq',S.maxq?'warn':''); setLight('cl-sep',S.sep?'warn':'');
+  setLight('cl-fuel',(S.f_s1<8&&t<162)||(S.f_s2<8&&t>=165&&t<553)?'warn':'');
+  setLight('cl-o2','ok'); setLight('cl-pres','ok'); setLight('cl-guid','ok');
+  setLight('cl-comms',t>250000?'warn':''); setLight('cl-ecs','ok'); setLight('cl-eps','ok');
+  setLight('cl-rcs',t>700?'ok':''); setLight('cl-imu','ok'); setLight('cl-sps','ok');
+  setLight('cl-fc','ok'); setLight('cl-cryog','');
+  // Mini meters
+  const o2pFrac=(900-S.pos*150)/900;
+  setMM('mm-o2',o2pFrac,'#00cc44'); ss('mv-o2',(Math.round(900-S.pos*150))+' PSI');
+  const h2pFrac=(230-S.pos*40)/230;
+  setMM('mm-h2',h2pFrac,'#00aaff'); ss('mv-h2',(Math.round(230-S.pos*40))+' PSI');
+  const glTemp=55+Math.sin(t/800)*5;
+  setMM('mm-gl',.5+Math.sin(t/800)*.05,'#ffaa00'); ss('mv-gl',glTemp.toFixed(0)+'°F');
+  setMM('mm-cp',.6,'#00ff88'); ss('mv-cp','5.0 PSI');
+  setMM('mm-sf',.7,'#44ffcc'); ss('mv-sf','5.0 lb/h');
+  const bv=28.8+Math.sin(t/400)*.2;
+  setMM('mm-bv',.92,'#ffee44'); ss('mv-bv',bv.toFixed(1)+' V');
+  // Flip switches (phase-driven)
+  setFSW('fsw-s1s',t>162&&t<300);
+  setFSW('fsw-s2s',t>553&&t<600);
+  setFSW('fsw-les',t>165&&t<200);
+  setFSW('fsw-pa',t>150&&t<200); setFSW('fsw-pb',t>150&&t<200);
+  setFSW('fsw-ulg',t>150&&t<170);
+  setFSW('fsw-rcsa',t>700); setFSW('fsw-rcsb',t>700);
+  setFSW('fsw-batc',t>10000);
+  setFSW('fsw-hga',t>11200);
+  setFSW('fsw-vhfb',t>11200);
+  setFSW('fsw-cage',false);
+  setFSW('fsw-opt',t>700&&t<10800);
+  // Push buttons
+  setPB('pb-gdc',t>650&&t<720,'green');
+  setPB('pb-stab',thOn,'green');
+  setPB('pb-tvc',thOn,'green');
+  setPB('pb-arcs',t>700,'green');
+  // Gauges
+  drawGauge('pitch-gauge',S.pitch/90,'#00ff41',28);
+  drawGauge('roll-gauge',(S.roll+180)/360,'#00ff41',28);
+  drawGauge('yaw-gauge',(S.yaw+10)/20,'#00aaff',28);
+  drawGauge('gf-gauge',Math.min(1,S.gforce/6),S.gforce>4?'#ff3300':S.gforce>2?'#ffb000':'#00ff41',28);
+  drawAltGauge(); drawVelGauge(); drawAtt();
+  drawKnob('knob-temp',t<0?0.3:0.5); drawKnob('knob-o2',0.6);
+  drawKnob('knob-dap',t>700?0.75:0.5); drawKnob('knob-roll',0.4); drawKnob('knob-comm',0.55);
+}
+
+function ss(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function setMM(id,frac,col){const e=document.getElementById(id);if(e){e.style.width=Math.round(Math.max(0,Math.min(1,frac))*100)+'%';e.style.background=col;}}
+function setEng(id,label,on){const e=document.getElementById(id);if(!e)return;e.textContent=label+(on?': FIRE':': OFF');e.className='eng-cell'+(on?' on':'');}
+function setDot(id,on){const e=document.getElementById(id);if(!e)return;e.className='dot'+(on?' on':'');}
+function setLight(id,state){const e=document.getElementById(id);if(!e)return;e.className='cl '+state;}
+function setFSW(id,on){const e=document.getElementById(id);if(!e)return;e.className='fsw'+(on?' on':'');}
+function setPB(id,lit,col){const e=document.getElementById(id);if(!e)return;e.className='push-btn'+(lit?' '+col:'');}
+
+// ── Gauge drawing ──
+function drawGauge(id,frac,color,r){
+  const c=document.getElementById(id);if(!c)return;
+  const ctx=c.getContext('2d'),w=c.width,h=c.height,cx=w/2,cy=h/2;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#060606'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#1c1c1c'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+  const sa=-Math.PI*.8,ea=Math.PI*.8,fa=sa+(ea-sa)*Math.max(0,Math.min(1,frac));
+  ctx.strokeStyle=color; ctx.lineWidth=3; ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(cx,cy,r-3,sa,fa); ctx.stroke();
+  const ax=cx+Math.cos(fa)*(r-6),ay=cy+Math.sin(fa)*(r-6);
+  ctx.strokeStyle='#ddd'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ax,ay); ctx.stroke();
+  ctx.fillStyle='#444'; ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2); ctx.fill();
+}
+function drawAltGauge(){const f=S.alt>0?Math.log10(Math.max(1,S.alt)+1)/Math.log10(390001):0;drawGauge('alt-gauge',f,'#00aaff',32);}
+function drawVelGauge(){drawGauge('vel-gauge',S.vel/12000,'#00ff41',32);}
+
+function drawKnob(id,frac){
+  const c=document.getElementById(id);if(!c)return;
+  const ctx=c.getContext('2d'),w=c.width,h=c.height,cx=w/2,cy=h/2,r=w/2-2;
+  ctx.clearRect(0,0,w,h);
+  const kg=ctx.createRadialGradient(cx-r*.3,cy-r*.3,1,cx,cy,r);
+  kg.addColorStop(0,'#3a3a3a');kg.addColorStop(.5,'#1c1c1c');kg.addColorStop(1,'#111');
+  ctx.fillStyle=kg; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+  // Indicator line
+  const angle=-Math.PI*.75+frac*Math.PI*1.5;
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=1.5; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(cx+Math.cos(angle)*2,cy+Math.sin(angle)*2);
+  ctx.lineTo(cx+Math.cos(angle)*(r-2),cy+Math.sin(angle)*(r-2));
+  ctx.stroke();
+  // Tick marks
+  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=1;
+  for(let i=0;i<=8;i++){
+    const a=-Math.PI*.75+i/8*Math.PI*1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*(r-3),cy+Math.sin(a)*(r-3));
+    ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+    ctx.stroke();
+  }
+}
+
+function drawAtt(){
+  const c=document.getElementById('att-canvas');if(!c)return;
+  const ctx=c.getContext('2d'),w=c.width,h=c.height,cx=w/2,cy=h/2,r=w/2-5;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#0a0a0a'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,r-1,0,Math.PI*2); ctx.clip();
+  ctx.translate(cx,cy); ctx.rotate(S.roll*Math.PI/180); ctx.translate(-cx,-cy);
+  const po=(S.pitch-90)/90*r;
+  ctx.fillStyle=S.alt>100?'#000008':'#081828'; ctx.fillRect(cx-r,cy-r,r*2,r*2);
+  ctx.fillStyle='#180c00'; ctx.fillRect(cx-r,cy+po,r*2,r*2);
+  ctx.strokeStyle='#ff6600'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(cx-r,cy+po); ctx.lineTo(cx+r,cy+po); ctx.stroke();
+  // Pitch lines
+  for(let deg=-30;deg<=30;deg+=10){
+    if(deg===0)continue;
+    const ly=cy+po-deg/90*r;
+    const lw=deg%20===0?16:10;
+    ctx.strokeStyle='rgba(255,100,0,.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx-lw,ly); ctx.lineTo(cx+lw,ly); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.strokeStyle='#ffcc00'; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(cx-22,cy); ctx.lineTo(cx-6,cy);
+  ctx.moveTo(cx+6,cy); ctx.lineTo(cx+22,cy);
+  ctx.moveTo(cx,cy-6); ctx.lineTo(cx,cy-16);
+  ctx.stroke();
+  ctx.fillStyle='#ffcc00'; ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+}
+
+// ── Helpers ──
+function fmtMET(s){const a=Math.abs(s),h=Math.floor(a/3600),m=Math.floor((a%3600)/60),sec=Math.floor(a%60);return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
+function fmtCountdown(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
+function fmtAlt(km){if(km<1)return Math.round(km*1000)+' m';if(km<10000)return km.toFixed(0)+' km';return(km/1000).toFixed(1)+' Mm';}
+function fmtVel(ms){if(ms<1000)return Math.round(ms)+' m/s';return(ms/1000).toFixed(2)+' km/s';}
+function phaseLabel(){const m={prelaunch:'PRE-LAUNCH',ignition:'IGNITION',liftoff:'LIFTOFF',sic:'S-IC BURN',sicsep:'STAGE SEP',sii:'S-II BURN',siisep:'STAGE SEP',sivb:'S-IVB BURN',earthorbit:'EARTH ORBIT',tli:'TLI BURN',translunar:'TRANS-LUNAR',lunarapproach:'LUNAR APPR',loi:'LOI BURN',lunarorbit:'LUNAR ORBIT',lm_sep:'LM UNDOCKING',lm_descent:'LM DESCENT',lm_landed:'LANDED',lm_ascent:'LM ASCENT',lm_dock:'LM DOCKING',lunarorbit2:'LUNAR ORBIT',tei:'TEI BURN',transearth:'TRANS-EARTH',entry_interface:'ENTRY INTRFC',reentry:'REENTRY',splashdown:'SPLASHDOWN'};return m[S.phase]||S.phase.toUpperCase();}
+
+function switchView(v){
+  ['crew','gc','lm'].forEach(n=>{
+    const vEl=document.getElementById(n+'-view'),bEl=document.getElementById('btn-'+n);
+    if(vEl)vEl.classList.remove('active');if(bEl)bEl.classList.remove('active');
+  });
+  document.getElementById(v+'-view').classList.add('active');
+  document.getElementById('btn-'+v).classList.add('active');
+  setTimeout(resizeAll,60);
+}
+
+function setWarp(idx){
+  warpIdx=idx; warpLevel=WARP[warpIdx];
+  const btn=document.getElementById('sw-warp');
+  if(btn){btn.textContent=warpLevel+'×';btn.className='sw-btn'+(warpLevel>1?' active-phase':'');}
+  [1,10,100,1000].forEach((v,i)=>{
+    const b=document.getElementById('spd-'+v);
+    if(b)b.className='spd-btn'+(i===idx?' spd-active':'');
+  });
+}
+function toggleWarp(){
+  setWarp((warpIdx+1)%WARP.length);
+}
+
+init();
+</script>
+</body>
+</html>
