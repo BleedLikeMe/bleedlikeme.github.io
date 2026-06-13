@@ -1466,11 +1466,11 @@ function tick(){
           rx.hadErr=true;rx.status='validated';rx.robId=null;rx.robStart=null;rx.robDone=null;rx._solog=false;
           rx.meds.forEach(m=>G.stk[m.name].stock+=m.qty);
           addLog(`${rx.id} — robot error, re-dispensing`,'err');toast(`Robot error on ${rx.id}!`,'err');
-        }else{rx.status='dispensed';addLog(`${rx.id} dispensed — awaiting accuracy check`);}
+        }else{rx.status='dispensed';addLog(`${rx.id} dispensed — awaiting pouch fix`);}
       }
     }
     if(rx.status==='acc-checking'&&G.time>=rx.dsDone){
-      freeStaff(rx.dsSt);rx.status='acc-checked';addLog(`${rx.id} accuracy check passed`);
+      freeStaff(rx.dsSt);rx.status='acc-checked';addLog(`${rx.id} pouch fix passed`);
       const td2=tierDef(rx.tier);
       if(Math.random()<td2.errRate){rx.accError=true;}
     }
@@ -4152,7 +4152,7 @@ const COLS=[
   {id:'col-arrived',  statuses:['arrived'],                    label:'ARRIVED',   action:'rxcheck'},
   {id:'col-rxcheck',  statuses:['rx-checking'],                label:'RX CHECK',  action:''},
   {id:'col-dispensing',statuses:['validated','dispensing'],    label:'ROBOTS',    action:''},
-  {id:'col-dispensed',statuses:['dispensed'],             label:'DISPENSED', action:'accchk'},
+  {id:'col-dispensed',statuses:['dispensed'],             label:'POUCH FIXES', action:'accchk'},
   {id:'col-accuracy', statuses:['acc-checking','acc-checked'],label:'ACCURACY',action:'finchk'},
   {id:'col-final',    statuses:['final-checking'],label:'FINAL CHECK',action:''},
 ];
@@ -4988,11 +4988,11 @@ function _renderCurrentDetail(){
 function _detailRx(){
   const rx=G.rxs.find(r=>r.id===openDetailId);
   if(!rx){_modal('var(--sub)','<p style="color:var(--sub);margin-top:20px">Prescription no longer active.</p>');return;}
-  const br=BRANCHES.find(b=>b.id===rx.brId);
+  const br=BRANCHES.find(b=>b.id===rx.brId)||{name:rx.brName,col:rx.brCol||'#22c55e'};
   const wait=G.time-rx.arrAt;
   const wc=wait>60?'var(--red)':wait>30?'var(--amber)':'var(--text)';
   const SL={'arrived':'Awaiting RX check','rx-checking':'RX check in progress','validated':'Queued for robot',
-    'dispensing':'Dispensing','dispensed':'Awaiting accuracy check','acc-checking':'Accuracy check in progress',
+    'dispensing':'Dispensing','dispensed':'Awaiting pouch fix','acc-checking':'Pouch fix in progress',
     'acc-checked':'Awaiting final check','final-checking':'Final check in progress',
     'complete':'Complete — pouch packed','rejected':'REJECTED — invalid prescription'};
   let staffLine='';
