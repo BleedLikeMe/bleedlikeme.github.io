@@ -451,10 +451,10 @@ const DIST_ORDER = ['5f','6f','7f','1m','1m2f','1m4f','2m','2m1f','2m4f','2m5f',
 // ── Festival race data ──
 // Royal Ascot (5 days, mid-June)
 const ROYAL_ASCOT_RACES = [
-  [{name:"Queen Anne Stakes",dist:'1m',cls:1,raceType:'conditions'},{name:"King's Stand Stakes",dist:'5f',cls:1,raceType:'conditions'},{name:"Coventry Stakes",dist:'6f',cls:2,raceType:'conditions'},{name:"Royal Hunt Cup",dist:'1m',cls:2,raceType:'handicap'},{name:"Ascot Stakes",dist:'2m',cls:3,raceType:'handicap'},{name:"Copper Horse Handicap",dist:'1m4f',cls:4,raceType:'handicap'},{name:"Ascot Maiden Stakes",dist:'1m',cls:'M',raceType:'maiden'}],
-  [{name:"Prince of Wales's Stakes",dist:'1m2f',cls:1,raceType:'conditions'},{name:"Queen Mary Stakes",dist:'5f',cls:2,raceType:'conditions'},{name:"Jersey Stakes",dist:'7f',cls:2,raceType:'conditions'},{name:"Duke of Cambridge Stakes",dist:'1m',cls:2,raceType:'conditions'},{name:"Hampton Court Stakes",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Sandringham Handicap",dist:'1m',cls:4,raceType:'handicap'},{name:"Windsor Castle Stakes",dist:'5f',cls:4,raceType:'conditions'}],
-  [{name:"Gold Cup",dist:'2m4f',cls:1,raceType:'conditions'},{name:"Coronation Stakes",dist:'1m',cls:1,raceType:'conditions'},{name:"Commonwealth Cup",dist:'6f',cls:1,raceType:'conditions'},{name:"King George V Handicap",dist:'1m4f',cls:2,raceType:'handicap'},{name:"Ribblesdale Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"Britannia Stakes",dist:'1m',cls:4,raceType:'handicap'},{name:"Buckingham Palace Stakes",dist:'1m',cls:4,raceType:'handicap'}],
-  [{name:"Hardwicke Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"King Edward VII Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"Albany Stakes",dist:'6f',cls:2,raceType:'conditions'},{name:"Tercentenary Stakes",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Wolferton Stakes",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Duke of Edinburgh Stakes",dist:'1m4f',cls:4,raceType:'handicap'},{name:"Chesham Stakes",dist:'7f',cls:3,raceType:'conditions'}],
+  [{name:"Queen Anne Stakes",dist:'1m',cls:1,raceType:'conditions'},{name:"King's Stand Stakes",dist:'5f',cls:1,raceType:'conditions'},{name:"Coventry Stakes",dist:'6f',cls:2,raceType:'conditions',ageRestriction:2},{name:"Royal Hunt Cup",dist:'1m',cls:2,raceType:'handicap'},{name:"Ascot Stakes",dist:'2m',cls:3,raceType:'handicap'},{name:"Copper Horse Handicap",dist:'1m4f',cls:4,raceType:'handicap'},{name:"Ascot Maiden Stakes",dist:'1m',cls:'M',raceType:'maiden'}],
+  [{name:"Prince of Wales's Stakes",dist:'1m2f',cls:1,raceType:'conditions'},{name:"Queen Mary Stakes",dist:'5f',cls:2,raceType:'conditions',ageRestriction:2,forFemale:true},{name:"Jersey Stakes",dist:'7f',cls:2,raceType:'conditions'},{name:"Duke of Cambridge Stakes",dist:'1m',cls:2,raceType:'conditions',forFemale:true},{name:"Hampton Court Stakes",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Sandringham Handicap",dist:'1m',cls:4,raceType:'handicap'},{name:"Windsor Castle Stakes",dist:'5f',cls:4,raceType:'conditions',ageRestriction:2}],
+  [{name:"Gold Cup",dist:'2m4f',cls:1,raceType:'conditions'},{name:"Coronation Stakes",dist:'1m',cls:1,raceType:'conditions',ageRestriction:3,forFemale:true},{name:"Commonwealth Cup",dist:'6f',cls:1,raceType:'conditions'},{name:"King George V Handicap",dist:'1m4f',cls:2,raceType:'handicap'},{name:"Ribblesdale Stakes",dist:'1m4f',cls:2,raceType:'conditions',forFemale:true},{name:"Britannia Stakes",dist:'1m',cls:4,raceType:'handicap'},{name:"Buckingham Palace Stakes",dist:'1m',cls:4,raceType:'handicap'}],
+  [{name:"Hardwicke Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"King Edward VII Stakes",dist:'1m4f',cls:2,raceType:'conditions',ageRestriction:3},{name:"Albany Stakes",dist:'6f',cls:2,raceType:'conditions',ageRestriction:2,forFemale:true},{name:"Tercentenary Stakes",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Wolferton Stakes",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Duke of Edinburgh Stakes",dist:'1m4f',cls:4,raceType:'handicap'},{name:"Chesham Stakes",dist:'7f',cls:3,raceType:'conditions',ageRestriction:2}],
   [{name:"Diamond Jubilee Stakes",dist:'6f',cls:1,raceType:'conditions'},{name:"Coronation Cup",dist:'1m4f',cls:2,raceType:'conditions'},{name:"Wokingham Stakes",dist:'6f',cls:4,raceType:'handicap'},{name:"Golden Gate Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"King George Handicap",dist:'1m2f',cls:5,raceType:'handicap'},{name:"Sandown Sprint",dist:'5f',cls:5,raceType:'handicap'},{name:"Ascot Fillies Maiden",dist:'1m',cls:'M',raceType:'maiden'}],
 ];
 const ASCOT_PRIZE_OVERRIDE = {1:[600000,240000,120000,60000],2:[200000,80000,40000,20000],3:[100000,40000,20000,10000],4:[60000,24000,12000,6000],5:[30000,12000,6000,3000],'M':[20000,8000,4000,2000]};
@@ -465,7 +465,7 @@ const CHELTENHAM_RACES = [
   [{name:"Supreme Novices' Hurdle",dist:'2m',cls:1,raceType:'hurdle'},{name:"Arkle Challenge Trophy Chase",dist:'2m',cls:1,raceType:'chase'},{name:"Champion Hurdle",dist:'2m',cls:1,raceType:'hurdle'},{name:"Ultima Handicap Chase",dist:'3m1f',cls:2,raceType:'chase'},{name:"Novices' Hurdle",dist:'2m4f',cls:3,raceType:'hurdle'},{name:"Mares' Hurdle",dist:'2m1f',cls:2,raceType:'hurdle'},{name:"National Hunt Chase",dist:'4m',cls:3,raceType:'chase'}],
   [{name:"Ballymore Novices' Hurdle",dist:'2m5f',cls:1,raceType:'hurdle'},{name:"RSA Novices Chase",dist:'3m1f',cls:1,raceType:'chase'},{name:"Queen Mother Champion Chase",dist:'2m',cls:1,raceType:'chase'},{name:"Coral Cup Handicap Hurdle",dist:'2m5f',cls:2,raceType:'hurdle'},{name:"Plate Handicap Chase",dist:'2m4f',cls:3,raceType:'chase'},{name:"Mares' Chase",dist:'2m1f',cls:2,raceType:'chase'},{name:"Champion Bumper",dist:'2m',cls:2,raceType:'nhf'}],
   [{name:"Stayers' Hurdle",dist:'3m',cls:1,raceType:'hurdle'},{name:"Ryanair Chase",dist:'2m5f',cls:1,raceType:'chase'},{name:"Pertemps Final",dist:'3m',cls:3,raceType:'hurdle'},{name:"Marsh Novices Chase",dist:'2m4f',cls:1,raceType:'chase'},{name:"Kim Muir Handicap Chase",dist:'3m2f',cls:3,raceType:'chase'},{name:"Fred Winter Handicap Hurdle",dist:'2m',cls:3,raceType:'hurdle'},{name:"Novices' Hurdle",dist:'2m1f',cls:4,raceType:'hurdle'}],
-  [{name:"Triumph Hurdle",dist:'2m1f',cls:1,raceType:'hurdle'},{name:"Albert Bartlett Novices' Hurdle",dist:'3m',cls:1,raceType:'hurdle'},{name:"Cheltenham Gold Cup",dist:'3m2f',cls:1,raceType:'chase',isGoldCup:true},{name:"County Hurdle",dist:'2m',cls:3,raceType:'hurdle'},{name:"Foxhunter Chase",dist:'3m2f',cls:4,raceType:'chase'},{name:"Martin Pipe Hurdle",dist:'2m4f',cls:3,raceType:'hurdle'},{name:"Novices Chase",dist:'2m',cls:4,raceType:'chase'}],
+  [{name:"Triumph Hurdle",dist:'2m1f',cls:1,raceType:'hurdle',ageRestriction:4},{name:"Albert Bartlett Novices' Hurdle",dist:'3m',cls:1,raceType:'hurdle'},{name:"Cheltenham Gold Cup",dist:'3m2f',cls:1,raceType:'chase',isGoldCup:true},{name:"County Hurdle",dist:'2m',cls:3,raceType:'hurdle'},{name:"Foxhunter Chase",dist:'3m2f',cls:4,raceType:'chase'},{name:"Martin Pipe Hurdle",dist:'2m4f',cls:3,raceType:'hurdle'},{name:"Novices Chase",dist:'2m',cls:4,raceType:'chase'}],
 ];
 const CHELT_PRIZE = {1:[460000,184000,92000,46000],2:[125000,50000,25000,12500],3:[80000,32000,16000,8000],4:[40000,16000,8000,4000]};
 CHELT_PRIZE['Cheltenham Gold Cup']=[625000,250000,125000,62500];
@@ -476,7 +476,7 @@ CHELT_PRIZE["Ryanair Chase"]=[280000,112000,56000,28000];
 
 // Aintree Grand National Meeting (3 days, early April)
 const AINTREE_RACES = [
-  [{name:"Maghull Novices Chase",dist:'2m',cls:1,raceType:'chase'},{name:"Top Novices Hurdle",dist:'2m',cls:1,raceType:'hurdle'},{name:"Juvenile Hurdle",dist:'2m4f',cls:1,raceType:'hurdle'},{name:"Manifold Novices Hurdle",dist:'2m4f',cls:3,raceType:'hurdle'},{name:"Anniversary Juvenile Hurdle",dist:'2m',cls:3,raceType:'hurdle'},{name:"Handicap Chase",dist:'2m5f',cls:3,raceType:'chase'},{name:"National Hunt Flat Race",dist:'2m',cls:5,raceType:'nhf'}],
+  [{name:"Maghull Novices Chase",dist:'2m',cls:1,raceType:'chase'},{name:"Top Novices Hurdle",dist:'2m',cls:1,raceType:'hurdle'},{name:"Juvenile Hurdle",dist:'2m4f',cls:1,raceType:'hurdle',ageRestriction:4},{name:"Manifold Novices Hurdle",dist:'2m4f',cls:3,raceType:'hurdle'},{name:"Anniversary Juvenile Hurdle",dist:'2m',cls:3,raceType:'hurdle',ageRestriction:4},{name:"Handicap Chase",dist:'2m5f',cls:3,raceType:'chase'},{name:"National Hunt Flat Race",dist:'2m',cls:5,raceType:'nhf'}],
   [{name:"Aintree Hurdle",dist:'2m4f',cls:1,raceType:'hurdle'},{name:"Melling Chase",dist:'2m4f',cls:1,raceType:'chase'},{name:"Sefton Novices Hurdle",dist:'3m1f',cls:1,raceType:'hurdle'},{name:"Red Rum Handicap Chase",dist:'2m',cls:3,raceType:'chase'},{name:"Handicap Hurdle",dist:'2m4f',cls:4,raceType:'hurdle'},{name:"Long Distance Handicap Chase",dist:'3m1f',cls:4,raceType:'chase'},{name:"Mares Hurdle",dist:'2m4f',cls:3,raceType:'hurdle'}],
   [{name:"Bowl Chase",dist:'3m1f',cls:1,raceType:'chase'},{name:"Topham Handicap Chase",dist:'2m5f',cls:3,raceType:'chase'},{name:"Handicap Hurdle",dist:'3m',cls:4,raceType:'hurdle'},{name:"Foxhunters Chase",dist:'2m5f',cls:4,raceType:'chase'},{name:"NH Flat Race",dist:'2m',cls:5,raceType:'nhf'},{name:"Handicap Chase",dist:'2m',cls:4,raceType:'chase'},{name:"Grand National",dist:'4m2f',cls:1,raceType:'chase',isGrandNational:true}],
 ];
@@ -487,8 +487,8 @@ AINTREE_PRIZE["Melling Chase"]=[260000,104000,52000,26000];
 AINTREE_PRIZE["Bowl Chase"]=[160000,64000,32000,16000];
 // ── Newmarket Guineas Meeting (2 days, early May) ──
 const GUINEAS_RACES = [
-  [{name:"2000 Guineas",dist:'1m',cls:1,raceType:'conditions'},{name:"Jockey Club Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"Palace House Stakes",dist:'5f',cls:2,raceType:'conditions'},{name:"Newmarket Stakes",dist:'1m4f',cls:3,raceType:'conditions'},{name:"Free Handicap",dist:'7f',cls:3,raceType:'handicap'},{name:"Maiden Stakes",dist:'1m',cls:'M',raceType:'maiden'},{name:"Conditions Stakes",dist:'6f',cls:4,raceType:'conditions'}],
-  [{name:"1000 Guineas",dist:'1m',cls:1,raceType:'conditions'},{name:"Dahlia Stakes",dist:'1m1f',cls:2,raceType:'conditions'},{name:"Abernant Stakes",dist:'6f',cls:3,raceType:'conditions'},{name:"Nell Gwyn Stakes",dist:'7f',cls:3,raceType:'conditions'},{name:"Handicap",dist:'1m2f',cls:4,raceType:'handicap'},{name:"Fillies Maiden",dist:'1m',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'7f',cls:5,raceType:'conditions'}],
+  [{name:"2000 Guineas",dist:'1m',cls:1,raceType:'conditions',ageRestriction:3},{name:"Jockey Club Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"Palace House Stakes",dist:'5f',cls:2,raceType:'conditions'},{name:"Newmarket Stakes",dist:'1m4f',cls:3,raceType:'conditions'},{name:"Free Handicap",dist:'7f',cls:3,raceType:'handicap'},{name:"Maiden Stakes",dist:'1m',cls:'M',raceType:'maiden'},{name:"Conditions Stakes",dist:'6f',cls:4,raceType:'conditions'}],
+  [{name:"1000 Guineas",dist:'1m',cls:1,raceType:'conditions',ageRestriction:3,forFemale:true},{name:"Dahlia Stakes",dist:'1m1f',cls:2,raceType:'conditions'},{name:"Abernant Stakes",dist:'6f',cls:3,raceType:'conditions'},{name:"Nell Gwyn Stakes",dist:'7f',cls:3,raceType:'conditions',ageRestriction:3,forFemale:true},{name:"Handicap",dist:'1m2f',cls:4,raceType:'handicap'},{name:"Fillies Maiden",dist:'1m',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'7f',cls:5,raceType:'conditions'}],
 ];
 const GUINEAS_PRIZE = {1:[600000,240000,120000,60000],2:[150000,60000,30000,15000],3:[60000,24000,12000,6000],4:[20000,8000,4000,2000],5:[8000,3200,1600,800],'M':[12000,4800,2400,1200]};
 GUINEAS_PRIZE['2000 Guineas']=[600000,240000,120000,60000];
@@ -496,8 +496,8 @@ GUINEAS_PRIZE['1000 Guineas']=[450000,180000,90000,45000];
 
 // ── Epsom Derby Meeting (2 days, early June) ──
 const DERBY_RACES = [
-  [{name:"Coronation Cup",dist:'1m4f',cls:1,raceType:'conditions'},{name:"The Oaks",dist:'1m4f',cls:1,raceType:'conditions'},{name:"Distaff Stakes",dist:'1m',cls:3,raceType:'conditions'},{name:"Woodcote Stakes",dist:'6f',cls:2,raceType:'conditions'},{name:"Epsom Handicap",dist:'1m4f',cls:3,raceType:'handicap'},{name:"Sprint Handicap",dist:'5f',cls:4,raceType:'handicap'},{name:"Maiden Stakes",dist:'1m',cls:'M',raceType:'maiden'}],
-  [{name:"The Derby",dist:'1m4f',cls:1,raceType:'conditions'},{name:"Diomed Stakes",dist:'1m1f',cls:3,raceType:'conditions'},{name:"Princess Elizabeth Stakes",dist:'1m',cls:3,raceType:'conditions'},{name:"Cazoo Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"Cocked Hat Stakes",dist:'1m4f',cls:3,raceType:'conditions'},{name:"Sprint Stakes",dist:'5f',cls:3,raceType:'conditions'},{name:"Handicap",dist:'1m',cls:4,raceType:'handicap'}],
+  [{name:"Coronation Cup",dist:'1m4f',cls:1,raceType:'conditions'},{name:"The Oaks",dist:'1m4f',cls:1,raceType:'conditions',ageRestriction:3,forFemale:true},{name:"Distaff Stakes",dist:'1m',cls:3,raceType:'conditions'},{name:"Woodcote Stakes",dist:'6f',cls:2,raceType:'conditions',ageRestriction:2},{name:"Epsom Handicap",dist:'1m4f',cls:3,raceType:'handicap'},{name:"Sprint Handicap",dist:'5f',cls:4,raceType:'handicap'},{name:"Maiden Stakes",dist:'1m',cls:'M',raceType:'maiden'}],
+  [{name:"The Derby",dist:'1m4f',cls:1,raceType:'conditions',ageRestriction:3},{name:"Diomed Stakes",dist:'1m1f',cls:3,raceType:'conditions'},{name:"Princess Elizabeth Stakes",dist:'1m',cls:3,raceType:'conditions'},{name:"Cazoo Stakes",dist:'1m4f',cls:2,raceType:'conditions'},{name:"Cocked Hat Stakes",dist:'1m4f',cls:3,raceType:'conditions'},{name:"Sprint Stakes",dist:'5f',cls:3,raceType:'conditions'},{name:"Handicap",dist:'1m',cls:4,raceType:'handicap'}],
 ];
 const DERBY_PRIZE = {1:[500000,200000,100000,50000],2:[150000,60000,30000,15000],3:[60000,24000,12000,6000],4:[20000,8000,4000,2000],'M':[12000,4800,2400,1200]};
 DERBY_PRIZE['The Derby']=[1500000,600000,300000,150000];
@@ -506,10 +506,10 @@ DERBY_PRIZE['Coronation Cup']=[400000,160000,80000,40000];
 
 // ── Doncaster St Leger Meeting (4 days, mid-September) ──
 const ST_LEGER_RACES = [
-  [{name:"Doncaster Cup",dist:'2m2f',cls:2,raceType:'conditions'},{name:"Park Stakes",dist:'7f',cls:2,raceType:'conditions'},{name:"May Hill Stakes",dist:'1m',cls:2,raceType:'conditions'},{name:"Portland Handicap",dist:'5f',cls:3,raceType:'handicap'},{name:"Nursery Handicap",dist:'6f',cls:4,raceType:'handicap'},{name:"Maiden Stakes",dist:'7f',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'1m2f',cls:5,raceType:'conditions'}],
-  [{name:"Champagne Stakes",dist:'7f',cls:2,raceType:'conditions'},{name:"Flying Childers",dist:'5f',cls:2,raceType:'conditions'},{name:"Park Hill Stakes",dist:'1m6f',cls:2,raceType:'conditions'},{name:"Doncaster Handicap",dist:'1m',cls:3,raceType:'handicap'},{name:"Handicap",dist:'1m4f',cls:4,raceType:'handicap'},{name:"Maiden",dist:'1m',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'6f',cls:5,raceType:'conditions'}],
-  [{name:"St Leger Stakes",dist:'1m6f',cls:1,raceType:'conditions'},{name:"Rotherham Handicap",dist:'1m2f',cls:3,raceType:'handicap'},{name:"Doncaster Conditions",dist:'7f',cls:3,raceType:'conditions'},{name:"Sprint Handicap",dist:'6f',cls:4,raceType:'handicap'},{name:"Nursery Handicap",dist:'7f',cls:5,raceType:'handicap'},{name:"Maiden",dist:'1m2f',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'2m2f',cls:3,raceType:'conditions'}],
-  [{name:"Doncaster Conditions",dist:'7f',cls:3,raceType:'conditions'},{name:"Handicap",dist:'1m',cls:4,raceType:'handicap'},{name:"Handicap",dist:'1m4f',cls:4,raceType:'handicap'},{name:"Sprint Handicap",dist:'6f',cls:5,raceType:'handicap'},{name:"Maiden",dist:'1m',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Nursery",dist:'6f',cls:5,raceType:'handicap'}],
+  [{name:"Doncaster Cup",dist:'2m2f',cls:2,raceType:'conditions'},{name:"Park Stakes",dist:'7f',cls:2,raceType:'conditions'},{name:"May Hill Stakes",dist:'1m',cls:2,raceType:'conditions',ageRestriction:2,forFemale:true},{name:"Portland Handicap",dist:'5f',cls:3,raceType:'handicap'},{name:"Nursery Handicap",dist:'6f',cls:4,raceType:'handicap',ageRestriction:2},{name:"Maiden Stakes",dist:'7f',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'1m2f',cls:5,raceType:'conditions'}],
+  [{name:"Champagne Stakes",dist:'7f',cls:2,raceType:'conditions',ageRestriction:2},{name:"Flying Childers",dist:'5f',cls:2,raceType:'conditions',ageRestriction:2},{name:"Park Hill Stakes",dist:'1m6f',cls:2,raceType:'conditions',forFemale:true},{name:"Doncaster Handicap",dist:'1m',cls:3,raceType:'handicap'},{name:"Handicap",dist:'1m4f',cls:4,raceType:'handicap'},{name:"Maiden",dist:'1m',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'6f',cls:5,raceType:'conditions'}],
+  [{name:"St Leger Stakes",dist:'1m6f',cls:1,raceType:'conditions',ageRestriction:3},{name:"Rotherham Handicap",dist:'1m2f',cls:3,raceType:'handicap'},{name:"Doncaster Conditions",dist:'7f',cls:3,raceType:'conditions'},{name:"Sprint Handicap",dist:'6f',cls:4,raceType:'handicap'},{name:"Nursery Handicap",dist:'7f',cls:5,raceType:'handicap',ageRestriction:2},{name:"Maiden",dist:'1m2f',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'2m2f',cls:3,raceType:'conditions'}],
+  [{name:"Doncaster Conditions",dist:'7f',cls:3,raceType:'conditions'},{name:"Handicap",dist:'1m',cls:4,raceType:'handicap'},{name:"Handicap",dist:'1m4f',cls:4,raceType:'handicap'},{name:"Sprint Handicap",dist:'6f',cls:5,raceType:'handicap'},{name:"Maiden",dist:'1m',cls:'M',raceType:'maiden'},{name:"Conditions",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Nursery",dist:'6f',cls:5,raceType:'handicap',ageRestriction:2}],
 ];
 const ST_LEGER_PRIZE = {1:[500000,200000,100000,50000],2:[120000,48000,24000,12000],3:[50000,20000,10000,5000],4:[15000,6000,3000,1500],5:[5000,2000,1000,500],'M':[8000,3200,1600,800]};
 ST_LEGER_PRIZE['St Leger Stakes']=[650000,260000,130000,65000];
@@ -517,7 +517,7 @@ ST_LEGER_PRIZE['Doncaster Cup']=[150000,60000,30000,15000];
 
 // ── Ayr Western Meeting — Gold Cup 2 days (mid-September) ──
 const AYR_GOLD_CUP_RACES = [
-  [{name:"Doonside Cup",dist:'1m2f',cls:2,raceType:'conditions'},{name:"Ayrshire Stakes",dist:'1m',cls:3,raceType:'conditions'},{name:"Ayr Handicap",dist:'7f',cls:3,raceType:'handicap'},{name:"Maiden Stakes",dist:'6f',cls:'M',raceType:'maiden'},{name:"Handicap",dist:'5f',cls:4,raceType:'handicap'},{name:"Conditions",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Nursery",dist:'6f',cls:5,raceType:'handicap'}],
+  [{name:"Doonside Cup",dist:'1m2f',cls:2,raceType:'conditions'},{name:"Ayrshire Stakes",dist:'1m',cls:3,raceType:'conditions'},{name:"Ayr Handicap",dist:'7f',cls:3,raceType:'handicap'},{name:"Maiden Stakes",dist:'6f',cls:'M',raceType:'maiden'},{name:"Handicap",dist:'5f',cls:4,raceType:'handicap'},{name:"Conditions",dist:'1m2f',cls:3,raceType:'conditions'},{name:"Nursery",dist:'6f',cls:5,raceType:'handicap',ageRestriction:2}],
   [{name:"Ayr Gold Cup",dist:'6f',cls:2,raceType:'handicap'},{name:"Firth of Clyde Stakes",dist:'6f',cls:2,raceType:'conditions'},{name:"Ladbrokes Handicap",dist:'1m',cls:3,raceType:'handicap'},{name:"Ayr Maiden",dist:'7f',cls:'M',raceType:'maiden'},{name:"Sprint Handicap",dist:'5f',cls:4,raceType:'handicap'},{name:"Handicap",dist:'1m2f',cls:4,raceType:'handicap'},{name:"Conditions",dist:'1m',cls:3,raceType:'conditions'}],
 ];
 const AYR_PRIZE = {1:[200000,80000,40000,20000],2:[80000,32000,16000,8000],3:[30000,12000,6000,3000],4:[12000,4800,2400,1200],5:[4000,1600,800,400],'M':[6000,2400,1200,600]};
@@ -3038,6 +3038,10 @@ function renderHorseDetail(id) {
       if(rIsNH!==hIsNH) return false;
       if(r.raceType==='hurdle'&&!h.schooled?.hurdles) return false;
       if(r.raceType==='chase' &&!h.schooled?.fences)  return false;
+      if(r.raceType==='maiden'&&h.form.some(f=>f.pos===1)) return false;
+      if(r.raceType==='nhf'&&h.form.some(f=>f.raceType==='hurdle'||f.raceType==='chase')) return false;
+      if(r.ageRestriction && h.age !== r.ageRestriction) return false;
+      if((r.forFemale||/filli|fillies|mares?/i.test(r.name))&&!['f','m'].includes(h.sex)) return false;
       return true;
     }).map(r=>({f,r})))
     .slice(0,12);
@@ -3251,13 +3255,15 @@ ${upcoming.length===0?'<p style="color:var(--dim);font-style:italic;">No upcomin
       ensureRunners(r);
       const entries = G.entries.filter(e=>e.raceId===r.id);
       const enteredHorses = entries.map(e=>G.horses.find(h=>h.id===e.horseId)).filter(Boolean);
-      const conditions = r.raceType==='handicap'?'Weights by official rating':
-                         r.raceType==='claiming'?'Declare claim price at entry':
-                         r.raceType==='maiden'?'For unraced/once-raced horses':
-                         r.raceType==='hurdle'?`Hurdle race${r.cls<=2?' — Graded':r.cls===3?' — Handicap':' — Conditions'} — school hurdles required`:
-                         r.raceType==='chase'?`Chase${r.isGrandNational?' — THE GRAND NATIONAL — 4m2f 30 fences':r.cls<=2?' — Graded':r.cls===3?' — Handicap':' — Conditions'} — school fences required`:
-                         r.raceType==='nhf'?'National Hunt Flat (Bumper) — no schooling required':
-                         'Conditions race — 9-0 all';
+      let conditions = r.raceType==='handicap'?'Weights by official rating':
+                       r.raceType==='claiming'?'Declare claim price at entry':
+                       r.raceType==='maiden'?'For horses that have never won':
+                       r.raceType==='hurdle'?`Hurdle race${r.cls<=2?' — Graded':r.cls===3?' — Handicap':' — Conditions'} — school hurdles required`:
+                       r.raceType==='chase'?`Chase${r.isGrandNational?' — THE GRAND NATIONAL — 4m2f 30 fences':r.cls<=2?' — Graded':r.cls===3?' — Handicap':' — Conditions'} — school fences required`:
+                       r.raceType==='nhf'?'National Hunt Flat (Bumper) — never run over jumps':
+                       'Conditions race — 9-0 all';
+      if(r.ageRestriction) conditions += ` — ${r.ageRestriction}yo only`;
+      if(r.forFemale||/filli|fillies|mares?/i.test(r.name)) conditions += ' — Fillies & Mares only';
       // Estimate field odds
       const totalAbil = r.runners.reduce((s,x)=>s+x.ability,0)||1;
       const fieldHtml = r.runners.map(runner=>{
@@ -3650,6 +3656,10 @@ function openEntryModal(raceId) {
     if(rIsNH !== hNH) return false;
     if(foundRace?.raceType==='hurdle' && !h.schooled?.hurdles) return false;
     if(foundRace?.raceType==='chase'  && !h.schooled?.fences)  return false;
+    if(foundRace?.raceType==='maiden' && h.form.some(f=>f.pos===1)) return false;
+    if(foundRace?.raceType==='nhf'    && h.form.some(f=>f.raceType==='hurdle'||f.raceType==='chase')) return false;
+    if(foundRace?.ageRestriction && h.age !== foundRace.ageRestriction) return false;
+    if((foundRace?.forFemale||/filli|fillies|mares?/i.test(foundRace?.name||''))&&!['f','m'].includes(h.sex)) return false;
     return true;
   });
   const claimTiers = [2500,3500,5000,7500,10000];
@@ -4220,6 +4230,10 @@ function findBestRaces(horseId) {
       if(rIsNH!==hIsNH) return false;
       if(r.raceType==='hurdle'&&!h.schooled?.hurdles) return false;
       if(r.raceType==='chase' &&!h.schooled?.fences)  return false;
+      if(r.raceType==='maiden'&&h.form.some(f=>f.pos===1)) return false;
+      if(r.raceType==='nhf'&&h.form.some(f=>f.raceType==='hurdle'||f.raceType==='chase')) return false;
+      if(r.ageRestriction && h.age !== r.ageRestriction) return false;
+      if((r.forFemale||/filli|fillies|mares?/i.test(r.name))&&!['f','m'].includes(h.sex)) return false;
       return true;
     }).map(r=>({f,r})));
 
