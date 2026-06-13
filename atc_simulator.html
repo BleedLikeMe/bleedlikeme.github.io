@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ATC Simulator — EGLL Approach</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #050810;
+  color: #00cc66;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  user-select: none;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+
+#app { display: flex; width: 100%; height: 100%; }
+
+#radar-wrap { position: relative; flex-shrink: 0; }
+
+canvas#radar {
+  display: block;
+  background: #020508;
+  cursor: crosshair;
+}
+
+#overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 11px;
+  color: #00884c;
+  pointer-events: none;
+  line-height: 1.6;
+}
+
+#panel {
+  flex: 1;
+  background: #060810;
+  border-left: 1px solid #002a1a;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 8px;
+  min-width: 265px;
+  max-width: 285px;
+  overflow: hidden;
+}
+
+.psec {
+  border: 1px solid #002a1a;
+  padding: 8px;
+  border-radius: 2px;
+}
+
+.stitle {
+  color: #00ee77;
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #002a1a;
+}
+
+#hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  border: 1px solid #002a1a;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+#hdr-title { color: #00ff88; font-size: 14px; letter-spacing: 3px; }
+#hdr-right { text-align: right; font-size: 10px; color: #00884c; }
+#hdr-score { color: #00ff88; font-size: 12px; }
+#speed-btns { display: flex; gap: 3px; align-items: center; }
+.spd-btn {
+  background: #040a06;
+  border: 1px solid #004422;
+  color: #009955;
+  padding: 2px 7px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 1px;
+  transition: background 0.1s;
+}
+.spd-btn:hover { background: #002a1a; color: #00ff88; }
+.spd-btn.on { background: #003322; border-color: #00ff88; color: #00ff88; }
+
+#ac-info {
+  color: #88ffcc;
+  line-height: 1.7;
+  font-size: 12px;
+  min-height: 70px;
+}
+
+#no-sel {
+  color: #224433;
+  text-align: center;
+  padding: 14px 0;
+  font-size: 11px;
+}
+
+.crow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+.crow label {
+  width: 32px;
+  color: #009955;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.crow input {
+  flex: 1;
+  background: #08090f;
+  border: 1px solid #002a1a;
+  color: #00ff88;
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  width: 55px;
+}
+.crow input:focus { border-color: #00cc66; }
+.crow button, .abtn {
+  background: #040a06;
+  border: 1px solid #005533;
+  color: #00cc66;
+  padding: 3px 7px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 1px;
+  transition: background 0.1s;
+}
+.crow button:hover, .abtn:hover { background: #002a1a; color: #00ff88; }
+.crow button:active, .abtn:active { background: #004422; }
+
+.abtn {
+  display: block;
+  width: 100%;
+  padding: 5px;
+  margin-bottom: 4px;
+  font-size: 10px;
+  text-align: center;
+  letter-spacing: 2px;
+}
+.abtn.on { background: #003322; border-color: #00ff88; color: #00ff88; }
+.abtn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+#traffic-wrap { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+#tlist {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 11px;
+}
+.ti {
+  padding: 3px 4px;
+  display: flex;
+  gap: 6px;
+  cursor: pointer;
+  border-bottom: 1px solid #010a05;
+}
+.ti:hover { background: #010a05; }
+.ti.sel { color: #ffffff; background: #011a0a; }
+.ti.warn { color: #ffbb00; }
+.ti.cfl  { color: #ff4444; animation: blink 0.6s infinite; }
+.tcol1 { width: 68px; font-weight: bold; }
+.tcol2 { width: 36px; }
+.tcol3 { width: 34px; }
+.tcol4 { flex: 1; font-size: 10px; color: #007744; }
+.ti.sel .tcol4 { color: #aaffcc; }
+.ti.warn .tcol4 { color: #ffbb00; }
+.ti.cfl  .tcol4 { color: #ff4444; }
+
+#msgs {
+  font-size: 11px;
+  color: #006633;
+  max-height: 95px;
+  overflow-y: auto;
+}
+.mline { padding: 2px 0; border-bottom: 1px solid #010a05; }
+.mline.warn { color: #ffaa00; }
+.mline.cfl  { color: #ff5555; font-weight: bold; }
+.mline.ok   { color: #00ffaa; }
+
+@keyframes blink {
+  50% { opacity: 0.4; }
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: #020508; }
+::-webkit-scrollbar-thumb { background: #002a1a; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="radar-wrap">
+    <canvas id="radar" width="700" height="700"></canvas>
+    <div id="overlay">
+      <div id="ov-time">TIME: 00:00</div>
+      <div id="ov-wind">WIND: 280/12KT</div>
+      <div id="ov-rwy">ACT RWY: 27L</div>
+    </div>
+
+    <div id="cockpit-overlay" style="display:none;position:absolute;top:115px;left:145px;background:#040608;border:1px solid #2a3a4a;border-radius:4px;padding:12px;z-index:50">
+      <div id="ck-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;cursor:move;user-select:none">
+        <span id="ck-cs" style="color:#00ff88;font-size:12px;letter-spacing:2px">— —</span>
+        <button onclick="toggleCockpit()" style="font-size:9px;padding:1px 6px;cursor:pointer">✕ CLOSE</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,120px);gap:8px">
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <canvas id="ck-asi" width="120" height="120" style="cursor:pointer;display:block"></canvas>
+          <div style="color:#445566;font-size:8px;letter-spacing:1px;margin-top:3px">AIRSPEED  ◀ ▶ ±10KT</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <canvas id="ck-ai"  width="120" height="120" style="cursor:pointer;display:block"></canvas>
+          <div style="color:#445566;font-size:8px;letter-spacing:1px;margin-top:3px">ATTITUDE  CLICK: ILS</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <canvas id="ck-alt" width="120" height="120" style="cursor:pointer;display:block"></canvas>
+          <div style="color:#445566;font-size:8px;letter-spacing:1px;margin-top:3px">ALTIMETER  ▲ ▼ ±1000</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <canvas id="ck-tc"  width="120" height="120" style="cursor:pointer;display:block"></canvas>
+          <div style="color:#445566;font-size:8px;letter-spacing:1px;margin-top:3px">TURN COORD  ◀ ▶ ±10°</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <canvas id="ck-hi"  width="120" height="120" style="cursor:pointer;display:block"></canvas>
+          <div style="color:#445566;font-size:8px;letter-spacing:1px;margin-top:3px">HEADING  ◀ ▶ ±10°</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <canvas id="ck-vsi" width="120" height="120" style="cursor:pointer;display:block"></canvas>
+          <div style="color:#445566;font-size:8px;letter-spacing:1px;margin-top:3px">VERT SPEED  ▲ ▼ ±1000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div id="hdr">
+      <span id="hdr-title">ATC SIM</span>
+      <div id="speed-btns">
+        <button class="spd-btn on" onclick="setSpeed(1)">×1</button>
+        <button class="spd-btn"    onclick="setSpeed(2)">×2</button>
+        <button class="spd-btn"    onclick="setSpeed(5)">×5</button>
+      </div>
+      <div id="hdr-right">
+        <div>EGLL APPROACH</div>
+        <div id="hdr-score">SCR:<span id="sv">0</span> LDG:<span id="lv">0</span> LVL:<span id="llv">1</span></div>
+        <div id="hdr-zoom" style="display:none;color:#ffdd00;font-size:10px">ZOOM ×<span id="zvl">1.0</span> <button onclick="resetZoom()" style="font-size:9px;padding:1px 4px;margin-left:3px">RESET</button></div>
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="stitle">SELECTED AIRCRAFT</div>
+      <div id="ac-info"><div id="no-sel">— CLICK BLIP TO SELECT —</div></div>
+      <div id="cmd-panel" style="display:none;margin-top:7px">
+        <div class="crow">
+          <label>HDG</label>
+          <input type="number" id="i-hdg" min="1" max="360" placeholder="270">
+          <button onclick="cmdHdg()">SET</button>
+        </div>
+        <div class="crow">
+          <label>ALT</label>
+          <input type="number" id="i-alt" min="1000" max="39000" step="1000" placeholder="3000">
+          <button onclick="cmdAlt()">SET</button>
+        </div>
+        <div class="crow">
+          <label>SPD</label>
+          <input type="number" id="i-spd" min="120" max="500" step="10" placeholder="250">
+          <button onclick="cmdSpd()">SET</button>
+        </div>
+        <div style="margin-top:6px">
+          <button class="abtn" id="btn-ils"  onclick="cmdILS()">ILS APPROACH</button>
+          <button class="abtn" id="btn-land" onclick="cmdLand()">CLEARED TO LAND</button>
+        </div>
+        <div style="margin-top:5px">
+          <button class="abtn" style="width:100%" onclick="toggleCockpit()">COCKPIT VIEW</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="psec" id="traffic-wrap">
+      <div class="stitle">TRAFFIC (<span id="tc">0</span>)</div>
+      <div style="display:flex;gap:6px;font-size:10px;color:#004422;margin-bottom:3px">
+        <span class="tcol1">CALLSIGN</span>
+        <span class="tcol2">ALT</span>
+        <span class="tcol3">HDG</span>
+        <span class="tcol4">STATUS</span>
+      </div>
+      <div id="tlist"></div>
+    </div>
+
+    <div class="psec">
+      <div class="stitle" style="display:flex;justify-content:space-between;align-items:center">
+        MAP LEGEND
+        <button onclick="toggleMap()" id="btn-map" style="font-size:9px;padding:1px 5px;letter-spacing:0">HIDE</button>
+      </div>
+      <div id="map-legend-body" style="font-size:10px;line-height:2;color:#88bbaa">
+
+        <div style="display:flex;align-items:center;gap:7px">
+          <svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4" stroke="rgba(30,90,220,0.55)" stroke-width="2"/></svg>
+          River / Thames
+        </div>
+
+        <div style="display:flex;align-items:center;gap:7px">
+          <svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4" stroke="rgba(30,90,220,0.35)" stroke-width="1.5"/></svg>
+          Coastline
+        </div>
+
+        <div style="display:flex;align-items:center;gap:7px;color:#e03030">
+          <svg width="28" height="14">
+            <rect x="1" y="1" width="26" height="12" fill="rgba(190,20,20,0.25)" stroke="rgba(210,30,30,0.8)" stroke-width="1" stroke-dasharray="4,3"/>
+          </svg>
+          No-go zone (penalty)
+        </div>
+
+        <div style="display:flex;align-items:center;gap:7px;color:#dba800">
+          <svg width="28" height="14">
+            <rect x="1" y="1" width="26" height="12" fill="rgba(160,100,0,0.25)" stroke="rgba(190,130,0,0.8)" stroke-width="1" stroke-dasharray="6,4"/>
+          </svg>
+          FL-restricted sector
+        </div>
+
+        <div style="margin-top:4px;color:#556655;border-top:1px solid #002a1a;padding-top:4px">
+          <div>SEC-E — MAX FL150 (east)</div>
+          <div>SEC-N — MIN FL080 (north)</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="stitle">RADIO</div>
+      <div id="msgs"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+// CONSTANTS & STATE
+// ============================================================
+const SZ   = 700;
+const CTR  = SZ / 2;        // 350
+const RNG  = 80;             // radar range in nm
+const SCL  = CTR / RNG;      // px per nm  (4.375)
+
+const RWY  = { hdg: 270, tx: 2.0, ty: 0.0 }; // 27L threshold pos (nm)
+const FAF  = { x: RWY.tx + 10, y: RWY.ty };  // final approach fix
+
+const SEP_H = 5, SEP_V = 1000;   // conflict thresholds
+const WRN_H = 8, WRN_V = 2000;   // warning thresholds
+
+// ── Map features (nm from EGLL, x=east y=north) ──────────────
+const MAP_RIVERS = [
+  // Thames: Oxford → Reading → Windsor/Staines → London → Estuary
+  [[-30,16],[-19,-1],[-10,-1],[-5,0],[-2,-3],[5,-2],[9,1],[13,2],[17,0],[25,-2],[31,-2],[36,-1],[47,1],[62,3]],
+];
+const MAP_COAST = [
+  // English Channel (south coast)
+  [[-55,-45],[-40,-45],[-20,-42],[-5,-41],[11,-39],[27,-42],[50,-36],[66,-21]],
+  // North Sea / Thames Estuary
+  [[44,4],[52,12],[61,19]],
+];
+
+// ── No-go zones (aircraft must not enter) ────────────────────
+const NO_GO_ZONES = [
+  { id:'D068', label:'DANGER\nD068', pts:[[-58,-30],[-38,-30],[-38,-15],[-58,-15]] },
+  { id:'P045', label:'PROHIB\nP045', pts:[[35,30],[50,30],[50,42],[35,42]] },
+];
+
+// ── Restricted FL sectors (altitude band constraints) ────────
+const FL_SECTORS = [
+  { id:'SEC-E', label:'MAX FL150', pts:[[20,-20],[60,-20],[60,15],[20,15]], minFL:null,  maxFL:15000 },
+  { id:'SEC-N', label:'MIN FL080', pts:[[-20,15],[15,15],[15,50],[-20,50]], minFL:8000,  maxFL:null  },
+];
+
+let aircraft    = [];
+let selectedId  = null;
+let sweepAng    = 0;
+let gameTime    = 0;
+let score       = 0;
+let landings    = 0;
+let level       = 1;
+let spawnTimer  = 6;
+let spawnGap    = 40;
+let maxAC       = 8;
+let nextId      = 1;
+let msgLog      = [];
+let gameSpeed   = 1;
+let proposedHdg = null;
+let showMap     = true;
+let zoomLevel  = 1;
+let zoomCenter = { x: 0, y: 0 }; // nm coords of view centre
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function nm2c(x, y) {
+  return [CTR + (x - zoomCenter.x) * SCL * zoomLevel,
+          CTR - (y - zoomCenter.y) * SCL * zoomLevel];
+}
+function c2nm(cx, cy) {
+  return [(cx - CTR) / (SCL * zoomLevel) + zoomCenter.x,
+          (CTR - cy) / (SCL * zoomLevel) + zoomCenter.y];
+}
+function dist(a, b) { const dx = a.x-b.x, dy = a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
+
+function ptInPoly(px, py, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > py) !== (yj > py) && px < (xj - xi) * (py - yi) / (yj - yi) + xi)
+      inside = !inside;
+  }
+  return inside;
+}
+
+function hdgDiff(a, b) { return ((a - b + 540) % 360) - 180; }
+
+function bearing(fx, fy, tx, ty) {
+  return ((Math.atan2(tx - fx, ty - fy) * 180 / Math.PI) + 360) % 360;
+}
+
+function fl(alt) {
+  const f = Math.round(alt / 100);
+  return f.toString().padStart(3, '0');
+}
+
+function pad3(n) { return Math.round(n).toString().padStart(3, '0'); }
+
+// ============================================================
+// AIRCRAFT CLASS
+// ============================================================
+const PFXS  = ['BAW','EZY','RYR','UAE','SWR','DLH','AFR','KLM','IBE','AAL','UAL','DAL','QFA','SIA'];
+const TYPES = ['B737','A320','B777','A380','B757','E190','A319','B787'];
+const WAKES = { B777:1, A380:1, B787:0, B757:0, A320:0, B737:0, A319:0, E190:0 };
+
+function rndCS() {
+  return PFXS[~~(Math.random() * PFXS.length)] + (~~(100 + Math.random() * 899));
+}
+
+class Aircraft {
+  constructor(cfg) {
+    this.id        = nextId++;
+    this.callsign  = cfg.callsign || rndCS();
+    this.actype    = TYPES[~~(Math.random() * TYPES.length)];
+    this.x         = cfg.x;  this.y   = cfg.y;
+    this.alt       = cfg.alt; this.hdg = cfg.hdg; this.spd = cfg.spd;
+    this.tHdg      = cfg.hdg; this.tAlt = cfg.alt; this.tSpd = cfg.spd;
+    this.isArr     = cfg.isArr || false;
+    this.status    = 'ENROUTE'; // ENROUTE APPROACH FINAL GOAROUND LANDED
+    this.clrILS    = false;
+    this.clrLand   = false;
+    this.cfl       = false;
+    this.warn      = false;
+    this.trail     = [];
+    this.trailT    = 0;
+    this.flashT    = 0;
+    this.age       = 0;
+    this.goaroundMsg = false;
+  }
+
+  get selected() { return this.id === selectedId; }
+
+  update(dt) {
+    this.age    += dt;
+    this.trailT += dt;
+    this.flashT += dt;
+
+    // ILS clearance received → start approach
+    if (this.clrILS && this.status === 'ENROUTE') {
+      this.status = 'APPROACH';
+      if (this.tSpd > 220) this.tSpd = 220;
+      if (this.tAlt > 4000) this.tAlt = 4000;
+    }
+
+    // APPROACH: fly toward FAF, then establish on ILS
+    if (this.status === 'APPROACH') {
+      const dFAF = dist(this, FAF);
+      const yErr = this.y - RWY.ty;
+      const onLoc = Math.abs(yErr) < 0.8 && this.x > RWY.tx + 3;
+      const aligned = Math.abs(hdgDiff(this.hdg, RWY.hdg)) < 40;
+
+      if (onLoc && aligned) {
+        this.status  = 'FINAL';
+        this.tHdg    = RWY.hdg;
+        this.tSpd    = 165;
+      } else if (dFAF < 3 && Math.abs(yErr) < 2) {
+        // Aim for a point on the centreline ahead rather than plain runway heading
+        const aimX = Math.max(RWY.tx + 2, this.x - 6);
+        this.tHdg = bearing(this.x, this.y, aimX, RWY.ty);
+        if (this.tAlt > 3000) this.tAlt = 3000;
+        this.tSpd = 175;
+      } else {
+        this.tHdg = bearing(this.x, this.y, FAF.x, FAF.y);
+        if (this.tAlt > 4000) this.tAlt = 4000;
+      }
+    }
+
+    // FINAL: follow glideslope with active localizer tracking
+    if (this.status === 'FINAL') {
+      const dThr = dist(this, { x: RWY.tx, y: RWY.ty });
+      const gsAlt = Math.max(30, dThr * 310);
+      // Proportional localizer: up to ±8° correction for lateral deviation
+      const locErr = this.y - RWY.ty;
+      const locCorr = Math.max(-8, Math.min(8, -locErr * 5));
+      this.tHdg = (RWY.hdg + locCorr + 360) % 360;
+      this.tAlt = gsAlt;
+      this.tSpd = 160;
+
+      if (dThr < 0.35 && this.alt < 150 && this.clrLand) {
+        this.status = 'LANDED';
+        return;
+      }
+      if (dThr < 1.2 && !this.clrLand) {
+        // go around
+        this.status      = 'GOAROUND';
+        this.clrILS      = false;
+        this.tHdg        = (RWY.hdg + 180) % 360;
+        this.tAlt        = 3000;
+        this.tSpd        = 220;
+        this.goaroundMsg = true;
+      }
+    }
+
+    // GOAROUND: fly away, then re-establish enroute
+    if (this.status === 'GOAROUND') {
+      if (this.goaroundMsg) {
+        addMsg(`${this.callsign}: GOING AROUND, CLIMBING FL030`, 'warn');
+        this.goaroundMsg = false;
+      }
+      const dCenter = dist(this, { x: 0, y: 0 });
+      if (dCenter > 20) this.status = 'ENROUTE';
+    }
+
+    // Heading update (3°/s bank)
+    const dH = hdgDiff(this.tHdg, this.hdg);
+    const tr = 3 * dt;
+    this.hdg = Math.abs(dH) < tr
+      ? this.tHdg
+      : (this.hdg + Math.sign(dH) * tr + 360) % 360;
+
+    // Altitude update (2500 ft/min)
+    const vspd = 2500 / 60 * dt;
+    const dA = this.tAlt - this.alt;
+    this.alt = Math.abs(dA) < vspd ? this.tAlt : this.alt + Math.sign(dA) * vspd;
+
+    // Speed update (2 kts/s)
+    const dS = this.tSpd - this.spd;
+    this.spd = Math.abs(dS) < 2 * dt ? this.tSpd : this.spd + Math.sign(dS) * 2 * dt;
+
+    // Position update
+    const nm = this.spd / 3600 * dt;
+    const r  = this.hdg * Math.PI / 180;
+    this.x  += Math.sin(r) * nm;
+    this.y  += Math.cos(r) * nm;
+
+    // Trail dots (every 0.5s)
+    if (this.trailT > 0.5) {
+      this.trailT = 0;
+      this.trail.push({ x: this.x, y: this.y });
+      if (this.trail.length > 9) this.trail.shift();
+    }
+  }
+
+  outOfSector() {
+    return Math.sqrt(this.x * this.x + this.y * this.y) > RNG + 8;
+  }
+}
+
+// ============================================================
+// SPAWN
+// ============================================================
+function spawn() {
+  const active = aircraft.filter(a => a.status !== 'LANDED');
+  if (active.length >= maxAC) return;
+
+  const isArr = Math.random() < 0.6;
+  const r = RNG - 6;
+  let x, y, hdg, alt, spd;
+
+  if (isArr) {
+    // Arrivals spawn on east side, heading roughly westward
+    x   = r * (0.55 + Math.random() * 0.45);
+    y   = (Math.random() - 0.5) * r * 1.4;
+    hdg = 220 + Math.random() * 80;
+    alt = 5000 + ~~(Math.random() * 6) * 1000;
+    spd = 220 + ~~(Math.random() * 4) * 10;
+  } else {
+    // Transit — any edge
+    const edge = ~~(Math.random() * 4);
+    if (edge === 0) { x = (Math.random()-0.5)*r*2; y = r;  hdg = 150+~~(Math.random()*80); }
+    else if (edge===1){ x = r;  y = (Math.random()-0.5)*r*2; hdg = 200+~~(Math.random()*80); }
+    else if (edge===2){ x = (Math.random()-0.5)*r*2; y = -r; hdg = ~~(Math.random()*80)-40; }
+    else             { x = -r; y = (Math.random()-0.5)*r*2;  hdg = 30+~~(Math.random()*80); }
+    alt = 15000 + ~~(Math.random() * 13) * 1000;
+    spd = 280  + ~~(Math.random() * 7)  * 20;
+  }
+
+  const ac = new Aircraft({ x, y, hdg: (hdg + 360) % 360, alt, spd, isArr });
+  aircraft.push(ac);
+  addMsg(
+    `${ac.callsign}/${ac.actype}: ENTERING SECTOR FL${fl(alt)}${isArr ? ' — ARRIVAL FOR EGLL' : ''}`,
+    isArr ? 'ok' : null
+  );
+}
+
+// ============================================================
+// CONFLICT DETECTION
+// ============================================================
+function checkConflicts() {
+  for (const a of aircraft) { a.cfl = false; a.warn = false; }
+  for (let i = 0; i < aircraft.length; i++) {
+    for (let j = i + 1; j < aircraft.length; j++) {
+      const a = aircraft[i], b = aircraft[j];
+      if (a.status === 'LANDED' || b.status === 'LANDED') continue;
+      const h = dist(a, b);
+      const v = Math.abs(a.alt - b.alt);
+      if (h < SEP_H && v < SEP_V) {
+        a.cfl = true; b.cfl = true;
+        score -= dt_g * 0.5; // drain score continuously
+        if (Math.random() < 0.015) {
+          addMsg(`⚠ CONFLICT: ${a.callsign} / ${b.callsign} — ${h.toFixed(1)}NM ${~~(v)}FT`, 'cfl');
+        }
+      } else if (h < WRN_H && v < WRN_V) {
+        if (!a.cfl) a.warn = true;
+        if (!b.cfl) b.warn = true;
+      }
+    }
+  }
+
+  // Zone violations
+  for (const ac of aircraft) {
+    if (ac.status === 'LANDED') continue;
+    const prev = ac.activeZones || new Set();
+    const cur  = new Set();
+
+    for (const z of NO_GO_ZONES) {
+      if (ptInPoly(ac.x, ac.y, z.pts)) {
+        cur.add('NGZ_' + z.id);
+        ac.cfl = true;
+        score -= dt_g * 0.4;
+        if (!prev.has('NGZ_' + z.id))
+          addMsg(`⚠ ${ac.callsign}: ENTERED PROHIBITED ZONE ${z.id}`, 'cfl');
+      }
+    }
+
+    for (const s of FL_SECTORS) {
+      if (ptInPoly(ac.x, ac.y, s.pts)) {
+        const viol = (s.minFL && ac.alt < s.minFL) || (s.maxFL && ac.alt > s.maxFL);
+        if (viol) {
+          cur.add('FLS_' + s.id);
+          if (!ac.cfl) ac.warn = true;
+          if (!prev.has('FLS_' + s.id))
+            addMsg(`⚠ ${ac.callsign}: FL VIOLATION IN ${s.id} — ${s.label}`, 'warn');
+        }
+      }
+    }
+
+    ac.activeZones = cur;
+  }
+}
+
+let dt_g = 0; // current dt available to conflict checker
+
+// ============================================================
+// RENDERING
+// ============================================================
+const canvas = document.getElementById('radar');
+const ctx    = canvas.getContext('2d');
+
+function drawPolyline(pts) {
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => {
+    const [px, py] = nm2c(x, y);
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+}
+
+function drawPolygon(pts, fill) {
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => {
+    const [px, py] = nm2c(x, y);
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  });
+  ctx.closePath();
+  if (fill) ctx.fill();
+  ctx.stroke();
+}
+
+function polyCenter(pts) {
+  const x = pts.reduce((s, [v]) => s + v, 0) / pts.length;
+  const y = pts.reduce((s, [, v]) => s + v, 0) / pts.length;
+  return nm2c(x, y);
+}
+
+function drawMapLayer() {
+  ctx.save();
+  ctx.lineJoin = 'round';
+
+  // Rivers
+  ctx.strokeStyle = 'rgba(30,90,220,0.28)';
+  ctx.lineWidth = 1.5;
+  MAP_RIVERS.forEach(drawPolyline);
+
+  // Coastlines
+  ctx.strokeStyle = 'rgba(30,90,220,0.18)';
+  ctx.lineWidth = 1.2;
+  MAP_COAST.forEach(drawPolyline);
+
+  // No-go zones
+  NO_GO_ZONES.forEach(z => {
+    ctx.fillStyle   = 'rgba(190,20,20,0.09)';
+    ctx.strokeStyle = 'rgba(210,30,30,0.6)';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([4, 3]);
+    drawPolygon(z.pts, true);
+    ctx.setLineDash([]);
+    const [lx, ly] = polyCenter(z.pts);
+    ctx.fillStyle  = 'rgba(230,60,60,0.75)';
+    ctx.font       = 'bold 8px Courier New';
+    ctx.textAlign  = 'center';
+    z.label.split('\n').forEach((line, i) => ctx.fillText(line, lx, ly + i * 10 - 4));
+    ctx.textAlign  = 'left';
+  });
+
+  // FL-restricted sectors
+  FL_SECTORS.forEach(s => {
+    ctx.fillStyle   = 'rgba(160,100,0,0.08)';
+    ctx.strokeStyle = 'rgba(190,130,0,0.5)';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([6, 4]);
+    drawPolygon(s.pts, true);
+    ctx.setLineDash([]);
+    const [lx, ly] = polyCenter(s.pts);
+    ctx.fillStyle  = 'rgba(220,165,0,0.8)';
+    ctx.font       = '8px Courier New';
+    ctx.textAlign  = 'center';
+    ctx.fillText(s.label, lx, ly + 4);
+    ctx.textAlign  = 'left';
+  });
+
+  ctx.restore();
+}
+
+function drawRadar() {
+  if (zoomLevel > 1) {
+    const sel = aircraft.find(a => a.id === selectedId && a.status !== 'LANDED');
+    if (sel) { zoomCenter.x = sel.x; zoomCenter.y = sel.y; }
+  }
+
+  ctx.clearRect(0, 0, SZ, SZ);
+  ctx.fillStyle = '#020508';
+  ctx.fillRect(0, 0, SZ, SZ);
+
+  // Clip to radar circle
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(CTR, CTR, CTR - 1, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Range rings (always centred on EGLL)
+  const [egx, egy] = nm2c(0, 0);
+  ctx.lineWidth = 0.7;
+  [20, 40, 60].forEach(nm => {
+    const r = nm * SCL * zoomLevel;
+    ctx.strokeStyle = '#001e12';
+    ctx.beginPath();
+    ctx.arc(egx, egy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    const lx = egx + r - 26, ly = egy + 8;
+    if (lx > 4 && lx < SZ - 4 && ly > 4 && ly < SZ - 4) {
+      ctx.fillStyle = '#003a22';
+      ctx.font = '9px Courier New';
+      ctx.fillText(nm + 'NM', lx, ly);
+    }
+  });
+
+  // Azimuth lines
+  ctx.strokeStyle = '#001208';
+  ctx.lineWidth = 0.4;
+  for (let a = 0; a < 360; a += 30) {
+    const rad = (a - 90) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(CTR, CTR);
+    ctx.lineTo(CTR + Math.cos(rad) * (CTR - 1), CTR + Math.sin(rad) * (CTR - 1));
+    ctx.stroke();
+  }
+
+  // Compass labels
+  ctx.fillStyle = '#005533';
+  ctx.font = 'bold 10px Courier New';
+  ctx.textAlign = 'center';
+  ['N','NE','E','SE','S','SW','W','NW'].forEach((lbl, i) => {
+    const a = (i * 45 - 90) * Math.PI / 180;
+    ctx.fillText(lbl, CTR + Math.cos(a) * (CTR - 14), CTR + Math.sin(a) * (CTR - 14) + 4);
+  });
+  ctx.textAlign = 'left';
+
+  if (showMap) drawMapLayer();
+
+  // Radar sweep
+  const swpRad = (sweepAng - 90) * Math.PI / 180;
+  for (let i = 0; i < 35; i++) {
+    const a = swpRad - i * 0.045;
+    const alpha = (1 - i / 35) * 0.14;
+    ctx.beginPath();
+    ctx.moveTo(CTR, CTR);
+    ctx.arc(CTR, CTR, CTR - 1, a - 0.045, a);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(0,220,80,${alpha})`;
+    ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(0,255,90,0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(CTR, CTR);
+  ctx.lineTo(CTR + Math.cos(swpRad) * (CTR - 1), CTR + Math.sin(swpRad) * (CTR - 1));
+  ctx.stroke();
+
+  // Airport symbol
+  const [ax, ay] = nm2c(0, 0);
+  ctx.strokeStyle = '#00bb55';
+  ctx.lineWidth = 1.5;
+  const rLen = 2.2 * SCL;
+  ctx.beginPath(); ctx.moveTo(ax - rLen, ay); ctx.lineTo(ax + rLen, ay); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ax, ay - 5); ctx.lineTo(ax, ay + 5); ctx.stroke();
+  ctx.beginPath(); ctx.arc(ax, ay, 5, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = '#009944';
+  ctx.font = '10px Courier New';
+  ctx.fillText('EGLL', ax + 8, ay + 4);
+
+  // ILS approach cone (27L — points east from threshold)
+  const [ttx, tty] = nm2c(RWY.tx, RWY.ty);
+  const coneHdg    = (RWY.hdg + 180) % 360; // 090 — pointing east
+  const coneRad    = (coneHdg - 90) * Math.PI / 180;
+  const coneLen    = 16 * SCL;
+  const coneHalf   = 12 * Math.PI / 180;
+  ctx.save();
+  ctx.fillStyle   = 'rgba(0,80,200,0.07)';
+  ctx.strokeStyle = 'rgba(0,90,220,0.25)';
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.moveTo(ttx, tty);
+  ctx.arc(ttx, tty, coneLen, coneRad - coneHalf, coneRad + coneHalf);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,100,255,0.35)';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(ttx, tty);
+  ctx.lineTo(ttx + Math.cos(coneRad) * coneLen, tty + Math.sin(coneRad) * coneLen);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Runway label
+  ctx.fillStyle = 'rgba(0,130,255,0.5)';
+  ctx.font = '9px Courier New';
+  ctx.fillText('27L', ttx - 24, tty - 6);
+  ctx.restore();
+
+  // Aircraft
+  for (const ac of aircraft) {
+    if (ac.status === 'LANDED') continue;
+    const [cx, cy] = nm2c(ac.x, ac.y);
+
+    // Trail
+    ac.trail.forEach((pt, i) => {
+      const [tx, ty] = nm2c(pt.x, pt.y);
+      const a = (i + 1) / ac.trail.length * 0.35;
+      ctx.fillStyle = `rgba(0,200,100,${a})`;
+      ctx.fillRect(tx - 1, ty - 1, 2, 2);
+    });
+
+    // Color
+    let col = '#00ee77';
+    if (ac.cfl) {
+      col = Math.floor(ac.flashT * 5) % 2 === 0 ? '#ff3333' : '#ff9999';
+    } else if (ac.warn) {
+      col = '#ffcc00';
+    } else if (ac.selected) {
+      col = '#ffffff';
+    } else if (ac.status === 'FINAL' || ac.status === 'APPROACH') {
+      col = '#00ffcc';
+    }
+
+    // Heading vector
+    ctx.strokeStyle = col + '88';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    const vRad = (ac.hdg - 90) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(vRad) * 22, cy + Math.sin(vRad) * 22);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Proposed heading preview
+    if (ac.selected && proposedHdg !== null) {
+      const pRad = (proposedHdg - 90) * Math.PI / 180;
+      ctx.save();
+      ctx.strokeStyle = '#ffdd00cc';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(pRad) * 60, cy + Math.sin(pRad) * 60);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#ffdd00';
+      ctx.font = 'bold 11px Courier New';
+      ctx.fillText(pad3(proposedHdg) + '°', cx + Math.cos(pRad) * 66, cy + Math.sin(pRad) * 66 + 4);
+      ctx.restore();
+    }
+
+    // Blip
+    const sz = ac.selected ? 6 : 4;
+    ctx.fillStyle = col;
+    ctx.fillRect(cx - sz / 2, cy - sz / 2, sz, sz);
+
+    // Selection ring
+    if (ac.selected) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 13, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Data tag
+    ctx.fillStyle = col;
+    ctx.font = '11px Courier New';
+    const tx0 = cx + 11, ty0 = cy - 4;
+    ctx.fillText(ac.callsign, tx0, ty0);
+    ctx.fillText(`FL${fl(ac.alt)} ${pad3(ac.hdg)}`, tx0, ty0 + 12);
+
+    if (ac.status !== 'ENROUTE' && ac.status !== 'GOAROUND') {
+      let stLbl = ac.status;
+      if (ac.status === 'FINAL') {
+        const d = dist(ac, { x: RWY.tx, y: RWY.ty });
+        stLbl = `FINAL ${d.toFixed(1)}NM`;
+      }
+      ctx.fillStyle = ac.status === 'FINAL' ? '#00ffcc' : '#00ddaa';
+      ctx.font = '10px Courier New';
+      ctx.fillText(stLbl, tx0, ty0 + 23);
+    }
+  }
+
+  ctx.restore(); // end clip
+
+  // Outer ring
+  ctx.strokeStyle = '#004422';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(CTR, CTR, CTR - 1, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Zoom indicator
+  if (zoomLevel > 1) {
+    ctx.fillStyle = '#ffdd00cc';
+    ctx.font = 'bold 11px Courier New';
+    ctx.textAlign = 'right';
+    ctx.fillText(`ZOOM ×${zoomLevel.toFixed(1)}`, SZ - 8, SZ - 8);
+    ctx.textAlign = 'left';
+  }
+}
+
+// ============================================================
+// MESSAGES
+// ============================================================
+// COCKPIT VIEW
+// ============================================================
+let cockpitOpen = false;
+const CKS = 120, CKC = 60, CKR = 52;        // canvas size / centre / radius
+const CK_SA = 2 * Math.PI / 3;              // arc start: 7 o'clock
+const CK_SW = 5 * Math.PI / 3;              // arc sweep: 300°
+
+function ckAng(f) { return CK_SA + f * CK_SW; }
+
+function ckBase(ctx) {
+  ctx.clearRect(0, 0, CKS, CKS);
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR + 4, 0, 2 * Math.PI);
+  ctx.fillStyle = '#121620'; ctx.fill();
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR, 0, 2 * Math.PI);
+  ctx.fillStyle = '#050810'; ctx.fill();
+  ctx.strokeStyle = '#1a2535'; ctx.lineWidth = 1.5; ctx.stroke();
+}
+
+function ckNeedle(ctx, angle, len, width, color, tail = 8) {
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(CKC - Math.cos(angle) * tail, CKC - Math.sin(angle) * tail);
+  ctx.lineTo(CKC + Math.cos(angle) * len,  CKC + Math.sin(angle) * len);
+  ctx.stroke(); ctx.restore();
+}
+
+function ckDot(ctx, r = 3, color = '#9aabb8') {
+  ctx.beginPath(); ctx.arc(CKC, CKC, r, 0, 2 * Math.PI);
+  ctx.fillStyle = color; ctx.fill();
+}
+
+function ckText(ctx, txt, y, color, size = 'bold 10px') {
+  ctx.fillStyle = color; ctx.font = size + ' Courier New';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(txt, CKC, y);
+}
+
+// ── 1. ASI — Airspeed Indicator ─────────────────────────────
+function drawASI(ac) {
+  const ctx = document.getElementById('ck-asi').getContext('2d');
+  const MAX = 400;
+  ckBase(ctx);
+  // Normal-range green arc (120–250kt)
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR - 3, ckAng(120/MAX), ckAng(250/MAX));
+  ctx.strokeStyle = 'rgba(0,180,80,0.45)'; ctx.lineWidth = 4; ctx.stroke();
+  // Ticks
+  for (let v = 0; v <= MAX; v += 10) {
+    const a = ckAng(v / MAX), maj = v % 50 === 0;
+    const r0 = maj ? CKR - 10 : CKR - 5;
+    ctx.beginPath();
+    ctx.moveTo(CKC + Math.cos(a) * r0,      CKC + Math.sin(a) * r0);
+    ctx.lineTo(CKC + Math.cos(a) * (CKR-1), CKC + Math.sin(a) * (CKR-1));
+    ctx.strokeStyle = maj ? '#ccd4dd' : '#2a3a4a'; ctx.lineWidth = maj ? 1.5 : 0.7; ctx.stroke();
+    if (maj && v > 0) {
+      const lr = CKR - 18;
+      ctx.fillStyle = '#7a8a99'; ctx.font = '7px Courier New';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(v, CKC + Math.cos(a) * lr, CKC + Math.sin(a) * lr);
+    }
+  }
+  // Target bug (green tick on rim)
+  const tA = ckAng(Math.min(ac.tSpd, MAX) / MAX);
+  ctx.beginPath();
+  ctx.moveTo(CKC + Math.cos(tA) * (CKR - 1),  CKC + Math.sin(tA) * (CKR - 1));
+  ctx.lineTo(CKC + Math.cos(tA - .12) * (CKR - 9), CKC + Math.sin(tA - .12) * (CKR - 9));
+  ctx.lineTo(CKC + Math.cos(tA + .12) * (CKR - 9), CKC + Math.sin(tA + .12) * (CKR - 9));
+  ctx.closePath(); ctx.fillStyle = '#00ff88'; ctx.fill();
+  // Needle
+  ckNeedle(ctx, ckAng(Math.min(ac.spd, MAX) / MAX), CKR - 5, 2, '#ffffff');
+  ckDot(ctx);
+  ckText(ctx, ~~ac.spd + 'KT', CKC + 18, '#00ff88');
+  ctx.fillStyle = '#3a5060'; ctx.font = '7px Courier New';
+  ctx.fillText('TGT ' + ~~ac.tSpd, CKC, CKC + 28);
+}
+
+// ── 2. AI — Attitude Indicator ───────────────────────────────
+function drawAI(ac) {
+  const ctx = document.getElementById('ck-ai').getContext('2d');
+  ctx.clearRect(0, 0, CKS, CKS);
+  const pitchPx  = Math.max(-34, Math.min(34, (ac.tAlt - ac.alt) / 400));
+  const bankRad  = Math.max(-25, Math.min(25, hdgDiff(ac.tHdg, ac.hdg) * 0.5)) * Math.PI / 180;
+  // Bezel + clip
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR + 4, 0, 2 * Math.PI);
+  ctx.fillStyle = '#121620'; ctx.fill();
+  ctx.save();
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR, 0, 2 * Math.PI); ctx.clip();
+  // Sky / earth
+  ctx.save();
+  ctx.translate(CKC, CKC); ctx.rotate(bankRad);
+  ctx.fillStyle = '#1a4080';
+  ctx.fillRect(-CKS, -CKS + pitchPx, CKS * 2, CKS * 2);
+  ctx.fillStyle = '#5a3a10';
+  ctx.fillRect(-CKS, pitchPx, CKS * 2, CKS * 2);
+  // Horizon
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(-CKS, pitchPx); ctx.lineTo(CKS, pitchPx); ctx.stroke();
+  // Pitch bars
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
+  [-10, -5, 5, 10].forEach(deg => {
+    const py = pitchPx - deg * 3;
+    const hw = Math.abs(deg) === 5 ? 12 : 20;
+    ctx.beginPath(); ctx.moveTo(-hw, py); ctx.lineTo(hw, py); ctx.stroke();
+  });
+  ctx.restore();
+  // Bank arc
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR - 6, Math.PI + Math.PI / 6, 2 * Math.PI - Math.PI / 6); ctx.stroke();
+  // Bank pointer (triangle at top)
+  const bA = -Math.PI / 2 + bankRad;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(CKC + Math.cos(bA) * (CKR - 6),       CKC + Math.sin(bA) * (CKR - 6));
+  ctx.lineTo(CKC + Math.cos(bA - .1) * (CKR - 13), CKC + Math.sin(bA - .1) * (CKR - 13));
+  ctx.lineTo(CKC + Math.cos(bA + .1) * (CKR - 13), CKC + Math.sin(bA + .1) * (CKR - 13));
+  ctx.closePath(); ctx.fill();
+  ctx.restore(); // end clip
+  // Fixed aircraft symbol
+  ctx.strokeStyle = '#ffcc00'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  [[-22,-8],[-8,0],[0,4],[8,0],[22,-8]].reduce((prev, [x,y]) => {
+    const px = CKC + x, py = CKC + y;
+    if (!prev) { ctx.beginPath(); ctx.moveTo(px, py); }
+    else ctx.lineTo(px, py);
+    return [px, py];
+  }, null); ctx.stroke();
+  // Bezel rim
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#1a2535'; ctx.lineWidth = 2; ctx.stroke();
+  // ILS indicator
+  const ilsColor = ac.clrILS ? '#00ff88' : '#223333';
+  ctx.fillStyle = ilsColor; ctx.font = 'bold 8px Courier New';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('ILS', CKC, CKC - 36);
+}
+
+// ── 3. ALT — Altimeter ───────────────────────────────────────
+function drawALT(ac) {
+  const ctx = document.getElementById('ck-alt').getContext('2d');
+  ckBase(ctx);
+  // Scale: 0–9 (× 1000ft) round the face
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * 2 * Math.PI - Math.PI / 2;
+    ctx.fillStyle = '#7a8a99'; ctx.font = '7px Courier New';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lr = CKR - 15;
+    ctx.fillText(i, CKC + Math.cos(a) * lr, CKC + Math.sin(a) * lr);
+    ctx.beginPath();
+    ctx.moveTo(CKC + Math.cos(a) * (CKR - 8), CKC + Math.sin(a) * (CKR - 8));
+    ctx.lineTo(CKC + Math.cos(a) * (CKR - 1), CKC + Math.sin(a) * (CKR - 1));
+    ctx.strokeStyle = '#ccd4dd'; ctx.lineWidth = 1.5; ctx.stroke();
+    // Minor ticks
+    for (let j = 1; j < 5; j++) {
+      const am = ((i + j / 5) / 10) * 2 * Math.PI - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(CKC + Math.cos(am) * (CKR - 4), CKC + Math.sin(am) * (CKR - 4));
+      ctx.lineTo(CKC + Math.cos(am) * (CKR - 1), CKC + Math.sin(am) * (CKR - 1));
+      ctx.strokeStyle = '#2a3a4a'; ctx.lineWidth = 0.7; ctx.stroke();
+    }
+  }
+  // Target altitude bug (green triangle on rim)
+  const tA = ((ac.tAlt % 10000) / 10000) * 2 * Math.PI - Math.PI / 2;
+  ctx.fillStyle = '#00ff88';
+  ctx.beginPath();
+  ctx.moveTo(CKC + Math.cos(tA) * (CKR - 1),      CKC + Math.sin(tA) * (CKR - 1));
+  ctx.lineTo(CKC + Math.cos(tA - .1) * (CKR - 9), CKC + Math.sin(tA - .1) * (CKR - 9));
+  ctx.lineTo(CKC + Math.cos(tA + .1) * (CKR - 9), CKC + Math.sin(tA + .1) * (CKR - 9));
+  ctx.closePath(); ctx.fill();
+  // Short needle: thousands (one revolution = 10 000ft)
+  const shortA = ((ac.alt % 10000) / 10000) * 2 * Math.PI - Math.PI / 2;
+  ckNeedle(ctx, shortA, CKR - 20, 3.5, '#ccddee', 6);
+  // Long needle: hundreds (one revolution = 1 000ft)
+  const longA  = ((ac.alt % 1000)  / 1000)  * 2 * Math.PI - Math.PI / 2;
+  ckNeedle(ctx, longA,  CKR - 5,  1.5, '#ffffff');
+  ckDot(ctx, 3.5);
+  ckText(ctx, 'FL' + fl(ac.alt), CKC + 18, '#00ff88');
+  ctx.fillStyle = '#3a5060'; ctx.font = '7px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText('TGT FL' + fl(ac.tAlt), CKC, CKC + 28);
+}
+
+// ── 4. TC — Turn Coordinator ─────────────────────────────────
+function drawTC(ac) {
+  const ctx = document.getElementById('ck-tc').getContext('2d');
+  ckBase(ctx);
+  const dH      = hdgDiff(ac.tHdg, ac.hdg);
+  const bankRad = (Math.abs(dH) < 3 ? 0 : Math.sign(dH) * 20) * Math.PI / 180;
+  // Standard-rate tick marks
+  for (const x of [-22, 22]) {
+    ctx.beginPath(); ctx.moveTo(CKC + x, CKC - 42); ctx.lineTo(CKC + x, CKC - 50);
+    ctx.strokeStyle = '#3a5060'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+  ctx.fillStyle = '#3a5060'; ctx.font = '8px Courier New'; ctx.textAlign = 'center';
+  ctx.fillText('L', CKC - 34, CKC - 38); ctx.fillText('R', CKC + 34, CKC - 38);
+  // Miniature aircraft (banks)
+  ctx.save();
+  ctx.translate(CKC, CKC - 6); ctx.rotate(bankRad);
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-34, 0); ctx.lineTo(34, 0); ctx.stroke(); // wings
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 10); ctx.stroke();   // body
+  ctx.beginPath(); ctx.moveTo(-34, 0); ctx.lineTo(-40, 6); ctx.stroke(); // tip L
+  ctx.beginPath(); ctx.moveTo( 34, 0); ctx.lineTo( 40, 6); ctx.stroke(); // tip R
+  ctx.restore();
+  // Inclinometer ball (always centred = coordinated)
+  ctx.fillStyle = '#0a0e16';
+  ctx.strokeStyle = '#3a5060'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(CKC - 28, CKC + 22, 56, 14, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(CKC, CKC + 29, 5, 0, 2 * Math.PI);
+  ctx.fillStyle = '#111522'; ctx.fill();
+  ctx.strokeStyle = '#8899aa'; ctx.lineWidth = 1; ctx.stroke();
+  // Turn rate label
+  const tr = Math.abs(dH) < 3 ? 'LEVEL' : (Math.sign(dH) > 0 ? 'RIGHT' : 'LEFT') + ' 3°/S';
+  ckText(ctx, tr, CKC + 44, '#3a6070', '7px');
+}
+
+// ── 5. HI — Heading Indicator ────────────────────────────────
+function drawHI(ac) {
+  const ctx = document.getElementById('ck-hi').getContext('2d');
+  ckBase(ctx);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR, 0, 2 * Math.PI); ctx.clip();
+  ctx.save();
+  ctx.translate(CKC, CKC); ctx.rotate(-ac.hdg * Math.PI / 180);
+  // Degree markings on rotating card
+  for (let d = 0; d < 360; d += 5) {
+    const a = (d - 90) * Math.PI / 180;
+    const maj = d % 30 === 0, med = d % 10 === 0;
+    const r0  = maj ? CKR - 13 : (med ? CKR - 8 : CKR - 5);
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0);
+    ctx.lineTo(Math.cos(a) * (CKR - 1), Math.sin(a) * (CKR - 1));
+    ctx.strokeStyle = maj ? '#ccd4dd' : (med ? '#4a6070' : '#1e2a34');
+    ctx.lineWidth = maj ? 1.5 : 0.7; ctx.stroke();
+    if (maj) {
+      const labels = { 0:'N',30:'030',60:'060',90:'E',120:'120',150:'150',
+                       180:'S',210:'210',240:'240',270:'W',300:'300',330:'330' };
+      ctx.fillStyle = d === 0 ? '#ff5544' : '#8899aa';
+      ctx.font = (d % 90 === 0 ? 'bold ' : '') + '7px Courier New';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const lr = CKR - 20;
+      ctx.fillText(labels[d], Math.cos(a) * lr, Math.sin(a) * lr);
+    }
+  }
+  // Target heading marker (green triangle on rotating card)
+  const tA = (ac.tHdg - 90) * Math.PI / 180;
+  ctx.fillStyle = '#00ff88';
+  ctx.beginPath();
+  ctx.moveTo(Math.cos(tA) * (CKR - 1),      Math.sin(tA) * (CKR - 1));
+  ctx.lineTo(Math.cos(tA - .12) * (CKR - 9), Math.sin(tA - .12) * (CKR - 9));
+  ctx.lineTo(Math.cos(tA + .12) * (CKR - 9), Math.sin(tA + .12) * (CKR - 9));
+  ctx.closePath(); ctx.fill();
+  ctx.restore(); // un-rotate
+  ctx.restore(); // un-clip
+  // Lubber line (fixed at top)
+  ctx.strokeStyle = '#ffcc00'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(CKC, CKC - CKR + 1); ctx.lineTo(CKC, CKC - CKR + 10); ctx.stroke();
+  ckDot(ctx, 2.5);
+  ckText(ctx, pad3(ac.hdg) + '°', CKC + 18, '#00ff88');
+  ctx.fillStyle = '#3a5060'; ctx.font = '7px Courier New'; ctx.textAlign = 'center';
+  ctx.fillText('TGT ' + pad3(ac.tHdg), CKC, CKC + 28);
+}
+
+// ── 6. VSI — Vertical Speed Indicator ───────────────────────
+function drawVSI(ac) {
+  const ctx = document.getElementById('ck-vsi').getContext('2d');
+  const MAX = 2500;
+  ckBase(ctx);
+  const dA   = ac.tAlt - ac.alt;
+  const vspd = Math.abs(dA) < 50 ? 0 : Math.sign(dA) * MAX;
+  // Needle angle: π = 9-o'clock (level), +MAX → 3π/2 (12, climb), -MAX → π/2 (6, descend)
+  function vsAngle(v) { return Math.PI + (v / MAX) * (Math.PI / 2); }
+  // Background arc (left semicircle: 6 o'clock clockwise to 12 o'clock)
+  ctx.beginPath(); ctx.arc(CKC, CKC, CKR - 3, Math.PI / 2, 3 * Math.PI / 2, false);
+  ctx.strokeStyle = 'rgba(40,55,70,0.6)'; ctx.lineWidth = 4; ctx.stroke();
+  // Coloured live arc
+  if (vspd !== 0) {
+    ctx.beginPath();
+    ctx.arc(CKC, CKC, CKR - 3, Math.PI, vsAngle(vspd), vspd < 0);
+    ctx.strokeStyle = vspd > 0 ? 'rgba(0,200,80,0.5)' : 'rgba(200,60,40,0.5)';
+    ctx.lineWidth = 4; ctx.stroke();
+  }
+  // Ticks & labels on left arc
+  for (let v = -MAX; v <= MAX; v += 500) {
+    const a = vsAngle(v), maj = v % 1000 === 0;
+    ctx.beginPath();
+    ctx.moveTo(CKC + Math.cos(a) * (CKR - (maj ? 10 : 5)), CKC + Math.sin(a) * (CKR - (maj ? 10 : 5)));
+    ctx.lineTo(CKC + Math.cos(a) * (CKR - 1),              CKC + Math.sin(a) * (CKR - 1));
+    ctx.strokeStyle = maj ? '#ccd4dd' : '#2a3a4a'; ctx.lineWidth = maj ? 1.5 : 0.7; ctx.stroke();
+    if (maj) {
+      const lr = CKR - 18;
+      ctx.fillStyle = '#7a8a99'; ctx.font = '7px Courier New';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(Math.abs(v / 1000) || '0', CKC + Math.cos(a) * lr, CKC + Math.sin(a) * lr);
+    }
+  }
+  ctx.fillStyle = '#2a4a2a'; ctx.font = '7px Courier New'; ctx.textAlign = 'center';
+  ctx.fillText('UP', CKC - 22, CKC - 32);
+  ctx.fillStyle = '#4a2a2a';
+  ctx.fillText('DN', CKC - 22, CKC + 32);
+  // Needle
+  const col = vspd > 0 ? '#00ff88' : (vspd < 0 ? '#ff5544' : '#8899aa');
+  ckNeedle(ctx, vsAngle(vspd), CKR - 5, 2, col);
+  ckDot(ctx);
+  const fpmStr = (vspd > 0 ? '+' : '') + ~~vspd + 'FPM';
+  ckText(ctx, fpmStr, CKC + 18, col);
+}
+
+// ── Cockpit lifecycle ────────────────────────────────────────
+function updateCockpit() {
+  if (!cockpitOpen) return;
+  const ac = getSel();
+  if (!ac) { cockpitOpen = false; document.getElementById('cockpit-overlay').style.display = 'none'; return; }
+  document.getElementById('ck-cs').textContent = ac.callsign + ' — ' + ac.actype;
+  drawASI(ac); drawAI(ac); drawALT(ac); drawTC(ac); drawHI(ac); drawVSI(ac);
+}
+
+// Drag-to-move
+(function() {
+  let dragging = false, ox = 0, oy = 0;
+  document.getElementById('ck-header').addEventListener('mousedown', e => {
+    if (e.target.tagName === 'BUTTON') return;
+    const el = document.getElementById('cockpit-overlay');
+    dragging = true;
+    ox = e.clientX - el.offsetLeft;
+    oy = e.clientY - el.offsetTop;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const el = document.getElementById('cockpit-overlay');
+    el.style.left = (e.clientX - ox) + 'px';
+    el.style.top  = (e.clientY - oy) + 'px';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
+})();
+
+function toggleCockpit() {
+  cockpitOpen = !cockpitOpen;
+  document.getElementById('cockpit-overlay').style.display = cockpitOpen ? 'block' : 'none';
+  if (cockpitOpen) updateCockpit();
+}
+
+// Cockpit click handlers (wired up at document-ready time after elements exist)
+function ckClick(id, fn) {
+  document.getElementById(id).addEventListener('click', e => {
+    const ac = getSel(); if (!ac) return;
+    fn(ac, e.offsetX, e.offsetY);
+  });
+}
+
+// ============================================================
+function addMsg(text, type) {
+  msgLog.unshift({ text, type, t: gameTime });
+  if (msgLog.length > 40) msgLog.pop();
+  renderMsgs();
+}
+
+function renderMsgs() {
+  document.getElementById('msgs').innerHTML =
+    msgLog.slice(0, 9).map(m =>
+      `<div class="mline ${m.type || ''}">${m.text}</div>`
+    ).join('');
+}
+
+// ============================================================
+// UI PANEL
+// ============================================================
+function updatePanel() {
+  const sel = aircraft.find(a => a.id === selectedId && a.status !== 'LANDED');
+
+  if (sel) {
+    document.getElementById('no-sel')    && (document.getElementById('no-sel').style.display = 'none');
+    document.getElementById('cmd-panel').style.display = 'block';
+
+    const vs = sel.tAlt > sel.alt + 50 ? '↑' : sel.tAlt < sel.alt - 50 ? '↓' : '▬';
+    const dThr = dist(sel, { x: RWY.tx, y: RWY.ty });
+    const distStr = sel.status === 'FINAL' || sel.status === 'APPROACH'
+      ? ` | ${dThr.toFixed(1)}NM TO RWY` : '';
+
+    document.getElementById('ac-info').innerHTML = `
+      <div style="color:#00ff88;font-size:13px;font-weight:bold;margin-bottom:3px">
+        ${sel.callsign} <span style="color:#336655;font-size:10px">${sel.actype}${sel.isArr ? ' ARR' : ''}</span>
+      </div>
+      <div>HDG: ${pad3(sel.hdg)}° → ${pad3(sel.tHdg)}°</div>
+      <div>ALT: FL${fl(sel.alt)} ${vs} FL${fl(sel.tAlt)}</div>
+      <div>SPD: ${~~sel.spd}kt → ${~~sel.tSpd}kt</div>
+      <div>STATUS: <span style="color:#00ffcc">${sel.status}${distStr}</span></div>
+    `;
+
+    const ilsBtn  = document.getElementById('btn-ils');
+    const landBtn = document.getElementById('btn-land');
+    ilsBtn.className  = 'abtn' + (sel.clrILS ? ' on' : '');
+    ilsBtn.disabled   = sel.status === 'FINAL';
+    landBtn.className = 'abtn' + (sel.clrLand ? ' on' : '');
+    landBtn.disabled  = sel.status !== 'FINAL';
+  } else {
+    selectedId = null;
+    clearInputs();
+    document.getElementById('cmd-panel').style.display = 'none';
+    document.getElementById('ac-info').innerHTML =
+      '<div id="no-sel">— CLICK BLIP TO SELECT —</div>';
+  }
+
+  const active = aircraft.filter(a => a.status !== 'LANDED');
+  document.getElementById('tc').textContent = active.length;
+  document.getElementById('tlist').innerHTML = active.map(ac => {
+    let cls = ac.cfl ? 'cfl' : ac.warn ? 'warn' : ac.selected ? 'sel' : '';
+    const stLbl = ac.isArr ? ac.status : 'TRANSIT';
+    return `<div class="ti ${cls}" onclick="selectAC(${ac.id})">
+      <span class="tcol1">${ac.callsign}</span>
+      <span class="tcol2">FL${fl(ac.alt)}</span>
+      <span class="tcol3">${pad3(ac.hdg)}</span>
+      <span class="tcol4">${stLbl}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('sv').textContent  = Math.max(0, ~~score);
+  document.getElementById('lv').textContent  = landings;
+  document.getElementById('llv').textContent = level;
+
+  const zoomEl = document.getElementById('hdr-zoom');
+  if (zoomLevel > 1) {
+    document.getElementById('zvl').textContent = zoomLevel.toFixed(1);
+    zoomEl.style.display = 'block';
+  } else {
+    zoomEl.style.display = 'none';
+  }
+
+  const m = ~~(gameTime / 60), s = ~~(gameTime % 60);
+  document.getElementById('ov-time').textContent =
+    `TIME: ${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+// ============================================================
+// COMMANDS
+// ============================================================
+function toggleMap() {
+  showMap = !showMap;
+  const btn = document.getElementById('btn-map');
+  btn.textContent = showMap ? 'HIDE' : 'SHOW';
+  document.getElementById('map-legend-body').style.display = showMap ? '' : 'none';
+}
+
+function resetZoom() {
+  zoomLevel = 1;
+  zoomCenter = { x: 0, y: 0 };
+}
+
+function setSpeed(s) {
+  gameSpeed = s;
+  document.querySelectorAll('.spd-btn').forEach(b =>
+    b.classList.toggle('on', b.textContent === '×' + s)
+  );
+}
+
+function getSel() { return aircraft.find(a => a.id === selectedId); }
+
+function clearInputs() {
+  proposedHdg = null;
+  document.getElementById('i-hdg').value = '';
+  document.getElementById('i-alt').value = '';
+  document.getElementById('i-spd').value = '';
+  cockpitOpen = false;
+  document.getElementById('cockpit-overlay').style.display = 'none';
+}
+
+function selectAC(id) {
+  selectedId = selectedId === id ? null : id;
+  const ac = selectedId ? aircraft.find(a => a.id === selectedId) : null;
+  if (ac) {
+    proposedHdg = null;
+    document.getElementById('i-hdg').value = Math.round(ac.tHdg);
+    document.getElementById('i-alt').value = ac.tAlt;
+    document.getElementById('i-spd').value = Math.round(ac.tSpd);
+  } else {
+    clearInputs();
+  }
+}
+
+function cmdHdg() {
+  const ac = getSel(); if (!ac) return;
+  const v = parseInt(document.getElementById('i-hdg').value);
+  if (isNaN(v) || v < 1 || v > 360) return;
+  ac.tHdg = v;
+  if (ac.status === 'APPROACH') { ac.status = 'ENROUTE'; ac.clrILS = false; }
+  addMsg(`${ac.callsign}: TURN HDG ${pad3(v)}`);
+  proposedHdg = null;
+  document.getElementById('i-hdg').value = '';
+}
+
+function cmdAlt() {
+  const ac = getSel(); if (!ac) return;
+  const v = parseInt(document.getElementById('i-alt').value);
+  if (isNaN(v) || v < 1000 || v > 39000) return;
+  ac.tAlt = v;
+  const dir = v > ac.alt ? 'CLIMB' : 'DESCEND';
+  addMsg(`${ac.callsign}: ${dir} FL${fl(v)}`);
+}
+
+function cmdSpd() {
+  const ac = getSel(); if (!ac) return;
+  const v = parseInt(document.getElementById('i-spd').value);
+  if (isNaN(v) || v < 120 || v > 500) return;
+  ac.tSpd = v;
+  addMsg(`${ac.callsign}: SPEED ${v}KT`);
+}
+
+function cmdILS() {
+  const ac = getSel(); if (!ac || ac.status === 'FINAL') return;
+  if (!ac.isArr) { addMsg(`${ac.callsign}: NOT AN ARRIVAL`, 'warn'); return; }
+  ac.clrILS = !ac.clrILS;
+  if (ac.clrILS) {
+    addMsg(`${ac.callsign}: CLEARED ILS RWY 27L, DESCEND FL040`, 'ok');
+  } else {
+    if (ac.status === 'APPROACH') ac.status = 'ENROUTE';
+    addMsg(`${ac.callsign}: ILS CLEARANCE CANCELLED`);
+  }
+}
+
+function cmdLand() {
+  const ac = getSel(); if (!ac || ac.status !== 'FINAL') return;
+  ac.clrLand = !ac.clrLand;
+  if (ac.clrLand) {
+    addMsg(`${ac.callsign}: CLEARED TO LAND RWY 27L, WIND 280/12`, 'ok');
+  } else {
+    addMsg(`${ac.callsign}: LANDING CLEARANCE CANCELLED`);
+  }
+}
+
+// ============================================================
+// EVENT HANDLERS
+// ============================================================
+canvas.addEventListener('click', e => {
+  const r    = canvas.getBoundingClientRect();
+  const scX  = SZ / r.width, scY = SZ / r.height;
+  const mx   = (e.clientX - r.left) * scX;
+  const my   = (e.clientY - r.top)  * scY;
+
+  let best = null, bestD = Infinity;
+  for (const ac of aircraft) {
+    if (ac.status === 'LANDED') continue;
+    const [cx, cy] = nm2c(ac.x, ac.y);
+    const d = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2);
+    if (d < 22 && d < bestD) { best = ac; bestD = d; }
+  }
+
+  if (best) selectAC(best.id);
+  else { selectedId = null; clearInputs(); }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { selectedId = null; clearInputs(); }
+  if (e.key === 'Enter') {
+    const fi = document.activeElement;
+    if (fi.id === 'i-hdg') cmdHdg();
+    else if (fi.id === 'i-alt') cmdAlt();
+    else if (fi.id === 'i-spd') cmdSpd();
+  }
+});
+
+// Cockpit instrument clicks
+ckClick('ck-asi', (ac, ox) => {
+  const d = ox < 60 ? -10 : 10;
+  ac.tSpd = Math.max(120, Math.min(400, ac.tSpd + d));
+  document.getElementById('i-spd').value = ~~ac.tSpd;
+  addMsg(`${ac.callsign}: SPEED ${~~ac.tSpd}KT`);
+});
+ckClick('ck-ai', (ac) => { cmdILS(); });
+ckClick('ck-alt', (ac, ox, oy) => {
+  const d = oy < 60 ? 1000 : -1000;
+  ac.tAlt = Math.max(1000, Math.min(39000, ac.tAlt + d));
+  document.getElementById('i-alt').value = ac.tAlt;
+  addMsg(`${ac.callsign}: ${d > 0 ? 'CLIMB' : 'DESCEND'} FL${fl(ac.tAlt)}`);
+});
+ckClick('ck-tc', (ac, ox) => {
+  const d = ox < 60 ? -10 : 10;
+  ac.tHdg = (ac.tHdg + d + 360) % 360;
+  if (ac.status === 'APPROACH') { ac.status = 'ENROUTE'; ac.clrILS = false; }
+  document.getElementById('i-hdg').value = ~~ac.tHdg;
+  addMsg(`${ac.callsign}: TURN HDG ${pad3(ac.tHdg)}`);
+});
+ckClick('ck-hi', (ac, ox) => {
+  const d = ox < 60 ? -10 : 10;
+  ac.tHdg = (ac.tHdg + d + 360) % 360;
+  if (ac.status === 'APPROACH') { ac.status = 'ENROUTE'; ac.clrILS = false; }
+  document.getElementById('i-hdg').value = ~~ac.tHdg;
+  addMsg(`${ac.callsign}: TURN HDG ${pad3(ac.tHdg)}`);
+});
+ckClick('ck-vsi', (ac, ox, oy) => {
+  const d = oy < 60 ? 1000 : -1000;
+  ac.tAlt = Math.max(1000, Math.min(39000, ac.tAlt + d));
+  document.getElementById('i-alt').value = ac.tAlt;
+  addMsg(`${ac.callsign}: ${d > 0 ? 'CLIMB' : 'DESCEND'} FL${fl(ac.tAlt)}`);
+});
+
+document.getElementById('i-hdg').addEventListener('input', e => {
+  const v = parseInt(e.target.value);
+  proposedHdg = (!isNaN(v) && v >= 1 && v <= 360) ? v : null;
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.3 : 1 / 1.3;
+  zoomLevel = Math.max(1, Math.min(8, zoomLevel * factor));
+  if (zoomLevel === 1) {
+    zoomCenter = { x: 0, y: 0 };
+  } else {
+    const sel = aircraft.find(a => a.id === selectedId && a.status !== 'LANDED');
+    if (sel) { zoomCenter.x = sel.x; zoomCenter.y = sel.y; }
+  }
+}, { passive: false });
+
+// ============================================================
+// GAME UPDATE
+// ============================================================
+function update(dt) {
+  dt_g = dt;
+  gameTime  += dt;
+  sweepAng   = (sweepAng + 28 * dt) % 360; // ~12.8s rotation
+
+  // Spawn
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawn();
+    spawnTimer = spawnGap * (0.65 + Math.random() * 0.7);
+  }
+
+  // Update aircraft
+  for (let i = aircraft.length - 1; i >= 0; i--) {
+    const ac = aircraft[i];
+    if (ac.status === 'LANDED') continue;
+
+    ac.update(dt);
+
+    // Just landed
+    if (ac.status === 'LANDED') {
+      score    += 100;
+      landings += 1;
+      addMsg(`✓ ${ac.callsign}: LANDED SAFELY — +100`, 'ok');
+      // Level up every 5 landings
+      if (landings % 5 === 0) {
+        level++;
+        maxAC     = Math.min(16, 8 + level);
+        spawnGap  = Math.max(18, 40 - level * 3);
+        addMsg(`LEVEL ${level} — TRAFFIC INCREASING`, 'warn');
+      }
+      aircraft.splice(i, 1);
+      if (selectedId === ac.id) { selectedId = null; clearInputs(); }
+      continue;
+    }
+
+    // Left sector
+    if (ac.outOfSector()) {
+      if (ac.isArr) {
+        score -= 50;
+        addMsg(`✗ ${ac.callsign}: LEFT SECTOR WITHOUT LANDING — -50`, 'cfl');
+      } else {
+        score += 10;
+        addMsg(`${ac.callsign}: TRANSFERRED — +10`);
+      }
+      aircraft.splice(i, 1);
+      if (selectedId === ac.id) { selectedId = null; clearInputs(); }
+    }
+  }
+
+  checkConflicts();
+}
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+let lastT = null;
+
+function loop(ts) {
+  if (!lastT) lastT = ts;
+  const rawDt = Math.min((ts - lastT) / 1000, 0.1);
+  lastT = ts;
+
+  update(rawDt * gameSpeed);
+  drawRadar();
+  updatePanel();
+  updateCockpit();
+  requestAnimationFrame(loop);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+addMsg('EGLL APPROACH CONTROL — SIMULATOR ACTIVE', 'ok');
+addMsg('1. Click aircraft blip to select');
+addMsg('2. Set HDG/ALT/SPD to vector arrivals');
+addMsg('3. Press ILS APPROACH when established');
+addMsg('4. Press CLEARED TO LAND on final');
+
+spawn(); spawn(); spawn();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
