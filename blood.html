@@ -1121,9 +1121,9 @@ function log(txt, cls='') {
   const d  = document.createElement('div');
   d.className = 'le ' + cls;
   d.textContent = txt;
-  el.appendChild(d);
-  while (el.children.length > 100) el.removeChild(el.firstChild);
-  el.scrollTop = el.scrollHeight;
+  el.insertBefore(d, el.firstChild);
+  while (el.children.length > 100) el.removeChild(el.lastChild);
+  el.scrollTop = 0;
 }
 
 function sep() { log('', 'sep'); }
