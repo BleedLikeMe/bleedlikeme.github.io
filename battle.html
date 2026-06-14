@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Scottish Wars – Tabletop Battle</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0a05;color:#e8d5a0;font-family:Georgia,serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#titlebar{background:linear-gradient(135deg,#2d1a0e,#4a2800);padding:5px 14px;display:flex;align-items:center;gap:12px;border-bottom:2px solid #8b6914;flex-shrink:0}
+#titlebar h1{font-size:1.15em;color:#f0c040;text-shadow:1px 1px 3px #000;letter-spacing:2px;white-space:nowrap}
+#scen-label{font-size:0.76em;color:#c8a030;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#main{display:flex;flex:1;overflow:hidden;min-height:0}
+#sidebar{width:210px;min-width:210px;background:#120d05;border-right:2px solid #5a3c0a;padding:6px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;font-size:0.78em}
+#canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:#080604;overflow:hidden;position:relative}
+canvas{cursor:crosshair;display:block;image-rendering:pixelated}
+.panel{background:#1c1208;border:1px solid #4a3008;border-radius:3px;padding:6px}
+.panel h3{color:#f0c040;font-size:0.8em;margin-bottom:4px;border-bottom:1px solid #4a3008;padding-bottom:3px}
+.btn{background:#2e1600;border:1px solid #6a4610;color:#f0c040;padding:4px 9px;cursor:pointer;font-family:Georgia;font-size:0.78em;border-radius:2px;width:100%;margin:2px 0;text-align:left}
+.btn:hover{background:#4a2800}.btn:disabled{opacity:0.3;cursor:default}
+.btn-go{background:#0c2010;border-color:#2a6020;color:#80ee80}.btn-go:hover{background:#183018}
+.sc{color:#7799ff}.ec{color:#ff7777}
+#unit-det{font-size:0.74em;line-height:1.65}
+.bar{height:6px;background:#111;border-radius:2px;margin:1px 0}
+.barf{height:100%;border-radius:2px;transition:width 0.2s}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:100}
+#ovbox{background:#1a1005;border:2px solid #8b6914;border-radius:6px;padding:18px;max-width:560px;width:94%;max-height:88vh;overflow-y:auto}
+#ovbox h2{color:#f0c040;margin-bottom:8px;font-size:1.15em}
+#ovbox p{font-size:0.8em;line-height:1.6;margin-bottom:7px;color:#d4b87a}
+.sb{text-align:left;margin:3px 0;padding:8px 10px}
+.sb strong{display:block;color:#f0c040;margin-bottom:1px}
+.sb small{color:#aaa;font-size:0.86em}
+#log-p{font-size:0.7em;max-height:110px;overflow-y:auto;line-height:1.5}
+#log-p div{padding:1px 0;border-bottom:1px solid #1e1000}
+#tleg{display:grid;grid-template-columns:1fr 1fr;gap:2px;font-size:0.68em}
+.tli{display:flex;align-items:center;gap:3px}
+.tcb{width:11px;height:11px;border-radius:1px;flex-shrink:0;border:1px solid rgba(255,255,255,0.15)}
+.cpath{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.cnode{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:40px}
+.cnode-dot{width:26px;height:26px;border-radius:50%;border:2px solid #5a3c0a;background:#1a1005;display:flex;align-items:center;justify-content:center;font-size:0.78em;font-weight:bold}
+.cnode-yr{font-size:0.6em;color:#887060}
+.cline{flex:1;min-width:6px;max-width:18px;height:2px;background:#3a2808;margin-bottom:14px}
+.cn-win .cnode-dot{background:#0e2808;border-color:#3a8820;color:#80ee80}
+.cn-win .cnode-yr{color:#60aa40}
+.cn-loss .cnode-dot{background:#280808;border-color:#882020;color:#ff8080}
+.cn-loss .cnode-yr{color:#aa4040}
+.cn-cur .cnode-dot{background:#2a2000;border-color:#f0c040;color:#f0c040;animation:cpulse 1.2s infinite}
+.cn-cur .cnode-yr{color:#c8a030}
+.cn-fut .cnode-dot{opacity:0.3}.cn-fut .cnode-yr{opacity:0.3}
+@keyframes cpulse{0%,100%{box-shadow:0 0 0 0 rgba(240,192,64,0.5)}50%{box-shadow:0 0 0 5px rgba(240,192,64,0)}}
+.cbons{font-size:0.8em;padding:5px 10px;border-radius:3px;margin:7px 0;text-align:center;font-style:italic}
+.cbp{background:#0a2010;border:1px solid #2a6820;color:#80ee80}.cbn{background:#200a0a;border:1px solid #681818;color:#ff8888}
+/* Help tabs */
+.htabs{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px}
+.htab{background:#2a1400;border:1px solid #5a3c0a;color:#b89040;padding:4px 9px;cursor:pointer;border-radius:3px;font-family:Georgia;font-size:0.76em}
+.htab:hover{background:#3e2000;color:#f0c040}.htab.on{background:#4a2800;border-color:#9a7020;color:#f0c040}
+.hpane{display:none}.hpane.on{display:block}
+.hbox{background:#160e04;border:1px solid #3a2808;border-radius:3px;padding:8px 10px;margin:5px 0;font-size:0.8em;line-height:1.6}
+.hbox h4{color:#f0c040;margin-bottom:4px;font-size:0.92em}
+.htbl{width:100%;border-collapse:collapse;font-size:0.76em;margin:4px 0}
+.htbl th{background:#2a1800;color:#f0c040;padding:4px 7px;text-align:left;border-bottom:1px solid #4a2808}
+.htbl td{padding:3px 7px;border-bottom:1px solid #221200;color:#d4b87a;vertical-align:middle}
+.htbl tr:nth-child(even) td{background:#120a02}
+.hfm{background:#111;border:1px solid #3a2808;border-radius:3px;padding:8px;text-align:center;margin:8px 0;font-size:0.82em;line-height:1.9}
+.sc2{color:#7799ff}.ec2{color:#ff7777}
+</style>
+</head>
+<body>
+<div id="titlebar">
+  <h1>⚔ SCOTTISH WARS</h1>
+  <span id="scen-label">Choose a battle to begin</span>
+  <button class="btn" style="width:auto;margin:0;white-space:nowrap" onclick="showMenu()">Scenarios</button>
+  <button class="btn" style="width:auto;margin:0" onclick="showHelp()">Help</button>
+  <button id="btn-sound" class="btn" style="width:auto;margin:0;padding:3px 8px;font-size:1.05em" onclick="toggleSound()" title="Toggle sound &amp; music">🔊</button>
+  <button id="btn-music" class="btn" style="width:auto;margin:0;padding:3px 8px;font-size:1.05em" onclick="toggleMusic()" title="Toggle background music">🎵</button>
+</div>
+<div id="main">
+  <div id="sidebar">
+    <div class="panel">
+      <div id="phase-d" style="text-align:center;font-size:0.88em;color:#f0c040">Select a scenario</div>
+      <div id="turn-d" style="text-align:center;font-size:0.7em;color:#c8a030;margin-top:2px"></div>
+    </div>
+    <div class="panel">
+      <h3>Selected Unit</h3>
+      <div id="unit-det"><i style="color:#666">No unit selected</i></div>
+    </div>
+    <div class="panel">
+      <h3>Commands</h3>
+      <button class="btn btn-go" id="btn-end" onclick="endTurn()" disabled>End Turn ▶</button>
+      <button class="btn" id="btn-atk" onclick="attackSelected()" disabled>Attack Enemy</button>
+    </div>
+    <div class="panel">
+      <h3>Forces</h3>
+      <div id="forces-d" style="font-size:0.73em;line-height:1.7"></div>
+    </div>
+    <div class="panel">
+      <h3>Terrain</h3>
+      <div id="tleg"></div>
+    </div>
+    <div class="panel">
+      <h3>Battle Log</h3>
+      <div id="log-p"></div>
+    </div>
+  </div>
+  <div id="canvas-wrap"><canvas id="gc"></canvas></div>
+</div>
+<div id="overlay">
+  <div id="ovbox">
+    <h2>⚔ Scottish Wars — Tabletop Battles</h2>
+    <p>Command Scottish forces across five centuries of conflict — from Wallace's ambush at Stirling to the last Highland charge at Culloden.</p>
+    <button class="btn btn-go sb" onclick="startCampaign()" style="border-width:2px;margin-bottom:8px">
+      <strong style="font-size:1.05em">⚔ CAMPAIGN MODE — The Long War, 1297–1746</strong>
+      <small>Play all 7 battles in sequence · carry-over morale · campaign narrative · final rating</small>
+    </button>
+    <p style="font-size:0.75em;color:#887060;text-align:center;margin:3px 0 7px">— or choose a single battle —</p>
+    <button class="btn sb" onclick="load('stirling')"><strong>Stirling Bridge — 1297</strong><small>Wallace springs a trap as the English cross the Forth</small></button>
+    <button class="btn sb" onclick="load('falkirk')"><strong>Falkirk — 1298</strong><small>Wallace holds with schiltrons against Edward I's longbowmen</small></button>
+    <button class="btn sb" onclick="load('bannockburn')"><strong>Bannockburn — 1314</strong><small>Bruce defends Scotland against Edward II's great cavalry host</small></button>
+    <button class="btn sb" onclick="load('halidon')"><strong>Halidon Hill — 1333</strong><small>Scots must charge uphill into English archers to relieve Berwick</small></button>
+    <button class="btn sb" onclick="load('flodden')"><strong>Flodden — 1513</strong><small>James IV leads Scottish pikes — can you change history?</small></button>
+    <button class="btn sb" onclick="load('prestonpans')"><strong>Prestonpans — 1745</strong><small>Jacobite dawn charge catches government forces off-guard</small></button>
+    <button class="btn sb" onclick="load('culloden')"><strong>Culloden — 1746</strong><small>The final Highland charge across Drumossie Moor</small></button>
+  </div>
+</div>
+
+<script>
+// ── TERRAIN CONSTANTS ──────────────────────────────────────────────────────
+const PL=0,HL=1,FR=2,RV=3,MS=4,TW=5,FD=6,RD=7,MR=8,SH=9;
+const TNAME=['Plain','Hill','Forest','River','Marsh','Town','Ford','Road','Moor','Shore'];
+const TCOL =['#5a8030','#8a7050','#1a4a10','#1a3a9a','#3a6018','#b09060','#1e4a8a','#7a9040','#5a4050','#c0b070'];
+const TDEF =[0,1,1,0,-1,2,0,0,-1,0];
+const TMOV =[1,2,3,99,2,1,2,1,2,99];
+const TPASS=[1,1,1,0,1,1,1,1,1,0];
+
+// ── GRID ──────────────────────────────────────────────────────────────────
+const COLS=36, ROWS=22, CS=32; // base cell size pre-scale
+
+// ── UNIT TYPES ─────────────────────────────────────────────────────────────
+const UT={
+  schiltron: {label:'Schiltron',  abbr:'SCH',atk:3,def:5,mov:2,range:1},
+  highlanders:{label:'Highlanders',abbr:'HLD',atk:5,def:2,mov:3,range:1},
+  pikes:     {label:'Pikemen',   abbr:'PIK',atk:3,def:4,mov:2,range:1},
+  infantry:  {label:'Infantry',  abbr:'INF',atk:3,def:3,mov:3,range:1},
+  cavalry:   {label:'Cavalry',   abbr:'CAV',atk:4,def:2,mov:5,range:1},
+  archers:   {label:'Archers',   abbr:'ARC',atk:4,def:2,mov:2,range:3},
+  artillery: {label:'Artillery', abbr:'ART',atk:6,def:1,mov:1,range:5},
+  billmen:   {label:'Billmen',   abbr:'BIL',atk:4,def:3,mov:3,range:1},
+  muskets:   {label:'Muskets',   abbr:'MSK',atk:5,def:2,mov:2,range:3},
+  dragoons:  {label:'Dragoons',  abbr:'DRG',atk:4,def:2,mov:4,range:2},
+  longbow:   {label:'Longbowmen',abbr:'LBW',atk:5,def:2,mov:2,range:4},
+};
+
+// ── SCENARIOS ──────────────────────────────────────────────────────────────
+const SCENARIOS={
+  stirling:{
+    name:'Battle of Stirling Bridge',date:'11 September 1297',player:'scots',turns:20,
+    brief:'Let the English cross the ford at col 19, then spring the trap. Eliminate 60% of enemy forces.',
+    vic_scots:{type:'elim',threshold:0.6,side:'english',desc:'Eliminate 60% of English forces'},
+    vic_english:{type:'reach',col:7,rmin:5,rmax:16,desc:'English reach Stirling Castle'},
+    sr:{fordCol:19},
+    scots:[
+      {name:"Wallace's Schiltron", type:'schiltron',  col:11,row:8,  str:8,mor:82},
+      {name:"Moray's Spearmen",    type:'schiltron',  col:9, row:11, str:7,mor:78},
+      {name:'Highland Reserve',    type:'highlanders',col:8, row:6,  str:5,mor:88},
+      {name:'Scottish Archers',    type:'archers',    col:12,row:5,  str:5,mor:70},
+      {name:'Border Horsemen',     type:'cavalry',    col:9, row:14, str:4,mor:65},
+      {name:"Murray's Spearmen",   type:'pikes',      col:11,row:13, str:5,mor:72},
+    ],
+    english:[
+      {name:"Cressingham's Foot",  type:'infantry',  col:24,row:8,  str:9,mor:70},
+      {name:'English Cavalry',     type:'cavalry',   col:25,row:11, str:8,mor:75},
+      {name:"Warenne's Reserves",  type:'infantry',  col:27,row:9,  str:7,mor:65},
+      {name:'Longbowmen North',    type:'longbow',   col:25,row:6,  str:6,mor:70},
+      {name:'Longbowmen South',    type:'longbow',   col:25,row:14, str:5,mor:68},
+      {name:'Heavy Horse',         type:'cavalry',   col:28,row:12, str:6,mor:72},
+    ],
+  },
+  falkirk:{
+    name:'Battle of Falkirk',date:'22 July 1298',player:'scots',turns:16,
+    brief:"Hold your schiltrons — your cavalry is unreliable. Edward's longbowmen are deadly at range. Eliminate 50% of English, or hold for 16 turns.",
+    vic_scots:{type:'elim',threshold:0.50,side:'english',desc:'Eliminate 50% of English forces'},
+    vic_english:{type:'elim',threshold:0.70,side:'scots',desc:'Eliminate 70% of Scottish forces'},
+    sr:{volleyFire:true},
+    scots:[
+      {name:"Wallace's Schiltron", type:'schiltron',  col:12,row:8,  str:8,mor:80},
+      {name:'Macduff Schiltron',   type:'schiltron',  col:10,row:11, str:7,mor:76},
+      {name:'Comyn Schiltron',     type:'schiltron',  col:14,row:11, str:7,mor:74},
+      {name:'Scots Archers',       type:'archers',    col:12,row:6,  str:4,mor:65},
+      {name:'Scots Cavalry',       type:'cavalry',    col:9, row:14, str:5,mor:60},
+      {name:'Balliol Men-at-Arms', type:'pikes',      col:14,row:14, str:4,mor:62},
+    ],
+    english:[
+      {name:'Norfolk Cavalry',     type:'cavalry',   col:24,row:7,  str:8,mor:76},
+      {name:"Hereford's Horse",    type:'cavalry',   col:26,row:10, str:7,mor:74},
+      {name:'Lincoln Longbows N',  type:'longbow',   col:23,row:5,  str:8,mor:78},
+      {name:'Lincoln Longbows S',  type:'longbow',   col:23,row:14, str:8,mor:78},
+      {name:'English Foot',        type:'infantry',  col:26,row:12, str:8,mor:68},
+      {name:'Welsh Spearmen',      type:'pikes',     col:28,row:9,  str:6,mor:62},
+    ],
+  },
+  bannockburn:{
+    name:'Battle of Bannockburn',date:'23–24 June 1314',player:'scots',turns:18,
+    brief:'Your schiltrons are near-invincible in formation. Advance steadily — English cavalry is hampered by the Carse marshes. Eliminate 55% of English.',
+    vic_scots:{type:'elim',threshold:0.55,side:'english',desc:'Eliminate 55% of English forces'},
+    vic_english:{type:'reach',col:9,rmin:4,rmax:17,desc:'English reach New Park forest'},
+    sr:{schiltronBonus:true},
+    scots:[
+      {name:"Bruce's Division",    type:'schiltron',  col:11,row:8,  str:9,mor:88},
+      {name:"Randolph's Schiltron",type:'schiltron',  col:13,row:11, str:8,mor:82},
+      {name:"Douglas's Schiltron", type:'schiltron',  col:9, row:11, str:8,mor:82},
+      {name:'Highland Guard',      type:'highlanders',col:12,row:5,  str:5,mor:92},
+      {name:"Stewart's Pikemen",   type:'pikes',      col:14,row:14, str:6,mor:76},
+      {name:'Scots Light Horse',   type:'cavalry',    col:8, row:14, str:4,mor:68},
+    ],
+    english:[
+      {name:"Gloucester's Cavalry",type:'cavalry',   col:23,row:8,  str:8,mor:78},
+      {name:"Hereford's Horse",    type:'cavalry',   col:25,row:12, str:7,mor:75},
+      {name:'English Foot',        type:'infantry',  col:24,row:10, str:10,mor:70},
+      {name:'Longbowmen',          type:'longbow',   col:27,row:9,  str:7,mor:70},
+      {name:'English Reserves',    type:'infantry',  col:28,row:13, str:8,mor:65},
+      {name:'Welsh Spearmen',      type:'pikes',     col:26,row:6,  str:6,mor:60},
+      {name:'Pembroke Cavalry',    type:'cavalry',   col:30,row:10, str:6,mor:70},
+    ],
+  },
+  halidon:{
+    name:'Battle of Halidon Hill',date:'19 July 1333',player:'scots',turns:14,
+    brief:'You must relieve Berwick — advance and break the English line on Halidon Hill. The English archers on the hill are deadly. Reach the hilltop (col 22+) with 3 units.',
+    vic_scots:{type:'reach_hold',col:22,rmin:4,rmax:17,need:3,desc:'Reach Halidon Hill with 3+ units'},
+    vic_english:{type:'elim',threshold:0.65,side:'scots',desc:'Eliminate 65% of Scottish forces'},
+    sr:{hillArchers:true},
+    scots:[
+      {name:"Douglas's Schiltron", type:'schiltron',  col:8, row:8,  str:8,mor:78},
+      {name:"Murray's Division",   type:'schiltron',  col:6, row:11, str:7,mor:74},
+      {name:'Ross Division',       type:'schiltron',  col:10,row:11, str:7,mor:72},
+      {name:'Scots Cavalry',       type:'cavalry',    col:7, row:6,  str:5,mor:70},
+      {name:"Carrick's Men",       type:'pikes',      col:9, row:14, str:6,mor:68},
+      {name:'Galloway Spearmen',   type:'infantry',   col:6, row:14, str:5,mor:65},
+    ],
+    english:[
+      {name:'Halidon Hill Archers',type:'longbow',   col:23,row:7,  str:8,mor:82},
+      {name:'Archers Centre',      type:'longbow',   col:23,row:11, str:8,mor:80},
+      {name:'Archers South',       type:'longbow',   col:23,row:15, str:7,mor:78},
+      {name:'English Men-at-Arms', type:'infantry',  col:25,row:9,  str:7,mor:72},
+      {name:'English Knights',     type:'cavalry',   col:27,row:12, str:6,mor:74},
+      {name:'Percy Retinue',       type:'infantry',  col:25,row:14, str:6,mor:68},
+    ],
+  },
+  flodden:{
+    name:'Battle of Flodden',date:'9 September 1513',player:'scots',turns:16,
+    brief:'Hold the high ground. Your pikemen are powerful but vulnerable if flanked. Eliminate 55% of English forces.',
+    vic_scots:{type:'elim',threshold:0.55,side:'english',desc:'Eliminate 55% of English forces'},
+    vic_english:{type:'elim',threshold:0.60,side:'scots',desc:'Eliminate 60% of Scottish forces'},
+    sr:{hillAdvantage:true},
+    scots:[
+      {name:"James IV's Division", type:'pikes',      col:11,row:8,  str:9,mor:78},
+      {name:"Huntly's Men",        type:'pikes',      col:9, row:10, str:8,mor:72},
+      {name:"Crawford's Division", type:'pikes',      col:13,row:10, str:7,mor:72},
+      {name:"Lennox's Men",        type:'infantry',   col:10,row:6,  str:6,mor:66},
+      {name:'Highland Contingent', type:'highlanders',col:8, row:13, str:6,mor:82},
+      {name:'Scots Cannon',        type:'artillery',  col:12,row:5,  str:5,mor:60},
+    ],
+    english:[
+      {name:"Howard's Billmen",    type:'billmen',   col:23,row:8,  str:9,mor:78},
+      {name:"Surrey's Foot",       type:'billmen',   col:22,row:11, str:8,mor:72},
+      {name:'English Archers',     type:'longbow',   col:25,row:9,  str:7,mor:72},
+      {name:"Edmund Howard's Men", type:'infantry',  col:26,row:12, str:6,mor:66},
+      {name:"Dacre's Horsemen",    type:'cavalry',   col:28,row:14, str:5,mor:70},
+      {name:'English Cannon',      type:'artillery', col:24,row:6,  str:4,mor:62},
+    ],
+  },
+  prestonpans:{
+    name:'Battle of Prestonpans',date:'21 September 1745',player:'scots',turns:10,
+    brief:"Dawn surprise attack! Government forces are caught off-guard — they suffer -2 attack for the first 3 turns. Close fast and rout them. Rout 70% of Government forces.",
+    vic_scots:{type:'rout_pct',threshold:0.70,side:'english',desc:'Rout 70% of Government forces'},
+    vic_english:{type:'survive',turns:10,desc:'Government survives 10 turns with losses below 50%'},
+    sr:{surprise:3,highlandCharge:true},
+    scots:[
+      {name:'Clan Cameron',        type:'highlanders',col:5, row:7,  str:7,mor:88},
+      {name:'Clan MacDonald',      type:'highlanders',col:5, row:10, str:7,mor:86},
+      {name:'Clan Fraser',         type:'highlanders',col:5, row:13, str:6,mor:84},
+      {name:'Jacobite Horse',      type:'cavalry',    col:4, row:9,  str:5,mor:78},
+      {name:'French Volunteers',   type:'infantry',   col:4, row:12, str:4,mor:70},
+    ],
+    english:[
+      {name:"Cope's Infantry N",   type:'muskets',   col:24,row:7,  str:7,mor:68},
+      {name:"Cope's Infantry S",   type:'muskets',   col:24,row:11, str:7,mor:68},
+      {name:'Dragoons',            type:'dragoons',  col:26,row:9,  str:5,mor:62},
+      {name:'Artillery Battery',   type:'artillery', col:25,row:13, str:4,mor:60},
+      {name:'Hamilton Dragoons',   type:'dragoons',  col:27,row:12, str:4,mor:58},
+    ],
+  },
+  culloden:{
+    name:'Battle of Culloden',date:'16 April 1746',player:'scots',turns:12,
+    brief:'Charge! Artillery fires every turn. Close the distance fast — reach the Government line (col 25+) with 3 units within 10 turns.',
+    vic_scots:{type:'reach_hold',col:25,rmin:4,rmax:17,need:3,desc:'Reach the Government line with 3+ units'},
+    vic_english:{type:'rout_pct',threshold:0.65,side:'scots',desc:'Rout 65% of Jacobite forces'},
+    sr:{artilleryFire:true,highlandCharge:true},
+    scots:[
+      {name:'Clan Cameron',        type:'highlanders',col:5, row:6,  str:7,mor:88},
+      {name:'Clan Fraser',         type:'highlanders',col:5, row:9,  str:7,mor:86},
+      {name:'Clan MacDonald',      type:'highlanders',col:5, row:12, str:7,mor:84},
+      {name:'Clan Atholl',         type:'highlanders',col:5, row:15, str:6,mor:82},
+      {name:'French Picquets',     type:'infantry',   col:4, row:10, str:5,mor:72},
+      {name:'Jacobite Horse',      type:'cavalry',    col:4, row:7,  str:4,mor:70},
+    ],
+    english:[
+      {name:"Barrel's Regiment",   type:'muskets',   col:28,row:6,  str:8,mor:82},
+      {name:"Munro's Regiment",    type:'muskets',   col:28,row:9,  str:8,mor:82},
+      {name:"Bligh's Regiment",    type:'muskets',   col:28,row:12, str:8,mor:80},
+      {name:"Campbell's Regiment", type:'muskets',   col:28,row:15, str:7,mor:78},
+      {name:'Royal Artillery N',   type:'artillery', col:29,row:7,  str:6,mor:88},
+      {name:'Royal Artillery S',   type:'artillery', col:29,row:14, str:6,mor:88},
+      {name:'Government Dragoons', type:'dragoons',  col:31,row:10, str:5,mor:76},
+    ],
+  },
+};
+
+// ── CAMPAIGN DATA ─────────────────────────────────────────────────────────────
+const CO=['stirling','falkirk','bannockburn','halidon','flodden','prestonpans','culloden'];
+const CN={stirling:'Stirling Bridge',falkirk:'Falkirk',bannockburn:'Bannockburn',halidon:'Halidon Hill',flodden:'Flodden',prestonpans:'Prestonpans',culloden:'Culloden'};
+const CY={stirling:'1297',falkirk:'1298',bannockburn:'1314',halidon:'1333',flodden:'1513',prestonpans:'1745',culloden:'1746'};
+
+const CPRE={
+  stirling:`Edward I 'Longshanks' occupies Scotland. William Wallace, a minor knight's son, has ignited rebellion. He and Andrew Moray have gathered their army on Abbey Craig — watching as the English vanguard begins to cross the bridge over the Forth below. Every soldier who crosses that bridge is a soldier cut off from reinforcement.`,
+  falkirk:`Edward I takes the field in person to crush the rebellion. Wallace forms his schiltrons on a ridge at Falkirk — bristling rings of spears that broke cavalry at Stirling. But Scottish cavalry is unreliable, and Edward's Welsh longbowmen are the most feared in Europe. The schiltrons must hold.`,
+  bannockburn:`Robert the Bruce has crowned himself King of Scots and won back most of Scotland castle by castle. Now Edward II marches north with the largest English army ever assembled — over 20,000 men — to relieve Stirling Castle, the last major English stronghold. This battle will determine Scotland's fate for generations.`,
+  halidon:`The Wars of Independence grind on. Edward III backs Edward Balliol's claim to the Scottish throne. Scotland's great trading port of Berwick is besieged and on the verge of surrender. The Scots army must advance uphill against English longbowmen to relieve it. Defeat here will cede Scotland's southern borderlands to England.`,
+  flodden:`James IV of Scotland is at the height of his power — a Renaissance king with a modern army, French-trained pike formations, and powerful artillery. He invades England in support of France under the Auld Alliance. Surrey's English army faces him at Flodden Hill with billmen and longbows. The flower of Scotland stands ready.`,
+  prestonpans:`It is September 1745 and a Jacobite flame burns across Scotland. Prince Charles Edward Stuart has raised his standard at Glenfinnan and marched on Edinburgh. General Cope's government army stands in the way. In the pre-dawn mist of an autumn morning, the Highland clans form for a charge that will decide Scotland's immediate future.`,
+  culloden:`The Jacobite army retreated from Derby without a decisive engagement in England. Now they stand hungry, cold, and exhausted on the open moorland of Drumossie near Inverness. The Duke of Cumberland's disciplined redcoats are drawn up barely 500 yards away. This is the final roll of the dice for the Stuart cause — and for the Highland way of life.`,
+};
+const CWIN={
+  stirling:`The English vanguard, trapped north of the Forth, is annihilated. Treasurer Cressingham is killed and Wallace is named Guardian of Scotland. England is shaken. Scotland erupts in jubilation.`,
+  falkirk:`Against all odds, the schiltrons hold their ground and repel the longbow volleys. Edward retreats north, his supply lines strained. Scotland breathes. Wallace's tactical genius is confirmed.`,
+  bannockburn:`Edward II flees south, abandoning his shield and privy seal. Bruce's genius is confirmed for all history. Scotland's independence is secured in blood and iron — a triumph that will echo for seven centuries.`,
+  halidon:`The Scottish army breaches the English line and relieves Berwick. Edward Balliol's claim collapses. Scotland holds its southern border intact and the Wars of Independence shift in Scotland's favour.`,
+  flodden:`James IV holds the high ground and his pikes prevail. Surrey's army breaks. The Auld Alliance is secured and France breathes easier. Scotland stands strong on the world stage.`,
+  prestonpans:`Cope's army collapses in minutes — one of the fastest victories in British military history. Dragoons flee without striking a blow. The prince rides into Edinburgh in triumph. All Scotland holds its breath.`,
+  culloden:`The impossible charge tears through the Government line. Cumberland's army breaks and flees. The Highland charge has won where rational military thinking said it could not. Scotland's future is gloriously unwritten.`,
+};
+const CLOSS={
+  stirling:`The English force a crossing and scatter the Scots. Wallace escapes to fight another day. Scotland grieves, but the flame of resistance will not be extinguished — it will burn for decades yet.`,
+  falkirk:`Edward's longbowmen destroy the schiltrons at a range Wallace's spears cannot reach. Scotland's military prestige is shattered. Wallace escapes but will resign the Guardianship; he fights on through diplomacy until his capture and execution in 1305.`,
+  bannockburn:`The English cavalry breaks through the Scottish line. Stirling is relieved. Bruce falls back to wage guerrilla war. Scotland's independence will be won — but not today. The struggle continues.`,
+  halidon:`The Scottish charges are cut down by English arrows before they can close. Berwick falls. Scotland cedes much of its southern territory. The Wars of Independence enter their darkest phase.`,
+  flodden:`James IV descends from the hill and the pike formations become disordered on the boggy ground. English billmen hack through the flanks. James himself is killed. The flower of Scottish nobility perishes at Flodden. Scotland will not recover for a generation.`,
+  prestonpans:`Cope's men hold their ground and the Highland charge is repulsed. The Jacobite rising falters before it has truly begun. Prince Charles retreats into the Highlands to regroup.`,
+  culloden:`The artillery and musketry cut down the Highlanders before they can close to melee. The charge breaks. Cumberland orders no quarter given. The Jacobite cause dies on Drumossie Moor — and the Highland way of life will be systematically destroyed in the reprisals that follow.`,
+};
+const CEND=[
+  {min:7,title:'Scotland Undefeated',col:'#f0c040',text:`Seven battles, seven victories spanning five centuries of conflict. In this history, Scotland has never been broken. From Wallace's ambush at Stirling Bridge to the Highland charge at Culloden, Scottish arms have proved invincible. An extraordinary record that stands alone in history.`},
+  {min:5,title:'Scotland Triumphant',col:'#80ee80',text:`A remarkable campaign record. Scotland's warriors have won decisively more than they have lost across five centuries of conflict. Wallace, Bruce, and Bonnie Prince Charlie would be proud. The weight of history falls on Scotland's side.`},
+  {min:4,title:'A Proud Record',col:'#cccc40',text:`Four victories from seven battles across five centuries. Scotland's fighters have given as good as they've got. A creditable record — hard-fought and honourably won. History could have been far worse.`},
+  {min:2,title:'Gallant Defeat',col:'#ff9944',text:`Scotland has won battles but lost more than it has gained. The long war has been costly — yet Scotland endures, as it always has. The spirit of independence cannot be conquered by force of arms alone.`},
+  {min:0,title:'The Long Defeat',col:'#ff7777',text:`Every struggle was valiant, but the tide of battle has run against Scotland across the centuries. Yet Scotland itself survives. The spirit of a nation cannot be extinguished — even in the darkest hour, the flame of resistance burns on.`},
+];
+
+let CAMP={active:false,idx:0,results:[],morBonus:0};
+
+// ── MAP GENERATION ─────────────────────────────────────────────────────────
+function genMap(key){
+  const m=new Array(COLS*ROWS).fill(PL);
+  function s(c,r,t){if(c>=0&&c<COLS&&r>=0&&r<ROWS)m[r*COLS+c]=t;}
+  function rect(c0,r0,c1,r1,t){for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)s(c,r,t);}
+  function vl(c,r0,r1,t){for(let r=r0;r<=r1;r++)s(c,r,t);}
+  function hl(r,c0,c1,t){for(let c=c0;c<=c1;c++)s(c,r,t);}
+
+  if(key==='stirling'){
+    // River Forth — vertical through col 19, ford at row 11
+    vl(19,0,21,RV); s(19,11,FD);
+    // Abbey Craig hills N of crossing
+    rect(6,3,14,9,HL); rect(4,4,7,12,HL);
+    // Forest west
+    rect(3,4,6,10,FR); rect(14,2,17,6,FR);
+    // Stirling Castle
+    rect(3,10,5,13,TW);
+    // Carse marshes east of river south
+    rect(20,14,28,21,MS); rect(19,16,21,21,MS);
+    // Roads
+    hl(11,0,35,RD);
+    // Some hills east of river
+    rect(22,4,27,8,HL);
+  } else if(key==='falkirk'){
+    // Callendar Wood (forest) SE of Scots
+    rect(14,12,20,19,FR);
+    // River to north — blocks retreat
+    hl(2,3,33,RV); hl(3,3,33,RV); s(8,2,FD); s(8,3,FD);
+    // Marshy ground in front of Scots
+    rect(14,7,19,13,MS);
+    // Falkirk town
+    rect(22,10,24,13,TW);
+    // Road east-west
+    hl(11,0,35,RD);
+    // Rolling hills
+    rect(6,5,12,10,HL); rect(24,7,30,12,HL);
+  } else if(key==='bannockburn'){
+    // Bannock Burn — horizontal rows 17-18
+    hl(17,5,31,RV); hl(18,5,31,RV);
+    s(14,17,FD); s(14,18,FD); s(22,17,FD); s(22,18,FD);
+    // New Park forest W
+    rect(3,3,9,17,FR);
+    // Carse marshes E
+    rect(21,13,31,17,MS); rect(18,15,24,18,MS);
+    // High ground centre N
+    rect(8,3,16,10,HL);
+    // Stirling Castle
+    rect(4,9,6,12,TW);
+  } else if(key==='halidon'){
+    // Halidon Hill — big hill E (English position)
+    rect(19,5,30,17,HL);
+    // Valley approach — slight depression (road through)
+    hl(11,0,35,RD);
+    // Marsh to SW (slows Scots)
+    rect(7,14,17,20,MS);
+    // Berwick town far SE
+    rect(27,15,31,20,TW);
+    // Small woods W
+    rect(3,5,6,10,FR); rect(3,13,7,18,FR);
+    // Tweed river S
+    hl(20,5,35,RV); hl(21,5,35,RV); s(18,20,FD); s(18,21,FD);
+  } else if(key==='flodden'){
+    // Flodden Hill W — Scottish position
+    rect(6,4,16,13,HL);
+    // Branxton Hill E — English counter
+    rect(18,8,26,16,HL);
+    // River Till S
+    hl(17,4,35,RV); hl(18,4,35,RV); s(16,17,FD); s(17,17,FD);
+    // Marshy centre
+    rect(14,12,19,18,MS);
+    // Forest flanks
+    rect(3,10,6,18,FR); rect(27,3,31,8,FR);
+    // Road
+    hl(11,0,35,RD);
+  } else if(key==='prestonpans'){
+    // Firth of Forth — coast on E (impassable shore)
+    vl(33,0,21,SH); vl(34,0,21,SH); vl(35,0,21,SH);
+    // Marsh S — blocks escape
+    hl(19,3,32,MS); hl(20,3,32,MS); hl(21,3,32,MS);
+    rect(19,16,32,21,MS);
+    // Prestonpans town
+    rect(20,9,24,14,TW);
+    // Cleared harvest fields (road-like)
+    rect(6,5,18,18,RD);
+    // Ditch/wall (represented as marsh strip)
+    hl(9,5,28,MS);
+    // Small wood
+    rect(3,4,6,9,FR); rect(3,14,6,19,FR);
+  } else if(key==='culloden'){
+    // Drumossie Moor — open moorland
+    rect(3,3,32,18,MR);
+    // Boggy ground centre
+    rect(10,9,20,14,MS);
+    // Culloden enclosure walls N
+    rect(22,3,27,8,TW); rect(22,14,27,19,TW);
+    // Small scrub patches
+    rect(16,3,20,7,FR); rect(16,15,20,19,FR);
+    // High ridge W (Jacobite start)
+    rect(3,4,7,17,HL);
+    // Road (military road)
+    hl(11,0,35,RD);
+    // Shore far N (Moray Firth)
+    hl(0,0,35,SH); hl(1,0,35,SH);
+    // Shore far S
+    hl(21,0,35,SH); hl(22,0,35,SH);
+  }
+
+  return m;
+}
+
+// ── STATE & UNIT FACTORY ───────────────────────────────────────────────────
+let G={scenario:null};
+let UID=1;
+function uid(){return UID++;}
+
+function mkUnit(d,side){
+  const t=UT[d.type];
+  return{id:uid(),side,name:d.name,type:d.type,
+    col:d.col,row:d.row,str:d.str||6,maxStr:d.str||6,
+    mor:d.mor||75,fat:0,atk:t.atk,def:t.def,mov:t.mov,range:t.range,
+    movLeft:t.mov,canAtk:true,routed:false,elim:false};
+}
+
+function load(key){
+  const def=SCENARIOS[key];
+  UID=1;
+  G={scenario:key,def,turn:1,phase:'player',
+     map:genMap(key),units:[],
+     sel:null,hi:[],atkTgts:[],log:[],victory:null,sr:def.sr||{},
+     surpriseLeft:def.sr?.surprise||0};
+  def.scots.forEach(d=>G.units.push(mkUnit(d,'scots')));
+  def.english.forEach(d=>G.units.push(mkUnit(d,'english')));
+  // Apply campaign morale carry-over
+  if(CAMP.active&&CAMP.morBonus!==0){
+    G.units.filter(u=>u.side===pSide()).forEach(u=>{
+      u.mor=Math.min(100,Math.max(40,u.mor+CAMP.morBonus));
+    });
+    addLog(CAMP.morBonus>0
+      ?`Campaign momentum: +${CAMP.morBonus} morale to all units (previous victory).`
+      :`Campaign setback: ${CAMP.morBonus} morale to all units (previous defeat).`);
+  }
+  document.getElementById('overlay').style.display='none';
+  document.getElementById('scen-label').textContent=def.name+' — '+def.date;
+  document.getElementById('btn-end').disabled=false;
+  addLog('⚔ '+def.name+' — BATTLE BEGINS. Turn 1.');
+  addLog(def.brief);
+  prerenderTerrain();
+  stopMusic();
+  render(); updateUI();
+  setTimeout(startMusic,400);
+}
+
+// ── CANVAS ─────────────────────────────────────────────────────────────────
+const cv=document.getElementById('gc');
+const cx=cv.getContext('2d');
+let SC=1;
+let terrBuf=null; // pre-rendered terrain
+
+function px(col){return Math.round(col*CS*SC);}
+function py(row){return Math.round(row*CS*SC);}
+function cs(){return Math.round(CS*SC);}
+
+function resize(){
+  const w=document.getElementById('canvas-wrap').clientWidth;
+  const h=document.getElementById('canvas-wrap').clientHeight;
+  SC=Math.min((w-2)/(COLS*CS),(h-2)/(ROWS*CS),1.6);
+  cv.width=Math.round(COLS*CS*SC);
+  cv.height=Math.round(ROWS*CS*SC);
+  if(G.scenario)prerenderTerrain();
+  render();
+}
+
+function xyToCell(x,y){
+  return{col:Math.floor(x/(CS*SC)),row:Math.floor(y/(CS*SC))};
+}
+
+// ── TERRAIN PRE-RENDER ─────────────────────────────────────────────────────
+function seededR(co,ro,n){
+  const s=(co*31337+ro*7919+n*1619)%65521;
+  return((s*9301+49297)%233280)/233280;
+}
+
+function prerenderTerrain(){
+  terrBuf=document.createElement('canvas');
+  terrBuf.width=cv.width; terrBuf.height=cv.height;
+  const tc=terrBuf.getContext('2d');
+  tc.clearRect(0,0,cv.width,cv.height);
+  for(let r=0;r<ROWS;r++)
+    for(let co=0;co<COLS;co++)
+      drawTerrCell(tc,co,r,G.map[r*COLS+co]);
+}
+
+function drawTerrCell(tc,co,ro,t){
+  const x=px(co),y=py(ro),c=cs();
+  tc.fillStyle=TCOL[t]; tc.fillRect(x,y,c,c);
+
+  function pr(n){return seededR(co,ro,n);}
+
+  if(t===PL){ // Plain — grass blades
+    tc.strokeStyle='rgba(30,80,0,0.35)'; tc.lineWidth=0.7;
+    for(let i=0;i<6;i++){
+      const gx=x+pr(i*3)*c,gy=y+pr(i*3+1)*c,gh=c*(0.1+pr(i*3+2)*0.1);
+      tc.beginPath(); tc.moveTo(gx,gy+gh); tc.lineTo(gx-c*0.02,gy); tc.lineTo(gx+c*0.02,gy); tc.stroke();
+    }
+  } else if(t===HL){ // Hill — contour shading
+    const g=tc.createLinearGradient(x,y,x+c*0.7,y+c*0.7);
+    g.addColorStop(0,'rgba(255,240,200,0.22)'); g.addColorStop(1,'rgba(0,0,0,0.28)');
+    tc.fillStyle=g; tc.fillRect(x,y,c,c);
+    tc.strokeStyle='rgba(100,65,20,0.38)'; tc.lineWidth=0.7;
+    for(let i=1;i<=3;i++){
+      tc.beginPath();
+      tc.ellipse(x+c*0.55,y+c*0.55,c*0.12*i,c*0.08*i,-0.4,0,Math.PI*2);
+      tc.stroke();
+    }
+  } else if(t===FR){ // Forest — tree canopy circles
+    tc.fillStyle='#122e08';
+    for(let i=0;i<5;i++){
+      const tx=x+pr(i*3)*c*0.82+c*0.09,ty=y+pr(i*3+1)*c*0.82+c*0.09;
+      const tr=c*(0.08+pr(i*3+2)*0.07);
+      tc.beginPath(); tc.arc(tx,ty,tr,0,Math.PI*2); tc.fill();
+    }
+    tc.fillStyle='rgba(50,120,20,0.45)';
+    for(let i=5;i<10;i++){
+      const tx=x+pr(i*3)*c*0.82+c*0.09,ty=y+pr(i*3+1)*c*0.82+c*0.09;
+      const tr=c*(0.05+pr(i*3+2)*0.05);
+      tc.beginPath(); tc.arc(tx,ty,tr,0,Math.PI*2); tc.fill();
+    }
+    tc.fillStyle='rgba(20,60,5,0.3)';
+    tc.fillRect(x,y,c,c);
+  } else if(t===RV){ // River — check flow direction
+    const hasN=ro>0&&G.map[(ro-1)*COLS+co]===RV;
+    const hasS=ro<ROWS-1&&G.map[(ro+1)*COLS+co]===RV;
+    const hasE=co<COLS-1&&G.map[ro*COLS+co+1]===RV;
+    const hasW=co>0&&G.map[ro*COLS+co-1]===RV;
+    const vert=(hasN||hasS)&&!hasE&&!hasW;
+    const horiz=(hasE||hasW)&&!hasN&&!hasS;
+    // Water shimmer
+    tc.fillStyle='rgba(60,120,220,0.25)'; tc.fillRect(x,y,c,c);
+    tc.strokeStyle='rgba(120,190,255,0.5)'; tc.lineWidth=1;
+    const waves=3;
+    for(let w=0;w<waves;w++){
+      tc.beginPath();
+      if(vert){
+        const wx=x+c*(0.2+w*0.25);
+        tc.moveTo(wx,y);
+        for(let step=0;step<=c;step+=4)
+          tc.lineTo(wx+Math.sin(step*0.4+w)*c*0.07,y+step);
+      } else {
+        const wy=y+c*(0.2+w*0.25);
+        tc.moveTo(x,wy);
+        for(let step=0;step<=c;step+=4)
+          tc.lineTo(x+step,wy+Math.sin(step*0.4+w)*c*0.07);
+      }
+      tc.stroke();
+    }
+  } else if(t===MS){ // Marsh — reed tufts
+    tc.fillStyle='rgba(20,50,5,0.3)'; tc.fillRect(x,y,c,c);
+    tc.strokeStyle='rgba(60,100,20,0.55)'; tc.lineWidth=0.8;
+    for(let i=0;i<7;i++){
+      const mx=x+pr(i*2)*c,my=y+pr(i*2+1)*c;
+      const mh=c*(0.12+pr(i*2+10)*0.08);
+      tc.beginPath();
+      tc.moveTo(mx,my); tc.lineTo(mx-c*0.03,my-mh);
+      tc.moveTo(mx,my); tc.lineTo(mx+c*0.03,my-mh);
+      tc.moveTo(mx,my); tc.lineTo(mx,my-mh*1.15);
+      tc.stroke();
+    }
+  } else if(t===TW){ // Town — building silhouettes
+    tc.fillStyle='#c89858';
+    tc.fillRect(x+c*0.18,y+c*0.35,c*0.25,c*0.38);
+    tc.fillRect(x+c*0.52,y+c*0.28,c*0.26,c*0.45);
+    tc.fillStyle='#6a4020'; // roofs
+    tc.beginPath(); tc.moveTo(x+c*0.16,y+c*0.35); tc.lineTo(x+c*0.305,y+c*0.2); tc.lineTo(x+c*0.45,y+c*0.35); tc.fill();
+    tc.beginPath(); tc.moveTo(x+c*0.5,y+c*0.28); tc.lineTo(x+c*0.65,y+c*0.12); tc.lineTo(x+c*0.8,y+c*0.28); tc.fill();
+    tc.fillStyle='rgba(0,0,0,0.3)';
+    tc.fillRect(x+c*0.25,y+c*0.5,c*0.1,c*0.23); // door
+  } else if(t===FD){ // Ford/Bridge
+    tc.fillStyle='#1a3a9a'; tc.fillRect(x,y,c,c);
+    tc.strokeStyle='rgba(120,190,255,0.4)'; tc.lineWidth=1;
+    for(let w=0;w<3;w++){
+      const wy=y+c*(0.25+w*0.2);
+      tc.beginPath(); tc.moveTo(x,wy);
+      for(let step=0;step<=c;step+=4) tc.lineTo(x+step,wy+Math.sin(step*0.5)*c*0.06);
+      tc.stroke();
+    }
+    tc.fillStyle='#887050'; // bridge planks
+    tc.fillRect(x+c*0.28,y+c*0.3,c*0.44,c*0.4);
+    tc.strokeStyle='#554030'; tc.lineWidth=0.8;
+    for(let i=0;i<5;i++) { tc.beginPath(); tc.moveTo(x+c*(0.28+i*0.09),y+c*0.3); tc.lineTo(x+c*(0.28+i*0.09),y+c*0.7); tc.stroke(); }
+  } else if(t===RD){ // Road — dirt track
+    const g=tc.createLinearGradient(x,y+c*0.35,x,y+c*0.65);
+    g.addColorStop(0,'rgba(160,130,70,0.5)'); g.addColorStop(0.5,'rgba(180,145,80,0.6)'); g.addColorStop(1,'rgba(160,130,70,0.5)');
+    tc.fillStyle=g; tc.fillRect(x,y+c*0.35,c,c*0.3);
+    // Cart ruts
+    tc.strokeStyle='rgba(100,80,40,0.3)'; tc.lineWidth=0.6;
+    tc.beginPath(); tc.moveTo(x,y+c*0.42); tc.lineTo(x+c,y+c*0.42); tc.stroke();
+    tc.beginPath(); tc.moveTo(x,y+c*0.58); tc.lineTo(x+c,y+c*0.58); tc.stroke();
+  } else if(t===MR){ // Moor — heather
+    tc.fillStyle='rgba(80,40,70,0.2)'; tc.fillRect(x,y,c,c);
+    for(let i=0;i<8;i++){
+      const hx=x+pr(i*3)*c,hy=y+pr(i*3+1)*c;
+      tc.fillStyle=`rgba(${120+pr(i*3+2)*40|0},${30+pr(i*2)*20|0},${80+pr(i)*30|0},0.4)`;
+      tc.beginPath(); tc.arc(hx,hy,c*(0.04+pr(i+20)*0.03),0,Math.PI*2); tc.fill();
+    }
+  } else if(t===SH){ // Shore
+    const g=tc.createLinearGradient(x,y,x,y+c);
+    g.addColorStop(0,'rgba(200,185,100,0.5)'); g.addColorStop(1,'rgba(170,200,220,0.4)');
+    tc.fillStyle=g; tc.fillRect(x,y,c,c);
+    tc.strokeStyle='rgba(150,200,230,0.4)'; tc.lineWidth=0.8;
+    for(let w=0;w<3;w++){
+      const wy=y+c*(0.25+w*0.22);
+      tc.beginPath(); tc.moveTo(x,wy);
+      for(let s=0;s<=c;s+=5) tc.lineTo(x+s,wy+Math.sin(s*0.3+w*2)*c*0.04);
+      tc.stroke();
+    }
+  }
+
+  // Grid line
+  tc.strokeStyle='rgba(0,0,0,0.2)'; tc.lineWidth=0.4;
+  tc.strokeRect(x+0.2,y+0.2,c-0.4,c-0.4);
+}
+
+// ── MAIN RENDER ────────────────────────────────────────────────────────────
+function render(){
+  if(!G.scenario)return;
+  const c=cs();
+  cx.clearRect(0,0,cv.width,cv.height);
+
+  if(terrBuf)cx.drawImage(terrBuf,0,0);
+
+  // Movement highlights
+  for(const[hc,hr]of G.hi){
+    cx.fillStyle='rgba(255,255,80,0.28)';
+    cx.fillRect(px(hc),py(hr),c,c);
+    cx.strokeStyle='rgba(220,220,0,0.6)';
+    cx.lineWidth=1; cx.strokeRect(px(hc)+1,py(hr)+1,c-2,c-2);
+  }
+
+  // Attack target highlights
+  for(const id of G.atkTgts){
+    const u=getU(id); if(!u)continue;
+    cx.fillStyle='rgba(255,30,30,0.22)';
+    cx.fillRect(px(u.col),py(u.row),c,c);
+    cx.strokeStyle='#ff2222'; cx.lineWidth=1.5;
+    cx.strokeRect(px(u.col)+1,py(u.row)+1,c-2,c-2);
+  }
+
+  G.units.filter(u=>!u.elim).forEach(u=>drawUnit(u,c));
+
+  // HUD text
+  cx.font=`bold ${Math.max(9,c*0.26)}px Georgia`;
+  cx.textAlign='left'; cx.textBaseline='top';
+  cx.fillStyle='rgba(0,0,0,0.5)';
+  cx.fillRect(2,2,c*5.5,c*0.4);
+  cx.fillStyle=G.phase==='player'?'#99bbff':'#ff9966';
+  cx.fillText(`Turn ${G.turn}/${G.def.turns}  ${G.phase==='player'?'▶ YOUR TURN':'⏳ AI MOVING...'}`,5,4);
+  if(G.surpriseLeft>0){
+    cx.fillStyle='#ffdd44';
+    cx.fillText(`  SURPRISE! -2 enemy ATK (${G.surpriseLeft} turns left)`,5+c*5.6,4);
+  }
+}
+
+function drawUnit(u,c){
+  const x=px(u.col),y=py(u.row);
+  const pad=Math.max(2,c*0.1);
+  const w=c-pad*2,h=c-pad*2;
+  const sc=u.side==='scots';
+  const bg=u.routed?(sc?'#161e30':'#301616'):(sc?'#0d1a3e':'#3e0d0d');
+  const brd=u.id===G.sel?'#ffff00':(u.routed?'#444':(sc?'#2255cc':'#cc2222'));
+
+  cx.fillStyle=bg; rrect(x+pad,y+pad,w,h,c*0.1); cx.fill();
+  cx.strokeStyle=brd; cx.lineWidth=u.id===G.sel?2.5*SC:SC;
+  rrect(x+pad,y+pad,w,h,c*0.1); cx.stroke();
+
+  // Side stripe
+  cx.fillStyle=sc?'rgba(40,90,220,0.4)':'rgba(220,40,40,0.4)';
+  cx.fillRect(x+pad,y+pad,w*0.16,h);
+
+  // Unit abbreviation
+  const ut=UT[u.type];
+  cx.fillStyle=u.routed?'#665555':(sc?'#9ab0ff':'#ffaaaa');
+  cx.font=`bold ${Math.max(7,c*0.22)}px Georgia`;
+  cx.textAlign='center'; cx.textBaseline='middle';
+  cx.fillText(ut.abbr,x+c*0.55,y+c*0.37);
+
+  // Strength number
+  cx.font=`${Math.max(6,c*0.19)}px Georgia`;
+  cx.fillStyle='#ffd060';
+  cx.fillText(u.str,x+c*0.55,y+c*0.63);
+
+  // Morale bar
+  const bx=x+pad+w*0.1,by=y+pad+h*0.84,bw=w*0.8;
+  cx.fillStyle='#1a1a1a'; cx.fillRect(bx,by,bw,Math.max(2,c*0.08));
+  cx.fillStyle=u.mor>60?'#44cc44':u.mor>30?'#cccc22':'#cc2222';
+  cx.fillRect(bx,by,bw*(u.mor/100),Math.max(2,c*0.08));
+
+  if(!u.canAtk&&u.movLeft===0&&!u.routed){
+    cx.fillStyle='rgba(0,0,0,0.38)'; rrect(x+pad,y+pad,w,h,c*0.1); cx.fill();
+  }
+  if(u.routed){
+    cx.font=`${c*0.28}px sans-serif`;
+    cx.fillStyle='#ffaa44';
+    cx.fillText('↩',x+c*0.82,y+c*0.16);
+  }
+}
+
+function rrect(x,y,w,h,r){
+  cx.beginPath();
+  cx.moveTo(x+r,y); cx.lineTo(x+w-r,y); cx.quadraticCurveTo(x+w,y,x+w,y+r);
+  cx.lineTo(x+w,y+h-r); cx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  cx.lineTo(x+r,y+h); cx.quadraticCurveTo(x,y+h,x,y+h-r);
+  cx.lineTo(x,y+r); cx.quadraticCurveTo(x,y,x+r,y);
+  cx.closePath();
+}
+
+// ── GAME LOGIC ─────────────────────────────────────────────────────────────
+function getU(id){return G.units.find(u=>u.id===id);}
+function unitAt(c,r){return G.units.find(u=>!u.elim&&u.col===c&&u.row===r);}
+function pSide(){return G.def.player;}
+function aSide(){return pSide()==='scots'?'english':'scots';}
+function pUnits(){return G.units.filter(u=>u.side===pSide()&&!u.elim);}
+function aUnits(){return G.units.filter(u=>u.side===aSide()&&!u.elim);}
+function terrAt(c,r){return(c>=0&&c<COLS&&r>=0&&r<ROWS)?G.map[r*COLS+c]:RV;}
+function dist(c1,r1,c2,r2){return Math.max(Math.abs(c1-c2),Math.abs(r1-r2));}
+
+function canStep(u,c,r){
+  if(c<0||c>=COLS||r<0||r>=ROWS)return false;
+  if(!TPASS[terrAt(c,r)])return false;
+  if(unitAt(c,r))return false;
+  return true;
+}
+
+function reachable(u){
+  if(u.movLeft<=0||u.routed)return[];
+  const vis=new Map(),q=[{c:u.col,r:u.row,ml:u.movLeft}],res=[];
+  vis.set(`${u.col},${u.row}`,u.movLeft);
+  while(q.length){
+    const{c,r,ml}=q.shift();
+    for(let dc=-1;dc<=1;dc++)for(let dr=-1;dr<=1;dr++){
+      if(!dc&&!dr)continue;
+      const nc=c+dc,nr=r+dr;
+      if(!canStep(u,nc,nr))continue;
+      const rem=ml-TMOV[terrAt(nc,nr)];
+      if(rem<0)continue;
+      const k=`${nc},${nr}`;
+      if(!vis.has(k)||vis.get(k)<rem){vis.set(k,rem);q.push({c:nc,r:nr,ml:rem});res.push([nc,nr]);}
+    }
+  }
+  return res;
+}
+
+function atkTargets(u){
+  if(!u.canAtk||u.routed)return[];
+  return G.units.filter(e=>!e.elim&&e.side!==u.side&&dist(u.col,u.row,e.col,e.row)<=u.range).map(e=>e.id);
+}
+
+// ── COMBAT ─────────────────────────────────────────────────────────────────
+function d6(){return 1+Math.floor(Math.random()*6);}
+
+function fight(atk,def){
+  let ap=atk.atk, dp=def.def+TDEF[terrAt(def.col,def.row)];
+  if(atk.mor>=80)ap++;else if(atk.mor<=30)ap--;
+  if(def.mor>=80)dp++;else if(def.mor<=30)dp--;
+  if(atk.fat>=80)ap--;
+  if(def.fat>=80)dp--;
+  // Special rules
+  if(G.sr.schiltronBonus&&def.type==='schiltron'&&(atk.type==='cavalry'||atk.type==='dragoons'))dp+=2;
+  if(G.sr.highlandCharge&&atk.type==='highlanders'&&atk.movLeft===0)ap++;
+  if(G.sr.hillArchers&&def.type==='longbow'&&terrAt(def.col,def.row)===HL)dp+=2;
+  if(G.sr.hillAdvantage&&terrAt(def.col,def.row)===HL&&def.side==='scots')dp++;
+  if(G.sr.volleyFire&&def.side==='english'&&def.type==='longbow')ap++;
+  if(G.surpriseLeft>0&&atk.side===pSide())ap+=2; // Surprise attack bonus (Prestonpans)
+  const aRoll=d6()+ap, dRoll=d6()+dp;
+  let aCas=0,dCas=0,msg=`${atk.name} attacks ${def.name} [${aRoll} vs ${dRoll}]: `;
+  if(aRoll>dRoll){dCas=Math.ceil((aRoll-dRoll)/2);msg+=`Hit! -${dCas} str.`;}
+  else if(dRoll>aRoll){aCas=Math.ceil((dRoll-aRoll)/2);msg+=`Repulsed! -${aCas} str.`;}
+  else msg+='Standoff.';
+  atk.str=Math.max(0,atk.str-aCas); def.str=Math.max(0,def.str-dCas);
+  atk.fat=Math.min(100,atk.fat+10); def.fat=Math.min(100,def.fat+8);
+  if(dCas>=2||(def.str>0&&def.str<=def.maxStr*0.4))morCheck(def);
+  if(aCas>=2||(atk.str>0&&atk.str<=atk.maxStr*0.4))morCheck(atk);
+  if(atk.str===0){atk.elim=true;msg+=` ${atk.name} DESTROYED.`;}
+  if(def.str===0){def.elim=true;msg+=` ${def.name} DESTROYED.`;}
+  atk.canAtk=false;
+  // Sound effect based on attacker type
+  if(atk.type==='artillery')snd('cannon');
+  else if(atk.type==='muskets'||atk.type==='dragoons')snd('musket');
+  else if(atk.range>1)snd('arrow');
+  else snd('melee');
+  if(atk.elim||def.elim)setTimeout(()=>snd('elim'),250);
+  addLog(msg);
+}
+
+function morCheck(u){
+  if(u.routed||u.elim)return;
+  if(d6()>u.mor/18)return;
+  u.routed=true; u.mor=Math.max(0,u.mor-20);
+  snd('rout');
+  addLog(`⚠ ${u.name} ROUTS!`);
+  const enemies=G.units.filter(e=>!e.elim&&e.side!==u.side);
+  if(!enemies.length)return;
+  let ec=0,er=0; enemies.forEach(e=>{ec+=e.col;er+=e.row;});
+  ec/=enemies.length; er/=enemies.length;
+  const dc=u.col-ec>0?1:-1,dr=u.row-er>0?1:-1;
+  for(let i=0;i<2;i++){
+    const nc=u.col+dc,nr=u.row+dr;
+    if(nc>=0&&nc<COLS&&nr>=0&&nr<ROWS&&TPASS[terrAt(nc,nr)]&&!unitAt(nc,nr)){u.col=nc;u.row=nr;}
+  }
+}
+
+function artFire(){
+  G.units.filter(u=>!u.elim&&u.side==='english'&&u.type==='artillery').forEach(gun=>{
+    const tgts=pUnits().filter(u=>!u.routed);
+    if(!tgts.length)return;
+    const tgt=tgts.sort((a,b)=>dist(a.col,a.row,gun.col,gun.row)-dist(b.col,b.row,gun.col,gun.row))[0];
+    const roll=d6();
+    if(roll>=3){
+      const cas=Math.ceil(roll/3);
+      tgt.str=Math.max(0,tgt.str-cas);
+      snd('cannon');
+      addLog(`🔥 ${gun.name} fires! ${tgt.name} -${cas} str.`);
+      if(tgt.str===0){tgt.elim=true;addLog(`${tgt.name} destroyed!`);}
+      else morCheck(tgt);
+    } else addLog(`💨 ${gun.name} fires... overshoot.`);
+  });
+}
+
+// ── VICTORY ────────────────────────────────────────────────────────────────
+function checkVic(){
+  if(G.victory)return;
+  const all=G.units;
+  const sc=all.filter(u=>u.side==='scots'),en=all.filter(u=>u.side==='english');
+  const scA=sc.filter(u=>!u.elim),enA=en.filter(u=>!u.elim);
+
+  function checkOne(vdef,mySide,oppSide){
+    const myA=mySide==='scots'?scA:enA;
+    const oppAll=oppSide==='scots'?sc:en;
+    const oppA=oppSide==='scots'?scA:enA;
+    const oppE=oppAll.length-oppA.length;
+    if(vdef.type==='elim'&&vdef.side===oppSide&&oppE/oppAll.length>=vdef.threshold)return true;
+    if(vdef.type==='reach_hold'){
+      const ok=myA.filter(u=>u.col>=vdef.col&&u.row>=vdef.rmin&&u.row<=vdef.rmax);
+      if(ok.length>=vdef.need)return true;
+    }
+    if(vdef.type==='rout_pct'){
+      const routedPct=(oppE+oppA.filter(u=>u.routed).length)/oppAll.length;
+      if(routedPct>=vdef.threshold)return true;
+    }
+    if(vdef.type==='reach'&&myA.some(u=>u.col<=vdef.col&&u.row>=vdef.rmin&&u.row<=vdef.rmax))return true;
+    if(vdef.type==='survive'&&G.turn>=vdef.turns){
+      const oppElimPct=oppE/oppAll.length;
+      if(oppElimPct<0.5)return true;
+    }
+    return false;
+  }
+
+  if(checkOne(G.def['vic_'+pSide()],pSide(),aSide())){endGame('win');return;}
+  if(checkOne(G.def['vic_'+aSide()],aSide(),pSide())){endGame('loss');return;}
+}
+
+function endGame(result){
+  G.victory=result; G.phase='gameover';
+  const win=result==='win';
+  const vdef=G.def['vic_'+(win?pSide():aSide())];
+  const body=result==='timeout'?'Time expires — the battle is indecisive.'
+             :(win?'Victory! ':'Defeat — ')+vdef.desc;
+  addLog((win?'🏆 VICTORY':'💀 DEFEAT')+' — '+body);
+  setTimeout(()=>{snd(win?'victory':'defeat');fadeMusicOut();},300);
+  if(CAMP.active){
+    CAMP.results.push(result);
+    setTimeout(()=>campShowResult(result), 1600);
+  } else {
+    openOverlay(win?'⚔ Victory!':'☠ Defeat',
+      `<p>${body}</p><button class="btn" style="margin-top:10px" onclick="showMenu()">↩ Choose Another Battle</button>`);
+  }
+  document.getElementById('btn-end').disabled=true;
+  render();
+}
+
+// ── INPUT ──────────────────────────────────────────────────────────────────
+cv.addEventListener('click',onClick);
+cv.addEventListener('mousemove',e=>{
+  if(!G.scenario)return;
+  const r=cv.getBoundingClientRect();
+  const{col,row}=xyToCell(e.clientX-r.left,e.clientY-r.top);
+  if(col<0||col>=COLS||row<0||row>=ROWS)return;
+  const u=unitAt(col,row);
+  const t=TNAME[terrAt(col,row)];
+  cv.title=u?`${u.name} (${UT[u.type].label}) STR:${u.str} MOR:${u.mor}% — Terrain: ${t}`:t;
+});
+
+function onClick(e){
+  if(G.phase!=='player'||!G.scenario)return;
+  const r=cv.getBoundingClientRect();
+  const{col,row}=xyToCell(e.clientX-r.left,e.clientY-r.top);
+  if(col<0||col>=COLS||row<0||row>=ROWS)return;
+  const clicked=unitAt(col,row);
+
+  if(G.sel!==null&&G.atkTgts.includes(clicked?.id)){
+    fight(getU(G.sel),clicked);
+    G.sel=null;G.hi=[];G.atkTgts=[];
+    checkVic();render();updateUI();return;
+  }
+  if(G.sel!==null&&!clicked&&G.hi.some(([hc,hr])=>hc===col&&hr===row)){
+    snd('march');
+    const u=getU(G.sel);
+    u.col=col;u.row=row;
+    u.movLeft=Math.max(0,u.movLeft-TMOV[terrAt(col,row)]);
+    u.fat=Math.min(100,u.fat+5);
+    G.hi=[];G.atkTgts=atkTargets(u);
+    render();updateUI();return;
+  }
+  if(clicked&&clicked.side===pSide()&&!clicked.elim){
+    snd('select');
+    G.sel=clicked.id;G.hi=reachable(clicked);G.atkTgts=atkTargets(clicked);
+    render();updateUI();return;
+  }
+  G.sel=null;G.hi=[];G.atkTgts=[];render();updateUI();
+}
+
+function attackSelected(){
+  if(G.sel===null)return;
+  const u=getU(G.sel);
+  if(!u||!u.canAtk||G.atkTgts.length===0)return;
+  if(G.atkTgts.length===1){
+    fight(u,getU(G.atkTgts[0]));
+    G.sel=null;G.hi=[];G.atkTgts=[];
+    checkVic();render();updateUI();
+  }
+}
+
+// ── END TURN / AI ──────────────────────────────────────────────────────────
+function endTurn(){
+  if(G.phase!=='player')return;
+  snd('endturn');
+  G.phase='ai';G.sel=null;G.hi=[];G.atkTgts=[];
+  if(G.surpriseLeft>0)G.surpriseLeft--;
+  render();updateUI();
+  setTimeout(()=>{
+    runAI();
+    G.turn++;
+    if(G.turn>G.def.turns){endGame('timeout');return;}
+    pUnits().forEach(u=>{
+      u.movLeft=u.mov;u.canAtk=true;u.fat=Math.max(0,u.fat-10);
+      if(u.routed){u.mor=Math.min(100,u.mor+14);if(u.mor>=55){u.routed=false;addLog(`${u.name} rallies!`);}}
+    });
+    G.phase='player';
+    if(G.sr.artilleryFire)artFire();
+    checkVic();render();updateUI();
+  },700);
+}
+
+function runAI(){
+  const aiU=G.units.filter(u=>u.side===aSide()&&!u.elim);
+  aiU.forEach(u=>{
+    u.movLeft=u.mov;u.canAtk=true;u.fat=Math.max(0,u.fat-10);
+    if(u.routed){u.mor=Math.min(100,u.mor+10);if(u.mor>=55){u.routed=false;}}
+  });
+  for(const u of aiU){
+    if(u.elim||u.routed)continue;
+    // Attack if possible
+    const tgts=()=>G.units.filter(e=>!e.elim&&e.side!==u.side&&dist(u.col,u.row,e.col,e.row)<=u.range);
+    if(u.canAtk&&tgts().length)fight(u,tgts().sort((a,b)=>a.str-b.str)[0]);
+    // Move toward nearest player unit
+    if(u.movLeft>0){
+      const pw=pUnits().filter(p=>!p.elim);
+      if(pw.length){
+        const near=pw.sort((a,b)=>dist(a.col,a.row,u.col,u.row)-dist(b.col,b.row,u.col,u.row))[0];
+        let moved=true;
+        while(u.movLeft>0&&moved){
+          moved=false;
+          let best=null,bd=dist(u.col,u.row,near.col,near.row);
+          for(let dc=-1;dc<=1;dc++)for(let dr=-1;dr<=1;dr++){
+            if(!dc&&!dr)continue;
+            const nc=u.col+dc,nr=u.row+dr;
+            if(!canStep(u,nc,nr))continue;
+            const cost=TMOV[terrAt(nc,nr)];
+            if(cost>u.movLeft)continue;
+            if(u.type==='artillery'&&dist(nc,nr,near.col,near.row)<3)continue;
+            const d=dist(nc,nr,near.col,near.row);
+            if(d<bd){bd=d;best=[nc,nr,cost];}
+          }
+          if(best){u.col=best[0];u.row=best[1];u.movLeft-=best[2];u.fat=Math.min(100,u.fat+3);moved=true;}
+        }
+      }
+    }
+    // Attack again post-move
+    if(u.canAtk&&tgts().length)fight(u,tgts().sort((a,b)=>a.str-b.str)[0]);
+  }
+  checkVic();
+}
+
+// ── UI ──────────────────────────────────────────────────────────────────────
+function updateUI(){
+  if(!G.scenario)return;
+  document.getElementById('phase-d').textContent=
+    G.phase==='player'?'🏴 YOUR TURN':G.phase==='ai'?'⏳ AI Moving...':'⚔ Battle Over';
+  document.getElementById('turn-d').textContent=`Turn ${G.turn} of ${G.def.turns}`;
+
+  const el=document.getElementById('unit-det');
+  if(G.sel!==null){
+    const u=getU(G.sel);
+    if(u){
+      const ut=UT[u.type];
+      el.innerHTML=`<strong class="${u.side==='scots'?'sc':'ec'}">${u.name}</strong><br>
+        <em>${ut.label}</em><br>
+        STR ${u.str}/${u.maxStr}<div class="bar"><div class="barf" style="width:${(u.str/u.maxStr)*100}%;background:#dd8844"></div></div>
+        MOR ${u.mor}%<div class="bar"><div class="barf" style="width:${u.mor}%;background:${u.mor>60?'#44cc44':u.mor>30?'#cccc22':'#cc2222'}"></div></div>
+        FAT ${u.fat}%<div class="bar"><div class="barf" style="width:${u.fat}%;background:#8844cc"></div></div>
+        ATK:${u.atk} DEF:${u.def} MOV:${u.movLeft}/${u.mov} RNG:${u.range}<br>
+        ${u.canAtk?'<span style="color:#88ff88">Can attack</span>':'<span style="color:#888">Attacked</span>'}
+        ${u.routed?'<br><span style="color:#ff6644">⚠ ROUTED</span>':''}`;
+    }
+  } else el.innerHTML='<i style="color:#555">Click a unit to select</i>';
+
+  const btnA=document.getElementById('btn-atk');
+  if(G.sel!==null){
+    const u=getU(G.sel);
+    btnA.disabled=!u||!u.canAtk||G.atkTgts.length===0;
+    btnA.textContent=G.atkTgts.length===1?`Attack ${getU(G.atkTgts[0])?.name}`:'Attack Enemy';
+  } else btnA.disabled=true;
+
+  const sc=G.units.filter(u=>u.side==='scots'),en=G.units.filter(u=>u.side==='english');
+  const scA=sc.filter(u=>!u.elim),enA=en.filter(u=>!u.elim);
+  document.getElementById('forces-d').innerHTML=
+    `<span class="sc">Scots: ${scA.length}/${sc.length} units${scA.filter(u=>u.routed).length?' ('+scA.filter(u=>u.routed).length+' routed)':''}</span><br>
+     <span class="ec">English: ${enA.length}/${en.length} units${enA.filter(u=>u.routed).length?' ('+enA.filter(u=>u.routed).length+' routed)':''}</span><br>
+     <small style="color:#998">Obj: ${G.def['vic_'+pSide()].desc}</small>`;
+}
+
+function addLog(msg){
+  G.log.push(msg);if(G.log.length>70)G.log.shift();
+  const el=document.getElementById('log-p');
+  el.innerHTML=G.log.slice(-15).map(m=>`<div>${m}</div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+// ── OVERLAYS ────────────────────────────────────────────────────────────────
+function openOverlay(title,html){
+  document.getElementById('ovbox').innerHTML=`<h2>${title}</h2>${html}`;
+  document.getElementById('overlay').style.display='flex';
+}
+function closeOverlay(){
+  if(G.scenario&&G.phase!=='gameover')
+    document.getElementById('overlay').style.display='none';
+}
+function showMenu(){
+  openOverlay('⚔ Scottish Wars',`
+    <button class="btn btn-go sb" onclick="startCampaign()" style="border-width:2px;margin-bottom:8px">
+      <strong style="font-size:1.05em">⚔ CAMPAIGN MODE — The Long War, 1297–1746</strong>
+      <small>Play all 7 battles in sequence · carry-over morale · campaign narrative · final rating</small>
+    </button>
+    <p style="font-size:0.75em;color:#887060;text-align:center;margin:4px 0 8px">— or choose a single battle —</p>
+    <button class="btn sb" onclick="load('stirling')"><strong>Stirling Bridge — 1297</strong><small>Wallace springs a trap as the English cross the Forth</small></button>
+    <button class="btn sb" onclick="load('falkirk')"><strong>Falkirk — 1298</strong><small>Wallace holds with schiltrons against Edward I's longbowmen</small></button>
+    <button class="btn sb" onclick="load('bannockburn')"><strong>Bannockburn — 1314</strong><small>Bruce defends Scotland against Edward II's cavalry host</small></button>
+    <button class="btn sb" onclick="load('halidon')"><strong>Halidon Hill — 1333</strong><small>Scots must charge uphill to relieve besieged Berwick</small></button>
+    <button class="btn sb" onclick="load('flodden')"><strong>Flodden — 1513</strong><small>James IV leads Scottish pikes — can you change history?</small></button>
+    <button class="btn sb" onclick="load('prestonpans')"><strong>Prestonpans — 1745</strong><small>Jacobite dawn charge catches government forces off-guard</small></button>
+    <button class="btn sb" onclick="load('culloden')"><strong>Culloden — 1746</strong><small>The final Highland charge across Drumossie Moor</small></button>
+    ${G.scenario&&G.phase!=='gameover'?'<button class="btn" style="margin-top:8px" onclick="closeOverlay()">↩ Return to Battle</button>':''}
+  `);
+}
+function showHelp(t){
+  t=t||0;
+  const TABS=['Quick Start','Controls','Combat','Units','Terrain','Special Rules','Campaign'];
+  const bar=TABS.map((n,i)=>`<button class="htab${i===t?' on':''}" onclick="hTab(${i})">${n}</button>`).join('');
+
+  // Unit table rows from live data
+  const urows=Object.entries(UT).map(([k,v])=>
+    `<tr><td><strong>${v.label}</strong> <span style="color:#666;font-size:0.9em">${v.abbr}</span></td>
+    <td style="text-align:center;color:#ffaa66">${v.atk}</td>
+    <td style="text-align:center;color:#66aaff">${v.def}</td>
+    <td style="text-align:center;color:#aaddaa">${v.mov}</td>
+    <td style="text-align:center;color:#ddddaa">${v.range===1?'1 (adj)':v.range}</td></tr>`
+  ).join('');
+
+  // Terrain table rows from live data
+  const trows=TNAME.map((n,i)=>
+    `<tr><td><span style="display:inline-block;width:12px;height:12px;background:${TCOL[i]};border:1px solid rgba(255,255,255,0.2);border-radius:2px;vertical-align:middle;margin-right:5px"></span>${n}</td>
+    <td style="text-align:center">${TDEF[i]>0?'<span style="color:#80ee80">+'+TDEF[i]+'</span>':TDEF[i]<0?'<span style="color:#ff8888">'+TDEF[i]+'</span>':'—'}</td>
+    <td style="text-align:center">${TMOV[i]===99?'<span style="color:#ff8888">✗</span>':TMOV[i]}</td>
+    <td style="text-align:center">${TPASS[i]?'<span style="color:#80ee80">✓</span>':'<span style="color:#ff8888">✗</span>'}</td></tr>`
+  ).join('');
+
+  // Campaign endings table
+  const erows=CEND.map(e=>
+    `<tr><td><strong style="color:${e.col}">${e.title}</strong></td><td style="text-align:center">${e.min===7?'7 / 7':e.min===0?'0 – 1':e.min+' – '+(e.min===2?3:e.min===4?4:e.min===5?6:'')}</td></tr>`
+  ).join('');
+
+  const PANES=[
+    // 0: Quick Start
+    `<div class="hbox"><h4>Your Goal</h4>
+    Complete your scenario objective before the enemy completes theirs, or before the turn limit expires.
+    Hover over a unit to see its stats. Check the <em>Forces</em> panel in the sidebar for your current objective.</div>
+    <div class="hbox"><h4>A Turn — Step by Step</h4>
+    <ol style="padding-left:18px;line-height:2.1;margin:0">
+    <li>Click a <span class="sc2">blue (Scottish) unit</span> to select it</li>
+    <li>Click a <span style="color:#cccc44">yellow highlighted cell</span> to move it there</li>
+    <li>Click a <span style="color:#ff5555">red-highlighted enemy</span> to attack, or use <strong>Attack Enemy</strong> in the sidebar</li>
+    <li>Repeat for your other units</li>
+    <li>Press <strong style="color:#80ee80">End Turn ▶</strong> — the AI moves and attacks, then your turn begins again</li>
+    </ol></div>
+    <div class="hbox"><h4>Things to Know</h4>
+    <ul style="padding-left:16px;line-height:1.9;margin:0">
+    <li>Units that have moved <em>and</em> attacked are <strong>darkened</strong> — they're spent for the turn</li>
+    <li>Ranged units (archers, artillery) can attack without moving at all</li>
+    <li>The green/yellow/red bar under each unit is its <strong>morale</strong> — watch it carefully</li>
+    <li>Units can both move then attack, or just attack without moving first</li>
+    </ul></div>`,
+
+    // 1: Controls
+    `<div class="hbox"><h4>Mouse Controls</h4>
+    <table class="htbl"><tbody>
+    <tr><td><strong>Click own unit</strong></td><td>Select it — shows movement range (yellow) and attack targets (red)</td></tr>
+    <tr><td><strong>Click yellow cell</strong></td><td>Move selected unit to that cell</td></tr>
+    <tr><td><strong>Click red enemy</strong></td><td>Attack that enemy with selected unit</td></tr>
+    <tr><td><strong>Click empty area</strong></td><td>Deselect current unit</td></tr>
+    <tr><td><strong>Hover any cell</strong></td><td>Shows terrain type + unit stats in browser tooltip</td></tr>
+    </tbody></table></div>
+    <div class="hbox"><h4>Sidebar Buttons</h4>
+    <table class="htbl"><tbody>
+    <tr><td><strong style="color:#80ee80">End Turn ▶</strong></td><td>Finish your turn — AI moves and attacks, then your next turn starts</td></tr>
+    <tr><td><strong>Attack Enemy</strong></td><td>Shortcut attack when exactly one enemy is in range of selected unit</td></tr>
+    <tr><td><strong>Scenarios</strong></td><td>Return to battle selection (campaign or individual)</td></tr>
+    <tr><td><strong>🔊 / 🔇</strong></td><td>Toggle sound effects on/off</td></tr>
+    <tr><td><strong>🎵</strong></td><td>Toggle background music on/off</td></tr>
+    </tbody></table></div>
+    <div class="hbox"><h4>Movement Range</h4>
+    Movement cost depends on terrain. A unit with <strong>MOV 3</strong> can enter:<br>
+    3 plain cells (cost 1 each) · or 1 forest cell (cost 3) · or 1 hill + 1 plain (cost 2+1).<br>
+    Diagonal movement is allowed. Rivers are <strong>impassable</strong> except at marked fords.</div>`,
+
+    // 2: Combat
+    `<div class="hbox"><h4>The Combat Formula</h4>
+    <div class="hfm">
+    <strong>Attacker</strong>: 🎲 d6 + ATK stat + morale modifier<br>
+    <strong>Defender</strong>: 🎲 d6 + DEF stat + terrain bonus + morale modifier<br>
+    <div style="margin-top:8px;color:#c8a030">If attacker wins: Defender loses <strong>⌈(atk roll − def roll) ÷ 2⌉</strong> strength<br>
+    If defender wins: Attacker loses <strong>⌈(def roll − atk roll) ÷ 2⌉</strong> strength</div>
+    </div>
+    Both sides risk casualties every combat — even a successful attack can hurt the attacker.</div>
+    <div class="hbox"><h4>Morale Modifiers</h4>
+    <table class="htbl"><tbody>
+    <tr><td><span style="color:#44cc44">●</span> Morale above 60</td><td>+1 to ATK and DEF rolls</td></tr>
+    <tr><td><span style="color:#cccc22">●</span> Morale 30–60</td><td>No modifier</td></tr>
+    <tr><td><span style="color:#cc2222">●</span> Morale below 30</td><td>−1 to ATK and DEF rolls</td></tr>
+    </tbody></table></div>
+    <div class="hbox"><h4>Morale Checks &amp; Routing</h4>
+    After taking <strong>2+ casualties in one attack</strong>, or when strength drops below 40% of max, a unit rolls a morale check.
+    <ul style="padding-left:16px;line-height:1.9;margin:4px 0 0">
+    <li><strong>Pass</strong>: unit holds, continues fighting</li>
+    <li><strong>Fail</strong>: unit <strong>routs</strong> — flees toward your start edge, loses 20 morale, cannot attack</li>
+    <li>Routed units show <strong>↩</strong> and can <strong>rally</strong> after resting a full turn (morale recovers to 50+)</li>
+    </ul></div>
+    <div class="hbox"><h4>Fatigue</h4>
+    Each attack adds fatigue. Above 80% fatigue: −1 ATK and −1 DEF. Fatigue drops by 10 each turn you don't fight.</div>`,
+
+    // 3: Units
+    `<table class="htbl">
+    <thead><tr><th>Unit Type</th><th>ATK</th><th>DEF</th><th>MOV</th><th>Range</th></tr></thead>
+    <tbody>${urows}</tbody>
+    </table>
+    <div class="hbox" style="margin-top:8px"><h4>Reading the Stats</h4>
+    <strong>ATK</strong> — added to your d6 attack roll &nbsp;·&nbsp;
+    <strong>DEF</strong> — added to your d6 defence roll &nbsp;·&nbsp;
+    <strong>MOV</strong> — movement points per turn (terrain costs reduce this) &nbsp;·&nbsp;
+    <strong>RANGE</strong> — max cells away you can attack (1 = adjacent only)</div>
+    <div class="hbox"><h4>Unit Tactics</h4>
+    <ul style="padding-left:16px;line-height:1.9;margin:0">
+    <li><strong>Schiltrons</strong>: DEF 5 — use them as an anvil; let enemies come to you</li>
+    <li><strong>Highlanders</strong>: ATK 5 — charge at full movement for the +1 bonus; deadly but fragile</li>
+    <li><strong>Artillery</strong>: ATK 6, RANGE 5 — keep them back and never let cavalry close</li>
+    <li><strong>Cavalry</strong>: MOV 5 — use them to flank and chase routed enemies</li>
+    <li><strong>Archers/Longbow</strong>: RANGE 3–4 — stay behind your infantry and shoot over them</li>
+    </ul></div>`,
+
+    // 4: Terrain
+    `<table class="htbl">
+    <thead><tr><th>Terrain</th><th>DEF Bonus</th><th>MOV Cost</th><th>Passable</th></tr></thead>
+    <tbody>${trows}</tbody>
+    </table>
+    <div class="hbox" style="margin-top:8px"><h4>Terrain Tips</h4>
+    <ul style="padding-left:16px;line-height:1.9;margin:0">
+    <li><strong>Hills</strong>: defend from high ground whenever possible — +1 DEF is significant</li>
+    <li><strong>Towns</strong>: +2 DEF makes them almost impregnable with a strong unit inside</li>
+    <li><strong>Forests</strong>: good cover but slow — cavalry loses effectiveness here</li>
+    <li><strong>Rivers</strong>: only crossable at <strong>Fords/Bridges</strong> — these become chokepoints</li>
+    <li><strong>Marsh &amp; Moor</strong>: slows movement and reduces defence — avoid placing units here unless forced</li>
+    </ul></div>`,
+
+    // 5: Special Rules
+    `<div class="hbox"><h4>🛡 Schiltron Formation <small style="color:#777">(Bannockburn)</small></h4>
+    Schiltron units receive <strong>+2 DEF</strong> against cavalry and dragoon attacks. The tight-packed spear rings of Bruce's army were devastating against charging horse.</div>
+    <div class="hbox"><h4>⚡ Highland Charge <small style="color:#777">(Culloden, Prestonpans)</small></h4>
+    Highlanders receive <strong>+1 ATK</strong> when they expend all their movement points before attacking that turn. Move your full MOV, then attack immediately for maximum impact.</div>
+    <div class="hbox"><h4>🎯 Hill Archers <small style="color:#777">(Halidon Hill)</small></h4>
+    English longbowmen on hill terrain gain <strong>+2 DEF</strong>. At Halidon Hill, the English held the high ground and shot down the advancing Scots with terrible effect. You must advance uphill into their volleys.</div>
+    <div class="hbox"><h4>🔥 Artillery Autofire <small style="color:#777">(Culloden)</small></h4>
+    Government artillery fires automatically at the nearest Jacobite unit <strong>at the start of each of your turns</strong>, before you move. Roll: 3–4 = 1 casualty, 5–6 = 2 casualties. Every turn you delay costs lives — charge.</div>
+    <div class="hbox"><h4>😴 Surprise Attack <small style="color:#777">(Prestonpans)</small></h4>
+    Your Jacobite units gain <strong>+2 ATK for the first 3 turns</strong>. Cope's army was caught completely off-guard by the pre-dawn attack. Strike hard in the opening turns before the advantage fades.</div>
+    <div class="hbox"><h4>🏹 Volley Fire <small style="color:#777">(Falkirk)</small></h4>
+    English longbowmen receive a permanent <strong>+1 ATK</strong> throughout the battle. Edward I's archers were the decisive weapon that broke Wallace's schiltrons. Stay out of their range or advance under cover.</div>`,
+
+    // 6: Campaign
+    `<div class="hbox"><h4>The Long War, 1297–1746</h4>
+    Campaign mode chains all 7 battles in chronological sequence. You play Scotland in every battle — win or lose, the campaign continues. Your final win/loss record determines the campaign ending.</div>
+    <div class="hbox"><h4>Morale Carry-Over</h4>
+    <table class="htbl"><tbody>
+    <tr><td><span style="color:#80ee80">Win a battle</span></td><td>All your units start the next battle with <strong>+5 morale</strong></td></tr>
+    <tr><td><span style="color:#ff8888">Lose a battle</span></td><td>All your units start the next battle with <strong>−5 morale</strong></td></tr>
+    </tbody></table>
+    Morale is capped between 40 and 100. Winning builds momentum; losing makes the next fight harder.</div>
+    <div class="hbox"><h4>Campaign Endings</h4>
+    <table class="htbl">
+    <thead><tr><th>Ending</th><th>Victories required</th></tr></thead>
+    <tbody>${erows}</tbody>
+    </table></div>
+    <div class="hbox"><h4>Tips for the Campaign</h4>
+    <ul style="padding-left:16px;line-height:1.9;margin:0">
+    <li>Bannockburn (battle 3) is your best chance for a strong morale boost heading into the harder later battles</li>
+    <li>Halidon Hill (battle 4) is the hardest — English longbowmen on a hill are brutal. Try to flank them</li>
+    <li>Culloden (battle 7) requires speed above all — every turn costs lives to artillery</li>
+    </ul></div>`,
+  ];
+
+  openOverlay('📖 Rules &amp; Help',
+    `<div class="htabs">${bar}</div>
+     ${PANES.map((p,i)=>`<div class="hpane${i===t?' on':''}" id="hp${i}">${p}</div>`).join('')}
+     <button class="btn" style="margin-top:10px" onclick="closeOverlay()">↩ Close</button>`
+  );
+}
+
+function hTab(n){
+  document.querySelectorAll('.htab').forEach((b,i)=>b.classList.toggle('on',i===n));
+  document.querySelectorAll('.hpane').forEach((p,i)=>p.classList.toggle('on',i===n));
+}
+
+// ── TERRAIN LEGEND ──────────────────────────────────────────────────────────
+function buildLegend(){
+  document.getElementById('tleg').innerHTML=
+    TNAME.map((n,i)=>`<div class="tli"><div class="tcb" style="background:${TCOL[i]}"></div><span>${n}</span></div>`).join('');
+}
+
+// ── CAMPAIGN FUNCTIONS ───────────────────────────────────────────────────────
+function campPath(showIdx){
+  // showIdx = which battle to mark as current (defaults to CAMP.idx)
+  const ci = showIdx !== undefined ? showIdx : CAMP.idx;
+  return CO.map((k,i)=>{
+    const r=CAMP.results[i];
+    let cls,icon;
+    if(r==='win'){cls='cn-win';icon='✓';}
+    else if(r==='loss'||r==='timeout'){cls='cn-loss';icon='✗';}
+    else if(i===ci&&CAMP.active){cls='cn-cur';icon='▶';}
+    else{cls='cn-fut';icon='·';}
+    const lineStyle=i>0&&(CAMP.results[i-1]==='win')?'background:#3a6820':'';
+    return (i>0?`<div class="cline" style="${lineStyle}"></div>`:'')
+      +`<div class="cnode ${cls}"><div class="cnode-dot">${icon}</div><div class="cnode-yr">${CY[k]}</div></div>`;
+  }).join('');
+}
+
+function startCampaign(){
+  CAMP={active:true,idx:0,results:[],morBonus:0};
+  openOverlay('⚔ The Long War',
+    `<p style="color:#c8a030;font-style:italic">Scotland's Struggle for Independence, 1297–1746</p>
+    <p>Seven pivotal battles spanning five centuries of conflict between Scotland and England. You command the Scottish forces in each — their fates are yours to write.</p>
+    <p>Each victory carries a <span style="color:#80ee80">+5 morale bonus</span> into the next battle. Each defeat carries a <span style="color:#ff8888">−5 morale penalty</span>. Win more than you lose and Scotland's story becomes one of defiance and triumph.</p>
+    <div class="cpath">${campPath(0)}</div>
+    <button class="btn btn-go" style="text-align:center;margin-top:8px" onclick="campShowPre()">Begin the Campaign →</button>
+    <button class="btn" style="text-align:center;margin-top:3px" onclick="showMenu()">↩ Back to Scenarios</button>`
+  );
+}
+
+function campShowPre(){
+  const key=CO[CAMP.idx], num=CAMP.idx+1;
+  const bonHtml=CAMP.morBonus!==0
+    ?`<div class="cbons ${CAMP.morBonus>0?'cbp':'cbn'}">${CAMP.morBonus>0?'▲ +'+CAMP.morBonus+' morale bonus (previous victory)':'▼ '+CAMP.morBonus+' morale penalty (previous defeat)'} applied to all units</div>`
+    :'';
+  document.getElementById('ovbox').innerHTML=
+    `<h2>Battle ${num} of ${CO.length} — ${CN[key]}</h2>
+    <p style="color:#c8a030;font-size:0.82em;margin-bottom:7px">${CY[key]}</p>
+    <p>${CPRE[key]}</p>
+    ${bonHtml}
+    <div class="cpath">${campPath()}</div>
+    <button class="btn btn-go" style="text-align:center;margin-top:8px" onclick="campBeginBattle()">Advance to Battle →</button>
+    <button class="btn" style="text-align:center;margin-top:3px" onclick="showMenu()">↩ Abandon Campaign</button>`;
+  document.getElementById('overlay').style.display='flex';
+}
+
+function campBeginBattle(){
+  load(CO[CAMP.idx]);
+}
+
+function campShowResult(result){
+  const key=CO[CAMP.idx];
+  const win=result==='win';
+  const isLast=CAMP.idx>=CO.length-1;
+  const nextKey=!isLast?CO[CAMP.idx+1]:null;
+  const nextBonus=win?5:-5;
+  const wins=CAMP.results.filter(r=>r==='win').length;
+  document.getElementById('ovbox').innerHTML=
+    `<h2>${win?'⚔ Victory!':'☠ Defeat'} — ${CN[key]}, ${CY[key]}</h2>
+    <p>${win?CWIN[key]:CLOSS[key]}</p>
+    <div class="cpath">${campPath(CAMP.idx)}</div>
+    <p style="text-align:center;font-size:0.8em;color:#c8a030;margin:6px 0">Campaign record so far: <strong>${wins} win${wins!==1?'s':''}</strong> / ${CAMP.results.length-wins} defeat${CAMP.results.length-wins!==1?'s':''}</p>
+    ${isLast
+      ?`<button class="btn btn-go" style="text-align:center;margin-top:10px" onclick="campShowEnd()">View Campaign Summary →</button>`
+      :`<p style="font-size:0.8em;color:#aaa;margin-top:6px">Next: <strong style="color:#f0c040">${CN[nextKey]}, ${CY[nextKey]}</strong></p>
+       <div class="cbons ${win?'cbp':'cbn'}">${win?'▲ +5 morale bonus':'▼ −5 morale penalty'} carried into the next battle</div>
+       <button class="btn btn-go" style="text-align:center;margin-top:8px" onclick="campAdvance(${nextBonus})">Continue Campaign →</button>`
+    }
+    <button class="btn" style="text-align:center;margin-top:3px" onclick="campAbort()">↩ Abandon Campaign</button>`;
+  document.getElementById('overlay').style.display='flex';
+}
+
+function campAdvance(nextBonus){
+  CAMP.idx++;
+  CAMP.morBonus=nextBonus;
+  campShowPre();
+}
+
+function campShowEnd(){
+  const wins=CAMP.results.filter(r=>r==='win').length;
+  const ending=CEND.find(e=>wins>=e.min)||CEND[CEND.length-1];
+  const dots=CO.map((k,i)=>{
+    const r=CAMP.results[i];
+    return `<span title="${CN[k]}, ${CY[k]}" style="color:${r==='win'?'#80ee80':'#ff7777'};font-size:1.1em;margin:0 2px">${r==='win'?'✓':'✗'}</span>`;
+  }).join('');
+  document.getElementById('ovbox').innerHTML=
+    `<h2>⚔ Campaign Complete</h2>
+    <h3 style="color:${ending.col};margin:6px 0 10px">${ending.title}</h3>
+    <p>${ending.text}</p>
+    <div style="text-align:center;letter-spacing:3px;font-size:1.3em;margin:12px 0;padding:8px 0;border-top:1px solid #4a3008;border-bottom:1px solid #4a3008">${dots}</div>
+    <p style="text-align:center;color:#c8a030;font-size:0.9em">Final Record: <strong style="color:#f0c040">${wins} victor${wins!==1?'ies':'y'}</strong> &nbsp;·&nbsp; ${CO.length-wins} defeat${CO.length-wins!==1?'s':''}</p>
+    <div class="cpath" style="margin:10px 0">${campPath(99)}</div>
+    <button class="btn btn-go" style="text-align:center;margin-top:10px" onclick="campRestart()">Play Campaign Again</button>
+    <button class="btn" style="text-align:center;margin-top:3px" onclick="campAbort()">Return to Scenarios</button>`;
+  document.getElementById('overlay').style.display='flex';
+}
+
+function campRestart(){
+  CAMP={active:true,idx:0,results:[],morBonus:0};
+  campShowPre();
+}
+
+function campAbort(){
+  CAMP={active:false,idx:0,results:[],morBonus:0};
+  showMenu();
+}
+
+// ── AUDIO SYSTEM ─────────────────────────────────────────────────────────────
+let aCtx=null, mGain=null, sGain=null;
+let sfxOn=true, musicOn=true;
+let musicPlaying=false, musicTimer=null, mIdx=0, droneOscs=[];
+
+function getCtx(){
+  if(!aCtx){
+    aCtx=new(window.AudioContext||window.webkitAudioContext)();
+    mGain=aCtx.createGain(); mGain.gain.value=0.28; mGain.connect(aCtx.destination);
+    sGain=aCtx.createGain(); sGain.gain.value=0.65; sGain.connect(aCtx.destination);
+  }
+  if(aCtx.state==='suspended')aCtx.resume();
+  return aCtx;
+}
+
+function toggleSound(){
+  sfxOn=!sfxOn;
+  document.getElementById('btn-sound').style.opacity=sfxOn?'1':'0.4';
+  document.getElementById('btn-sound').textContent=sfxOn?'🔊':'🔇';
+}
+
+function toggleMusic(){
+  musicOn=!musicOn;
+  document.getElementById('btn-music').style.opacity=musicOn?'1':'0.4';
+  if(musicOn){if(G.scenario&&!musicPlaying)startMusic();}
+  else stopMusic();
+}
+
+function snd(type){
+  if(!sfxOn)return;
+  try{
+    const c=getCtx();
+    if(type==='select')sndSelect(c);
+    else if(type==='march')sndMarch(c);
+    else if(type==='melee')sndMelee(c);
+    else if(type==='arrow')sndArrow(c);
+    else if(type==='musket')sndMusket(c);
+    else if(type==='cannon')sndCannon(c);
+    else if(type==='rout')sndRout(c);
+    else if(type==='elim')sndElim(c);
+    else if(type==='endturn')sndEndTurn(c);
+    else if(type==='victory')sndVictory(c);
+    else if(type==='defeat')sndDefeat(c);
+  }catch(e){}
+}
+
+function mkNoise(c,dur){
+  const n=c.sampleRate*dur,buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+  const s=c.createBufferSource();s.buffer=buf;return s;
+}
+
+function sndSelect(c){
+  const o=c.createOscillator(),g=c.createGain();
+  o.type='sine';o.frequency.value=880;
+  g.gain.setValueAtTime(0.1,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.07);
+  o.connect(g);g.connect(sGain);o.start();o.stop(c.currentTime+0.07);
+}
+
+function sndMarch(c){
+  const ns=mkNoise(c,0.06),f=c.createBiquadFilter(),g=c.createGain();
+  f.type='bandpass';f.frequency.value=220;f.Q.value=0.7;
+  g.gain.setValueAtTime(0.55,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.07);
+  ns.connect(f);f.connect(g);g.connect(sGain);ns.start();
+}
+
+function sndMelee(c){
+  // Metal clash: filtered noise + ring
+  const ns=mkNoise(c,0.22),f1=c.createBiquadFilter(),f2=c.createBiquadFilter(),g=c.createGain();
+  f1.type='bandpass';f1.frequency.value=2800;f1.Q.value=4;
+  f2.type='highpass';f2.frequency.value=900;
+  g.gain.setValueAtTime(0.9,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.25);
+  ns.connect(f1);f1.connect(f2);f2.connect(g);g.connect(sGain);ns.start();
+  const o=c.createOscillator(),og=c.createGain();
+  o.type='triangle';o.frequency.value=280+Math.random()*160;
+  og.gain.setValueAtTime(0.3,c.currentTime);
+  og.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.3);
+  o.connect(og);og.connect(sGain);o.start();o.stop(c.currentTime+0.3);
+  // War cry snippet — short burst of voices
+  const o2=c.createOscillator(),og2=c.createGain();
+  o2.type='sawtooth';o2.frequency.value=180+Math.random()*60;
+  og2.gain.setValueAtTime(0,c.currentTime+0.02);
+  og2.gain.linearRampToValueAtTime(0.12,c.currentTime+0.06);
+  og2.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.22);
+  const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=400;
+  o2.connect(lp);lp.connect(og2);og2.connect(sGain);o2.start();o2.stop(c.currentTime+0.25);
+}
+
+function sndArrow(c){
+  const o=c.createOscillator(),g=c.createGain();
+  o.type='sawtooth';
+  o.frequency.setValueAtTime(1800,c.currentTime);
+  o.frequency.exponentialRampToValueAtTime(280,c.currentTime+0.18);
+  g.gain.setValueAtTime(0.13,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.22);
+  o.connect(g);g.connect(sGain);o.start();o.stop(c.currentTime+0.22);
+  // Volley — play 3 slightly offset arrows
+  for(let i=1;i<3;i++){
+    const o2=c.createOscillator(),g2=c.createGain();
+    o2.type='sawtooth';
+    o2.frequency.setValueAtTime(1600+i*100,c.currentTime+i*0.05);
+    o2.frequency.exponentialRampToValueAtTime(250,c.currentTime+i*0.05+0.16);
+    g2.gain.setValueAtTime(0.08,c.currentTime+i*0.05);
+    g2.gain.exponentialRampToValueAtTime(0.001,c.currentTime+i*0.05+0.18);
+    o2.connect(g2);g2.connect(sGain);o2.start(c.currentTime+i*0.05);o2.stop(c.currentTime+i*0.05+0.2);
+  }
+  // Thud of impact
+  const ns=mkNoise(c,0.1),f=c.createBiquadFilter(),gn=c.createGain();
+  f.type='lowpass';f.frequency.value=350;
+  gn.gain.setValueAtTime(0,c.currentTime+0.15);
+  gn.gain.linearRampToValueAtTime(0.5,c.currentTime+0.18);
+  gn.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.3);
+  ns.connect(f);f.connect(gn);gn.connect(sGain);ns.start();
+}
+
+function sndMusket(c){
+  // Sharp crack
+  const ns=mkNoise(c,0.25),f=c.createBiquadFilter(),g=c.createGain();
+  f.type='bandpass';f.frequency.value=1200;f.Q.value=1;
+  g.gain.setValueAtTime(1.8,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.22);
+  ns.connect(f);f.connect(g);g.connect(sGain);ns.start();
+  // Low pop
+  const o=c.createOscillator(),og=c.createGain();
+  o.type='sine';o.frequency.setValueAtTime(150,c.currentTime);
+  o.frequency.exponentialRampToValueAtTime(40,c.currentTime+0.1);
+  og.gain.setValueAtTime(0.8,c.currentTime);
+  og.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.12);
+  o.connect(og);og.connect(sGain);o.start();o.stop(c.currentTime+0.12);
+}
+
+function sndCannon(c){
+  const ns=mkNoise(c,0.7),f=c.createBiquadFilter(),g=c.createGain();
+  f.type='lowpass';f.frequency.value=100;
+  g.gain.setValueAtTime(3,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.55);
+  ns.connect(f);f.connect(g);g.connect(sGain);ns.start();
+  const o=c.createOscillator(),og=c.createGain();
+  o.type='sine';o.frequency.value=55;
+  o.frequency.exponentialRampToValueAtTime(20,c.currentTime+0.35);
+  og.gain.setValueAtTime(1.4,c.currentTime);
+  og.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.45);
+  o.connect(og);og.connect(sGain);o.start();o.stop(c.currentTime+0.45);
+  // Rumble tail
+  const ns2=mkNoise(c,0.5),f2=c.createBiquadFilter(),g2=c.createGain();
+  f2.type='lowpass';f2.frequency.value=60;
+  g2.gain.setValueAtTime(0,c.currentTime+0.1);
+  g2.gain.linearRampToValueAtTime(0.5,c.currentTime+0.2);
+  g2.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.7);
+  ns2.connect(f2);f2.connect(g2);g2.connect(sGain);ns2.start();
+}
+
+function sndRout(c){
+  // Descending wail
+  const o=c.createOscillator(),g=c.createGain();
+  o.type='sawtooth';
+  o.frequency.setValueAtTime(520,c.currentTime);
+  o.frequency.exponentialRampToValueAtTime(110,c.currentTime+0.4);
+  g.gain.setValueAtTime(0.22,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.45);
+  const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=600;
+  o.connect(lp);lp.connect(g);g.connect(sGain);o.start();o.stop(c.currentTime+0.45);
+}
+
+function sndElim(c){
+  // Crash + fade
+  const ns=mkNoise(c,0.4),f=c.createBiquadFilter(),g=c.createGain();
+  f.type='lowpass';f.frequency.value=180;
+  g.gain.setValueAtTime(1.5,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.45);
+  ns.connect(f);f.connect(g);g.connect(sGain);ns.start();
+  const o=c.createOscillator(),og=c.createGain();
+  o.type='sawtooth';o.frequency.value=120;
+  o.frequency.exponentialRampToValueAtTime(30,c.currentTime+0.3);
+  og.gain.setValueAtTime(0.6,c.currentTime);
+  og.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.4);
+  o.connect(og);og.connect(sGain);o.start();o.stop(c.currentTime+0.4);
+}
+
+function sndEndTurn(c){
+  const o=c.createOscillator(),g=c.createGain();
+  o.type='sine';
+  o.frequency.setValueAtTime(440,c.currentTime);
+  o.frequency.setValueAtTime(550,c.currentTime+0.07);
+  g.gain.setValueAtTime(0.18,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.22);
+  o.connect(g);g.connect(sGain);o.start();o.stop(c.currentTime+0.22);
+}
+
+function sndVictory(c){
+  // Rising D major fanfare + drum rolls
+  const NOTES=[[293.66,0],[369.99,0.18],[440,0.36],[587.33,0.54],[740,0.76],[880,1.0]];
+  NOTES.forEach(([f,t])=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='triangle';o.frequency.value=f;
+    g.gain.setValueAtTime(0,c.currentTime+t);
+    g.gain.linearRampToValueAtTime(0.5,c.currentTime+t+0.04);
+    g.gain.setValueAtTime(0.45,c.currentTime+t+0.25);
+    g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+t+0.55);
+    o.connect(g);g.connect(sGain);o.start(c.currentTime+t);o.stop(c.currentTime+t+0.6);
+    // Octave harmonic
+    const o2=c.createOscillator(),g2=c.createGain();
+    o2.type='sine';o2.frequency.value=f*2;
+    g2.gain.setValueAtTime(0,c.currentTime+t);
+    g2.gain.linearRampToValueAtTime(0.18,c.currentTime+t+0.04);
+    g2.gain.exponentialRampToValueAtTime(0.001,c.currentTime+t+0.5);
+    o2.connect(g2);g2.connect(sGain);o2.start(c.currentTime+t);o2.stop(c.currentTime+t+0.5);
+  });
+  // Drum rolls on beats
+  for(let i=0;i<4;i++){
+    const ns=mkNoise(c,0.06),f2=c.createBiquadFilter(),gn=c.createGain();
+    f2.type='bandpass';f2.frequency.value=200;f2.Q.value=0.6;
+    gn.gain.setValueAtTime(0.5,c.currentTime+i*0.27);
+    gn.gain.exponentialRampToValueAtTime(0.001,c.currentTime+i*0.27+0.07);
+    ns.connect(f2);f2.connect(gn);gn.connect(sGain);ns.start(c.currentTime+i*0.27);
+  }
+}
+
+function sndDefeat(c){
+  // Slow descending minor progression
+  const NOTES=[[440,0],[415.3,0.32],[391.99,0.64],[349.23,0.96],[329.63,1.32],[293.66,1.72]];
+  NOTES.forEach(([f,t])=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='triangle';o.frequency.value=f;
+    g.gain.setValueAtTime(0,c.currentTime+t);
+    g.gain.linearRampToValueAtTime(0.38,c.currentTime+t+0.06);
+    g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+t+0.6);
+    o.connect(g);g.connect(sGain);o.start(c.currentTime+t);o.stop(c.currentTime+t+0.65);
+  });
+}
+
+// ── MUSIC: PROCEDURAL SCOTS MARCH ────────────────────────────────────────────
+// D major pentatonic (D,E,F#,A,B) + bagpipe-style chanter with A drone
+// Note format: [hz, beats]
+const MARCH = [
+  [293.66,1],[329.63,.5],[369.99,.5],[440,1],
+  [493.88,.5],[440,.5],[369.99,.5],[329.63,.5],[293.66,1],
+  [293.66,.5],[369.99,.5],[440,1],[493.88,1],
+  [440,.5],[369.99,.5],[329.63,.5],[293.66,1.5],
+  [440,1],[493.88,.5],[440,.5],[369.99,1],
+  [329.63,1],[369.99,.5],[329.63,.5],[293.66,.5],[246.94,.5],[293.66,1],
+  [440,.5],[369.99,.5],[329.63,.5],[293.66,.5],[220,1],[293.66,2],
+];
+// Percussion: [offset_beats, type ('bd'=bass drum,'sd'=snare)]
+const DRUMS = [[0,'bd'],[1,'sd'],[2,'bd'],[3,'sd']];
+const BPM=74, BEAT=60000/BPM;
+
+function startMusic(){
+  if(!musicOn||musicPlaying)return;
+  try{
+    const c=getCtx();
+    musicPlaying=true;mIdx=0;
+    startDrone(c);
+    schedNote();
+    schedDrum();
+  }catch(e){}
+}
+
+function stopMusic(){
+  musicPlaying=false;
+  if(musicTimer)clearTimeout(musicTimer);
+  musicTimer=null;
+  droneOscs.forEach(o=>{try{o.stop();}catch(e){}});
+  droneOscs=[];
+}
+
+function fadeMusicOut(){
+  if(!musicPlaying)return;
+  if(mGain)mGain.gain.linearRampToValueAtTime(0,getCtx().currentTime+2);
+  setTimeout(stopMusic,2100);
+}
+
+function startDrone(c){
+  droneOscs.forEach(o=>{try{o.stop();}catch(e){}});droneOscs=[];
+  // Bagpipe drones: Bass A2 + two Tenor A3s (slightly detuned for beating effect)
+  [[110,0,0.05],[220,6,0.04],[220,-5,0.04],[164.81,0,0.025]].forEach(([f,det,vol])=>{
+    const o=c.createOscillator(),lp=c.createBiquadFilter(),g=c.createGain();
+    o.type='sawtooth';o.frequency.value=f;o.detune.value=det;
+    lp.type='lowpass';lp.frequency.value=900;
+    g.gain.value=vol;
+    o.connect(lp);lp.connect(g);g.connect(mGain);
+    o.start();droneOscs.push(o);
+  });
+}
+
+function schedNote(){
+  if(!musicPlaying||!musicOn)return;
+  const[f,b]=MARCH[mIdx];mIdx=(mIdx+1)%MARCH.length;
+  try{
+    const c=getCtx();
+    const dur=b*BEAT/1000;
+    // Chanter: two detuned sawtooths + lowpass (bagpipe chanter timbre)
+    [0,10].forEach(det=>{
+      const o=c.createOscillator(),lp=c.createBiquadFilter(),g=c.createGain();
+      o.type='sawtooth';o.frequency.value=f;o.detune.value=det;
+      lp.type='lowpass';lp.frequency.value=1800;lp.Q.value=1.5;
+      g.gain.setValueAtTime(0.19,c.currentTime);
+      g.gain.linearRampToValueAtTime(0.22,c.currentTime+0.015);
+      g.gain.setValueAtTime(0.2,c.currentTime+dur*0.78);
+      g.gain.linearRampToValueAtTime(0,c.currentTime+dur*0.92);
+      o.connect(lp);lp.connect(g);g.connect(mGain);
+      o.start();o.stop(c.currentTime+dur);
+    });
+  }catch(e){}
+  musicTimer=setTimeout(schedNote,b*BEAT);
+}
+
+let drumBeat=0;
+function schedDrum(){
+  if(!musicPlaying||!musicOn)return;
+  try{
+    const c=getCtx();
+    const beat=drumBeat%4;
+    if(beat===0||beat===2){ // bass drum on 1,3
+      const ns=mkNoise(c,0.12),f=c.createBiquadFilter(),g=c.createGain();
+      f.type='lowpass';f.frequency.value=120;
+      g.gain.setValueAtTime(0.7,c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.12);
+      ns.connect(f);f.connect(g);g.connect(mGain);ns.start();
+      const o=c.createOscillator(),og=c.createGain();
+      o.type='sine';o.frequency.value=80;
+      o.frequency.exponentialRampToValueAtTime(35,c.currentTime+0.08);
+      og.gain.setValueAtTime(0.6,c.currentTime);
+      og.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.1);
+      o.connect(og);og.connect(mGain);o.start();o.stop(c.currentTime+0.12);
+    } else { // snare on 2,4
+      const ns=mkNoise(c,0.1),f=c.createBiquadFilter(),g=c.createGain();
+      f.type='bandpass';f.frequency.value=2400;f.Q.value=0.8;
+      g.gain.setValueAtTime(0.35,c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.09);
+      ns.connect(f);f.connect(g);g.connect(mGain);ns.start();
+    }
+  }catch(e){}
+  drumBeat++;
+  setTimeout(schedDrum,BEAT);
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────────
+window.addEventListener('resize',resize);
+buildLegend();
+resize();
+</script>
+</body>
+</html>
