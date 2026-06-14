@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HUB Pharmacy — The Dispensary</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -298,6 +299,63 @@ body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;
 .gf-empty{padding:20px 12px;font-size:10px;color:var(--sub);text-align:center}
 .homelife-good{color:var(--green);font-size:9px}
 .homelife-troubled{color:var(--urgent);font-size:9px}
+/* ── MOBILE ── */
+@media(max-width:700px){
+  /* Topbar: scrolls horizontally so all stats remain accessible */
+  #topbar{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;gap:10px;padding:6px 10px;scrollbar-width:none}
+  #topbar::-webkit-scrollbar{display:none}
+  #topbar>*{flex-shrink:0}
+  .hub-title{font-size:13px;letter-spacing:1px}
+
+  /* Nav: horizontal scroll, no visible scrollbar */
+  #nav{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #nav::-webkit-scrollbar{display:none}
+  .ntab{padding:9px 11px;font-size:10px;white-space:nowrap;flex-shrink:0}
+
+  /* Pipeline: momentum-scroll on iOS */
+  #pipe-cols{-webkit-overflow-scrolling:touch}
+  .pcol{min-width:140px}
+
+  /* Staff tab: gossip feed stacks below staff list instead of side panel */
+  #tab-staff{flex-direction:column!important;overflow-y:auto!important;overflow-x:hidden!important}
+  #staff-main{overflow-y:visible!important;flex:none!important}
+  #gossip-feed{width:100%!important;border-left:none!important;border-top:1px solid var(--border);height:300px;flex-shrink:0!important}
+
+  /* All card grids collapse to 1 column */
+  .stfgrid,.cand-grid,.sgrid,.bgrid,.rgrid,.upgrid{grid-template-columns:1fr}
+
+  /* Bigger touch targets */
+  .rxc-btn,.dbtn,.hire-btn{padding:7px;font-size:10px}
+  .sbtn{padding:5px 10px}
+  .gbtn{padding:10px 24px}
+  .req-btn{padding:5px}
+  .obtn{padding:6px 12px}
+  .rxm-action{padding:10px}
+  .rxc-selring{width:18px;height:18px;line-height:17px}
+
+  /* Prevent iOS zoom on focused inputs */
+  .oqty,#setup-box input{font-size:16px}
+
+  /* Setup screen */
+  #setup-box{padding:22px 16px}
+  #setup-box h1{font-size:16px;letter-spacing:2px}
+
+  /* Modals: use more of the screen */
+  #rx-modal-box{width:96%;max-height:90vh}
+  #bulk-box{width:96%;max-height:90vh}
+  #eod-box,#weekly-box,#gameover-box{padding:18px 14px}
+
+  /* Toast: nudge down slightly to clear topbar */
+  #toast{top:60px;right:8px;max-width:240px;font-size:10px}
+
+  /* Miscellaneous */
+  .tpanel{padding:8px}
+  .stfc-meta{flex-wrap:wrap;gap:5px}
+  .rxm-patient{font-size:18px}
+  #sel-bar{padding:7px 10px;font-size:10px}
+  .ev-staff-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  #evening{padding:20px 10px 40px}
+}
 </style>
 </head>
 <body>

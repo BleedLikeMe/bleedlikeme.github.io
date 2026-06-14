@@ -231,6 +231,21 @@ select option{background:#1a2a1a;}
 .offer-banner{background:#1a1a2a;border:1px solid #5555aa;border-radius:6px;padding:.7rem;margin-bottom:.6rem;}
 .sell-val{font-size:.7rem;color:var(--dim);}
 .sell-price{font-size:.95rem;color:#a8e6a8;font-weight:bold;}
+/* ── MOBILE ── */
+@media(max-width:700px){
+  #content{padding:.5rem}
+  .grid2,.grid3{grid-template-columns:1fr}
+  #logbar{height:60px}
+  .topstat{min-width:60px}
+  .topstat .lbl{font-size:.6rem}
+  .topstat .val{font-size:.85rem}
+  /* prevent iOS zoom on focused inputs */
+  .bet-input,.work-select{font-size:1rem}
+  /* tables scroll horizontally rather than overflowing */
+  .fin-table,.odds-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  .result-box{width:96%;padding:.8rem}
+  .race-row{font-size:.8rem;gap:.3rem}
+}
 </style>
 </head>
 <body>

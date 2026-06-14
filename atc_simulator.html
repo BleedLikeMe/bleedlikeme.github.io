@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ATC Simulator — Airport Approach</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -202,6 +203,30 @@ canvas#radar {
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: #020508; }
 ::-webkit-scrollbar-thumb { background: #002a1a; }
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  /* Radar + panel stack vertically */
+  body{overflow-y:auto;height:auto;min-height:100vh}
+  #app{flex-direction:column;height:auto}
+  #radar-wrap{width:100%}
+  /* Scale radar canvas to fill phone width; click handler already compensates
+     for CSS scale via getBoundingClientRect (see line 1717) */
+  canvas#radar{width:100%!important;height:auto!important}
+  /* Panel flows below the radar at full width */
+  #panel{min-width:0;max-width:100%;width:100%;max-height:none;overflow:visible;flex-shrink:0}
+  /* Traffic list: fixed height scroll instead of flex:1 */
+  #traffic-wrap{flex:none;overflow:visible}
+  #tlist{height:180px;overflow-y:auto;flex:none}
+  /* Bigger touch targets for number inputs and buttons */
+  .crow input{font-size:16px;padding:5px 6px}
+  .crow button,.abtn{padding:7px 10px;font-size:11px}
+  .spd-btn{padding:5px 10px;font-size:11px}
+  /* Cockpit overlay: reposition from hardcoded absolute coords to left edge */
+  #cockpit-overlay{left:4px!important;right:4px!important;overflow-x:auto!important}
+  /* Overlay text slightly smaller */
+  #overlay{font-size:9px}
+}
 </style>
 </head>
 <body>

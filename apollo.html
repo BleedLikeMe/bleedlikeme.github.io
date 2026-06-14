@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Apollo Mission Simulation</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -218,6 +219,36 @@ body{background:#050505;color:#c8c8c8;font-family:'Courier New',monospace;overfl
 .poll-flight-row{border-top:1px solid #2a2a2a!important;margin-top:2px;padding-top:5px!important}
 .poll-flight-row .poll-stn{color:#ff8800}
 .poll-flight-row .poll-go{color:#ff8800;letter-spacing:1px}
+/* ── MOBILE ── */
+@media(max-width:700px){
+  /* Body scrolls; views flow in document rather than fixed-overlapping */
+  body{overflow-y:auto;height:auto;padding-top:36px}
+  .view{position:relative!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important}
+  .view.active{min-height:calc(100vh - 36px)}
+  /* Window canvases: fixed height instead of % of variable-height flex container */
+  #window-area{flex:0 0 200px!important}
+  #lm-window-area{flex:0 0 220px!important}
+  /* Instrument grid: 2 columns instead of 3 */
+  #instruments,#lm-instruments{grid-template-columns:1fr 1fr!important;overflow:visible;flex:0 0 auto}
+  .panel{overflow:visible}
+  /* Caution lights: 2 columns */
+  .clights,.lm-clights{grid-template-columns:repeat(2,1fr)}
+  /* Switch panel scrolls horizontally — switches are too small to resize */
+  #switch-panel{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .sw-rows{min-width:max-content}
+  /* LM switch row same */
+  #lm-switch-row{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* Mission Control console rows scroll horizontally */
+  #consoles{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .console-row{min-width:max-content;gap:4px}
+  .console{min-width:90px;flex-shrink:0}
+  /* Topbar view-switcher buttons: bigger touch targets */
+  #topbar button{padding:6px 12px;font-size:11px}
+  /* Hold modal */
+  #hold-box{max-width:92%;width:92%;padding:20px 16px}
+  .hold-go{padding:10px 24px}
+  .hold-wait{padding:8px 18px}
+}
 </style>
 </head>
 <body>
