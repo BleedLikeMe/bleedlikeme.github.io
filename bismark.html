@@ -615,7 +615,7 @@ const DEFS = {
   ger_hvy:  { pool:['KMS Prinz Eugen'],
                spd:32, hp:130, hostile:true,  sz:2.2, fireRange:9,  dmgLo:12, dmgHi:22, reload:2800, identified:false },
   ger_sub:  { pool:['U-556','U-74','U-557'],
-               spd:8,  hp:40,  hostile:true,  sz:0.9, fireRange:3,  dmgLo:30, dmgHi:50, reload:12000, identified:false, isSub:true },
+               spd:8,  hp:40,  hostile:true,  sz:0.9, fireRange:3,  dmgLo:12, dmgHi:22, reload:12000, identified:false, isSub:true },
   bismarck: { pool:['KMS Bismarck'],
                spd:30, hp:360, hostile:true,  sz:4.0, fireRange:12, dmgLo:28, dmgHi:48, reload:2400, identified:false },
 };
@@ -939,7 +939,7 @@ function updateFleetEvents() {
   }
 
   // U-boat occasionally
-  if (Math.random() < 0.0015) {
+  if (Math.random() < 0.00075) {
     spawnShip('ger_sub', rnd(4,8), rnd(0,360));
     log('SONAR: Possible submarine contact.', 'itl');
   }
