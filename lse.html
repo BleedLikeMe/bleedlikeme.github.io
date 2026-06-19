@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>London Stock Exchange Simulator</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -303,6 +304,66 @@ input[type=checkbox]{accent-color:var(--bl);}
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px;}
+/* ── MOBILE RESPONSIVE ── */
+#side-toggle{display:none;background:var(--bg3);border:1px solid var(--bd);color:var(--bl);
+  padding:4px 10px;border-radius:3px;cursor:pointer;font-size:13px;font-family:inherit;}
+@media(max-width:768px){
+  body{height:auto;overflow-y:auto;overflow-x:hidden;}
+  #hdr{flex-wrap:wrap;gap:5px;padding:6px 10px;}
+  .hidxs{order:3;width:100%;justify-content:space-around;gap:4px;overflow-x:auto;}
+  .idx{min-width:62px;}
+  .idx-v{font-size:12px;}
+  .htitle{font-size:13px;}
+  .mst{font-size:10px;}
+  #pbar{gap:10px;padding:5px 10px;overflow-x:auto;flex-wrap:nowrap;}
+  .pb{flex-shrink:0;}
+  .pb-v{font-size:11px;}
+  #ctrl{flex-direction:column;align-items:stretch;gap:5px;padding:5px 10px;}
+  .cl{flex-wrap:wrap;gap:4px;}
+  #srch{flex:1;min-width:0;}
+  #main{flex-direction:column;overflow:visible;height:auto;}
+  #mkt{overflow-y:visible;overflow-x:auto;}
+  #side{width:100%;border-left:none;border-top:1px solid var(--bd);
+    max-height:320px;overflow-y:auto;display:none;}
+  #side.mob-open{display:block;}
+  #side-toggle{display:inline-block;margin:0 10px 6px;}
+  .stabs .stab{padding:8px 2px;font-size:9px;}
+  /* hide less critical table columns */
+  #stbl th:nth-child(2),#stbl td:nth-child(2), /* Name */
+  #stbl th:nth-child(7),#stbl td:nth-child(7), /* High */
+  #stbl th:nth-child(8),#stbl td:nth-child(8), /* Low */
+  #stbl th:nth-child(10),#stbl td:nth-child(10) /* P/E */
+  {display:none;}
+  #stbl thead th,#stbl tbody td{padding:5px 6px;}
+  /* full-screen modal */
+  #mov{align-items:flex-start;}
+  #mod{width:100vw;max-width:100vw;max-height:100vh;border-radius:0;margin:0;}
+  .mstats{grid-template-columns:repeat(3,1fr);}
+  canvas#mchart{width:100%!important;}
+  /* order/trade buttons larger for touch */
+  .btn{padding:10px 14px;font-size:13px;}
+  .ttab{padding:10px 4px;}
+  .vbtn,.spdbtn,.hbtn{min-height:36px;min-width:36px;}
+  /* day end modal */
+  #dayend-overlay{align-items:flex-start;}
+  #dayend-box{width:96vw;max-height:100vh;border-radius:4px;margin:0;overflow-y:auto;}
+  /* perf/screener grids */
+  .perf-grid{grid-template-columns:repeat(3,1fr);}
+  .scr-grid{grid-template-columns:repeat(2,1fr);}
+  /* achievement popup */
+  #ach-pop{left:8px;right:8px;bottom:8px;max-width:none;}
+}
+@media(max-width:480px){
+  .hidxs .idx:nth-child(3),.hidxs .idx:nth-child(4){display:none;}
+  /* also hide sector and volume and trend columns */
+  #stbl th:nth-child(3),#stbl td:nth-child(3), /* Sector */
+  #stbl th:nth-child(9),#stbl td:nth-child(9), /* Volume */
+  #stbl th:nth-child(11),#stbl td:nth-child(11) /* Trend */
+  {display:none;}
+  .spdbtn{padding:4px 6px;font-size:10px;}
+  .perf-grid{grid-template-columns:repeat(2,1fr);}
+  #srch{width:100%;}
+}
 </style>
 </head>
 <body>
@@ -399,6 +460,7 @@ input[type=checkbox]{accent-color:var(--bl);}
       <tbody id="scr-tbl-b"></tbody>
     </table>
   </div>
+  <button id="side-toggle" onclick="document.getElementById('side').classList.toggle('mob-open')">☰ Portfolio / Orders</button>
   <div id="side">
     <div class="stabs">
       <div class="stab on" data-p="port">Port</div>
@@ -472,6 +534,9 @@ const DIV_YIELD = {
   LLOY:6.2,LGEN:8.8,IMB:8.1,VOD:6.8,NG:5.4,SSE:5.2,SVT:4.1,UU:4.3,
   BP:4.5,SHEL:4.2,BARC:4.0,NWG:5.1,ULVR:3.8,DGE:2.8,REL:2.1,SGE:1.8,
   HL:3.2,PRU:3.0,STAN:2.8,WPP:4.5,ITV:5.0,
+  AV:7.5,ADM:3.2,LSEG:1.4,STJ:5.5,NXT:2.5,GRG:2.0,BRBY:3.5,
+  BLND:5.8,PNN:5.0,DRX:5.5,CNA:4.2,FRES:2.2,INF:2.3,PSON:2.1,
+  PSN:7.2,BDEV:5.8,TW:6.5,MNDI:3.8,SMIN:2.0,WEIR:1.8,RTO:1.5,
 };
 const PE_RATIOS = {
   AZN:42,SHEL:12,HSBA:11,ULVR:19,BP:10,RIO:8,GLEN:7,DGE:22,REL:28,LGEN:9,
@@ -479,6 +544,9 @@ const PE_RATIOS = {
   BT:11,TSCO:14,SBRY:13,MKS:16,JD:18,EXPN:25,SGE:28,AUTO:22,RMV:24,IAG:6,
   EZJ:12,IHG:25,WTB:18,FLTR:45,ITV:8,OCDO:0,SMT:15,HL:20,IMB:9,SSE:14,
   SVT:20,UU:18,CRDA:28,HLMA:35,AAL:7,LAND:14,SGRO:18,STAN:9,ABF:16,CPG:22,
+  AV:12,ADM:14,LSEG:32,STJ:16,QLT:13,NXT:14,BME:13,DNLM:15,CURY:9,GRG:22,
+  BRBY:18,HIK:14,BLND:12,PNN:18,DRX:9,HBR:7,FRES:20,FUTR:12,INF:18,PSON:18,
+  ENT:14,PSN:12,BDEV:11,TW:10,MNDI:12,CNA:10,SMIN:22,WEIR:20,RTO:20,DPLM:30,
 };
 const STOCK_BETA = {
   AZN:0.8,SHEL:1.0,HSBA:1.1,ULVR:0.65,BP:1.05,RIO:1.3,GLEN:1.4,DGE:0.7,REL:0.75,LGEN:1.2,
@@ -486,6 +554,9 @@ const STOCK_BETA = {
   BT:0.9,TSCO:0.8,SBRY:0.75,MKS:1.1,JD:1.4,EXPN:1.0,SGE:1.05,AUTO:1.1,RMV:1.15,IAG:1.7,
   EZJ:1.6,IHG:1.2,WTB:1.0,FLTR:1.5,ITV:1.2,OCDO:2.2,SMT:1.3,HL:1.0,IMB:0.6,SSE:0.5,
   SVT:0.4,UU:0.45,CRDA:0.9,HLMA:0.85,AAL:1.35,LAND:0.8,SGRO:0.85,STAN:1.2,ABF:0.75,CPG:0.9,
+  AV:1.2,ADM:1.0,LSEG:0.9,STJ:1.3,QLT:1.1,NXT:0.9,BME:1.1,DNLM:1.0,CURY:1.4,GRG:0.9,
+  BRBY:1.1,HIK:0.8,BLND:0.9,PNN:0.6,DRX:1.1,HBR:1.4,FRES:1.3,FUTR:1.5,INF:0.9,PSON:0.7,
+  ENT:1.4,PSN:1.2,BDEV:1.2,TW:1.2,MNDI:0.9,CNA:0.8,SMIN:0.9,WEIR:1.1,RTO:0.9,DPLM:0.8,
 };
 const DEFS = [
   {t:'AZN', n:'AstraZeneca',               s:'Healthcare', p:11234,v:.008},
@@ -538,6 +609,37 @@ const DEFS = [
   {t:'STAN',n:'Standard Chartered',        s:'Finance',    p:678,  v:.012},
   {t:'ABF', n:'Associated British Foods',  s:'Food & Bev', p:1987, v:.008},
   {t:'CPG', n:'Compass Group',             s:'Food & Bev', p:2187, v:.008},
+  /* ── additional stocks ── */
+  {t:'AV',  n:'Aviva',                     s:'Finance',    p:478,  v:.010},
+  {t:'ADM', n:'Admiral Group',             s:'Finance',    p:2456, v:.011},
+  {t:'LSEG',n:'London Stock Exch. Group',  s:'Finance',    p:9876, v:.008},
+  {t:'STJ', n:"St James's Place",          s:'Finance',    p:678,  v:.012},
+  {t:'QLT', n:'Quilter',                   s:'Finance',    p:123,  v:.013},
+  {t:'NXT', n:'Next',                      s:'Retail',     p:8234, v:.009},
+  {t:'BME', n:'B&M European Value Retail', s:'Retail',     p:456,  v:.012},
+  {t:'DNLM',n:'Dunelm Group',              s:'Retail',     p:1123, v:.011},
+  {t:'CURY',n:'Currys',                    s:'Retail',     p:89,   v:.016},
+  {t:'GRG', n:'Greggs',                    s:'Food & Bev', p:2412, v:.010},
+  {t:'BRBY',n:'Burberry Group',            s:'Consumer',   p:987,  v:.013},
+  {t:'HIK', n:'Hikma Pharmaceuticals',     s:'Healthcare', p:1876, v:.010},
+  {t:'BLND',n:'British Land',              s:'Property',   p:378,  v:.011},
+  {t:'PNN', n:'Pennon Group',              s:'Utilities',  p:567,  v:.009},
+  {t:'DRX', n:'Drax Group',               s:'Energy',     p:456,  v:.013},
+  {t:'HBR', n:'Harbour Energy',            s:'Energy',     p:234,  v:.015},
+  {t:'FRES',n:'Fresnillo',                 s:'Mining',     p:567,  v:.016},
+  {t:'FUTR',n:'Future PLC',                s:'Media',      p:678,  v:.015},
+  {t:'INF', n:'Informa',                   s:'Media',      p:678,  v:.010},
+  {t:'PSON',n:'Pearson',                   s:'Media',      p:1123, v:.009},
+  {t:'ENT', n:'Entain',                    s:'Gaming',     p:678,  v:.015},
+  {t:'PSN', n:'Persimmon',                 s:'Property',   p:1234, v:.013},
+  {t:'BDEV',n:'Barratt Developments',      s:'Property',   p:456,  v:.013},
+  {t:'TW',  n:'Taylor Wimpey',             s:'Property',   p:145,  v:.014},
+  {t:'MNDI',n:'Mondi',                     s:'Chemicals',  p:1456, v:.010},
+  {t:'CNA', n:'Centrica',                  s:'Utilities',  p:145,  v:.012},
+  {t:'SMIN',n:'Smiths Group',              s:'Technology', p:1823, v:.009},
+  {t:'WEIR',n:'Weir Group',                s:'Engineering',p:2345, v:.011},
+  {t:'RTO', n:'Rentokil Initial',          s:'Services',   p:345,  v:.010},
+  {t:'DPLM',n:'Diploma',                   s:'Technology', p:3867, v:.009},
 ];
 const IPO_POOL = [
   {t:'NXRT',n:'Nexart Technologies',  s:'Technology', p:350,  v:.020},
