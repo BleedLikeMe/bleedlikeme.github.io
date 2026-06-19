@@ -364,6 +364,134 @@ input[type=checkbox]{accent-color:var(--bl);}
   .perf-grid{grid-template-columns:repeat(2,1fr);}
   #srch{width:100%;}
 }
+/* ── FX / METALS VIEW ── */
+#fxview{display:none;flex:1;overflow-y:auto;padding:14px;}
+#fxview.on{display:block;}
+.fx-section{font-size:10px;font-weight:bold;color:var(--gd);text-transform:uppercase;
+  letter-spacing:1px;padding:8px 0 5px;border-bottom:1px solid var(--bd);margin-bottom:4px;}
+.fx-tbl{width:100%;border-collapse:collapse;margin-bottom:14px;}
+.fx-tbl thead th{background:var(--bg2);padding:4px 8px;text-align:left;font-size:10px;
+  color:var(--dm);text-transform:uppercase;letter-spacing:1px;position:sticky;top:0;
+  border-bottom:1px solid var(--bd);white-space:nowrap;}
+.fx-tbl tbody tr{border-bottom:1px solid var(--bd);cursor:pointer;}
+.fx-tbl tbody tr:hover{background:var(--bg3);}
+.fx-tbl tbody tr.fxsel{background:#1a2035;}
+.fx-tbl tbody td{padding:5px 8px;font-size:12px;white-space:nowrap;}
+.fx-tc{font-weight:bold;color:var(--bl);font-size:13px;min-width:42px;}
+.fx-flag{font-size:15px;margin-right:4px;}
+.fx-held-badge{font-size:9px;background:var(--bg3);border:1px solid var(--gn);
+  color:var(--gn);padding:1px 5px;border-radius:3px;}
+.fx-pos-wrap{margin-top:14px;}
+.fx-pos-row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 10px;background:var(--bg3);border:1px solid var(--bd);border-radius:4px;
+  margin-bottom:5px;font-size:11px;}
+.fx-pos-l{display:flex;flex-direction:column;gap:2px;}
+.fx-pos-ticker{font-weight:bold;color:var(--bl);}
+.fx-pos-detail{color:var(--dm);}
+.fx-pos-r{text-align:right;}
+/* ── FX TRADE MODAL ── */
+#fxmov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:110;
+  align-items:center;justify-content:center;}
+#fxmov.vis{display:flex;}
+#fxmod{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;width:400px;
+  max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.9);}
+.fmh{padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;
+  justify-content:space-between;align-items:flex-start;}
+.fm-sym{font-size:22px;font-weight:bold;color:var(--bl);}
+.fm-nm{font-size:11px;color:var(--dm);margin-top:2px;}
+.fm-rp{text-align:right;}
+.fm-rate{font-size:18px;font-weight:bold;}
+.fm-tabs{display:flex;gap:8px;padding:10px 14px 0;}
+.fm-tab{flex:1;padding:7px;font-size:12px;font-family:inherit;border-radius:4px;
+  cursor:pointer;border:1px solid var(--bd);background:var(--bg3);color:var(--dm);}
+.fm-tab.on.buy{background:#1a2a1a;border-color:var(--gn);color:var(--gn);}
+.fm-tab.on.sell{background:#2a1a1a;border-color:var(--rd);color:var(--rd);}
+.fm-body{padding:14px;}
+.fm-stats-g{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:11px;}
+.fm-st-l{color:var(--dm);}
+.fm-st-v{color:var(--tx);font-weight:bold;text-align:right;}
+.fm-pos-box{background:var(--bg3);border:1px solid var(--bl);border-radius:4px;
+  padding:8px;margin-bottom:10px;font-size:11px;}
+.fm-cost-line{margin:6px 0;font-size:11px;color:var(--dm);}
+.fm-pnl-line{margin:6px 0;font-size:11px;}
+@media(max-width:768px){#fxmod{max-height:100vh;border-radius:0;}}
+/* ── HELP MODAL ── */
+#help{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;
+  align-items:center;justify-content:center;}
+#help.vis{display:flex;}
+#help-box{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;
+  width:840px;max-width:97vw;max-height:92vh;display:flex;flex-direction:column;
+  box-shadow:0 24px 80px rgba(0,0,0,.95);}
+#help-hdr{padding:12px 18px;border-bottom:1px solid var(--bd);display:flex;
+  justify-content:space-between;align-items:center;flex-shrink:0;}
+#help-hdr-title{font-size:15px;font-weight:bold;color:var(--gd);letter-spacing:1px;}
+#help-tabs{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0;overflow-x:auto;
+  background:var(--bg3);}
+.htab{padding:9px 15px;font-size:10px;text-transform:uppercase;letter-spacing:.6px;
+  cursor:pointer;color:var(--dm);border-bottom:2px solid transparent;white-space:nowrap;
+  flex-shrink:0;}
+.htab.on{color:var(--bl);border-bottom-color:var(--bl);background:var(--bg2);}
+.htab:hover:not(.on){color:var(--tx);}
+#help-body{flex:1;overflow-y:auto;padding:20px 24px;}
+.hpanel{display:none;}.hpanel.on{display:block;}
+.h1{font-size:17px;font-weight:bold;color:var(--gd);margin-bottom:14px;letter-spacing:.5px;}
+.h2{font-size:11px;font-weight:bold;color:var(--bl);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;padding-bottom:4px;border-bottom:1px solid var(--bd);}
+.hp{font-size:12px;color:var(--tx);line-height:1.75;margin-bottom:8px;}
+.htbl{width:100%;border-collapse:collapse;font-size:11px;margin:6px 0 14px;}
+.htbl th{background:var(--bg3);padding:5px 8px;text-align:left;color:var(--dm);border-bottom:1px solid var(--bd);}
+.htbl td{padding:5px 8px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:top;}
+.htbl td:first-child{color:var(--bl);font-weight:bold;white-space:nowrap;width:120px;}
+.htbl tr:last-child td{border-bottom:none;}
+.tip-box{background:var(--bg3);border-left:3px solid var(--gd);padding:8px 12px;
+  border-radius:0 4px 4px 0;margin:10px 0;font-size:11px;color:var(--dm);line-height:1.6;}
+.tip-box b{color:var(--gd);}
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+.ach-card{background:var(--bg3);border:1px solid var(--bd);border-radius:5px;padding:10px;}
+.ach-ci{font-size:18px;margin-bottom:4px;}
+.ach-cn{color:var(--tx);font-weight:bold;font-size:11px;}
+.ach-cd{color:var(--dm);font-size:10px;margin-top:3px;line-height:1.4;}
+/* ── NEWS TICKER ── */
+#news-bar{background:var(--bg3);border-top:1px solid var(--bd);padding:4px 12px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;overflow:hidden;min-height:27px;}
+#news-label{font-size:9px;color:var(--gd);font-weight:bold;letter-spacing:1px;
+  text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+#news-text{font-size:11px;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  transition:opacity .45s;}
+.news-fade{opacity:0;}
+/* ── PIE CHART ── */
+.pie-wrap{display:flex;gap:20px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;}
+.pie-legend{display:flex;flex-direction:column;gap:5px;font-size:10px;}
+.pl-row{display:flex;align-items:center;gap:6px;}
+.pl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.pl-nm{color:var(--dm);}
+.pl-pct{color:var(--tx);font-weight:bold;margin-left:auto;padding-left:10px;}
+/* ── SCENARIO MODAL ── */
+#scen-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:550;
+  align-items:center;justify-content:center;}
+#scen-ov.vis{display:flex;}
+#scen-box{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;
+  width:620px;max-width:96vw;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.9);}
+.scen-title{font-size:15px;font-weight:bold;color:var(--gd);margin-bottom:4px;}
+.scen-sub{font-size:11px;color:var(--dm);margin-bottom:14px;}
+.scen-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.scen-card{background:var(--bg3);border:2px solid var(--bd);border-radius:6px;
+  padding:12px 10px;cursor:pointer;transition:border-color .15s;text-align:center;}
+.scen-card:hover{border-color:var(--dm);}
+.scen-card.on{border-color:var(--bl);background:#1a2035;}
+.scen-icon{font-size:22px;margin-bottom:6px;}
+.scen-name{font-weight:bold;color:var(--tx);font-size:11px;}
+.scen-desc{color:var(--dm);font-size:9px;margin-top:4px;line-height:1.4;}
+.scen-effect{color:var(--gn);font-size:9px;margin-top:3px;}
+@media(max-width:768px){
+  #help-box{max-height:100vh;border-radius:0;}
+  .ach-grid{grid-template-columns:repeat(2,1fr);}
+  .scen-grid{grid-template-columns:repeat(2,1fr);}
+  #help-body{padding:14px 16px;}
+}
+@media(max-width:480px){
+  .ach-grid{grid-template-columns:1fr;}
+  .scen-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
@@ -413,10 +541,14 @@ input[type=checkbox]{accent-color:var(--bl);}
     <button class="spdbtn" data-s="10" onclick="setSpeed(10)">10×</button>
   </div>
   <div class="cl">
+    <button class="vbtn on" id="vmkt" onclick="setView('market')">📋 Market</button>
     <button class="vbtn" id="vmap" onclick="setView('map')">🌡 Heatmap</button>
     <button class="vbtn" id="vperf" onclick="setView('perf')">📈 Perf</button>
     <button class="vbtn" id="vscr" onclick="setView('scr')">🔍 Screener</button>
-    <span style="font-size:10px;color:var(--dm)">£9.95/trade · ? help</span>
+    <button class="vbtn" id="vfx" onclick="setView('fx')">💱 FX &amp; Metals</button>
+    <button class="vbtn" id="vscen" onclick="openScenario()">🎬 Scenario</button>
+    <button class="vbtn" onclick="exportTrades()">⬇ CSV</button>
+    <button class="vbtn" onclick="openHelp('overview')">❓ Help</button>
   </div>
 </div>
 <div id="main">
@@ -433,6 +565,10 @@ input[type=checkbox]{accent-color:var(--bl);}
   <div id="heatmap"></div>
   <div id="perfview">
     <canvas id="perf-chart" height="130" style="width:100%;display:block;margin-bottom:10px;"></canvas>
+    <div class="pie-wrap" id="pie-wrap">
+      <canvas id="pie-canvas" width="160" height="160"></canvas>
+      <div class="pie-legend" id="pie-legend"></div>
+    </div>
     <div class="perf-grid" id="perf-stats"></div>
     <table class="perf-tbl" id="perf-tbl">
       <thead><tr><th>Ticker</th><th>Name</th><th>Qty</th><th>Avg Cost</th><th>Value</th><th>P&L</th><th>%</th><th>Beta</th></tr></thead>
@@ -459,6 +595,26 @@ input[type=checkbox]{accent-color:var(--bl);}
       <thead><tr><th>Ticker</th><th>Name</th><th>Sector</th><th>Price</th><th>Change%</th><th>P/E</th><th>Div%</th><th>Vol</th></tr></thead>
       <tbody id="scr-tbl-b"></tbody>
     </table>
+  </div>
+  <div id="fxview">
+    <div class="fx-section">💱 World Currencies — Rate vs GBP</div>
+    <table class="fx-tbl" id="fx-ccy-tbl">
+      <thead><tr>
+        <th>Currency</th><th>Pair</th><th>Rate (GBP)</th><th>Change</th><th>%</th>
+        <th>Day High</th><th>Day Low</th><th>Trend</th><th>Held</th>
+      </tr></thead>
+      <tbody id="fx-ccy-body"></tbody>
+    </table>
+    <div class="fx-section">🏅 Precious Metals — GBP per Troy Oz</div>
+    <table class="fx-tbl" id="fx-metal-tbl">
+      <thead><tr>
+        <th>Metal</th><th>Symbol</th><th>Price (£/oz)</th><th>Change</th><th>%</th>
+        <th>Day High</th><th>Day Low</th><th>Trend</th><th>Held</th>
+      </tr></thead>
+      <tbody id="fx-metal-body"></tbody>
+    </table>
+    <div class="fx-section" id="fx-pos-hdr" style="display:none">📂 My FX &amp; Metal Positions</div>
+    <div id="fx-pos-list" class="fx-pos-wrap"></div>
   </div>
   <button id="side-toggle" onclick="document.getElementById('side').classList.toggle('mob-open')">☰ Portfolio / Orders</button>
   <div id="side">
@@ -504,18 +660,221 @@ input[type=checkbox]{accent-color:var(--bl);}
   </div>
 </div>
 <div id="mov"><div id="mod"></div></div>
-<div id="shortcuts">
-  <div id="shortcuts-box">
-    <div class="sk-title">⌨ Keyboard Shortcuts</div>
-    <div class="sk-row"><span class="sk-key">B/S/L</span><span>Buy/Sell/Limit (modal open)</span></div>
-    <div class="sk-row"><span class="sk-key">W</span><span>Toggle watchlist (stock selected)</span></div>
-    <div class="sk-row"><span class="sk-key">H/P</span><span>Heatmap / Performance view</span></div>
-    <div class="sk-row"><span class="sk-key">Space</span><span>Pause / Resume market</span></div>
-    <div class="sk-row"><span class="sk-key">1 2 3 4</span><span>Set speed 1× / 2× / 5× / 10×</span></div>
-    <div class="sk-row"><span class="sk-key">/</span><span>Focus search box</span></div>
-    <div class="sk-row"><span class="sk-key">Esc</span><span>Close modal / overlay</span></div>
-    <div class="sk-row"><span class="sk-key">?</span><span>Show this help</span></div>
-    <br><button class="btn bx" onclick="el('shortcuts').classList.remove('vis')">Close</button>
+<div id="help">
+  <div id="help-box">
+    <div id="help-hdr">
+      <div id="help-hdr-title">🏛 LSE SIMULATOR — HELP &amp; GUIDE</div>
+      <button class="btn bx" onclick="closeHelp()">✕ Close</button>
+    </div>
+    <div id="help-tabs">
+      <div class="htab on" data-hp="overview">Overview</div>
+      <div class="htab" data-hp="trading">Trading</div>
+      <div class="htab" data-hp="orders">Orders</div>
+      <div class="htab" data-hp="charts">Charts</div>
+      <div class="htab" data-hp="metrics">Metrics</div>
+      <div class="htab" data-hp="scenarios">Scenarios</div>
+      <div class="htab" data-hp="shortcuts">Shortcuts</div>
+      <div class="htab" data-hp="achievements">Achievements</div>
+    </div>
+    <div id="help-body">
+
+      <!-- OVERVIEW -->
+      <div class="hpanel on" id="hp-overview">
+        <div class="h1">Welcome to the LSE Simulator</div>
+        <p class="hp">You start with <b style="color:var(--gd)">£100,000</b> and trade on a simulated London Stock Exchange with <b>80 real UK-listed stocks</b> across all major sectors. Your goal is to grow your portfolio through smart trading, risk management, and reading the market.</p>
+        <div class="h2">How a Day Works</div>
+        <table class="htbl">
+          <tr><td>Pre-Market</td><td>The clock begins at 08:00. Prices are set from the previous close. Place orders in advance.</td></tr>
+          <tr><td>Market Open</td><td>08:00–16:30. Prices tick continuously. News events, earnings, circuit breakers, and economic data fire throughout the day.</td></tr>
+          <tr><td>Market Close</td><td>16:30. Day-end summary shows your P&amp;L, challenge result, achievements, and leaderboard position.</td></tr>
+          <tr><td>New Day</td><td>Click "Next Day" to continue. Prices carry over; dividends are paid; new events are generated.</td></tr>
+        </table>
+        <div class="h2">Speed Controls</div>
+        <p class="hp">Use the <b style="color:var(--gn)">1× 2× 5× 10×</b> buttons to accelerate game time. At 10×, a full trading day takes about 5 real minutes. Press <b style="color:var(--bl)">Space</b> or ⏸ to pause.</p>
+        <div class="tip-box"><b>Tip:</b> Run at 2× or 5× normally, then pause when you want to study a chart or place a complex order. Use 10× to fast-forward quiet periods.</div>
+        <div class="h2">Scoring &amp; Leaderboard</div>
+        <p class="hp">Your score is your <b>total portfolio value</b> at the end of each day. The top 10 scores are saved locally. Complete daily challenges for bonus cash rewards.</p>
+        <div class="h2">Saving &amp; Loading</div>
+        <p class="hp">The game auto-saves to <b>localStorage</b> at the end of each day and when you close the modal. It loads automatically on page refresh. Use the <b>↺</b> button to start a completely fresh game.</p>
+      </div>
+
+      <!-- TRADING -->
+      <div class="hpanel" id="hp-trading">
+        <div class="h1">Buying &amp; Selling Stocks</div>
+        <div class="h2">Opening the Trade Modal</div>
+        <p class="hp">Click any row in the market table to open the detail modal for that stock. You'll see the live price chart, key statistics, and trade controls.</p>
+        <div class="h2">Buying (Going Long)</div>
+        <p class="hp">Enter a quantity and click <b style="color:var(--gn)">BUY</b>. The cost is <code>(price in pence ÷ 100) × quantity + £9.95 commission</code>. Prices are quoted in pence (GBX) — a 1,234p stock costs £12.34 per share.</p>
+        <div class="tip-box"><b>Tip:</b> Use the "Max" link to automatically fill in the maximum quantity you can afford.</div>
+        <div class="h2">Selling</div>
+        <p class="hp">Switch to the <b style="color:var(--rd)">SELL</b> tab. You can sell any portion of your holding. Profit/loss is shown before you confirm. Commission of £9.95 applies.</p>
+        <div class="h2">Short Selling</div>
+        <p class="hp">The <b style="color:var(--or)">SHORT</b> tab lets you borrow shares and sell them immediately, profiting if the price falls. To close a short, use the <b>COVER</b> button.</p>
+        <table class="htbl">
+          <tr><td>Short Entry</td><td>You receive cash for the shares sold short. A borrow cost accrues daily.</td></tr>
+          <tr><td>Profit</td><td>If the price falls, covering costs less than your original sale — the difference is profit.</td></tr>
+          <tr><td>Risk</td><td>If the price rises, losses are theoretically unlimited. Use stop-loss orders to manage risk.</td></tr>
+        </table>
+        <div class="h2">Commission</div>
+        <p class="hp">Every trade (buy, sell, short, cover) costs a flat <b>£9.95 commission</b>. This is deducted from your cash. High-frequency trading on cheap stocks will erode returns quickly.</p>
+        <div class="h2">IPOs &amp; Rights Issues</div>
+        <p class="hp"><b style="color:var(--pu)">IPOs</b> appear as pop-up notifications. Subscribe for an allocation at the listing price — you may receive fewer shares than requested. <b>Rights Issues</b> appear as special limit orders — eligible shareholders are offered new shares at a discount to market price.</p>
+      </div>
+
+      <!-- ORDERS -->
+      <div class="hpanel" id="hp-orders">
+        <div class="h1">Order Types</div>
+        <p class="hp">All order types are set from the <b>Limit/Orders</b> tab in the trade modal. Active orders are shown in the sidebar Orders tab. They execute automatically when price conditions are met.</p>
+        <table class="htbl">
+          <tr><th>Order Type</th><th>Description</th><th>Use case</th></tr>
+          <tr><td>Limit Buy</td><td>Buy when price falls to your target</td><td>Enter a position at a better price than current</td></tr>
+          <tr><td>Limit Sell</td><td>Sell when price rises to your target</td><td>Lock in profit at a specific target</td></tr>
+          <tr><td>Stop-Loss</td><td>Sell if price falls below a level</td><td>Automatically limit downside risk</td></tr>
+          <tr><td>Take-Profit</td><td>Sell when price reaches a target (above current)</td><td>Secure gains without watching the screen</td></tr>
+          <tr><td>Trailing Stop</td><td>Sell when price drops X% from its highest point since order placed</td><td>Ride upward trends while protecting gains</td></tr>
+        </table>
+        <div class="h2">Trailing Stop Example</div>
+        <p class="hp">You set a 5% trailing stop on a stock at 500p. The price rises to 600p — your stop automatically moves to 570p (600 × 0.95). If the price then drops to 570p, the order fills. If it rises further to 700p, the stop moves to 665p.</p>
+        <div class="h2">Price Alerts</div>
+        <p class="hp">Set alerts from the Alerts tab. When the price crosses your threshold, a banner notification fires. Unlike orders, alerts don't automatically trade — they just notify you.</p>
+        <div class="tip-box"><b>Tip:</b> Combine a trailing stop with a take-profit for a "let winners run but protect gains" strategy. Set take-profit at your stretch target and trailing stop at 5–8% to exit gracefully if momentum fades.</div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="hpanel" id="hp-charts">
+        <div class="h1">Reading the Charts</div>
+        <div class="h2">Candlestick Chart</div>
+        <p class="hp">Each candle represents one price period. <span style="color:var(--gn)">Green candles</span> mean the price rose that period (close above open). <span style="color:var(--rd)">Red candles</span> mean the price fell.</p>
+        <p class="hp">The body spans the open→close range. The wicks (thin lines) show the high and low. Long wicks indicate indecision or reversal pressure.</p>
+        <div class="h2">Volume Bars</div>
+        <p class="hp">Volume bars at the bottom of the chart show how many shares traded each period. <b>High volume on a big price move</b> confirms the move. High volume with little price change suggests buyers and sellers are balanced.</p>
+        <div class="h2">Moving Averages (MA20, MA50)</div>
+        <table class="htbl">
+          <tr><td>MA20 (blue)</td><td>Average of the last 20 periods. Tracks short-term trend.</td></tr>
+          <tr><td>MA50 (orange)</td><td>Average of the last 50 periods. Tracks medium-term trend.</td></tr>
+          <tr><td>Golden Cross</td><td>MA20 crosses above MA50 — bullish signal.</td></tr>
+          <tr><td>Death Cross</td><td>MA20 crosses below MA50 — bearish signal.</td></tr>
+        </table>
+        <div class="h2">Bollinger Bands</div>
+        <p class="hp">Three lines: the MA20 in the middle, with upper and lower bands at 2 standard deviations above/below. When price touches the <span style="color:var(--cy)">upper band</span>, it may be overbought. When it touches the <span style="color:var(--cy)">lower band</span>, it may be oversold. <b>Band squeeze</b> (bands narrowing) often precedes a big move.</p>
+        <div class="h2">RSI (Relative Strength Index)</div>
+        <p class="hp">Oscillates 0–100. Above <b style="color:var(--rd)">70</b> = overbought (consider selling). Below <b style="color:var(--gn)">30</b> = oversold (consider buying). Divergence between RSI and price can signal reversals.</p>
+        <div class="h2">MACD</div>
+        <p class="hp">Shows the difference between the 12-period and 26-period EMAs (the MACD line) vs a 9-period signal line. The <b>histogram</b> shows the gap between them. When MACD crosses above the signal line, it's bullish. Histogram turning green after being red = early bullish signal.</p>
+        <div class="tip-box"><b>Tip:</b> Don't use indicators in isolation. Look for confluence: RSI oversold + price at lower Bollinger Band + positive volume = stronger buy signal than any single indicator alone.</div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="hpanel" id="hp-metrics">
+        <div class="h1">Understanding the Numbers</div>
+        <div class="h2">Individual Stock Metrics</div>
+        <table class="htbl">
+          <tr><td>P/E Ratio</td><td>Price ÷ annual earnings per share. A P/E of 15 means you pay £15 for every £1 of annual profit. Lower P/E = cheaper relative to earnings, but may signal problems.</td></tr>
+          <tr><td>Dividend Yield</td><td>Annual dividend ÷ share price × 100. A 5% yield on a 200p stock means 10p paid per share per year. Dividends are paid daily in this simulator.</td></tr>
+          <tr><td>Beta</td><td>How sensitive a stock is to overall market moves. Beta 1.5 means a 1% market rise tends to produce a 1.5% rise. Beta 0.5 = defensive stock, half the market's swings.</td></tr>
+          <tr><td>52W High/Low</td><td>Highest and lowest prices in the past 52 weeks. Breaking above 52W high = strong bullish momentum. Holding at 52W low may be a value entry.</td></tr>
+          <tr><td>EPS / Earnings</td><td>Stocks have quarterly earnings events. A beat sends the price sharply up; a miss sends it down. Watch for earnings dates flagged on chart.</td></tr>
+        </table>
+        <div class="h2">Portfolio Metrics</div>
+        <table class="htbl">
+          <tr><td>Portfolio Beta</td><td>Weighted average beta of all holdings. Shows overall market exposure. &gt;1.2 = aggressive; &lt;0.8 = defensive.</td></tr>
+          <tr><td>Sharpe Ratio</td><td>Return per unit of risk. &gt;1 is good; &gt;2 is excellent; &lt;0 means you'd have done better in cash. Calculated from daily P&amp;L history.</td></tr>
+          <tr><td>Realised P&amp;L</td><td>Profit or loss locked in by completed trades. Unrealised P&amp;L is the current paper gain/loss on open positions.</td></tr>
+          <tr><td>Borrow Cost</td><td>Daily charge for holding short positions. Erodes profits on shorts held overnight — cover them if the trade isn't working.</td></tr>
+        </table>
+        <div class="tip-box"><b>Portfolio construction tip:</b> Mix high-beta stocks (tech, aerospace) for growth with low-beta defensives (utilities, healthcare) for stability. A beta-neutral portfolio performs regardless of market direction.</div>
+      </div>
+
+      <!-- SCENARIOS -->
+      <div class="hpanel" id="hp-scenarios">
+        <div class="h1">Market Scenarios</div>
+        <p class="hp">Scenarios apply a persistent bias to market sentiment and sector performance. You can switch scenarios at any time — the effect builds gradually over subsequent ticks.</p>
+        <table class="htbl">
+          <tr><th>Scenario</th><th>Effect</th><th>Strategy</th></tr>
+          <tr><td>📊 Normal Market</td><td>Balanced drift, standard volatility</td><td>Any balanced approach works</td></tr>
+          <tr><td>🚀 Bull Run</td><td>Positive sentiment, 0.75× volatility. Tech and consumer stocks surge.</td><td>Growth stocks, momentum strategies</td></tr>
+          <tr><td>📉 Market Crash</td><td>Strong negative bias, 2× volatility. Finance and property fall hardest.</td><td>Short positions, defensive sectors (utilities, defence)</td></tr>
+          <tr><td>⚡ Volatility Storm</td><td>Neutral drift but 2.5× volatility. Wild swings in both directions.</td><td>Options-like strategies: buy dips, take-profit quickly</td></tr>
+          <tr><td>🛢 Stagflation</td><td>Mild negative bias. Commodities (mining, energy) win; tech suffers.</td><td>Rotate into mining, energy, avoid growth stocks</td></tr>
+          <tr><td>🏦 Rate Shock</td><td>BoE rate hike. Banks surge; property and utilities plummet.</td><td>Long finance, short REITS and utilities</td></tr>
+        </table>
+        <div class="tip-box"><b>Tip:</b> Open the 🎬 Scenario selector from the control bar and click a card to apply it immediately. You can change scenarios mid-day to simulate news shocks.</div>
+      </div>
+
+      <!-- SHORTCUTS -->
+      <div class="hpanel" id="hp-shortcuts">
+        <div class="h1">Keyboard Shortcuts</div>
+        <table class="htbl">
+          <tr><th>Key</th><th>Action</th></tr>
+          <tr><td>B</td><td>Switch to Buy tab (when modal is open)</td></tr>
+          <tr><td>S</td><td>Switch to Sell tab (when modal is open)</td></tr>
+          <tr><td>L</td><td>Switch to Limit/Orders tab (when modal is open)</td></tr>
+          <tr><td>W</td><td>Toggle watchlist for selected stock</td></tr>
+          <tr><td>H</td><td>Toggle Heatmap view</td></tr>
+          <tr><td>P</td><td>Toggle Performance view</td></tr>
+          <tr><td>Space</td><td>Pause / Resume market</td></tr>
+          <tr><td>1 / 2 / 3 / 4</td><td>Set speed to 1× / 2× / 5× / 10×</td></tr>
+          <tr><td>/</td><td>Focus the search box</td></tr>
+          <tr><td>?</td><td>Open this help screen</td></tr>
+          <tr><td>Esc</td><td>Close any open modal or overlay</td></tr>
+        </table>
+        <div class="h2">Tips for Efficiency</div>
+        <p class="hp">Click a stock row to open it, then press B or S to jump straight to the trade tab. Use the search box (/) to quickly find a stock by name or ticker. Press Space to pause when a news event fires and you want to read it carefully before deciding to trade.</p>
+      </div>
+
+      <!-- ACHIEVEMENTS -->
+      <div class="hpanel" id="hp-achievements">
+        <div class="h1">Achievements</div>
+        <p class="hp" style="color:var(--dm)">Unlock achievements by meeting specific milestones. Unlocked achievements are highlighted on the right-side Achievements tab.</p>
+        <div class="ach-grid" id="help-ach-grid"></div>
+      </div>
+
+    </div><!-- #help-body -->
+  </div><!-- #help-box -->
+</div><!-- #help -->
+<!-- SCENARIO OVERLAY -->
+<div id="scen-ov">
+  <div id="scen-box">
+    <div class="scen-title">🎬 Market Scenario</div>
+    <div class="scen-sub">Select a scenario to apply a market-wide bias. Takes effect over the next few minutes.</div>
+    <div class="scen-grid" id="scen-cards"></div>
+    <button class="btn bx" onclick="el('scen-ov').classList.remove('vis')">Close</button>
+  </div>
+</div>
+<!-- FX TRADE MODAL -->
+<div id="fxmov">
+  <div id="fxmod">
+    <div class="fmh">
+      <div>
+        <div class="fm-sym" id="fm-sym">XAU</div>
+        <div class="fm-nm" id="fm-nm">Gold / GBP</div>
+      </div>
+      <div class="fm-rp">
+        <div class="fm-rate" id="fm-rate">1,823.40</div>
+        <div class="nt" id="fm-chg" style="font-size:11px">+0.00 (0.00%)</div>
+      </div>
+      <button class="btn bx" onclick="closeFxModal()" style="align-self:flex-start">✕</button>
+    </div>
+    <canvas id="fm-chart" height="200" style="width:100%;display:block;background:var(--bg)"></canvas>
+    <div class="fm-tabs">
+      <button class="fm-tab on buy" id="fm-t-buy" onclick="setFxSide('buy')">Buy</button>
+      <button class="fm-tab sell" id="fm-t-sell" onclick="setFxSide('sell')">Sell</button>
+    </div>
+    <div class="fm-body">
+      <div class="fm-stats-g" id="fm-stats"></div>
+      <div class="fm-pos-box" id="fm-pos" style="display:none"></div>
+      <div>
+        <label style="font-size:11px;color:var(--dm)">Quantity <span id="fm-unit">units</span>
+          <span class="mxb" onclick="setFxMaxQty()">Max</span>
+        </label>
+        <input type="number" class="scr-inp" id="fm-qty" min="1" style="width:100%;margin-top:4px"
+               oninput="updateFxCost()">
+      </div>
+      <div class="fm-cost-line" id="fm-cost">Cost: —</div>
+      <div class="fm-pnl-line" id="fm-pnl"></div>
+      <button class="btn bu" id="fm-exec" onclick="execFxTrade()" style="width:100%;margin-top:8px">Buy</button>
+      <div class="emsg" id="fm-err"></div>
+    </div>
   </div>
 </div>
 <div id="tst"></div>
@@ -523,6 +882,115 @@ input[type=checkbox]{accent-color:var(--bl);}
 <script>
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const COMM = 9.95;
+const SCENARIOS = {
+  normal:     {name:'Normal Market',    icon:'📊',mktBias:0,    volMult:1.0, sectorBias:{},
+               desc:'Standard LSE conditions. Balanced risk and reward.',
+               effect:'No bias applied'},
+  bull:       {name:'Bull Run',         icon:'🚀',mktBias:0.12, volMult:0.75,sectorBias:{Technology:0.45,Consumer:0.3,Gaming:0.35,Retail:0.2},
+               desc:'Positive sentiment lifts all boats. Tech and consumer stocks surge.',
+               effect:'↑ Tech, Consumer, Gaming · ↓ Volatility'},
+  crash:      {name:'Market Crash',     icon:'📉',mktBias:-0.25,volMult:2.2, sectorBias:{Finance:-0.4,Property:-0.4,Utilities:0.15,Defence:0.1,Mining:-0.2},
+               desc:'Sharp sell-off. Fear rules. Defensive sectors outperform.',
+               effect:'↓ Finance, Property, Mining · ↑ Utilities, Defence'},
+  volatile:   {name:'Volatility Storm', icon:'⚡',mktBias:0,    volMult:2.8, sectorBias:{},
+               desc:'Wild swings in all directions. High risk, high reward.',
+               effect:'All sectors: 2.8× normal volatility'},
+  stagflation:{name:'Stagflation',      icon:'🛢',mktBias:-0.08,volMult:1.3, sectorBias:{Mining:0.25,Energy:0.22,'Food & Bev':0.1,Technology:-0.25,Consumer:-0.2,Retail:-0.15},
+               desc:'High inflation, slow growth. Commodities win; growth stocks suffer.',
+               effect:'↑ Mining, Energy · ↓ Technology, Consumer'},
+  rateshock:  {name:'Rate Shock',       icon:'🏦',mktBias:-0.06,volMult:1.4, sectorBias:{Finance:0.28,Utilities:-0.32,Property:-0.38,Technology:-0.15,Aerospace:0.1},
+               desc:'BoE hikes rates sharply. Banks gain; property and utilities crater.',
+               effect:'↑ Finance, Aerospace · ↓ Property, Utilities'},
+};
+let activeScenario = 'normal';
+const FX_COMM = 4.95;
+const FX_DEFS = [
+  // Currencies — price = GBP per 1 unit of foreign currency
+  {t:'EUR',n:'Euro',           sub:'EUR/GBP',  type:'fx',   p:0.85340,v:.00035,flag:'€',  region:'Europe'},
+  {t:'USD',n:'US Dollar',      sub:'USD/GBP',  type:'fx',   p:0.78560,v:.00042,flag:'$',  region:'Americas'},
+  {t:'JPY',n:'Japanese Yen',   sub:'JPY/GBP',  type:'fx',   p:0.005246,v:.00055,flag:'¥', region:'Asia'},
+  {t:'CHF',n:'Swiss Franc',    sub:'CHF/GBP',  type:'fx',   p:0.89230,v:.00028,flag:'Fr', region:'Europe'},
+  {t:'AUD',n:'Aust. Dollar',   sub:'AUD/GBP',  type:'fx',   p:0.51230,v:.00055,flag:'A$', region:'Oceania'},
+  {t:'CAD',n:'Canadian Dollar',sub:'CAD/GBP',  type:'fx',   p:0.57340,v:.00045,flag:'C$', region:'Americas'},
+  {t:'CNY',n:'Chinese Yuan',   sub:'CNY/GBP',  type:'fx',   p:0.10820,v:.00025,flag:'¥',  region:'Asia'},
+  {t:'NOK',n:'Norwegian Krone',sub:'NOK/GBP',  type:'fx',   p:0.07423,v:.00058,flag:'kr', region:'Europe'},
+  {t:'SEK',n:'Swedish Krona',  sub:'SEK/GBP',  type:'fx',   p:0.07212,v:.00052,flag:'kr', region:'Europe'},
+  {t:'NZD',n:'NZ Dollar',      sub:'NZD/GBP',  type:'fx',   p:0.47170,v:.00065,flag:'NZ$',region:'Oceania'},
+  {t:'SGD',n:'Singapore Dollar',sub:'SGD/GBP', type:'fx',   p:0.58720,v:.00035,flag:'S$', region:'Asia'},
+  {t:'HKD',n:'Hong Kong Dollar',sub:'HKD/GBP', type:'fx',   p:0.10150,v:.00020,flag:'HK$',region:'Asia'},
+  // Precious Metals — price = GBP per troy oz
+  {t:'XAU',n:'Gold',     sub:'XAU/GBP', type:'metal',p:1823.4,v:.0055,flag:'Au',region:'Metals'},
+  {t:'XAG',n:'Silver',   sub:'XAG/GBP', type:'metal',p:21.450,v:.0115,flag:'Ag',region:'Metals'},
+  {t:'XPT',n:'Platinum', sub:'XPT/GBP', type:'metal',p:876.20,v:.0085,flag:'Pt',region:'Metals'},
+  {t:'XPD',n:'Palladium',sub:'XPD/GBP', type:'metal',p:945.60,v:.0125,flag:'Pd',region:'Metals'},
+];
+const fxItems=[], fxMap={};
+let selFxTicker=null, fxModeSide='buy';
+const MARKET_HEADLINES = [
+  {t:'Bank of England holds base rate at 5.25% — markets digest decision',c:'dm'},
+  {t:'UK inflation eases to 3.1% — below forecast, sterling firms',c:'gn'},
+  {t:'FTSE 100 outperforms European peers on positive macro data',c:'gn'},
+  {t:'OPEC+ announces production cuts — Brent crude rallies 3%',c:'or'},
+  {t:'UK GDP grows 0.4% in latest reading — beats 0.1% forecast',c:'gn'},
+  {t:'China economic slowdown weighs on global mining stocks',c:'rd'},
+  {t:'US Federal Reserve signals rate cuts ahead — risk assets surge',c:'gn'},
+  {t:'UK housing market showing early signs of recovery',c:'dm'},
+  {t:'Sterling weakens vs dollar amid trade uncertainty',c:'rd'},
+  {t:'London tech sector records strongest inflows in five years',c:'gn'},
+  {t:'Chancellor announces infrastructure spending package in Autumn Statement',c:'gn'},
+  {t:'UK unemployment steady at 4.2% — wage growth ahead of inflation',c:'dm'},
+  {t:'European banking sector facing rising credit default pressures',c:'rd'},
+  {t:'M&A activity accelerates as private equity hunts UK bargains',c:'or'},
+  {t:'UK retail sales beat forecasts for third consecutive month',c:'gn'},
+  {t:'Energy prices spike on Middle East supply concerns',c:'or'},
+  {t:'FTSE 250 outperforms as domestic economy shows resilience',c:'gn'},
+  {t:'Short sellers increase bets against UK property sector',c:'rd'},
+  {t:'AI investment boom lifts tech valuations — analysts divided',c:'or'},
+  {t:'LSE reports record trading volumes for second month running',c:'gn'},
+  {t:'UK manufacturers report supply chain disruption easing',c:'gn'},
+  {t:'Pension funds increase equity allocations ahead of rate normalisation',c:'dm'},
+  {t:'Corporate earnings season begins — 60% of FTSE 100 report this week',c:'dm'},
+  {t:'Gilt yields ease as inflation data comes in below expectations',c:'gn'},
+  {t:'UK consumers confidence index rises to 8-month high',c:'gn'},
+  {t:'Analysts raise FTSE 100 year-end target to 9,200',c:'gn'},
+  {t:'Activist investor takes stake in major UK conglomerate',c:'or'},
+  {t:'Global trade tensions ease — commodity stocks recover',c:'gn'},
+  {t:'UK fintech sector attracts record venture capital funding',c:'gn'},
+  {t:'Weak PMI data raises recession fears — markets cautious',c:'rd'},
+  // additional headlines
+  {t:'UK chancellor signals no new taxes in Autumn Budget — markets relieved',c:'gn'},
+  {t:'BoE governor: inflation "firmly on a downward path" — gilt yields ease',c:'gn'},
+  {t:'FTSE 100 dividend yield rises to 4.2% — attracting global income funds',c:'gn'},
+  {t:'IMF: UK economy to outperform G7 peers this year',c:'gn'},
+  {t:'Sovereign wealth funds increase UK equity allocations — City boosted',c:'gn'},
+  {t:'UK–EU trade deal upgrade signed — tariffs reduced on key goods',c:'gn'},
+  {t:'North Sea licensing round attracts record bid submissions',c:'or'},
+  {t:'Private equity buyout activity at five-year high in London',c:'or'},
+  {t:'FTSE 250 outpaces FTSE 100 for third consecutive week',c:'gn'},
+  {t:'Green gilts oversubscribed by 12× — strong investor appetite',c:'gn'},
+  {t:'City hiring surges as banks expand trading desks',c:'gn'},
+  {t:'UK manufacturing output beats forecast for fourth straight month',c:'gn'},
+  {t:'Sterling hits 18-month high against the euro',c:'gn'},
+  {t:'US Federal Reserve holds rates — UK equities rally in relief',c:'gn'},
+  {t:'Commodity supercycle talk returns as copper breaks $10,000',c:'or'},
+  {t:'Biotech sector attracts record venture funding in London',c:'gn'},
+  {t:'UK government infrastructure plan worth £120bn announced',c:'gn'},
+  {t:'Middle East ceasefire deal reduces geopolitical risk premium',c:'gn'},
+  {t:'European Central Bank cuts rates — capital flows towards London',c:'gn'},
+  {t:'Oil prices surge 5% on OPEC supply cut announcement',c:'or'},
+  {t:'Gold hits new all-time high as inflation fears resurface',c:'or'},
+  {t:'US credit downgrade triggers global bond market volatility',c:'rd'},
+  {t:'China property sector collapse deepens — Asian markets tumble',c:'rd'},
+  {t:'Stagflation fears return as wages outpace productivity',c:'rd'},
+  {t:'UK trade deficit widens sharply — pound comes under pressure',c:'rd'},
+  {t:'Hedge funds increase short positions on UK housebuilders',c:'rd'},
+  {t:'European banking stress tests reveal capital shortfalls at two lenders',c:'rd'},
+  {t:'Gas storage levels at multi-year lows — energy price spike feared',c:'rd'},
+  {t:'UK insolvencies hit 10-year high — consumer stress mounting',c:'rd'},
+  {t:'Tech sector layoffs spread to London offices of US giants',c:'rd'},
+  {t:'Retail footfall drops 8% — high street fears intensify',c:'rd'},
+];
+let newsHeadlineIdx = 0;
 const SCOLORS = {
   Finance:'#4d7eff',Healthcare:'#26c2ae',Energy:'#ff8c00',Mining:'#c49a3c',
   Consumer:'#9b59b6',Technology:'#00d4ff',Utilities:'#2ecc71',Retail:'#e84393',
@@ -687,14 +1155,108 @@ const NEWS_POOL = [
   {x:'Sterling slumps on weak economic data',                 ty:'mkt',r:[0.985,0.992],pos:false},
   {x:'FLASH CRASH: Algorithmic selling hits all sectors',     ty:'crash',r:[0.955,0.978],pos:false},
   {x:'SHORT SQUEEZE: Indexes surge as shorts cover',          ty:'crash',r:[1.015,1.030],pos:true},
+  // ── additional stock-specific positive ──
+  {x:'{n} to spin off division — unlocking hidden value',             ty:'pos',r:[1.020,1.055]},
+  {x:'Activist investor Elliott takes {p}% stake in {n}',            ty:'pos',r:[1.025,1.060]},
+  {x:'{n} confirms merger talks with overseas rival',                 ty:'pos',r:[1.030,1.065]},
+  {x:'{n} announces AI-driven cost savings of £{b}bn',               ty:'pos',r:[1.015,1.035]},
+  {x:'{n} debt rating upgraded to A by S&P',                         ty:'pos',r:[1.010,1.022]},
+  {x:'{n} added to FTSE 100 index — tracker buying expected',        ty:'pos',r:[1.018,1.038]},
+  {x:'Private equity eyes {n} — sources say bid imminent',           ty:'pos',r:[1.035,1.065]},
+  {x:'{n} secures landmark US market entry',                         ty:'pos',r:[1.020,1.042]},
+  {x:'{n} reports record online sales — up {p}%',                    ty:'pos',r:[1.015,1.032]},
+  {x:'Hedge fund takes {p}% stake in {n}, demands strategic review',  ty:'pos',r:[1.022,1.048]},
+  {x:'{n} signs {b}bn partnership with global tech giant',           ty:'pos',r:[1.018,1.040]},
+  {x:'{n} new CEO hailed as transformative hire by analysts',        ty:'pos',r:[1.012,1.030]},
+  {x:'{n} raises dividend by {p}% — ninth consecutive year of growth',ty:'pos',r:[1.010,1.025]},
+  {x:'{n} announces £{b}bn debt reduction programme',               ty:'pos',r:[1.008,1.020]},
+  {x:'{n} Phase III drug trial shows {p}% efficacy — breakthrough',  ty:'pos',r:[1.040,1.080]},
+  {x:'{n} wins exclusive supply deal with Amazon UK',                ty:'pos',r:[1.018,1.040]},
+  {x:'{n} Q{q} revenues surge {p}% — beats all estimates',          ty:'pos',r:[1.025,1.060]},
+  {x:'{n} land-banking revaluation adds £{b}bn to asset base',      ty:'pos',r:[1.012,1.028]},
+  // ── additional stock-specific negative ──
+  {x:'{n} recalls {m}m units over safety concerns — shares plunge',  ty:'neg',r:[0.920,0.962]},
+  {x:'Cyber attack hits {n} — customer data compromised',            ty:'neg',r:[0.938,0.968]},
+  {x:'CMA blocks {n} proposed acquisition on competition grounds',   ty:'neg',r:[0.945,0.972]},
+  {x:'Major shareholder dumps {p}% of {n} stake on market',         ty:'neg',r:[0.950,0.975]},
+  {x:'Moody\'s downgrades {n} debt to junk status',                 ty:'neg',r:[0.928,0.958]},
+  {x:'Strike action at {n} — production halted indefinitely',       ty:'neg',r:[0.948,0.973]},
+  {x:'Environment Agency fines {n} £{m}m for pollution incident',   ty:'neg',r:[0.955,0.978]},
+  {x:'{n} accounting irregularities found — PwC review ordered',    ty:'neg',r:[0.910,0.952]},
+  {x:'{n} pension deficit widens to £{b}bn — analyst alarm',        ty:'neg',r:[0.960,0.980]},
+  {x:'{n} CFO departs with immediate effect — no reason given',     ty:'neg',r:[0.945,0.970]},
+  {x:'US tariffs to hit {n} exports — £{m}m revenue at risk',       ty:'neg',r:[0.950,0.975]},
+  {x:'{n} restates prior year earnings — accounting error found',   ty:'neg',r:[0.930,0.962]},
+  {x:'{n} loses NHS contract worth £{m}m to rival bidder',          ty:'neg',r:[0.955,0.978]},
+  {x:'Short seller Muddy Waters publishes damning report on {n}',   ty:'neg',r:[0.905,0.950]},
+  {x:'{n} faces {p}% decline in market share — CEO admits crisis',  ty:'neg',r:[0.942,0.968]},
+  {x:'Profit warning at {n}: full-year guidance cut by {p}%',       ty:'neg',r:[0.935,0.965]},
+  {x:'Fire destroys {n} flagship warehouse — operations disrupted',  ty:'neg',r:[0.945,0.970]},
+  {x:'{n} CEO arrested in overseas bribery investigation',          ty:'neg',r:[0.895,0.942]},
+  // ── additional sector events ──
+  {x:'UK house prices rise {p}% — {sec} sector in demand',       ty:'sec',sec:'Property',   r:[1.012,1.028],pos:true},
+  {x:'Construction boom drives {sec} earnings higher',           ty:'sec',sec:'Property',   r:[1.010,1.025],pos:true},
+  {x:'REIT yields compress as institutions pile in to {sec}',    ty:'sec',sec:'Property',   r:[1.008,1.020],pos:true},
+  {x:'House prices slide — headwinds for {sec}',                 ty:'sec',sec:'Property',   r:[0.975,0.990],pos:false},
+  {x:'5G spectrum auction lifts sentiment for {sec}',            ty:'sec',sec:'Telecom',    r:[1.010,1.022],pos:true},
+  {x:'Roaming charge removal boosts {sec} subscriber growth',    ty:'sec',sec:'Telecom',    r:[1.008,1.018],pos:true},
+  {x:'Price war erupts in {sec} — margins under pressure',       ty:'sec',sec:'Telecom',    r:[0.978,0.991],pos:false},
+  {x:'Fuel cost relief boosts margins for {sec}',                ty:'sec',sec:'Transport',  r:[1.012,1.025],pos:true},
+  {x:'Airport passenger records broken — great news for {sec}',  ty:'sec',sec:'Transport',  r:[1.015,1.030],pos:true},
+  {x:'Rail strike fears weigh on {sec}',                         ty:'sec',sec:'Transport',  r:[0.978,0.990],pos:false},
+  {x:'Copper price surge boosts {sec} revenues',                 ty:'sec',sec:'Mining',     r:[1.015,1.030],pos:true},
+  {x:'Iron ore demand surges on China stimulus — lifts {sec}',   ty:'sec',sec:'Mining',     r:[1.012,1.028],pos:true},
+  {x:'Commodity price crash drags on {sec}',                     ty:'sec',sec:'Mining',     r:[0.970,0.985],pos:false},
+  {x:'Drug approval spree benefits whole {sec} sector',          ty:'sec',sec:'Healthcare', r:[1.012,1.025],pos:true},
+  {x:'NICE rejects blockbuster drug — bad news for {sec}',       ty:'sec',sec:'Healthcare', r:[0.975,0.988],pos:false},
+  {x:'Buyout wave sweeps through {sec}',                         ty:'sec',sec:'Technology', r:[1.018,1.035],pos:true},
+  {x:'Semiconductor shortage hits {sec} supply chains',          ty:'sec',sec:'Technology', r:[0.975,0.988],pos:false},
+  {x:'Online gambling clampdown weighs on {sec}',                ty:'sec',sec:'Gaming',     r:[0.968,0.983],pos:false},
+  {x:'Super Bowl boost lifts US revenues for {sec}',             ty:'sec',sec:'Gaming',     r:[1.012,1.025],pos:true},
+  {x:'Spirits volumes surge abroad — strong quarter for {sec}',  ty:'sec',sec:'Food & Bev', r:[1.010,1.022],pos:true},
+  {x:'Supermarket price war squeezes margins in {sec}',          ty:'sec',sec:'Food & Bev', r:[0.978,0.990],pos:false},
+  {x:'Cold winter drives energy demand — tailwind for {sec}',    ty:'sec',sec:'Utilities',  r:[1.008,1.018],pos:true},
+  {x:'M&A wave drives premium valuations in {sec}',             ty:'sec',sec:'Finance',    r:[1.012,1.025],pos:true},
+  {x:'Bad debt provisions spike across {sec}',                   ty:'sec',sec:'Finance',    r:[0.972,0.986],pos:false},
+  {x:'Holiday bookings surge — transforming outlook for {sec}',  ty:'sec',sec:'Consumer',   r:[1.012,1.028],pos:true},
+  {x:'Luxury slowdown in China hits {sec} earnings',             ty:'sec',sec:'Consumer',   r:[0.972,0.985],pos:false},
+  {x:'Record order backlog reported across {sec}',               ty:'sec',sec:'Aerospace',  r:[1.015,1.030],pos:true},
+  {x:'Export controls hit {sec} revenues',                       ty:'sec',sec:'Aerospace',  r:[0.975,0.988],pos:false},
+  {x:'Green energy push boosts grid investment for {sec}',       ty:'sec',sec:'Utilities',  r:[1.010,1.022],pos:true},
+  // ── additional market-wide events ──
+  {x:'Fed signals larger-than-expected rate cut — global risk rally',  ty:'mkt',r:[1.010,1.018],pos:true},
+  {x:'ECB emergency liquidity measures calm European markets',         ty:'mkt',r:[1.006,1.012],pos:true},
+  {x:'UK–US trade deal signed — city analysts broadly positive',      ty:'mkt',r:[1.008,1.015],pos:true},
+  {x:'China announces £1 trillion stimulus package — commodities soar',ty:'mkt',r:[1.010,1.020],pos:true},
+  {x:'IMF upgrades UK growth forecast — sterling firms',               ty:'mkt',r:[1.005,1.011],pos:true},
+  {x:'FTSE 100 breaks all-time record high',                           ty:'mkt',r:[1.006,1.014],pos:true},
+  {x:'Pension funds rotate into equities — broad market lift',         ty:'mkt',r:[1.005,1.012],pos:true},
+  {x:'Value rotation: investors dump growth stocks for cyclicals',     ty:'mkt',r:[1.003,1.008],pos:true},
+  {x:'Middle East tensions escalate — oil spikes, markets rattled',   ty:'mkt',r:[0.980,0.990],pos:false},
+  {x:'US debt ceiling crisis deepens — risk-off across globe',        ty:'mkt',r:[0.975,0.988],pos:false},
+  {x:'Yield curve inverts — recession signal sparks sell-off',        ty:'mkt',r:[0.978,0.990],pos:false},
+  {x:'ECB emergency rate hike shocks markets',                        ty:'mkt',r:[0.977,0.988],pos:false},
+  {x:'Bank failures in Europe trigger contagion fears',               ty:'mkt',r:[0.965,0.980],pos:false},
+  {x:'Oil price crashes on OPEC output surge',                        ty:'mkt',r:[0.980,0.990],pos:false},
+  {x:'Russia–Ukraine escalation sends markets into risk-off',         ty:'mkt',r:[0.972,0.985],pos:false},
+  {x:'Tech selloff intensifies — Nasdaq down 4%, London follows',     ty:'mkt',r:[0.978,0.990],pos:false},
 ];
 const ECO_EVENTS = [
-  {sec:9*3600+45*60,name:'UK Manufacturing PMI',impact:0.4,pos:null},
-  {sec:10*3600,     name:'BoE Interest Rate Decision',impact:0.8,pos:null},
-  {sec:12*3600,     name:'UK GDP Preliminary',impact:0.7,pos:null},
-  {sec:13*3600+30*60,name:'US Non-Farm Payrolls',impact:0.6,pos:null},
-  {sec:15*3600,     name:'UK CPI Inflation',impact:0.65,pos:null},
-  {sec:11*3600+30*60,name:'UK Unemployment Rate',impact:0.5,pos:null},
+  {sec: 9*3600+30*60, name:'UK Services PMI',              impact:0.35,pos:null},
+  {sec: 9*3600+45*60, name:'UK Manufacturing PMI',         impact:0.40,pos:null},
+  {sec:10*3600,       name:'BoE Interest Rate Decision',   impact:0.85,pos:null},
+  {sec:10*3600+30*60, name:'BoE MPC Vote Breakdown',       impact:0.50,pos:null},
+  {sec:11*3600,       name:'UK House Price Index',         impact:0.35,pos:null},
+  {sec:11*3600+30*60, name:'UK Unemployment Rate',         impact:0.50,pos:null},
+  {sec:12*3600,       name:'UK GDP Preliminary',           impact:0.75,pos:null},
+  {sec:12*3600+30*60, name:'UK Retail Sales',              impact:0.45,pos:null},
+  {sec:13*3600,       name:'UK Balance of Trade',          impact:0.35,pos:null},
+  {sec:13*3600+30*60, name:'US Non-Farm Payrolls',         impact:0.65,pos:null},
+  {sec:14*3600,       name:'US Initial Jobless Claims',    impact:0.40,pos:null},
+  {sec:14*3600+30*60, name:'US Consumer Confidence',       impact:0.40,pos:null},
+  {sec:15*3600,       name:'UK CPI Inflation',             impact:0.70,pos:null},
+  {sec:15*3600+30*60, name:'UK Consumer Confidence (GfK)',impact:0.30,pos:null},
+  {sec:16*3600,       name:'UK Industrial Production',     impact:0.35,pos:null},
 ];
 const ACHIEVEMENTS = [
   {id:'first_trade', icon:'🎯', name:'First Trade',        desc:'Execute your first trade',                  check:()=>G.trades.length>=1},
@@ -746,8 +1308,9 @@ let G = {
   dayNumber:1,
   nextOrderId:1,
   nextAlertId:1,
-  achievements:[],   // unlocked IDs
+  achievements:[],
   dailyChallenge:null,
+  fxHoldings:{},      // {ticker:{qty,entryPrice}}
   stats:{cbSurvived:false,takeoverHeld:false,ipoSubscribed:false,stopFired:false,challengesCompleted:0},
 };
 const stocks=[], stockMap={};
@@ -763,7 +1326,7 @@ let tickN=0, newsItems=[], gameTime=9*3600;
 let soundEnabled=true, circuitBreakerActive=false, cbTimer=0, chartMode='line';
 let cbInterval=null, currentView='market';
 let dayDividends=0;
-let simSpeed=1, simPaused=false, mainTickInterval=null, dayEnded=false;
+let simSpeed=1, simPaused=false, mainTickInterval=null, dayEnded=false, cbFiredToday=false;
 let showMA20=true, showMA50=true, showBB=false, showRSI=false, showMACD=false;
 const watchlist=new Set(JSON.parse(localStorage.getItem('lse_wl')||'[]'));
 const ipoQueue=[];  // pending IPOs
@@ -823,6 +1386,11 @@ function init(){
     stocks.push(st);stockMap[d.t]=st;
     if(!secSentiment[d.s])secSentiment[d.s]=0;
   }
+  if(!G.fxHoldings)G.fxHoldings={};
+  for(const d of FX_DEFS){
+    const item={...d,baseP:d.p,price:d.p,prev:d.p,open:d.p,high:d.p,low:d.p,history:[d.p]};
+    fxItems.push(item);fxMap[d.t]=item;
+  }
   const sf=el('sf'),ss=el('scr-sec');
   [...new Set(DEFS.map(d=>d.s))].sort().forEach(s=>{
     const o=document.createElement('option');o.value=s;o.textContent=s;sf.appendChild(o);
@@ -835,6 +1403,7 @@ function init(){
   setInterval(renderSidebar,3000);
   setInterval(autoSave,10000);
   setInterval(()=>{if(!simPaused&&Math.random()<0.04)maybeFireIPO();},15000);
+  setInterval(()=>{if(currentView==='fx')renderFxView();},2000);
   if(!G.portfolioHistory.length)G.portfolioHistory.push({t:gameTimeStr(),v:G.cash});
   if(!G.dailyChallenge)newDailyChallenge();
 }
@@ -844,11 +1413,12 @@ function newGame(){
   G={cash:100000,startVal:100000,dayStartVal:100000,holdings:{},trades:[],commPaid:0,
      shorts:{},limitOrders:[],priceAlerts:[],portfolioHistory:[],realisedPnl:0,
      dividendsTotal:0,borrowCosts:0,dayNumber:1,nextOrderId:1,nextAlertId:1,
-     achievements:[],dailyChallenge:null,
+     achievements:[],dailyChallenge:null,fxHoldings:{},
      stats:{cbSurvived:false,takeoverHeld:false,ipoSubscribed:false,stopFired:false,challengesCompleted:0}};
   stocks.forEach(st=>{st.price=st.open=st.prev=st.high=st.low=st.baseP;st.history=[st.baseP];st.momentum=0;st.shockDir=0;});
+  fxItems.forEach(i=>{i.price=i.open=i.prev=i.high=i.low=i.baseP;i.history=[i.baseP];});
   ftse=ftse_open=8234.1;ftse250=ftse250_open=20456.3;
-  gameTime=9*3600;dayEnded=false;ecoFired.clear();
+  gameTime=9*3600;dayEnded=false;cbFiredToday=false;ecoFired.clear();
   newDailyChallenge();
   renderRows(true);renderSidebar();updatePortfolioBar();
   toast('New game started — good luck!','inf');
@@ -861,18 +1431,20 @@ function rf(a,b){return Math.random()*(b-a)+a;}
 function tick(){
   if(circuitBreakerActive||simPaused)return;
   tickN++;
-  mktSentiment=Math.max(-1,Math.min(1,mktSentiment+randn()*.04));
+  const sc=SCENARIOS[activeScenario];
+  mktSentiment=Math.max(-1,Math.min(1,mktSentiment+randn()*.04+sc.mktBias*.015));
   for(const s in secSentiment)secSentiment[s]=Math.max(-1,Math.min(1,secSentiment[s]+randn()*.06+mktSentiment*.02));
   gbpusd=Math.max(1.10,Math.min(1.45,gbpusd*(1+randn()*.001)));
   gold=Math.max(1800,Math.min(3200,gold*(1+randn()*.002)));
   const allChg=[];
   for(const st of stocks){
-    const idio=randn()*st.vol,secF=secSentiment[st.s]*.003,mktF=mktSentiment*.002;
+    const idio=randn()*st.vol*sc.volMult,secF=secSentiment[st.s]*.003,mktF=mktSentiment*.002;
     const momF=st.momentum*.08,revF=(st.baseP-st.price)/st.baseP*.008;
     const shk=st.shockDir!==0?st.shockDir*.004:0;
     if(st.shockDir>0)st.shockDir=Math.max(0,st.shockDir-.08);
     else if(st.shockDir<0)st.shockDir=Math.min(0,st.shockDir+.08);
-    const chg=idio+secF+mktF+momF+revF+shk;
+    const scSec=(sc.sectorBias[st.s]||0)*.0009;
+    const chg=idio+secF+mktF+momF+revF+shk+scSec;
     st.prev=st.price;
     st.price=Math.max(st.baseP*.08,st.price*(1+chg));
     st.momentum=st.momentum*.88+(st.price-st.prev)/st.prev*.5;
@@ -904,6 +1476,20 @@ function tick(){
   const avgChg=allChg.reduce((a,b)=>a+b,0)/allChg.length;
   ftse=ftse_open*(1+avgChg*1.1+randn()*.0003);
   ftse250=ftse250_open*(1+avgChg*.9+randn()*.0005);
+  // tick FX items
+  for(const item of fxItems){
+    if(circuitBreakerActive)break;
+    const isMetal=item.type==='metal';
+    // Gold/silver negatively correlated with market risk-on moves
+    const mktLink=isMetal?-mktSentiment*.0008:mktSentiment*.0001;
+    const chg=randn()*item.v+mktLink;
+    item.prev=item.price;
+    item.price=Math.max(item.baseP*.25,item.price*(1+chg));
+    if(item.price>item.high)item.high=item.price;
+    if(item.price<item.low)item.low=item.price;
+    item.history.push(item.price);if(item.history.length>120)item.history.shift();
+  }
+  if(selFxTicker)refreshFxModalPrices();
   checkLimitOrders();
   checkPriceAlerts();
   checkCircuitBreaker();
@@ -927,10 +1513,10 @@ function applyShock(st,factor){
   st.history.push(st.price);if(st.history.length>120)st.history.shift();
 }
 function checkCircuitBreaker(){
-  if(circuitBreakerActive)return;
+  if(circuitBreakerActive||cbFiredToday)return;
   const chg=(ftse/ftse_open-1)*100;
-  if(chg<-4){
-    circuitBreakerActive=true;cbTimer=60;
+  if(chg<-7){
+    circuitBreakerActive=true;cbFiredToday=true;cbTimer=60;
     el('circuit').classList.add('vis');el('cb-timer').textContent=cbTimer;
     if(soundEnabled){initAudio();sndCB();}
     G.stats.cbSurvived=true;
@@ -1227,7 +1813,7 @@ function nextDay(){
   }
   ftse_open=ftse=ftse*(1+rf(-.015,.015));
   ftse250_open=ftse250=ftse250*(1+rf(-.015,.015));
-  gameTime=9*3600;dayEnded=false;ecoFired.clear();
+  gameTime=9*3600;dayEnded=false;cbFiredToday=false;ecoFired.clear();
   newDailyChallenge();
   el('dayend').classList.remove('vis');
   renderRows(true);updatePortfolioBar();
@@ -1248,7 +1834,15 @@ function holdingsValue(){
   for(const tk in G.holdings){const h=G.holdings[tk];if(h.qty>0)t+=(stockMap[tk].price/100)*h.qty;}
   return t;
 }
-function portfolioValue(){return G.cash+holdingsValue()+shortsValue();}
+function fxHoldingsValue(){
+  let t=0;
+  for(const tk in (G.fxHoldings||{})){
+    const h=G.fxHoldings[tk],item=fxMap[tk];
+    if(item&&h.qty>0)t+=h.qty*item.price;
+  }
+  return t;
+}
+function portfolioValue(){return G.cash+holdingsValue()+shortsValue()+fxHoldingsValue();}
 function energySectorPnl(){
   let t=0;
   for(const tk in G.holdings){
@@ -2226,6 +2820,7 @@ function renderPerfView(){
       <td class="${clsChg(gpnl)}">${fmtPct(gp)}</td><td style="color:var(--dm)">${beta.toFixed(2)}</td></tr>`;
   });
   el('perf-tbl-b').innerHTML=tb||'<tr><td colspan="8" style="color:var(--dm);text-align:center;padding:12px">No holdings</td></tr>';
+  drawPieChart();
 }
 // ── MODAL ─────────────────────────────────────────────────────────────────────
 function openModal(ticker){
@@ -2585,13 +3180,17 @@ function setView(v){
   el('heatmap').className=v==='map'?'on':'';
   el('perfview').className=v==='perf'?'on':'';
   el('scrview').className=v==='scr'?'on':'';
+  el('fxview').className=v==='fx'?'on':'';
   el('side').style.display=(v==='market')?'':'none';
+  el('vmkt').classList.toggle('on',v==='market');
   el('vmap').classList.toggle('on',v==='map');
   el('vperf').classList.toggle('on',v==='perf');
   el('vscr').classList.toggle('on',v==='scr');
+  el('vfx').classList.toggle('on',v==='fx');
   if(v==='map')renderHeatmap();
   if(v==='perf')renderPerfView();
   if(v==='scr')applyScreener();
+  if(v==='fx')renderFxView();
   if(v==='market'){el('mkt').style.display='';el('side').style.display='';}
 }
 // ── CLOCK ─────────────────────────────────────────────────────────────────────
@@ -2649,13 +3248,18 @@ function attachEvents(){
     });
   });
   el('mov').addEventListener('click',e=>{if(e.target===el('mov'))closeModal();});
-  el('shortcuts').addEventListener('click',e=>{if(e.target===el('shortcuts'))el('shortcuts').classList.remove('vis');});
   el('ipo-mod').addEventListener('click',e=>{if(e.target===el('ipo-mod'))el('ipo-mod').classList.remove('vis');});
+  el('fxmov').addEventListener('click',e=>{if(e.target===el('fxmov'))closeFxModal();});
+  initHelpTabs();
+  buildScenarioCards();
+  cycleMarketNews();
+  setInterval(cycleMarketNews, 14000);
   document.addEventListener('keydown',e=>{
     if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;
-    if(el('shortcuts').classList.contains('vis')){if(e.key==='Escape')el('shortcuts').classList.remove('vis');return;}
-    if(e.key==='Escape'){closeModal();el('ipo-mod').classList.remove('vis');return;}
-    if(e.key==='?'){el('shortcuts').classList.add('vis');return;}
+    if(el('help').classList.contains('vis')){if(e.key==='Escape')closeHelp();return;}
+    if(el('scen-ov').classList.contains('vis')){if(e.key==='Escape')el('scen-ov').classList.remove('vis');return;}
+    if(e.key==='Escape'){closeModal();closeFxModal();el('ipo-mod').classList.remove('vis');return;}
+    if(e.key==='?'){openHelp('overview');return;}
     if(e.key==='/')  {e.preventDefault();el('srch').focus();return;}
     if(e.key===' '){e.preventDefault();togglePause();return;}
     if(e.key==='1'){setSpeed(1);return;}
@@ -2676,6 +3280,362 @@ function toggleWatchlist(ticker){
   else{watchlist.add(ticker);toast(`Added ${ticker} to watchlist`,'inf');}
   localStorage.setItem('lse_wl',JSON.stringify([...watchlist]));
   renderRows(true);renderWatchlist();
+}
+// ── FX & METALS ──────────────────────────────────────────────────────────────
+function fmtFxPrice(item){
+  if(item.type==='metal')return'£'+item.price.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(item.price<0.01)return item.price.toFixed(6);
+  if(item.price<1)return item.price.toFixed(4);
+  return item.price.toFixed(4);
+}
+function fmtFxChg(item){
+  const d=item.price-item.open,pct=(d/item.open)*100;
+  const sgn=d>=0?'+':'';
+  if(item.type==='metal')return`${sgn}£${Math.abs(d).toFixed(2)} (${sgn}${pct.toFixed(2)}%)`;
+  return`${sgn}${Math.abs(d)<0.001?d.toFixed(6):d.toFixed(4)} (${sgn}${pct.toFixed(2)}%)`;
+}
+function fxSparkline(item,w,h){
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  const ctx=c.getContext('2d'),data=item.history;
+  if(data.length<2)return c;
+  const mn=Math.min(...data),mx=Math.max(...data),rng=mx-mn||item.price*.001;
+  const toX=i=>(i/(data.length-1))*(w-2)+1,toY=v=>h-((v-mn)/rng)*(h-4)-2;
+  const up=data[data.length-1]>=data[0];
+  ctx.strokeStyle=up?'#3fb950':'#f85149';ctx.lineWidth=1.2;
+  ctx.beginPath();data.forEach((p,i)=>i===0?ctx.moveTo(toX(i),toY(p)):ctx.lineTo(toX(i),toY(p)));
+  ctx.stroke();return c;
+}
+function renderFxView(){
+  const fxBody=el('fx-ccy-body'), metalBody=el('fx-metal-body');
+  if(!fxBody)return;
+  const ccys=fxItems.filter(i=>i.type==='fx');
+  const metals=fxItems.filter(i=>i.type==='metal');
+  function rowHtml(item){
+    const held=G.fxHoldings[item.t]&&G.fxHoldings[item.t].qty>0;
+    const chg=item.price-item.open,pct=(chg/item.open)*100;
+    const cls=chg>=0?'up':'dn';
+    const sgn=chg>=0?'+':'';
+    const isMetal=item.type==='metal';
+    const priceStr=fmtFxPrice(item);
+    const highStr=isMetal?'£'+item.high.toFixed(2):item.high.toFixed(item.price<0.01?6:4);
+    const lowStr=isMetal?'£'+item.low.toFixed(2):item.low.toFixed(item.price<0.01?6:4);
+    const chgStr=isMetal?`${sgn}£${Math.abs(chg).toFixed(2)}`:`${sgn}${Math.abs(chg)<0.001?chg.toFixed(6):chg.toFixed(4)}`;
+    return`<tr data-fx="${item.t}" class="${selFxTicker===item.t?'fxsel':''}">
+      <td><span class="fx-tc">${item.flag}</span> ${item.n}</td>
+      <td style="color:var(--dm);font-size:10px">${item.sub}</td>
+      <td style="font-weight:bold">${priceStr}</td>
+      <td class="${cls}">${chgStr}</td>
+      <td class="${cls} pcc">${sgn}${pct.toFixed(2)}%</td>
+      <td style="color:var(--gn);font-size:11px">${highStr}</td>
+      <td style="color:var(--rd);font-size:11px">${lowStr}</td>
+      <td class="spk" id="fxspk-${item.t}"></td>
+      <td>${held?`<span class="fx-held-badge">HELD</span>`:''}</td>
+    </tr>`;
+  }
+  fxBody.innerHTML=ccys.map(rowHtml).join('');
+  metalBody.innerHTML=metals.map(rowHtml).join('');
+  // draw sparklines
+  fxItems.forEach(item=>{
+    const cell=el('fxspk-'+item.t);if(!cell)return;
+    cell.innerHTML='';cell.appendChild(fxSparkline(item,68,22));
+  });
+  // positions
+  const posEntries=Object.entries(G.fxHoldings||{}).filter(([,h])=>h.qty>0);
+  const posHdr=el('fx-pos-hdr'),posList=el('fx-pos-list');
+  if(posHdr)posHdr.style.display=posEntries.length?'':'none';
+  if(posList){
+    posList.innerHTML=posEntries.map(([t,h])=>{
+      const item=fxMap[t];if(!item)return'';
+      const curVal=h.qty*item.price,entryVal=h.qty*h.entryPrice;
+      const pnl=curVal-entryVal,pct=(pnl/entryVal)*100;
+      const isMetal=item.type==='metal';
+      const unitLabel=isMetal?'oz':'units';
+      const qtyFmt=isMetal?h.qty.toFixed(4):h.qty.toLocaleString();
+      return`<div class="fx-pos-row">
+        <div class="fx-pos-l">
+          <span class="fx-pos-ticker">${item.flag} ${t} — ${item.n}</span>
+          <span class="fx-pos-detail">${qtyFmt} ${unitLabel} @ ${isMetal?'£'+h.entryPrice.toFixed(2):h.entryPrice.toFixed(6)}</span>
+        </div>
+        <div class="fx-pos-r">
+          <div style="font-weight:bold">£${curVal.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+          <div class="${pnl>=0?'up':'dn'}">${pnl>=0?'+':''}£${Math.abs(pnl).toFixed(2)} (${pnl>=0?'+':''}${pct.toFixed(2)}%)</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  // wire row clicks
+  document.querySelectorAll('[data-fx]').forEach(row=>{
+    row.onclick=()=>openFxModal(row.dataset.fx);
+  });
+}
+function openFxModal(ticker){
+  selFxTicker=ticker;
+  fxModeSide='buy';
+  document.querySelectorAll('[data-fx]').forEach(r=>r.classList.toggle('fxsel',r.dataset.fx===ticker));
+  renderFxModal();
+  el('fxmov').classList.add('vis');
+}
+function closeFxModal(){
+  el('fxmov').classList.remove('vis');
+  selFxTicker=null;
+  document.querySelectorAll('[data-fx]').forEach(r=>r.classList.remove('fxsel'));
+}
+function setFxSide(side){
+  fxModeSide=side;
+  el('fm-t-buy').className='fm-tab'+(side==='buy'?' on buy':'');
+  el('fm-t-sell').className='fm-tab'+(side==='sell'?' on sell':'');
+  el('fm-exec').textContent=side==='buy'?'Buy':'Sell';
+  el('fm-exec').className='btn '+(side==='buy'?'bu':'bs');
+  updateFxCost();
+}
+function renderFxModal(){
+  const item=fxMap[selFxTicker];if(!item)return;
+  const chg=item.price-item.open,pct=(chg/item.open)*100;
+  const cls=chg>=0?'up':'dn';
+  el('fm-sym').textContent=item.t;
+  el('fm-nm').textContent=item.n+' / GBP';
+  el('fm-rate').textContent=fmtFxPrice(item);
+  el('fm-rate').className='fm-rate '+(chg>=0?'up':'dn');
+  el('fm-chg').textContent=fmtFxChg(item);
+  el('fm-chg').className=cls;
+  const isMetal=item.type==='metal';
+  el('fm-unit').textContent=isMetal?'(troy oz)':'(units)';
+  // stats
+  const dayChgPct=pct.toFixed(3)+'%';
+  const highStr=isMetal?'£'+item.high.toFixed(2):item.high.toFixed(item.price<0.01?6:4);
+  const lowStr=isMetal?'£'+item.low.toFixed(2):item.low.toFixed(item.price<0.01?6:4);
+  el('fm-stats').innerHTML=`
+    <div class="fm-st-l">Day High</div><div class="fm-st-v up">${highStr}</div>
+    <div class="fm-st-l">Day Low</div><div class="fm-st-v dn">${lowStr}</div>
+    <div class="fm-st-l">Day Change</div><div class="fm-st-v ${cls}">${(chg>=0?'+':'')+dayChgPct}</div>
+    <div class="fm-st-l">Commission</div><div class="fm-st-v">£${FX_COMM.toFixed(2)}</div>`;
+  // position box
+  const held=G.fxHoldings[item.t];
+  const posEl=el('fm-pos');
+  if(held&&held.qty>0){
+    const curVal=held.qty*item.price,entryVal=held.qty*held.entryPrice;
+    const pnl=curVal-entryVal,pp=(pnl/entryVal)*100;
+    const qtyFmt=isMetal?held.qty.toFixed(4):held.qty.toLocaleString();
+    posEl.style.display='';
+    posEl.innerHTML=`<b>Your position:</b> ${qtyFmt} ${isMetal?'oz':'units'} @ ${isMetal?'£'+held.entryPrice.toFixed(2):held.entryPrice.toFixed(6)}<br>
+      Value: <b>£${curVal.toFixed(2)}</b> | P&L: <span class="${pnl>=0?'up':'dn'}">${pnl>=0?'+':''}£${Math.abs(pnl).toFixed(2)} (${pnl>=0?'+':''}${pp.toFixed(2)}%)</span>`;
+  } else { posEl.style.display='none'; }
+  // default qty
+  const defaultQty=isMetal?1:(item.price<0.02?10000:1000);
+  el('fm-qty').value=defaultQty;
+  setFxSide('buy');
+  drawFxChart();
+}
+function refreshFxModalPrices(){
+  const item=fxMap[selFxTicker];if(!item)return;
+  const chg=item.price-item.open;
+  el('fm-rate').textContent=fmtFxPrice(item);
+  el('fm-rate').className='fm-rate '+(chg>=0?'up':'dn');
+  el('fm-chg').textContent=fmtFxChg(item);
+  el('fm-chg').className=chg>=0?'up':'dn';
+  updateFxCost();
+}
+function drawFxChart(){
+  const canvas=el('fm-chart');const item=fxMap[selFxTicker];
+  if(!canvas||!item)return;
+  canvas.width=canvas.offsetWidth||380;
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,data=item.history;
+  ctx.clearRect(0,0,W,H);
+  if(data.length<2)return;
+  const mn=Math.min(...data),mx=Math.max(...data),rng=mx-mn||item.price*.001;
+  const toX=i=>(i/(data.length-1))*(W-2)+1;
+  const toY=v=>H-((v-mn)/rng)*(H-4)-2;
+  ctx.strokeStyle='#30363d';ctx.lineWidth=.4;
+  for(let i=0;i<=3;i++){const y=(i/3)*(H-4)+2;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const up=data[data.length-1]>=data[0];
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,up?'rgba(63,185,80,.25)':'rgba(248,81,73,.25)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();ctx.moveTo(toX(0),H);
+  data.forEach((p,i)=>ctx.lineTo(toX(i),toY(p)));
+  ctx.lineTo(toX(data.length-1),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();data.forEach((p,i)=>i===0?ctx.moveTo(toX(i),toY(p)):ctx.lineTo(toX(i),toY(p)));
+  ctx.strokeStyle=up?'#3fb950':'#f85149';ctx.lineWidth=1.5;ctx.stroke();
+}
+function updateFxCost(){
+  const item=fxMap[selFxTicker];if(!item)return;
+  const qty=parseFloat(el('fm-qty').value)||0;
+  if(qty<=0){el('fm-cost').textContent='Cost: —';el('fm-pnl').textContent='';return;}
+  const isMetal=item.type==='metal';
+  const cost=qty*item.price;
+  if(fxModeSide==='buy'){
+    el('fm-cost').textContent=`Cost: £${cost.toFixed(2)} + £${FX_COMM} commission`;
+    el('fm-pnl').textContent='';
+  } else {
+    const held=G.fxHoldings[item.t];
+    if(!held||!held.qty){el('fm-pnl').textContent='';el('fm-cost').textContent='No position to sell';return;}
+    const proceeds=qty*item.price-FX_COMM;
+    const pnl=qty*(item.price-held.entryPrice)-FX_COMM;
+    el('fm-cost').textContent=`Proceeds: £${Math.max(0,proceeds).toFixed(2)}`;
+    el('fm-pnl').innerHTML=`P&L: <span class="${pnl>=0?'up':'dn'}">${pnl>=0?'+':''}£${Math.abs(pnl).toFixed(2)}</span>`;
+  }
+}
+function setFxMaxQty(){
+  const item=fxMap[selFxTicker];if(!item)return;
+  const isMetal=item.type==='metal';
+  if(fxModeSide==='buy'){
+    const avail=(G.cash-FX_COMM);
+    const maxQty=avail/item.price;
+    el('fm-qty').value=isMetal?Math.floor(maxQty*100)/100:Math.floor(maxQty);
+  } else {
+    const held=G.fxHoldings[item.t];
+    el('fm-qty').value=held?(isMetal?held.qty:Math.floor(held.qty)):0;
+  }
+  updateFxCost();
+}
+function execFxTrade(){
+  const item=fxMap[selFxTicker];if(!item)return;
+  const qty=parseFloat(el('fm-qty').value)||0;
+  const isMetal=item.type==='metal';
+  el('fm-err').textContent='';
+  if(qty<=0){el('fm-err').textContent='Enter a valid quantity';return;}
+  if(fxModeSide==='buy'){
+    const cost=qty*item.price+FX_COMM;
+    if(cost>G.cash){el('fm-err').textContent='Insufficient cash';return;}
+    G.cash-=cost;
+    const held=G.fxHoldings[item.t];
+    if(held&&held.qty>0){
+      const totalQty=held.qty+qty;
+      held.entryPrice=(held.qty*held.entryPrice+qty*item.price)/totalQty;
+      held.qty=totalQty;
+    } else {
+      G.fxHoldings[item.t]={qty,entryPrice:item.price};
+    }
+    G.commPaid+=FX_COMM;
+    toast(`Bought ${isMetal?qty.toFixed(4)+' oz':qty.toLocaleString()+' units'} ${item.n} @ ${fmtFxPrice(item)}`,'ok');
+  } else {
+    const held=G.fxHoldings[item.t];
+    if(!held||held.qty<qty){el('fm-err').textContent='Insufficient position';return;}
+    const proceeds=qty*item.price-FX_COMM;
+    G.cash+=proceeds;
+    held.qty-=qty;
+    if(held.qty<=0)delete G.fxHoldings[item.t];
+    G.commPaid+=FX_COMM;
+    const pnl=qty*(item.price-held.entryPrice)-FX_COMM;
+    G.realisedPnl+=pnl;
+    toast(`Sold ${isMetal?qty.toFixed(4)+' oz':qty.toLocaleString()+' units'} ${item.n} @ ${fmtFxPrice(item)}`,'ok');
+  }
+  updatePortfolioBar();
+  renderFxModal();
+  if(currentView==='fx')renderFxView();
+}
+// ── HELP MODAL ───────────────────────────────────────────────────────────────
+function openHelp(tab){
+  tab=tab||'overview';
+  document.querySelectorAll('.htab').forEach(t=>t.classList.toggle('on',t.dataset.hp===tab));
+  document.querySelectorAll('.hpanel').forEach(p=>p.classList.toggle('on',p.id==='hp-'+tab));
+  if(tab==='achievements') renderHelpAch();
+  el('help').classList.add('vis');
+}
+function closeHelp(){el('help').classList.remove('vis');}
+function switchHelpTab(tab){
+  document.querySelectorAll('.htab').forEach(t=>t.classList.toggle('on',t.dataset.hp===tab));
+  document.querySelectorAll('.hpanel').forEach(p=>p.classList.toggle('on',p.id==='hp-'+tab));
+  if(tab==='achievements') renderHelpAch();
+}
+function renderHelpAch(){
+  const g=el('help-ach-grid');if(!g)return;
+  g.innerHTML=ACHIEVEMENTS.map(a=>`
+    <div class="ach-card" style="${G.achievements.includes(a.id)?'border-color:var(--gd)':'opacity:.6'}">
+      <div class="ach-ci">${a.icon}</div>
+      <div class="ach-cn">${a.name}</div>
+      <div class="ach-cd">${a.desc}</div>
+    </div>`).join('');
+}
+function initHelpTabs(){
+  document.querySelectorAll('.htab').forEach(t=>{
+    t.addEventListener('click',()=>switchHelpTab(t.dataset.hp));
+  });
+  el('help').addEventListener('click',e=>{if(e.target===el('help'))closeHelp();});
+}
+// ── SCENARIO ─────────────────────────────────────────────────────────────────
+function openScenario(){
+  el('scen-ov').classList.add('vis');
+}
+function applyScenario(key){
+  activeScenario=key;
+  document.querySelectorAll('.scen-card').forEach(c=>c.classList.toggle('on',c.dataset.sc===key));
+  const sc=SCENARIOS[key];
+  mktSentiment=Math.max(-1,Math.min(1,mktSentiment+sc.mktBias*3));
+  toast(`Scenario: ${sc.name}`,sc.mktBias>=0?'ok':'err');
+}
+function buildScenarioCards(){
+  const grid=el('scen-cards');if(!grid)return;
+  grid.innerHTML=Object.entries(SCENARIOS).map(([k,sc])=>`
+    <div class="scen-card ${activeScenario===k?'on':''}" data-sc="${k}" onclick="applyScenario('${k}')">
+      <div class="scen-icon">${sc.icon}</div>
+      <div class="scen-name">${sc.name}</div>
+      <div class="scen-desc">${sc.desc}</div>
+      <div class="scen-effect">${sc.effect}</div>
+    </div>`).join('');
+  el('scen-ov').addEventListener('click',e=>{if(e.target===el('scen-ov'))el('scen-ov').classList.remove('vis');});
+}
+// ── MARKET HEADLINE TICKER ────────────────────────────────────────────────────
+function cycleMarketNews(){
+  const h=MARKET_HEADLINES[newsHeadlineIdx%MARKET_HEADLINES.length];
+  newsHeadlineIdx++;
+  scrollNews(h.t);
+}
+// ── PORTFOLIO PIE CHART ───────────────────────────────────────────────────────
+function drawPieChart(){
+  const canvas=el('pie-canvas');const legEl=el('pie-legend');
+  if(!canvas||!legEl)return;
+  const ks=Object.keys(G.holdings).filter(k=>G.holdings[k].qty>0);
+  const wrap=el('pie-wrap');
+  if(!ks.length&&G.cash>=G.startVal*.98){wrap.style.display='none';return;}
+  wrap.style.display='flex';
+  const sectors={};let total=0;
+  ks.forEach(tk=>{
+    const hld=G.holdings[tk],st=stockMap[tk];if(!st)return;
+    const val=(st.price/100)*hld.qty;total+=val;
+    sectors[st.s]=(sectors[st.s]||0)+val;
+  });
+  if(G.cash>0){sectors['Cash']=G.cash;total+=G.cash;}
+  const cols=['#58a6ff','#3fb950','#f85149','#d29922','#ffa657','#bc8cff',
+              '#26c2ae','#ff7b72','#79c0ff','#56d364','#e3b341','#db6d28','#ff9f43','#a29bfe'];
+  const skeys=Object.keys(sectors);
+  canvas.width=160;canvas.height=160;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,160,160);
+  let angle=-Math.PI/2;
+  skeys.forEach((s,i)=>{
+    const slice=(sectors[s]/total)*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(80,80);
+    ctx.arc(80,80,72,angle,angle+slice);
+    ctx.closePath();ctx.fillStyle=cols[i%cols.length];ctx.fill();
+    ctx.strokeStyle='#161b22';ctx.lineWidth=2;ctx.stroke();
+    angle+=slice;
+  });
+  ctx.beginPath();ctx.arc(80,80,32,0,Math.PI*2);
+  ctx.fillStyle='var(--bg2)';ctx.fill();
+  ctx.fillStyle='var(--dm)';ctx.font='9px monospace';ctx.textAlign='center';
+  ctx.fillText('Portfolio',80,78);ctx.fillText('Mix',80,90);
+  legEl.innerHTML=skeys.map((s,i)=>`
+    <div class="pl-row">
+      <div class="pl-dot" style="background:${cols[i%cols.length]}"></div>
+      <span class="pl-nm">${s}</span>
+      <span class="pl-pct">${((sectors[s]/total)*100).toFixed(1)}%</span>
+    </div>`).join('');
+}
+// ── EXPORT TRADES CSV ─────────────────────────────────────────────────────────
+function exportTrades(){
+  if(!G.trades.length){toast('No trades to export','err');return;}
+  const rows=[['Day','Time','Ticker','Action','Qty','Price(p)','Total(£)','P&L(£)']];
+  G.trades.forEach(t=>{
+    rows.push([G.dayNumber,t.time||'',t.ticker,t.action,t.qty,
+      (t.price).toFixed(2),(t.total||0).toFixed(2),(t.profit||0).toFixed(2)]);
+  });
+  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='lse_trades_day'+G.dayNumber+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('Trades exported as CSV','ok');
 }
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
