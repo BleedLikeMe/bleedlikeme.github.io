@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Graphing Calculator</title>
+<script>
+(function(){
+  try {
+    var saved = localStorage.getItem('graphcalc-theme');
+    var mode = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', mode);
+  } catch(e){}
+})();
+</script>
+<style>
+  :root, :root[data-theme="light"] {
+    --sidebar-w: 320px;
+    --border: #dcdcdc;
+    --text: #2a2a2a;
+    --muted: #8a8a8a;
+    --accent: #4a70e2;
+    --bg: #ffffff;
+    --bg-canvas: #ffffff;
+    --hover-bg: #f7f7f7;
+    --placeholder: #bbb;
+    --shadow: rgba(0,0,0,0.08);
+    --readout-bg: rgba(255,255,255,0.85);
+    --code-bg: #f2f2f2;
+  }
+  :root[data-theme="dark"] {
+    --sidebar-w: 320px;
+    --border: #3a3b3f;
+    --text: #e8e8e8;
+    --muted: #9a9a9a;
+    --accent: #6c8fff;
+    --bg: #202124;
+    --bg-canvas: #1a1b1e;
+    --hover-bg: #2b2c30;
+    --placeholder: #666;
+    --shadow: rgba(0,0,0,0.4);
+    --readout-bg: rgba(32,33,36,0.85);
+    --code-bg: #2c2d31;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    overflow: hidden;
+  }
+  #app { display: flex; height: 100vh; width: 100vw; }
+
+  /* ---------- Sidebar ---------- */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  #sidebar-header {
+    padding: 14px 16px 10px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.2px;
+  }
+  #rows {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .row-container {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    background: transparent;
+  }
+  .row .color-tab {
+    width: 34px;
+    min-width: 34px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .row .color-tab .dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid transparent;
+  }
+  .row.hidden .color-tab .dot {
+    background: transparent !important;
+    border-color: currentColor;
+  }
+  .row .expr-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    padding: 10px 4px;
+    font-family: "Cambria Math", Cambria, Georgia, serif;
+    background: transparent;
+    color: var(--text);
+    min-width: 0;
+  }
+  .row .expr-input::placeholder { color: var(--placeholder); font-family: -apple-system, sans-serif; }
+  .row.error .expr-input { color: #e5534b; }
+  .row .del-btn {
+    width: 30px; min-width: 30px; height: 40px;
+    border: none; background: transparent;
+    color: var(--muted); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .1s;
+  }
+  .row:hover .del-btn { opacity: 1; }
+  .row .del-btn:hover { color: #e5534b; }
+
+  .slider-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px 10px 34px;
+  }
+  .slider-controls input[type="number"] {
+    width: 46px;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 4px;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .slider-controls input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+  .slider-controls .play-btn {
+    width: 22px; height: 22px; min-width: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 9px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+  .slider-controls .play-btn:hover { color: var(--text); border-color: var(--muted); }
+  .slider-controls .value-label {
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 40px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #add-row-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    border: none; border-top: 1px solid var(--border);
+    background: var(--bg); cursor: pointer;
+    color: var(--muted); font-size: 14px;
+    width: 100%; text-align: left;
+  }
+  #add-row-btn:hover { background: var(--hover-bg); color: var(--text); }
+  #add-row-btn .plus-circle {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; line-height: 1;
+  }
+
+  #help-note {
+    font-size: 11.5px;
+    color: var(--muted);
+    padding: 10px 16px 14px 16px;
+    border-top: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  #help-note code { background: var(--code-bg); padding: 1px 4px; border-radius: 3px; }
+
+  /* ---------- Canvas area ---------- */
+  #canvas-wrap {
+    position: relative;
+    flex: 1;
+    height: 100%;
+    background: var(--bg-canvas);
+  }
+  #graph {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-canvas);
+    cursor: grab;
+    touch-action: none;
+  }
+  #graph.dragging { cursor: grabbing; }
+
+  #controls {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px var(--shadow);
+    overflow: hidden;
+  }
+  #controls button {
+    width: 36px; height: 36px;
+    border: none;
+    background: var(--bg);
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  #controls button:last-child { border-bottom: none; }
+  #controls button:hover { background: var(--hover-bg); }
+
+  #coord-readout {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--readout-bg);
+    padding: 3px 8px;
+    border-radius: 5px;
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div id="sidebar-header">f(x) Graphing Calculator</div>
+    <div id="rows"></div>
+    <button id="add-row-btn"><span class="plus-circle">+</span> Add expression</button>
+    <div id="help-note">
+      Functions: <code>y = sin(x)</code>. Implicit curves: <code>x^2 + y^2 = 9</code>.
+      Sliders: <code>a = 2</code>, then reference <code>a</code> in another row, e.g. <code>y = a*sin(x)</code>.<br>
+      Supports <code>+ - * / ^</code>, parentheses, <code>sqrt abs log ln exp floor ceil</code>,
+      trig/inverse-trig/hyperbolic functions, <code>min max pow</code>, and constants <code>pi</code>, <code>e</code>.<br>
+      Scroll to zoom, drag to pan.
+    </div>
+  </div>
+  <div id="canvas-wrap">
+    <canvas id="graph"></canvas>
+    <div id="coord-readout"></div>
+    <div id="controls">
+      <button id="theme-toggle" title="Toggle dark mode">&#9789;</button>
+      <button id="zoom-in" title="Zoom in">+</button>
+      <button id="zoom-out" title="Zoom out">&minus;</button>
+      <button id="reset-view" title="Reset view">&#8635;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     Expression parser / evaluator (no eval)
+     variables: x, y  |  constants: pi, e  |  everything else: param
+     ============================================================ */
+
+  const FUNCTIONS = new Set([
+    'sin','cos','tan','asin','acos','atan',
+    'sinh','cosh','tanh','sqrt','abs','log','ln','exp',
+    'floor','ceil','round','sign','min','max','pow'
+  ]);
+
+  function tokenize(raw){
+    const str = raw.replace(/\s+/g,'');
+    const tokens = [];
+    let i = 0;
+    while (i < str.length){
+      const c = str[i];
+      if (/[0-9.]/.test(c)){
+        let j = i+1;
+        while (j < str.length && /[0-9.]/.test(str[j])) j++;
+        const numStr = str.slice(i,j);
+        if (numStr === '.' || numStr === '') throw new Error('Bad number');
+        tokens.push({type:'num', value: parseFloat(numStr)});
+        i = j;
+      } else if (/[a-zA-Z]/.test(c)){
+        let j = i+1;
+        while (j < str.length && /[a-zA-Z]/.test(str[j])) j++;
+        tokens.push({type:'id', value: str.slice(i,j)});
+        i = j;
+      } else if (c === '('){ tokens.push({type:'lparen', value:'('}); i++; }
+      else if (c === ')'){ tokens.push({type:'rparen', value:')'}); i++; }
+      else if (c === ','){ tokens.push({type:'comma', value:','}); i++; }
+      else if ('+-*/^'.includes(c)){ tokens.push({type:'op', value:c}); i++; }
+      else { throw new Error('Unexpected character: ' + c); }
+    }
+    return tokens;
+  }
+
+  function insertImplicitMultiplication(tokens){
+    const out = [];
+    for (let i = 0; i < tokens.length; i++){
+      const t = tokens[i];
+      out.push(t);
+      const next = tokens[i+1];
+      if (!next) continue;
+      const curIsValueEnd =
+        t.type === 'num' ||
+        t.type === 'rparen' ||
+        (t.type === 'id' && !(FUNCTIONS.has(t.value) && next.type === 'lparen'));
+      const nextIsValueStart =
+        next.type === 'num' || next.type === 'lparen' || next.type === 'id';
+      if (curIsValueEnd && nextIsValueStart){
+        out.push({type:'op', value:'*'});
+      }
+    }
+    return out;
+  }
+
+  function parseTokens(tokens){
+    let pos = 0;
+    function peek(){ return tokens[pos]; }
+    function consume(){ return tokens[pos++]; }
+    function expect(type){
+      const t = peek();
+      if (!t || t.type !== type) throw new Error('Expected ' + type);
+      return consume();
+    }
+
+    function parseExpression(){ return parseAddSub(); }
+
+    function parseAddSub(){
+      let node = parseMulDiv();
+      while (peek() && peek().type === 'op' && (peek().value === '+' || peek().value === '-')){
+        const op = consume().value;
+        const rhs = parseMulDiv();
+        node = {type:'bin', op, l:node, r:rhs};
+      }
+      return node;
+    }
+
+    function parseMulDiv(){
+      let node = parseUnary();
+      while (peek() && peek().type === 'op' && (peek().value === '*' || peek().value === '/')){
+        const op = consume().value;
+        const rhs = parseUnary();
+        node = {type:'bin', op, l:node, r:rhs};
+      }
+      return node;
+    }
+
+    function parseUnary(){
+      if (peek() && peek().type === 'op' && (peek().value === '-' || peek().value === '+')){
+        const op = consume().value;
+        const arg = parseUnary();
+        return {type:'unary', op, arg};
+      }
+      return parsePow();
+    }
+
+    function parsePow(){
+      let node = parsePrimary();
+      if (peek() && peek().type === 'op' && peek().value === '^'){
+        consume();
+        const rhs = parseUnary(); // right-associative
+        node = {type:'bin', op:'^', l:node, r:rhs};
+      }
+      return node;
+    }
+
+    function parsePrimary(){
+      const t = peek();
+      if (!t) throw new Error('Unexpected end of expression');
+
+      if (t.type === 'num'){ consume(); return {type:'num', value:t.value}; }
+
+      if (t.type === 'lparen'){
+        consume();
+        const node = parseExpression();
+        expect('rparen');
+        return node;
+      }
+
+      if (t.type === 'id'){
+        consume();
+        if (peek() && peek().type === 'lparen'){
+          consume();
+          const args = [parseExpression()];
+          while (peek() && peek().type === 'comma'){
+            consume();
+            args.push(parseExpression());
+          }
+          expect('rparen');
+          return {type:'call', name:t.value, args};
+        }
+        if (t.value === 'x') return {type:'var', name:'x'};
+        if (t.value === 'y') return {type:'var', name:'y'};
+        if (t.value === 'pi' || t.value === 'e') return {type:'const', name:t.value};
+        return {type:'param', name:t.value};
+      }
+
+      throw new Error('Unexpected token: ' + t.value);
+    }
+
+    const ast = parseExpression();
+    if (pos !== tokens.length) throw new Error('Unexpected trailing input');
+    return ast;
+  }
+
+  function parseSide(str){
+    const tokens = insertImplicitMultiplication(tokenize(str));
+    if (tokens.length === 0) throw new Error('Empty expression');
+    return parseTokens(tokens);
+  }
+
+  function hasVar(node, name){
+    if (!node) return false;
+    switch(node.type){
+      case 'var': return node.name === name;
+      case 'unary': return hasVar(node.arg, name);
+      case 'bin': return hasVar(node.l, name) || hasVar(node.r, name);
+      case 'call': return node.args.some(a => hasVar(a, name));
+      default: return false;
+    }
+  }
+
+  function collectParams(node, set){
+    set = set || new Set();
+    if (!node) return set;
+    switch(node.type){
+      case 'param': set.add(node.name); break;
+      case 'unary': collectParams(node.arg, set); break;
+      case 'bin': collectParams(node.l, set); collectParams(node.r, set); break;
+      case 'call': node.args.forEach(a => collectParams(a, set)); break;
+    }
+    return set;
+  }
+
+  // env = {x, y, params}
+  function evaluate(node, env){
+    switch(node.type){
+      case 'num': return node.value;
+      case 'var': return node.name === 'x' ? env.x : env.y;
+      case 'const': return node.name === 'pi' ? Math.PI : Math.E;
+      case 'param': {
+        const v = env.params ? env.params[node.name] : undefined;
+        return v === undefined ? NaN : v;
+      }
+      case 'unary': {
+        const v = evaluate(node.arg, env);
+        return node.op === '-' ? -v : v;
+      }
+      case 'bin': {
+        const l = evaluate(node.l, env), r = evaluate(node.r, env);
+        switch(node.op){
+          case '+': return l + r;
+          case '-': return l - r;
+          case '*': return l * r;
+          case '/': return l / r;
+          case '^': return Math.pow(l, r);
+        }
+        return NaN;
+      }
+      case 'call': {
+        const a = node.args.map(arg => evaluate(arg, env));
+        switch(node.name){
+          case 'sin': return Math.sin(a[0]);
+          case 'cos': return Math.cos(a[0]);
+          case 'tan': return Math.tan(a[0]);
+          case 'asin': return Math.asin(a[0]);
+          case 'acos': return Math.acos(a[0]);
+          case 'atan': return Math.atan(a[0]);
+          case 'sinh': return Math.sinh(a[0]);
+          case 'cosh': return Math.cosh(a[0]);
+          case 'tanh': return Math.tanh(a[0]);
+          case 'sqrt': return Math.sqrt(a[0]);
+          case 'abs': return Math.abs(a[0]);
+          case 'log': return a.length > 1 ? Math.log(a[0])/Math.log(a[1]) : Math.log10(a[0]);
+          case 'ln': return Math.log(a[0]);
+          case 'exp': return Math.exp(a[0]);
+          case 'floor': return Math.floor(a[0]);
+          case 'ceil': return Math.ceil(a[0]);
+          case 'round': return Math.round(a[0]);
+          case 'sign': return Math.sign(a[0]);
+          case 'min': return Math.min(...a);
+          case 'max': return Math.max(...a);
+          case 'pow': return Math.pow(a[0], a[1]);
+          default: return NaN;
+        }
+      }
+    }
+    return NaN;
+  }
+
+  /* ============================================================
+     App state
+     rows: {id, expr, color, visible, kind, ast, error,
+            paramName, value, sliderMin, sliderMax, sliderStep, animating, animDir}
+     kind: null | 'function' | 'implicit' | 'param'
+     ============================================================ */
+
+  const COLORS = ['#c74440','#2d70b3','#388c46','#6042a6','#fa7e19','#000000','#e07cb1','#0a8783'];
+  let colorCursor = 0;
+  function nextColor(){ return COLORS[(colorCursor++) % COLORS.length]; }
+
+  let rowIdSeq = 1;
+  const rows = [];
+
+  function makeRow(expr){
+    return {
+      id: rowIdSeq++, expr: expr || '', color: nextColor(), visible: true,
+      kind: null, ast: null, error: false,
+      paramName: null, value: 0,
+      sliderMin: undefined, sliderMax: undefined, sliderStep: 0.1,
+      animating: false, animDir: 1
+    };
+  }
+
+  function recompile(row){
+    row.error = false;
+    row.kind = null;
+    row.ast = null;
+    const raw = row.expr;
+
+    if (raw.trim() === '') { row.animating = false; return; }
+
+    try {
+      const eqIdx = raw.indexOf('=');
+
+      if (eqIdx === -1){
+        row.kind = 'function';
+        row.ast = parseSide(raw);
+      } else {
+        const leftStr = raw.slice(0, eqIdx);
+        const rightStr = raw.slice(eqIdx + 1);
+        const leftTrim = leftStr.trim();
+        const isBareIdent = /^[a-zA-Z]+$/.test(leftTrim) &&
+          leftTrim !== 'x' && leftTrim !== 'y' && leftTrim !== 'pi' && leftTrim !== 'e' &&
+          !FUNCTIONS.has(leftTrim);
+
+        let handledAsParam = false;
+        if (isBareIdent){
+          const rightAst = parseSide(rightStr);
+          if (!hasVar(rightAst,'x') && !hasVar(rightAst,'y') && collectParams(rightAst).size === 0){
+            const value = evaluate(rightAst, {x:0, y:0, params:{}});
+            if (!isFinite(value)) throw new Error('Non-finite constant');
+            row.kind = 'param';
+            row.paramName = leftTrim;
+            row.value = value;
+            if (row.sliderMin === undefined){
+              if (value >= -10 && value <= 10){ row.sliderMin = -10; row.sliderMax = 10; }
+              else { const span = Math.abs(value) * 1.5; row.sliderMin = -span; row.sliderMax = span; }
+              row.sliderStep = 0.1;
+            }
+            handledAsParam = true;
+          }
+        }
+
+        if (!handledAsParam){
+          const leftAst = parseSide(leftStr);
+          const rightAst = parseSide(rightStr);
+          if (leftTrim === 'y' && !hasVar(rightAst,'y')){
+            row.kind = 'function';
+            row.ast = rightAst;
+          } else {
+            row.kind = 'implicit';
+            row.ast = {type:'bin', op:'-', l:leftAst, r:rightAst};
+          }
+        }
+      }
+    } catch (e){
+      row.error = true;
+      row.kind = null;
+      row.ast = null;
+    }
+
+    if (row.kind !== 'param') row.animating = false;
+  }
+
+  rows.push(makeRow('a = 2'));
+  rows.push(makeRow('y = a*sin(x)'));
+  rows.push(makeRow('x^2 + y^2 = 9'));
+  rows.forEach(recompile);
+  rows.push(makeRow(''));
+
+  function buildParamsSnapshot(){
+    const params = {};
+    rows.forEach(r => { if (r.kind === 'param' && r.paramName) params[r.paramName] = r.value; });
+    return params;
+  }
+
+  /* ============================================================
+     Sidebar rendering
+     ============================================================ */
+
+  const rowsEl = document.getElementById('rows');
+  const rowSliderRefs = new Map(); // rowId -> {slider, valueLabel}
+  let animRafId = null;
+
+  function ensureAnimationLoop(){
+    if (animRafId !== null) return;
+    const step = () => {
+      let anyAnimating = false;
+      rows.forEach(row => {
+        if (row.kind === 'param' && row.animating){
+          anyAnimating = true;
+          const range = row.sliderMax - row.sliderMin;
+          const speed = range / 300;
+          row.value += speed * row.animDir;
+          if (row.value >= row.sliderMax){ row.value = row.sliderMax; row.animDir = -1; }
+          if (row.value <= row.sliderMin){ row.value = row.sliderMin; row.animDir = 1; }
+          const refs = rowSliderRefs.get(row.id);
+          if (refs){
+            refs.slider.value = row.value;
+            refs.valueLabel.textContent = formatNumber(row.value);
+          }
+        }
+      });
+      if (anyAnimating){
+        draw();
+        animRafId = requestAnimationFrame(step);
+      } else {
+        animRafId = null;
+      }
+    };
+    animRafId = requestAnimationFrame(step);
+  }
+
+  function buildSliderControls(row){
+    const wrap = document.createElement('div');
+    wrap.className = 'slider-controls';
+
+    const playBtn = document.createElement('button');
+    playBtn.className = 'play-btn';
+    playBtn.textContent = row.animating ? '❚❚' : '▶';
+    playBtn.title = row.animating ? 'Pause' : 'Animate';
+    playBtn.addEventListener('click', () => {
+      row.animating = !row.animating;
+      playBtn.textContent = row.animating ? '❚❚' : '▶';
+      playBtn.title = row.animating ? 'Pause' : 'Animate';
+      if (row.animating) ensureAnimationLoop();
+    });
+
+    const minInput = document.createElement('input');
+    minInput.type = 'number';
+    minInput.value = row.sliderMin;
+    minInput.addEventListener('change', () => {
+      const v = parseFloat(minInput.value);
+      row.sliderMin = isFinite(v) ? v : row.sliderMin;
+      slider.min = row.sliderMin;
+      if (row.value < row.sliderMin){ row.value = row.sliderMin; slider.value = row.value; valueLabel.textContent = formatNumber(row.value); }
+      draw();
+    });
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = row.sliderMin;
+    slider.max = row.sliderMax;
+    slider.step = row.sliderStep || 0.1;
+    slider.value = row.value;
+    slider.addEventListener('input', () => {
+      row.value = parseFloat(slider.value);
+      valueLabel.textContent = formatNumber(row.value);
+      draw();
+    });
+
+    const maxInput = document.createElement('input');
+    maxInput.type = 'number';
+    maxInput.value = row.sliderMax;
+    maxInput.addEventListener('change', () => {
+      const v = parseFloat(maxInput.value);
+      row.sliderMax = isFinite(v) ? v : row.sliderMax;
+      slider.max = row.sliderMax;
+      if (row.value > row.sliderMax){ row.value = row.sliderMax; slider.value = row.value; valueLabel.textContent = formatNumber(row.value); }
+      draw();
+    });
+
+    const valueLabel = document.createElement('span');
+    valueLabel.className = 'value-label';
+    valueLabel.textContent = formatNumber(row.value);
+
+    wrap.appendChild(playBtn);
+    wrap.appendChild(minInput);
+    wrap.appendChild(slider);
+    wrap.appendChild(maxInput);
+    wrap.appendChild(valueLabel);
+
+    rowSliderRefs.set(row.id, {slider, valueLabel});
+    return wrap;
+  }
+
+  function renderRows(){
+    rowsEl.innerHTML = '';
+    rowSliderRefs.clear();
+    rows.forEach(row => {
+      const container = document.createElement('div');
+      container.className = 'row-container';
+      container.setAttribute('data-row-id', String(row.id));
+
+      const rowEl = document.createElement('div');
+      rowEl.className = 'row' + (row.error ? ' error' : '') + (!row.visible ? ' hidden' : '');
+
+      const colorTab = document.createElement('div');
+      colorTab.className = 'color-tab';
+      colorTab.style.color = row.color;
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.background = row.color;
+      colorTab.appendChild(dot);
+      colorTab.addEventListener('click', () => {
+        row.visible = !row.visible;
+        renderRows();
+        draw();
+      });
+
+      const input = document.createElement('input');
+      input.className = 'expr-input';
+      input.type = 'text';
+      input.placeholder = 'y = ...';
+      input.value = row.expr;
+      input.spellcheck = false;
+      input.addEventListener('input', () => {
+        const prevKind = row.kind;
+        row.expr = input.value;
+        recompile(row);
+        rowEl.classList.toggle('error', row.error);
+
+        if (row.kind !== prevKind){
+          const selStart = input.selectionStart, selEnd = input.selectionEnd;
+          const rid = row.id;
+          renderRows();
+          const newInput = rowsEl.querySelector('[data-row-id="'+rid+'"] .expr-input');
+          if (newInput){ newInput.focus(); try { newInput.setSelectionRange(selStart, selEnd); } catch(e){} }
+        } else if (row.kind === 'param'){
+          const refs = rowSliderRefs.get(row.id);
+          if (refs){
+            refs.slider.min = row.sliderMin;
+            refs.slider.max = row.sliderMax;
+            refs.slider.value = row.value;
+            refs.valueLabel.textContent = formatNumber(row.value);
+          }
+        }
+
+        // auto-add a fresh empty row if the last row just got content
+        if (row === rows[rows.length - 1] && row.expr.trim() !== ''){
+          rows.push(makeRow(''));
+          renderRows();
+          const inputs = rowsEl.querySelectorAll('.expr-input');
+          inputs[inputs.length - 1] && inputs[inputs.length - 1].focus();
+        }
+        draw();
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter'){
+          e.preventDefault();
+          const idx = rows.indexOf(row);
+          if (idx === rows.length - 1 && row.expr.trim() !== ''){
+            rows.push(makeRow(''));
+          }
+          renderRows();
+          const inputs = rowsEl.querySelectorAll('.expr-input');
+          const nextIdx = Math.min(idx + 1, inputs.length - 1);
+          inputs[nextIdx] && inputs[nextIdx].focus();
+        }
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del-btn';
+      delBtn.textContent = '×';
+      delBtn.title = 'Delete';
+      delBtn.addEventListener('click', () => {
+        const idx = rows.indexOf(row);
+        if (rows.length === 1){
+          row.expr = ''; row.ast = null; row.error = false; row.kind = null; row.animating = false;
+        } else {
+          rows.splice(idx, 1);
+        }
+        renderRows();
+        draw();
+      });
+
+      rowEl.appendChild(colorTab);
+      rowEl.appendChild(input);
+      rowEl.appendChild(delBtn);
+      container.appendChild(rowEl);
+
+      if (row.kind === 'param'){
+        container.appendChild(buildSliderControls(row));
+      }
+
+      rowsEl.appendChild(container);
+    });
+  }
+
+  document.getElementById('add-row-btn').addEventListener('click', () => {
+    rows.push(makeRow(''));
+    renderRows();
+    const inputs = rowsEl.querySelectorAll('.expr-input');
+    inputs[inputs.length - 1] && inputs[inputs.length - 1].focus();
+  });
+
+  renderRows();
+
+  /* ============================================================
+     Theme
+     ============================================================ */
+
+  const THEME = {
+    light: { grid:'#eaeaea', axis:'#9a9a9a', text:'#7a7a7a', bg:'#ffffff' },
+    dark:  { grid:'#2c2d31', axis:'#6b6c70', text:'#a5a5a9', bg:'#1a1b1e' }
+  };
+  let currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  const themeToggleBtn = document.getElementById('theme-toggle');
+
+  function updateThemeToggleIcon(){
+    themeToggleBtn.textContent = currentTheme === 'dark' ? '☀' : '☽';
+    themeToggleBtn.title = currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  }
+  function setTheme(mode){
+    currentTheme = mode;
+    document.documentElement.setAttribute('data-theme', mode);
+    try { localStorage.setItem('graphcalc-theme', mode); } catch(e){}
+    updateThemeToggleIcon();
+    draw();
+  }
+  themeToggleBtn.addEventListener('click', () => setTheme(currentTheme === 'dark' ? 'light' : 'dark'));
+  updateThemeToggleIcon();
+
+  /* ============================================================
+     Canvas / viewport
+     ============================================================ */
+
+  const canvas = document.getElementById('graph');
+  const ctx = canvas.getContext('2d');
+  const wrap = document.getElementById('canvas-wrap');
+  const coordReadout = document.getElementById('coord-readout');
+
+  let dpr = window.devicePixelRatio || 1;
+  let cssW = 0, cssH = 0;
+
+  // view: center point in world coords + pixels-per-unit scale
+  const view = { cx: 0, cy: 0, scale: 40 };
+
+  function resizeCanvas(){
+    dpr = window.devicePixelRatio || 1;
+    cssW = wrap.clientWidth;
+    cssH = wrap.clientHeight;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+
+  function worldToPixel(x, y){
+    return [
+      cssW/2 + (x - view.cx) * view.scale,
+      cssH/2 - (y - view.cy) * view.scale
+    ];
+  }
+  function pixelToWorld(px, py){
+    return [
+      view.cx + (px - cssW/2) / view.scale,
+      view.cy - (py - cssH/2) / view.scale
+    ];
+  }
+
+  function niceStep(rawStep){
+    if (rawStep <= 0 || !isFinite(rawStep)) return 1;
+    const exp = Math.floor(Math.log10(rawStep));
+    const f = rawStep / Math.pow(10, exp);
+    let nf;
+    if (f < 1.5) nf = 1;
+    else if (f < 3) nf = 2;
+    else if (f < 7) nf = 5;
+    else nf = 10;
+    return nf * Math.pow(10, exp);
+  }
+
+  function formatNumber(n){
+    if (Math.abs(n) < 1e-9) return '0';
+    const s = n.toPrecision(10).replace(/\.?0+$/,'');
+    return s;
+  }
+
+  function drawImplicitCurve(row, params){
+    const res = 6; // px cell size
+    const nx = Math.ceil(cssW / res) + 1;
+    const ny = Math.ceil(cssH / res) + 1;
+    const values = new Array(ny);
+
+    for (let iy = 0; iy < ny; iy++){
+      const py = Math.min(iy * res, cssH);
+      const arr = new Array(nx);
+      for (let ix = 0; ix < nx; ix++){
+        const px = Math.min(ix * res, cssW);
+        const [wx, wy] = pixelToWorld(px, py);
+        let v;
+        try { v = evaluate(row.ast, {x:wx, y:wy, params}); } catch(e){ v = NaN; }
+        arr[ix] = v;
+      }
+      values[iy] = arr;
+    }
+
+    function sgn(v){ return v >= 0 ? 1 : 0; }
+    function lerpPoint(x1,y1,v1,x2,y2,v2){
+      const t = v1 / (v1 - v2);
+      return [x1 + t*(x2-x1), y1 + t*(y2-y1)];
+    }
+
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = row.color;
+    ctx.beginPath();
+
+    for (let iy = 0; iy < ny - 1; iy++){
+      for (let ix = 0; ix < nx - 1; ix++){
+        const x0 = ix*res, x1 = Math.min((ix+1)*res, cssW);
+        const y0 = iy*res, y1 = Math.min((iy+1)*res, cssH);
+        const vTL = values[iy][ix], vTR = values[iy][ix+1];
+        const vBL = values[iy+1][ix], vBR = values[iy+1][ix+1];
+        if (!isFinite(vTL) || !isFinite(vTR) || !isFinite(vBL) || !isFinite(vBR)) continue;
+
+        const sTL = sgn(vTL), sTR = sgn(vTR), sBL = sgn(vBL), sBR = sgn(vBR);
+        if (sTL === sTR && sTR === sBR && sBR === sBL) continue;
+
+        const pts = {};
+        if (sTL !== sTR) pts.top = lerpPoint(x0,y0,vTL,x1,y0,vTR);
+        if (sTR !== sBR) pts.right = lerpPoint(x1,y0,vTR,x1,y1,vBR);
+        if (sBL !== sBR) pts.bottom = lerpPoint(x0,y1,vBL,x1,y1,vBR);
+        if (sTL !== sBL) pts.left = lerpPoint(x0,y0,vTL,x0,y1,vBL);
+
+        const crossed = Object.keys(pts);
+        if (crossed.length === 2){
+          ctx.moveTo(pts[crossed[0]][0], pts[crossed[0]][1]);
+          ctx.lineTo(pts[crossed[1]][0], pts[crossed[1]][1]);
+        } else if (crossed.length === 4){
+          let centerMatchesTL = true;
+          try {
+            const [cwx, cwy] = pixelToWorld((x0+x1)/2, (y0+y1)/2);
+            const vC = evaluate(row.ast, {x:cwx, y:cwy, params});
+            if (isFinite(vC)) centerMatchesTL = (sgn(vC) === sTL);
+          } catch(e){}
+          if (centerMatchesTL){
+            ctx.moveTo(pts.top[0], pts.top[1]); ctx.lineTo(pts.left[0], pts.left[1]);
+            ctx.moveTo(pts.bottom[0], pts.bottom[1]); ctx.lineTo(pts.right[0], pts.right[1]);
+          } else {
+            ctx.moveTo(pts.top[0], pts.top[1]); ctx.lineTo(pts.right[0], pts.right[1]);
+            ctx.moveTo(pts.bottom[0], pts.bottom[1]); ctx.lineTo(pts.left[0], pts.left[1]);
+          }
+        }
+      }
+    }
+    ctx.stroke();
+  }
+
+  function draw(){
+    const th = THEME[currentTheme] || THEME.light;
+    ctx.fillStyle = th.bg;
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    const minorStep = niceStep(90 / view.scale);
+
+    const xMin = view.cx - (cssW/2)/view.scale;
+    const xMax = view.cx + (cssW/2)/view.scale;
+    const yMin = view.cy - (cssH/2)/view.scale;
+    const yMax = view.cy + (cssH/2)/view.scale;
+
+    // minor gridlines
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = th.grid;
+    ctx.beginPath();
+    let startX = Math.floor(xMin / minorStep) * minorStep;
+    for (let x = startX; x <= xMax; x += minorStep){
+      const [px] = worldToPixel(x, 0);
+      ctx.moveTo(px + 0.5, 0);
+      ctx.lineTo(px + 0.5, cssH);
+    }
+    let startY = Math.floor(yMin / minorStep) * minorStep;
+    for (let y = startY; y <= yMax; y += minorStep){
+      const [,py] = worldToPixel(0, y);
+      ctx.moveTo(0, py + 0.5);
+      ctx.lineTo(cssW, py + 0.5);
+    }
+    ctx.stroke();
+
+    // axes
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = th.axis;
+    ctx.beginPath();
+    const [ax] = worldToPixel(0, 0);
+    const [,ay] = worldToPixel(0, 0);
+    ctx.moveTo(ax + 0.5, 0); ctx.lineTo(ax + 0.5, cssH);
+    ctx.moveTo(0, ay + 0.5); ctx.lineTo(cssW, ay + 0.5);
+    ctx.stroke();
+
+    // tick labels
+    ctx.fillStyle = th.text;
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.textBaseline = 'top';
+    for (let x = startX; x <= xMax; x += minorStep){
+      if (Math.abs(x) < minorStep/1000) continue;
+      const [px] = worldToPixel(x, 0);
+      let ly = ay + 4;
+      if (ly > cssH - 14) ly = cssH - 14;
+      if (ly < 0) ly = 0;
+      ctx.fillText(formatNumber(x), px + 3, ly);
+    }
+    ctx.textBaseline = 'bottom';
+    for (let y = startY; y <= yMax; y += minorStep){
+      if (Math.abs(y) < minorStep/1000) continue;
+      const [,py] = worldToPixel(0, y);
+      let lx = ax + 3;
+      if (lx > cssW - 30) lx = cssW - 30;
+      if (lx < 0) lx = 0;
+      ctx.fillText(formatNumber(y), lx, py - 2);
+    }
+
+    // curves
+    const params = buildParamsSnapshot();
+    rows.forEach(row => {
+      if (!row.visible) return;
+      if (row.kind === 'function' && row.ast){
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = row.color;
+        ctx.beginPath();
+        let started = false;
+        let prevPy = null;
+        for (let pxi = 0; pxi <= cssW; pxi += 1){
+          const [wx] = pixelToWorld(pxi, 0);
+          let wy;
+          try { wy = evaluate(row.ast, {x:wx, y:undefined, params}); } catch(e){ wy = NaN; }
+          if (!isFinite(wy)){
+            started = false;
+            prevPy = null;
+            continue;
+          }
+          const [,py] = worldToPixel(wx, wy);
+          if (prevPy !== null && Math.abs(py - prevPy) > cssH * 1.4){
+            started = false;
+          }
+          if (!started){
+            ctx.moveTo(pxi, py);
+            started = true;
+          } else {
+            ctx.lineTo(pxi, py);
+          }
+          prevPy = py;
+        }
+        ctx.stroke();
+      } else if (row.kind === 'implicit' && row.ast){
+        drawImplicitCurve(row, params);
+      }
+    });
+  }
+
+  /* ============================================================
+     Interaction: pan / zoom / touch
+     ============================================================ */
+
+  let dragging = false;
+  let lastPointer = null;
+  const activePointers = new Map();
+  let pinchStartDist = null;
+  let pinchStartScale = null;
+
+  canvas.addEventListener('pointerdown', (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (activePointers.size === 1){
+      dragging = true;
+      lastPointer = {x:e.clientX, y:e.clientY};
+      canvas.classList.add('dragging');
+    } else if (activePointers.size === 2){
+      dragging = false;
+      const pts = Array.from(activePointers.values());
+      pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      pinchStartScale = view.scale;
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!activePointers.has(e.pointerId)) {
+      const rect = canvas.getBoundingClientRect();
+      const [wx, wy] = pixelToWorld(e.clientX - rect.left, e.clientY - rect.top);
+      coordReadout.textContent = '(' + wx.toFixed(3) + ', ' + wy.toFixed(3) + ')';
+      return;
+    }
+    activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+
+    if (activePointers.size === 2 && pinchStartDist){
+      const pts = Array.from(activePointers.values());
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const factor = dist / pinchStartDist;
+      view.scale = Math.max(1, Math.min(1e6, pinchStartScale * factor));
+      draw();
+      return;
+    }
+
+    if (dragging && lastPointer){
+      const dx = e.clientX - lastPointer.x;
+      const dy = e.clientY - lastPointer.y;
+      view.cx -= dx / view.scale;
+      view.cy += dy / view.scale;
+      lastPointer = {x:e.clientX, y:e.clientY};
+      draw();
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const [wx, wy] = pixelToWorld(e.clientX - rect.left, e.clientY - rect.top);
+    coordReadout.textContent = '(' + wx.toFixed(3) + ', ' + wy.toFixed(3) + ')';
+  });
+
+  function endPointer(e){
+    activePointers.delete(e.pointerId);
+    if (activePointers.size === 0){
+      dragging = false;
+      canvas.classList.remove('dragging');
+    } else if (activePointers.size === 1){
+      const [p] = activePointers.values();
+      dragging = true;
+      lastPointer = {x:p.x, y:p.y};
+      pinchStartDist = null;
+    }
+  }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('pointerleave', () => { coordReadout.textContent = ''; });
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    const [wxBefore, wyBefore] = pixelToWorld(px, py);
+    const factor = Math.pow(1.0015, -e.deltaY);
+    view.scale = Math.max(1, Math.min(1e6, view.scale * factor));
+    const [wxAfter, wyAfter] = pixelToWorld(px, py);
+    view.cx += wxBefore - wxAfter;
+    view.cy += wyBefore - wyAfter;
+    draw();
+  }, {passive:false});
+
+  document.getElementById('zoom-in').addEventListener('click', () => {
+    view.scale = Math.min(1e6, view.scale * 1.4);
+    draw();
+  });
+  document.getElementById('zoom-out').addEventListener('click', () => {
+    view.scale = Math.max(1, view.scale / 1.4);
+    draw();
+  });
+  document.getElementById('reset-view').addEventListener('click', () => {
+    view.cx = 0; view.cy = 0; view.scale = 40;
+    draw();
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+})();
+</script>
+</body>
+</html>
