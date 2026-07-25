@@ -546,136 +546,175 @@ function prerenderTerrain(){
   for(let r=0;r<ROWS;r++)
     for(let co=0;co<COLS;co++)
       drawTerrCell(tc,co,r,G.map[r*COLS+co]);
+
+  // Scenario mood wash — sets the light/weather of each battlefield
+  const TINT={
+    stirling:'rgba(40,60,30,0.10)', falkirk:'rgba(60,55,40,0.10)',
+    bannockburn:'rgba(40,55,30,0.10)', halidon:'rgba(66,58,36,0.12)',
+    flodden:'rgba(54,58,64,0.16)', prestonpans:'rgba(80,48,36,0.20)',
+    culloden:'rgba(60,72,92,0.22)',
+  };
+  if(TINT[G.scenario]){ tc.fillStyle=TINT[G.scenario]; tc.fillRect(0,0,cv.width,cv.height); }
+
+  // Atmospheric vignette for depth
+  const vg=tc.createRadialGradient(cv.width/2,cv.height*0.46,Math.min(cv.width,cv.height)*0.34,
+                                   cv.width/2,cv.height/2,Math.max(cv.width,cv.height)*0.72);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.34)');
+  tc.fillStyle=vg; tc.fillRect(0,0,cv.width,cv.height);
 }
 
 function drawTerrCell(tc,co,ro,t){
   const x=px(co),y=py(ro),c=cs();
-  tc.fillStyle=TCOL[t]; tc.fillRect(x,y,c,c);
-
   function pr(n){return seededR(co,ro,n);}
+  // Base fill with subtle per-cell tonal variation so no two cells look identical
+  const shade=(pr(99)-0.5)*0.10;
+  tc.fillStyle=shadeCol(TCOL[t],shade);
+  tc.fillRect(x,y,c,c);
 
-  if(t===PL){ // Plain — grass blades
-    tc.strokeStyle='rgba(30,80,0,0.35)'; tc.lineWidth=0.7;
-    for(let i=0;i<6;i++){
-      const gx=x+pr(i*3)*c,gy=y+pr(i*3+1)*c,gh=c*(0.1+pr(i*3+2)*0.1);
-      tc.beginPath(); tc.moveTo(gx,gy+gh); tc.lineTo(gx-c*0.02,gy); tc.lineTo(gx+c*0.02,gy); tc.stroke();
+  if(t===PL){ // Grassland — mottled turf + tufts of grass
+    for(let i=0;i<5;i++){
+      const gx=x+pr(i*4)*c,gy=y+pr(i*4+1)*c,rr=c*(0.16+pr(i*4+2)*0.22);
+      tc.fillStyle=pr(i*4+3)>0.5?'rgba(126,168,66,0.22)':'rgba(28,58,10,0.20)';
+      tc.beginPath(); tc.ellipse(gx,gy,rr,rr*0.68,pr(i)*3,0,Math.PI*2); tc.fill();
     }
-  } else if(t===HL){ // Hill — contour shading
-    const g=tc.createLinearGradient(x,y,x+c*0.7,y+c*0.7);
-    g.addColorStop(0,'rgba(255,240,200,0.22)'); g.addColorStop(1,'rgba(0,0,0,0.28)');
+    for(let i=0;i<7;i++){
+      const gx=x+pr(i*3)*c,gy=y+c*0.35+pr(i*3+1)*c*0.6,gh=c*(0.1+pr(i*3+2)*0.13);
+      const lean=(pr(i*3+4)-0.5)*c*0.09;
+      tc.strokeStyle=pr(i*3+5)>0.6?'rgba(150,190,80,0.5)':'rgba(38,88,12,0.55)';
+      tc.lineWidth=Math.max(0.5,c*0.02);
+      tc.beginPath(); tc.moveTo(gx,gy); tc.quadraticCurveTo(gx+lean*0.5,gy-gh*0.6,gx+lean,gy-gh); tc.stroke();
+    }
+  } else if(t===HL){ // Hill — lit dome with contour rings, light from top-left
+    const g=tc.createRadialGradient(x+c*0.35,y+c*0.32,c*0.05,x+c*0.55,y+c*0.55,c*0.95);
+    g.addColorStop(0,'rgba(196,176,110,0.5)');
+    g.addColorStop(0.45,'rgba(120,110,55,0.10)');
+    g.addColorStop(1,'rgba(18,22,6,0.45)');
     tc.fillStyle=g; tc.fillRect(x,y,c,c);
-    tc.strokeStyle='rgba(100,65,20,0.38)'; tc.lineWidth=0.7;
+    tc.strokeStyle='rgba(92,68,26,0.32)'; tc.lineWidth=Math.max(0.5,c*0.018);
     for(let i=1;i<=3;i++){
       tc.beginPath();
-      tc.ellipse(x+c*0.55,y+c*0.55,c*0.12*i,c*0.08*i,-0.4,0,Math.PI*2);
+      tc.ellipse(x+c*0.52,y+c*0.54,c*0.13*i,c*0.095*i,-0.5,0,Math.PI*2);
       tc.stroke();
     }
-  } else if(t===FR){ // Forest — tree canopy circles
-    tc.fillStyle='#122e08';
-    for(let i=0;i<5;i++){
-      const tx=x+pr(i*3)*c*0.82+c*0.09,ty=y+pr(i*3+1)*c*0.82+c*0.09;
-      const tr=c*(0.08+pr(i*3+2)*0.07);
+  } else if(t===FR){ // Forest — clustered canopies with shadow + sunlit crowns
+    tc.fillStyle='rgba(12,32,6,0.55)'; tc.fillRect(x,y,c,c);
+    for(let i=0;i<6;i++){
+      const tx=x+pr(i*3)*c*0.72+c*0.14,ty=y+pr(i*3+1)*c*0.7+c*0.16;
+      const tr=c*(0.1+pr(i*3+2)*0.09);
+      tc.fillStyle='rgba(0,0,0,0.30)';
+      tc.beginPath(); tc.arc(tx+tr*0.28,ty+tr*0.32,tr,0,Math.PI*2); tc.fill();
+      tc.fillStyle=`rgb(${22+pr(i*3+3)*18|0},${66+pr(i*3+4)*44|0},${16+pr(i*3+5)*18|0})`;
       tc.beginPath(); tc.arc(tx,ty,tr,0,Math.PI*2); tc.fill();
+      tc.fillStyle='rgba(150,200,90,0.35)';
+      tc.beginPath(); tc.arc(tx-tr*0.32,ty-tr*0.32,tr*0.42,0,Math.PI*2); tc.fill();
     }
-    tc.fillStyle='rgba(50,120,20,0.45)';
-    for(let i=5;i<10;i++){
-      const tx=x+pr(i*3)*c*0.82+c*0.09,ty=y+pr(i*3+1)*c*0.82+c*0.09;
-      const tr=c*(0.05+pr(i*3+2)*0.05);
-      tc.beginPath(); tc.arc(tx,ty,tr,0,Math.PI*2); tc.fill();
-    }
-    tc.fillStyle='rgba(20,60,5,0.3)';
-    tc.fillRect(x,y,c,c);
-  } else if(t===RV){ // River — check flow direction
-    const hasN=ro>0&&G.map[(ro-1)*COLS+co]===RV;
-    const hasS=ro<ROWS-1&&G.map[(ro+1)*COLS+co]===RV;
+  } else if(t===RV){ // River — depth gradient + flowing highlights
     const hasE=co<COLS-1&&G.map[ro*COLS+co+1]===RV;
     const hasW=co>0&&G.map[ro*COLS+co-1]===RV;
-    const vert=(hasN||hasS)&&!hasE&&!hasW;
-    const horiz=(hasE||hasW)&&!hasN&&!hasS;
-    // Water shimmer
-    tc.fillStyle='rgba(60,120,220,0.25)'; tc.fillRect(x,y,c,c);
-    tc.strokeStyle='rgba(120,190,255,0.5)'; tc.lineWidth=1;
-    const waves=3;
-    for(let w=0;w<waves;w++){
+    const vert=!hasE&&!hasW;
+    const g=tc.createLinearGradient(x,y,x+c,y+c);
+    g.addColorStop(0,'rgba(70,130,205,0.4)'); g.addColorStop(1,'rgba(10,26,74,0.55)');
+    tc.fillStyle=g; tc.fillRect(x,y,c,c);
+    tc.strokeStyle='rgba(150,200,255,0.42)'; tc.lineWidth=Math.max(0.6,c*0.03);
+    for(let w=0;w<3;w++){
       tc.beginPath();
       if(vert){
-        const wx=x+c*(0.2+w*0.25);
+        const wx=x+c*(0.22+w*0.28);
         tc.moveTo(wx,y);
-        for(let step=0;step<=c;step+=4)
-          tc.lineTo(wx+Math.sin(step*0.4+w)*c*0.07,y+step);
+        for(let s=0;s<=c;s+=4) tc.lineTo(wx+Math.sin(s*0.4+w)*c*0.07,y+s);
       } else {
-        const wy=y+c*(0.2+w*0.25);
+        const wy=y+c*(0.22+w*0.28);
         tc.moveTo(x,wy);
-        for(let step=0;step<=c;step+=4)
-          tc.lineTo(x+step,wy+Math.sin(step*0.4+w)*c*0.07);
+        for(let s=0;s<=c;s+=4) tc.lineTo(x+s,wy+Math.sin(s*0.4+w)*c*0.07);
       }
       tc.stroke();
     }
-  } else if(t===MS){ // Marsh — reed tufts
-    tc.fillStyle='rgba(20,50,5,0.3)'; tc.fillRect(x,y,c,c);
-    tc.strokeStyle='rgba(60,100,20,0.55)'; tc.lineWidth=0.8;
-    for(let i=0;i<7;i++){
-      const mx=x+pr(i*2)*c,my=y+pr(i*2+1)*c;
-      const mh=c*(0.12+pr(i*2+10)*0.08);
+  } else if(t===MS){ // Marsh — murky ground with standing-water pools + reeds
+    tc.fillStyle='rgba(18,44,8,0.4)'; tc.fillRect(x,y,c,c);
+    for(let i=0;i<3;i++){
+      const mx=x+pr(i*5)*c*0.66+c*0.1,my=y+pr(i*5+1)*c*0.66+c*0.12;
+      tc.fillStyle='rgba(74,116,120,0.35)';
+      tc.beginPath(); tc.ellipse(mx,my,c*0.16,c*0.09,pr(i)*2,0,Math.PI*2); tc.fill();
+    }
+    tc.strokeStyle='rgba(120,150,60,0.6)'; tc.lineWidth=Math.max(0.5,c*0.02);
+    for(let i=0;i<6;i++){
+      const mx=x+pr(i*2)*c,my=y+c*0.4+pr(i*2+1)*c*0.55,mh=c*(0.14+pr(i*2+10)*0.1);
       tc.beginPath();
       tc.moveTo(mx,my); tc.lineTo(mx-c*0.03,my-mh);
       tc.moveTo(mx,my); tc.lineTo(mx+c*0.03,my-mh);
-      tc.moveTo(mx,my); tc.lineTo(mx,my-mh*1.15);
+      tc.moveTo(mx,my); tc.lineTo(mx,my-mh*1.2);
       tc.stroke();
     }
-  } else if(t===TW){ // Town — building silhouettes
-    tc.fillStyle='#c89858';
-    tc.fillRect(x+c*0.18,y+c*0.35,c*0.25,c*0.38);
-    tc.fillRect(x+c*0.52,y+c*0.28,c*0.26,c*0.45);
-    tc.fillStyle='#6a4020'; // roofs
-    tc.beginPath(); tc.moveTo(x+c*0.16,y+c*0.35); tc.lineTo(x+c*0.305,y+c*0.2); tc.lineTo(x+c*0.45,y+c*0.35); tc.fill();
-    tc.beginPath(); tc.moveTo(x+c*0.5,y+c*0.28); tc.lineTo(x+c*0.65,y+c*0.12); tc.lineTo(x+c*0.8,y+c*0.28); tc.fill();
-    tc.fillStyle='rgba(0,0,0,0.3)';
-    tc.fillRect(x+c*0.25,y+c*0.5,c*0.1,c*0.23); // door
-  } else if(t===FD){ // Ford/Bridge
-    tc.fillStyle='#1a3a9a'; tc.fillRect(x,y,c,c);
-    tc.strokeStyle='rgba(120,190,255,0.4)'; tc.lineWidth=1;
+  } else if(t===TW){ // Town — cluster of pitched-roof buildings with shading
+    const houses=[[0.14,0.42,0.26,0.34],[0.5,0.34,0.28,0.42],[0.36,0.2,0.22,0.24]];
+    houses.forEach((b,i)=>{
+      const bx=x+b[0]*c,by=y+b[1]*c,bw=b[2]*c,bh=b[3]*c;
+      tc.fillStyle=i===2?'#b98a4e':'#cf9d5c';
+      tc.fillRect(bx,by,bw,bh);
+      tc.fillStyle='rgba(0,0,0,0.22)'; tc.fillRect(bx+bw*0.6,by,bw*0.4,bh); // wall shadow
+      tc.fillStyle=i===1?'#7a4626':'#5e3a1e'; // roof
+      tc.beginPath(); tc.moveTo(bx-bw*0.08,by); tc.lineTo(bx+bw*0.5,by-bh*0.5); tc.lineTo(bx+bw*1.08,by); tc.closePath(); tc.fill();
+      tc.fillStyle='rgba(255,220,150,0.55)'; // lit window
+      tc.fillRect(bx+bw*0.2,by+bh*0.35,bw*0.18,bh*0.28);
+    });
+  } else if(t===FD){ // Ford / timber bridge over water
+    const g=tc.createLinearGradient(x,y,x+c,y+c);
+    g.addColorStop(0,'rgba(70,130,205,0.5)'); g.addColorStop(1,'rgba(12,30,80,0.6)');
+    tc.fillStyle=g; tc.fillRect(x,y,c,c);
+    tc.strokeStyle='rgba(150,200,255,0.4)'; tc.lineWidth=Math.max(0.6,c*0.025);
     for(let w=0;w<3;w++){
-      const wy=y+c*(0.25+w*0.2);
+      const wy=y+c*(0.2+w*0.28);
       tc.beginPath(); tc.moveTo(x,wy);
-      for(let step=0;step<=c;step+=4) tc.lineTo(x+step,wy+Math.sin(step*0.5)*c*0.06);
+      for(let s=0;s<=c;s+=4) tc.lineTo(x+s,wy+Math.sin(s*0.5)*c*0.05);
       tc.stroke();
     }
-    tc.fillStyle='#887050'; // bridge planks
-    tc.fillRect(x+c*0.28,y+c*0.3,c*0.44,c*0.4);
-    tc.strokeStyle='#554030'; tc.lineWidth=0.8;
-    for(let i=0;i<5;i++) { tc.beginPath(); tc.moveTo(x+c*(0.28+i*0.09),y+c*0.3); tc.lineTo(x+c*(0.28+i*0.09),y+c*0.7); tc.stroke(); }
-  } else if(t===RD){ // Road — dirt track
-    const g=tc.createLinearGradient(x,y+c*0.35,x,y+c*0.65);
-    g.addColorStop(0,'rgba(160,130,70,0.5)'); g.addColorStop(0.5,'rgba(180,145,80,0.6)'); g.addColorStop(1,'rgba(160,130,70,0.5)');
-    tc.fillStyle=g; tc.fillRect(x,y+c*0.35,c,c*0.3);
-    // Cart ruts
-    tc.strokeStyle='rgba(100,80,40,0.3)'; tc.lineWidth=0.6;
+    // plank deck with shadow
+    tc.fillStyle='rgba(0,0,0,0.3)'; tc.fillRect(x+c*0.26,y+c*0.34,c*0.5,c*0.42);
+    const pg=tc.createLinearGradient(x,y+c*0.28,x,y+c*0.72);
+    pg.addColorStop(0,'#9a7a4c'); pg.addColorStop(1,'#6a4e2c');
+    tc.fillStyle=pg; tc.fillRect(x+c*0.28,y+c*0.3,c*0.44,c*0.4);
+    tc.strokeStyle='rgba(60,42,26,0.7)'; tc.lineWidth=Math.max(0.5,c*0.018);
+    for(let i=0;i<5;i++){ tc.beginPath(); tc.moveTo(x+c*(0.28+i*0.088),y+c*0.3); tc.lineTo(x+c*(0.28+i*0.088),y+c*0.7); tc.stroke(); }
+  } else if(t===RD){ // Road — worn dirt track with cart ruts and pebbles
+    const g=tc.createLinearGradient(x,y+c*0.32,x,y+c*0.68);
+    g.addColorStop(0,'rgba(150,120,66,0.55)'); g.addColorStop(0.5,'rgba(184,150,84,0.7)'); g.addColorStop(1,'rgba(140,112,60,0.55)');
+    tc.fillStyle=g; tc.fillRect(x,y+c*0.32,c,c*0.36);
+    tc.strokeStyle='rgba(96,74,38,0.4)'; tc.lineWidth=Math.max(0.5,c*0.02);
     tc.beginPath(); tc.moveTo(x,y+c*0.42); tc.lineTo(x+c,y+c*0.42); tc.stroke();
     tc.beginPath(); tc.moveTo(x,y+c*0.58); tc.lineTo(x+c,y+c*0.58); tc.stroke();
-  } else if(t===MR){ // Moor — heather
-    tc.fillStyle='rgba(80,40,70,0.2)'; tc.fillRect(x,y,c,c);
-    for(let i=0;i<8;i++){
+    for(let i=0;i<3;i++){ tc.fillStyle='rgba(90,72,44,0.5)'; tc.beginPath(); tc.arc(x+pr(i*7)*c,y+c*(0.38+pr(i*7+1)*0.24),c*0.025,0,Math.PI*2); tc.fill(); }
+  } else if(t===MR){ // Moor — heather-clad open ground
+    tc.fillStyle='rgba(74,44,66,0.28)'; tc.fillRect(x,y,c,c);
+    for(let i=0;i<10;i++){
       const hx=x+pr(i*3)*c,hy=y+pr(i*3+1)*c;
-      tc.fillStyle=`rgba(${120+pr(i*3+2)*40|0},${30+pr(i*2)*20|0},${80+pr(i)*30|0},0.4)`;
-      tc.beginPath(); tc.arc(hx,hy,c*(0.04+pr(i+20)*0.03),0,Math.PI*2); tc.fill();
+      tc.fillStyle=`rgba(${118+pr(i*3+2)*46|0},${44+pr(i*2)*24|0},${88+pr(i)*34|0},0.42)`;
+      tc.beginPath(); tc.arc(hx,hy,c*(0.035+pr(i+20)*0.035),0,Math.PI*2); tc.fill();
     }
-  } else if(t===SH){ // Shore
+  } else if(t===SH){ // Shore — wet sand meeting surf with foam
     const g=tc.createLinearGradient(x,y,x,y+c);
-    g.addColorStop(0,'rgba(200,185,100,0.5)'); g.addColorStop(1,'rgba(170,200,220,0.4)');
+    g.addColorStop(0,'rgba(206,190,104,0.55)'); g.addColorStop(0.55,'rgba(150,180,190,0.45)'); g.addColorStop(1,'rgba(120,170,210,0.5)');
     tc.fillStyle=g; tc.fillRect(x,y,c,c);
-    tc.strokeStyle='rgba(150,200,230,0.4)'; tc.lineWidth=0.8;
+    tc.strokeStyle='rgba(220,240,255,0.5)'; tc.lineWidth=Math.max(0.6,c*0.025);
     for(let w=0;w<3;w++){
-      const wy=y+c*(0.25+w*0.22);
+      const wy=y+c*(0.3+w*0.22);
       tc.beginPath(); tc.moveTo(x,wy);
-      for(let s=0;s<=c;s+=5) tc.lineTo(x+s,wy+Math.sin(s*0.3+w*2)*c*0.04);
+      for(let s=0;s<=c;s+=5) tc.lineTo(x+s,wy+Math.sin(s*0.3+w*2)*c*0.045);
       tc.stroke();
     }
   }
 
-  // Grid line
-  tc.strokeStyle='rgba(0,0,0,0.2)'; tc.lineWidth=0.4;
+  // Very subtle cell separator (soft, not a hard grid)
+  tc.strokeStyle='rgba(0,0,0,0.10)'; tc.lineWidth=0.4;
   tc.strokeRect(x+0.2,y+0.2,c-0.4,c-0.4);
+}
+
+// Lighten/darken a hex colour by amount (-1..1)
+function shadeCol(hex,amt){
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  const f=amt<0?0:255,p=Math.abs(amt);
+  r=Math.round(r+(f-r)*p); g=Math.round(g+(f-g)*p); b=Math.round(b+(f-b)*p);
+  return `rgb(${r},${g},${b})`;
 }
 
 // ── MAIN RENDER ────────────────────────────────────────────────────────────
@@ -686,21 +725,29 @@ function render(){
 
   if(terrBuf)cx.drawImage(terrBuf,0,0);
 
-  // Movement highlights
+  // Movement highlights — soft rounded glow tiles
   for(const[hc,hr]of G.hi){
-    cx.fillStyle='rgba(255,255,80,0.28)';
-    cx.fillRect(px(hc),py(hr),c,c);
-    cx.strokeStyle='rgba(220,220,0,0.6)';
-    cx.lineWidth=1; cx.strokeRect(px(hc)+1,py(hr)+1,c-2,c-2);
+    const hx=px(hc),hy=py(hr);
+    cx.fillStyle='rgba(255,236,120,0.22)';
+    rrect(hx+c*0.06,hy+c*0.06,c*0.88,c*0.88,c*0.14); cx.fill();
+    cx.strokeStyle='rgba(240,214,90,0.55)'; cx.lineWidth=Math.max(1,c*0.03);
+    rrect(hx+c*0.06,hy+c*0.06,c*0.88,c*0.88,c*0.14); cx.stroke();
   }
 
-  // Attack target highlights
+  // Attack target highlights — pulsing red reticle
   for(const id of G.atkTgts){
     const u=getU(id); if(!u)continue;
-    cx.fillStyle='rgba(255,30,30,0.22)';
-    cx.fillRect(px(u.col),py(u.row),c,c);
-    cx.strokeStyle='#ff2222'; cx.lineWidth=1.5;
-    cx.strokeRect(px(u.col)+1,py(u.row)+1,c-2,c-2);
+    const hx=px(u.col),hy=py(u.row);
+    cx.fillStyle='rgba(255,40,40,0.20)';
+    rrect(hx+c*0.05,hy+c*0.05,c*0.9,c*0.9,c*0.14); cx.fill();
+    cx.strokeStyle='rgba(255,60,50,0.9)'; cx.lineWidth=Math.max(1.2,c*0.04);
+    rrect(hx+c*0.05,hy+c*0.05,c*0.9,c*0.9,c*0.14); cx.stroke();
+    // corner ticks
+    cx.strokeStyle='#ff4030'; cx.lineWidth=Math.max(1,c*0.03);
+    const s=c*0.16;
+    [[0.12,0.12,1,1],[0.88,0.12,-1,1],[0.12,0.88,1,-1],[0.88,0.88,-1,-1]].forEach(([fx,fy,sx,sy])=>{
+      cx.beginPath(); cx.moveTo(hx+c*fx,hy+c*fy+sy*s); cx.lineTo(hx+c*fx,hy+c*fy); cx.lineTo(hx+c*fx+sx*s,hy+c*fy); cx.stroke();
+    });
   }
 
   G.units.filter(u=>!u.elim).forEach(u=>drawUnit(u,c));
@@ -720,46 +767,250 @@ function render(){
 
 function drawUnit(u,c){
   const x=px(u.col),y=py(u.row);
-  const pad=Math.max(2,c*0.1);
-  const w=c-pad*2,h=c-pad*2;
+  const mx=x+c*0.5;              // cell centre x
+  const feet=y+c*0.8;           // figure ground line
   const sc=u.side==='scots';
-  const bg=u.routed?(sc?'#161e30':'#301616'):(sc?'#0d1a3e':'#3e0d0d');
-  const brd=u.id===G.sel?'#ffff00':(u.routed?'#444':(sc?'#2255cc':'#cc2222'));
+  const sel=u.id===G.sel;
+  const dir=sc?1:-1;            // facing: Scots →, English ← (they face each other)
+  const spent=!u.canAtk&&u.movLeft===0&&!u.routed;
 
-  cx.fillStyle=bg; rrect(x+pad,y+pad,w,h,c*0.1); cx.fill();
-  cx.strokeStyle=brd; cx.lineWidth=u.id===G.sel?2.5*SC:SC;
-  rrect(x+pad,y+pad,w,h,c*0.1); cx.stroke();
+  cx.save();
+  if(u.routed)cx.globalAlpha=0.6;
 
-  // Side stripe
-  cx.fillStyle=sc?'rgba(40,90,220,0.4)':'rgba(220,40,40,0.4)';
-  cx.fillRect(x+pad,y+pad,w*0.16,h);
+  // Cast shadow on the ground
+  cx.fillStyle='rgba(0,0,0,0.32)';
+  cx.beginPath(); cx.ellipse(mx+c*0.05,feet+c*0.03,c*0.32,c*0.11,0,0,Math.PI*2); cx.fill();
 
-  // Unit abbreviation
-  const ut=UT[u.type];
-  cx.fillStyle=u.routed?'#665555':(sc?'#9ab0ff':'#ffaaaa');
-  cx.font=`bold ${Math.max(7,c*0.22)}px Georgia`;
+  // Selection glow ring
+  if(sel){
+    cx.save();
+    cx.strokeStyle='rgba(255,224,90,0.95)'; cx.lineWidth=Math.max(1.5,c*0.05);
+    cx.shadowColor='rgba(255,214,60,0.9)'; cx.shadowBlur=c*0.4;
+    cx.beginPath(); cx.ellipse(mx,feet+c*0.02,c*0.36,c*0.15,0,0,Math.PI*2); cx.stroke();
+    cx.restore();
+  }
+
+  // Base disc (faction colour)
+  const baseTop=sc?'#3a63c0':'#c23a3a', baseBot=sc?'#1a2c60':'#601a1a';
+  const bg=cx.createLinearGradient(mx,feet-c*0.08,mx,feet+c*0.1);
+  bg.addColorStop(0,u.routed?'#555':baseTop); bg.addColorStop(1,u.routed?'#333':baseBot);
+  cx.fillStyle=bg;
+  cx.beginPath(); cx.ellipse(mx,feet+c*0.02,c*0.32,c*0.13,0,0,Math.PI*2); cx.fill();
+  cx.strokeStyle=sel?'#ffe24a':(sc?'#6a90e0':'#e06a6a'); cx.lineWidth=Math.max(1,c*0.028);
+  cx.stroke();
+
+  // The miniature figure
+  drawFigure(u,mx,feet,c,sc,dir);
+
+  cx.restore();
+
+  // Spent units darkened
+  if(spent){
+    cx.save();
+    cx.fillStyle='rgba(10,10,20,0.42)';
+    cx.beginPath(); cx.ellipse(mx,y+c*0.46,c*0.42,c*0.46,0,0,Math.PI*2); cx.fill();
+    cx.restore();
+  }
+
+  // Strength badge (top-right)
+  const bs=c*0.15;
+  const bxx=x+c*0.82,byy=y+c*0.16;
+  cx.fillStyle='rgba(20,16,8,0.9)';
+  cx.beginPath(); cx.arc(bxx,byy,bs,0,Math.PI*2); cx.fill();
+  cx.strokeStyle=sc?'#6a90e0':'#e06a6a'; cx.lineWidth=Math.max(0.8,c*0.02); cx.stroke();
+  cx.fillStyle='#ffd867'; cx.font=`bold ${Math.max(7,c*0.2)}px Georgia`;
   cx.textAlign='center'; cx.textBaseline='middle';
-  cx.fillText(ut.abbr,x+c*0.55,y+c*0.37);
+  cx.fillText(u.str,bxx,byy+c*0.005);
 
-  // Strength number
-  cx.font=`${Math.max(6,c*0.19)}px Georgia`;
-  cx.fillStyle='#ffd060';
-  cx.fillText(u.str,x+c*0.55,y+c*0.63);
+  // Morale bar under the base
+  const bw=c*0.6,bx=mx-bw/2,mby=feet+c*0.13,bh=Math.max(2,c*0.06);
+  cx.fillStyle='rgba(0,0,0,0.6)'; cx.fillRect(bx-1,mby-1,bw+2,bh+2);
+  cx.fillStyle=u.mor>60?'#46cc46':u.mor>30?'#cccc26':'#cc3226';
+  cx.fillRect(bx,mby,bw*(u.mor/100),bh);
 
-  // Morale bar
-  const bx=x+pad+w*0.1,by=y+pad+h*0.84,bw=w*0.8;
-  cx.fillStyle='#1a1a1a'; cx.fillRect(bx,by,bw,Math.max(2,c*0.08));
-  cx.fillStyle=u.mor>60?'#44cc44':u.mor>30?'#cccc22':'#cc2222';
-  cx.fillRect(bx,by,bw*(u.mor/100),Math.max(2,c*0.08));
-
-  if(!u.canAtk&&u.movLeft===0&&!u.routed){
-    cx.fillStyle='rgba(0,0,0,0.38)'; rrect(x+pad,y+pad,w,h,c*0.1); cx.fill();
-  }
+  // Routed marker
   if(u.routed){
-    cx.font=`${c*0.28}px sans-serif`;
-    cx.fillStyle='#ffaa44';
-    cx.fillText('↩',x+c*0.82,y+c*0.16);
+    cx.fillStyle='#ffb04a'; cx.font=`bold ${c*0.3}px sans-serif`;
+    cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText('↩',x+c*0.2,y+c*0.18);
   }
+}
+
+// ── UNIT FIGURES ─────────────────────────────────────────────────────────────
+// Draws a small painted-miniature style figure for each troop type.
+// (mx = centre x, feet = ground baseline, c = cell size, sc = is-Scots, dir = facing ±1)
+function drawFigure(u,mx,feet,c,sc,dir){
+  const coat=sc?'#3f6ac0':'#c23a3a', coatDk=sc?'#26467e':'#7c2020';
+  const t=u.type;
+  if(t==='cavalry'||t==='dragoons'){ drawRider(mx,feet,c,coat,coatDk,dir,t==='dragoons'); return; }
+  if(t==='artillery'){ drawCannon(mx,feet,c,dir); return; }
+
+  // Standing footman anatomy
+  const skin='#c99a6c', dark='#22222c', metal='#cdd2da', wood='#6b4a26';
+  const legTop=feet-c*0.2, shoulder=feet-c*0.46, headY=shoulder-c*0.085, headR=c*0.075;
+
+  // Weapons drawn BEHIND the body first (pike shafts, bows, banners)
+  if(t==='schiltron'){ // hedgehog of spears radiating out
+    cx.strokeStyle='#5a3f22'; cx.lineWidth=Math.max(1,c*0.028); cx.lineCap='round';
+    for(const a of [-0.9,-0.4,0.4,0.9,1.4]){
+      cx.beginPath(); cx.moveTo(mx,shoulder+c*0.02);
+      cx.lineTo(mx+Math.sin(a)*c*0.4,shoulder-Math.cos(a)*c*0.5); cx.stroke();
+    }
+    cx.fillStyle=metal;
+    for(const a of [-0.9,-0.4,0.4,0.9,1.4]){
+      const tx=mx+Math.sin(a)*c*0.4,ty=shoulder-Math.cos(a)*c*0.5;
+      cx.beginPath(); cx.moveTo(tx,ty); cx.lineTo(tx-c*0.02,ty+c*0.05); cx.lineTo(tx+c*0.02,ty+c*0.05); cx.fill();
+    }
+  } else if(t==='pikes'){ // one long vertical pike
+    cx.strokeStyle='#6a4a26'; cx.lineWidth=Math.max(1,c*0.03); cx.lineCap='round';
+    const pxp=mx+dir*c*0.16;
+    cx.beginPath(); cx.moveTo(pxp,feet); cx.lineTo(pxp,shoulder-c*0.5); cx.stroke();
+    cx.fillStyle=metal; cx.beginPath();
+    cx.moveTo(pxp,shoulder-c*0.6); cx.lineTo(pxp-c*0.03,shoulder-c*0.5); cx.lineTo(pxp+c*0.03,shoulder-c*0.5); cx.fill();
+  } else if(t==='billmen'){ // bill polearm with hooked blade
+    cx.strokeStyle='#6a4a26'; cx.lineWidth=Math.max(1,c*0.03); cx.lineCap='round';
+    const pxp=mx+dir*c*0.16;
+    cx.beginPath(); cx.moveTo(pxp,feet); cx.lineTo(pxp,shoulder-c*0.42); cx.stroke();
+    cx.strokeStyle=metal; cx.lineWidth=Math.max(1,c*0.035);
+    cx.beginPath(); cx.moveTo(pxp,shoulder-c*0.42);
+    cx.quadraticCurveTo(pxp+dir*c*0.14,shoulder-c*0.5,pxp+dir*c*0.05,shoulder-c*0.58); cx.stroke();
+  } else if(t==='archers'||t==='longbow'){ // crescent bow bent toward the enemy
+    const long=t==='longbow';
+    const bh=long?c*0.62:c*0.46;
+    const bx=mx+dir*c*0.18, midY=shoulder-c*0.04;
+    const topY=midY-bh*0.5, botY=midY+bh*0.5, belly=bx+dir*bh*0.34;
+    cx.strokeStyle=long?'#8a6a34':'#6a4a26'; cx.lineWidth=Math.max(1,c*0.03); cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(bx,topY); cx.quadraticCurveTo(belly,midY,bx,botY); cx.stroke();
+    cx.strokeStyle='rgba(235,235,235,0.75)'; cx.lineWidth=Math.max(0.5,c*0.012);
+    cx.beginPath(); cx.moveTo(bx,topY); cx.lineTo(bx-dir*c*0.04,midY); cx.lineTo(bx,botY); cx.stroke();
+    cx.strokeStyle='#d8c090'; cx.lineWidth=Math.max(0.6,c*0.014);
+    cx.beginPath(); cx.moveTo(bx-dir*c*0.04,midY); cx.lineTo(belly+dir*c*0.05,midY); cx.stroke();
+  }
+
+  // Legs
+  cx.strokeStyle=dark; cx.lineWidth=Math.max(1.4,c*0.065); cx.lineCap='round';
+  cx.beginPath(); cx.moveTo(mx-c*0.04,legTop); cx.lineTo(mx-c*0.06,feet); cx.stroke();
+  cx.beginPath(); cx.moveTo(mx+c*0.04,legTop); cx.lineTo(mx+c*0.06,feet); cx.stroke();
+
+  // Torso / coat
+  cx.fillStyle=coat;
+  cx.beginPath();
+  cx.moveTo(mx-c*0.1,shoulder); cx.lineTo(mx+c*0.1,shoulder);
+  cx.lineTo(mx+c*0.12,legTop+c*0.02); cx.lineTo(mx-c*0.12,legTop+c*0.02);
+  cx.closePath(); cx.fill();
+  cx.fillStyle=coatDk; // shading on trailing half
+  cx.beginPath();
+  cx.moveTo(mx+dir*0.0,shoulder); cx.lineTo(mx+dir*c*0.1,shoulder);
+  cx.lineTo(mx+dir*c*0.12,legTop+c*0.02); cx.lineTo(mx,legTop+c*0.02);
+  cx.closePath(); cx.fill();
+
+  // Highlanders get a plaid sash accent
+  if(t==='highlanders'){
+    cx.strokeStyle=sc?'#8a9a3a':'#c0a040'; cx.lineWidth=Math.max(1,c*0.03);
+    cx.beginPath(); cx.moveTo(mx-c*0.1,shoulder); cx.lineTo(mx+c*0.12,legTop); cx.stroke();
+  }
+
+  // Head + skin
+  cx.fillStyle=skin; cx.beginPath(); cx.arc(mx,headY,headR,0,Math.PI*2); cx.fill();
+
+  // Headgear per type / era
+  if(t==='muskets'){ // tricorn hat
+    cx.fillStyle=dark; cx.beginPath();
+    cx.moveTo(mx-headR*1.5,headY-headR*0.3); cx.lineTo(mx+headR*1.5,headY-headR*0.3);
+    cx.lineTo(mx,headY-headR*1.6); cx.closePath(); cx.fill();
+  } else if(t==='highlanders'){ // feathered bonnet
+    cx.fillStyle='#1c2a3a'; cx.beginPath(); cx.arc(mx,headY-headR*0.5,headR*1.1,Math.PI,0); cx.fill();
+    cx.strokeStyle='#eee'; cx.lineWidth=Math.max(0.6,c*0.012);
+    cx.beginPath(); cx.moveTo(mx-headR*0.6,headY-headR); cx.lineTo(mx-headR*0.9,headY-headR*2.4); cx.stroke();
+  } else if(t==='schiltron'||t==='pikes'||t==='infantry'||t==='billmen'||t==='archers'||t==='longbow'){ // kettle/steel helm
+    cx.fillStyle=metal; cx.beginPath(); cx.arc(mx,headY-headR*0.2,headR*1.05,Math.PI,0); cx.fill();
+    cx.strokeStyle='#8a909c'; cx.lineWidth=Math.max(0.5,c*0.01);
+    cx.beginPath(); cx.arc(mx,headY-headR*0.2,headR*1.05,Math.PI,0); cx.stroke();
+  }
+
+  // Weapons drawn IN FRONT (swords, shields, muskets)
+  if(t==='infantry'){ // sword + heater shield
+    cx.strokeStyle=metal; cx.lineWidth=Math.max(1,c*0.03); cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(mx+dir*c*0.1,shoulder+c*0.06); cx.lineTo(mx+dir*c*0.22,shoulder-c*0.16); cx.stroke();
+    cx.fillStyle=coatDk;
+    cx.beginPath(); cx.ellipse(mx-dir*c*0.11,shoulder+c*0.08,c*0.07,c*0.1,0,0,Math.PI*2); cx.fill();
+    cx.strokeStyle=sc?'#8aa8ff':'#ffb0b0'; cx.lineWidth=Math.max(0.6,c*0.014); cx.stroke();
+  } else if(t==='highlanders'){ // raised broadsword + round targe
+    cx.strokeStyle=metal; cx.lineWidth=Math.max(1,c*0.03); cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(mx+dir*c*0.08,shoulder); cx.lineTo(mx+dir*c*0.26,shoulder-c*0.36); cx.stroke();
+    cx.fillStyle='#7a5a2a'; // targe
+    cx.beginPath(); cx.arc(mx-dir*c*0.11,shoulder+c*0.08,c*0.09,0,Math.PI*2); cx.fill();
+    cx.fillStyle='#caa050'; cx.beginPath(); cx.arc(mx-dir*c*0.11,shoulder+c*0.08,c*0.025,0,Math.PI*2); cx.fill();
+  } else if(t==='muskets'){ // shouldered musket with bayonet
+    cx.strokeStyle='#4a3418'; cx.lineWidth=Math.max(1,c*0.03); cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(mx-dir*c*0.12,legTop); cx.lineTo(mx+dir*c*0.16,shoulder-c*0.12); cx.stroke();
+    cx.strokeStyle=metal; cx.lineWidth=Math.max(0.7,c*0.016);
+    cx.beginPath(); cx.moveTo(mx+dir*c*0.16,shoulder-c*0.12); cx.lineTo(mx+dir*c*0.24,shoulder-c*0.24); cx.stroke();
+  }
+}
+
+// Mounted figure (cavalry / dragoon)
+function drawRider(mx,feet,c,coat,coatDk,dir,dragoon){
+  const hide='#5a3d22', hideDk='#3a2614', dark='#20202a', metal='#cdd2da', skin='#c99a6c';
+  const backY=feet-c*0.32;
+  // Legs
+  cx.strokeStyle=hideDk; cx.lineWidth=Math.max(1.2,c*0.05); cx.lineCap='round';
+  for(const o of [-0.2,-0.06,0.16,0.26]){
+    cx.beginPath(); cx.moveTo(mx+dir*c*o,backY+c*0.1); cx.lineTo(mx+dir*c*o+dir*c*0.02,feet); cx.stroke();
+  }
+  // Tail
+  cx.strokeStyle=hideDk; cx.lineWidth=Math.max(1,c*0.04);
+  cx.beginPath(); cx.moveTo(mx-dir*c*0.26,backY); cx.quadraticCurveTo(mx-dir*c*0.34,backY+c*0.12,mx-dir*c*0.3,backY+c*0.22); cx.stroke();
+  // Body
+  cx.fillStyle=hide; cx.beginPath(); cx.ellipse(mx,backY+c*0.06,c*0.26,c*0.13,0,0,Math.PI*2); cx.fill();
+  cx.fillStyle='rgba(0,0,0,0.2)'; cx.beginPath(); cx.ellipse(mx,backY+c*0.11,c*0.24,c*0.07,0,0,Math.PI*2); cx.fill();
+  // Neck + head (facing dir)
+  const nx=mx+dir*c*0.24;
+  cx.fillStyle=hide; cx.beginPath();
+  cx.moveTo(mx+dir*c*0.14,backY-c*0.02); cx.lineTo(nx,backY-c*0.14);
+  cx.lineTo(nx+dir*c*0.11,backY-c*0.1); cx.lineTo(mx+dir*c*0.18,backY+c*0.1); cx.closePath(); cx.fill();
+  cx.beginPath(); cx.ellipse(nx+dir*c*0.09,backY-c*0.12,c*0.07,c*0.045,dir*0.4,0,Math.PI*2); cx.fill();
+  // Mane
+  cx.strokeStyle=hideDk; cx.lineWidth=Math.max(0.8,c*0.02);
+  cx.beginPath(); cx.moveTo(mx+dir*c*0.14,backY-c*0.04); cx.lineTo(nx,backY-c*0.14); cx.stroke();
+  // Rider torso
+  const rShoulder=backY-c*0.2;
+  cx.fillStyle=coat; cx.beginPath();
+  cx.moveTo(mx-dir*c*0.02-c*0.08,rShoulder); cx.lineTo(mx-dir*c*0.02+c*0.08,rShoulder);
+  cx.lineTo(mx-dir*c*0.02+c*0.06,backY-c*0.02); cx.lineTo(mx-dir*c*0.02-c*0.06,backY-c*0.02); cx.closePath(); cx.fill();
+  cx.fillStyle=coatDk; cx.fillRect(mx-dir*c*0.02+ (dir>0?0:-c*0.06),rShoulder,c*0.06,c*0.18);
+  // Rider head
+  cx.fillStyle=skin; cx.beginPath(); cx.arc(mx-dir*c*0.02,rShoulder-c*0.07,c*0.06,0,Math.PI*2); cx.fill();
+  // Weapon: sabre (cavalry) or carbine (dragoon)
+  cx.strokeStyle=dragoon?'#4a3418':metal; cx.lineWidth=Math.max(1,c*0.028); cx.lineCap='round';
+  if(dragoon){
+    cx.beginPath(); cx.moveTo(mx-dir*c*0.02,rShoulder); cx.lineTo(mx+dir*c*0.2,rShoulder-c*0.02); cx.stroke();
+    cx.strokeStyle=metal; cx.beginPath(); cx.moveTo(mx+dir*c*0.2,rShoulder-c*0.02); cx.lineTo(mx+dir*c*0.27,rShoulder-c*0.05); cx.stroke();
+  } else {
+    cx.beginPath(); cx.moveTo(mx-dir*c*0.02,rShoulder-c*0.02); cx.lineTo(mx+dir*c*0.16,rShoulder-c*0.3); cx.stroke();
+  }
+}
+
+// Field gun (artillery)
+function drawCannon(mx,feet,c,dir){
+  const wood='#5a3f22', woodDk='#3a2814', iron='#2a2a30', ironHi='#55555f';
+  // Wheel
+  cx.fillStyle=iron; cx.beginPath(); cx.arc(mx-dir*c*0.08,feet-c*0.1,c*0.15,0,Math.PI*2); cx.fill();
+  cx.fillStyle=woodDk; cx.beginPath(); cx.arc(mx-dir*c*0.08,feet-c*0.1,c*0.11,0,Math.PI*2); cx.fill();
+  cx.strokeStyle=wood; cx.lineWidth=Math.max(0.7,c*0.016);
+  for(let i=0;i<6;i++){ const a=i*Math.PI/3; cx.beginPath(); cx.moveTo(mx-dir*c*0.08,feet-c*0.1);
+    cx.lineTo(mx-dir*c*0.08+Math.cos(a)*c*0.11,feet-c*0.1+Math.sin(a)*c*0.11); cx.stroke(); }
+  cx.fillStyle=iron; cx.beginPath(); cx.arc(mx-dir*c*0.08,feet-c*0.1,c*0.03,0,Math.PI*2); cx.fill();
+  // Carriage
+  cx.strokeStyle=wood; cx.lineWidth=Math.max(1.4,c*0.05); cx.lineCap='round';
+  cx.beginPath(); cx.moveTo(mx-dir*c*0.22,feet-c*0.02); cx.lineTo(mx+dir*c*0.12,feet-c*0.22); cx.stroke();
+  // Barrel
+  const bg=cx.createLinearGradient(mx,feet-c*0.34,mx,feet-c*0.18);
+  bg.addColorStop(0,ironHi); bg.addColorStop(1,iron);
+  cx.strokeStyle=bg; cx.lineWidth=Math.max(2,c*0.11); cx.lineCap='round';
+  cx.beginPath(); cx.moveTo(mx-dir*c*0.14,feet-c*0.2); cx.lineTo(mx+dir*c*0.26,feet-c*0.28); cx.stroke();
+  // Muzzle
+  cx.fillStyle=ironHi; cx.beginPath(); cx.arc(mx+dir*c*0.26,feet-c*0.28,c*0.055,0,Math.PI*2); cx.fill();
 }
 
 function rrect(x,y,w,h,r){
@@ -914,6 +1165,9 @@ function checkVic(){
 
   if(checkOne(G.def['vic_'+pSide()],pSide(),aSide())){endGame('win');return;}
   if(checkOne(G.def['vic_'+aSide()],aSide(),pSide())){endGame('loss');return;}
+  // Fallback: if every player unit is eliminated the battle is lost regardless of scenario VC type
+  const pAll=G.units.filter(u=>u.side===pSide());
+  if(pAll.length&&pAll.every(u=>u.elim)){endGame('loss');return;}
 }
 
 function endGame(result){
