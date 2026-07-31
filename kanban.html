@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flowboard — Kanban</title>
+<style>
+:root{
+  --purple:#6c5ce7; --purple-dark:#5a4bd4;
+  --red:#e74c3c; --orange:#e67e22; --yellow:#f1c40f; --green:#2ecc71; --blue:#3498db; --teal:#1abc9c; --gray:#95a5a6;
+}
+:root[data-theme="dark"]{
+  --bg:#14151a; --bg-elev1:#1b1d24; --bg-elev2:#22242e; --bg-elev3:#2b2e3a;
+  --border:#33353f; --border-soft:#2a2c36;
+  --text:#e8e9ee; --text-dim:#9a9db0; --text-faint:#6b6e80;
+  --accent:#7c6df0; --accent-soft:rgba(124,109,240,.16);
+  --shadow: 0 8px 24px rgba(0,0,0,.45);
+  --scrollbar:#3a3d4a;
+  color-scheme: dark;
+}
+:root[data-theme="light"]{
+  --bg:#f4f5f8; --bg-elev1:#ffffff; --bg-elev2:#ffffff; --bg-elev3:#eceef3;
+  --border:#dcdee6; --border-soft:#e8e9ee;
+  --text:#1c1e26; --text-dim:#5c5f6e; --text-faint:#9295a3;
+  --accent:#6c5ce7; --accent-soft:rgba(108,92,231,.12);
+  --shadow: 0 8px 24px rgba(30,32,50,.12);
+  --scrollbar:#d3d5dd;
+  color-scheme: light;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+body{background:var(--bg);color:var(--text);overflow:hidden;font-size:14px;}
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+button{font-family:inherit;}
+a{color:var(--accent);}
+#app{display:flex;height:100vh;width:100vw;}
+
+/* ---------- Sidebar ---------- */
+#sidebar{width:236px;min-width:236px;background:var(--bg-elev1);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:14px 10px;gap:4px;transition:margin-left .18s ease;}
+#sidebar.collapsed{margin-left:-236px;}
+.brand{display:flex;align-items:center;gap:8px;padding:6px 8px 14px;font-weight:700;font-size:16px;letter-spacing:.2px;}
+.brand .logo{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--purple),#a29bfe);display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex-shrink:0;}
+.side-section-label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);padding:14px 10px 6px;display:flex;justify-content:space-between;align-items:center;}
+.side-btn{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;cursor:pointer;color:var(--text-dim);font-size:13.5px;user-select:none;}
+.side-btn:hover{background:var(--bg-elev3);color:var(--text);}
+.side-btn.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
+.side-btn .ic{width:16px;text-align:center;flex-shrink:0;}
+.board-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;color:var(--text-dim);position:relative;}
+.board-row:hover{background:var(--bg-elev3);}
+.board-row.active{background:var(--accent-soft);color:var(--accent);font-weight:600;}
+.board-row .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.board-row .bname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;}
+.board-row .star{opacity:0;font-size:12px;color:var(--yellow);}
+.board-row:hover .star, .board-row .star.on{opacity:1;}
+.iconbtn{background:none;border:none;color:var(--text-faint);cursor:pointer;padding:3px 5px;border-radius:5px;font-size:13px;}
+.iconbtn:hover{background:var(--bg-elev3);color:var(--text);}
+#sidebar-bottom{margin-top:auto;display:flex;flex-direction:column;gap:4px;padding-top:8px;border-top:1px solid var(--border-soft);}
+.user-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;}
+.user-chip select{background:none;border:none;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;max-width:130px;}
+
+/* ---------- Topbar ---------- */
+#main{flex:1;display:flex;flex-direction:column;min-width:0;}
+#topbar{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border);background:var(--bg-elev1);flex-wrap:wrap;}
+#board-title{font-size:19px;font-weight:700;background:none;border:none;color:var(--text);outline:none;border-radius:6px;padding:3px 6px;min-width:60px;}
+#board-title:hover,#board-title:focus{background:var(--bg-elev3);}
+.topbar-spacer{flex:1;}
+.search-box{display:flex;align-items:center;gap:6px;background:var(--bg-elev2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;min-width:190px;}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-size:13px;flex:1;}
+.search-box .ic{color:var(--text-faint);font-size:13px;}
+.btn{display:flex;align-items:center;gap:6px;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;}
+.btn:hover{background:var(--bg-elev3);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn.primary:hover{background:var(--purple-dark);}
+.btn.small{padding:4px 9px;font-size:12px;}
+.btn.icon-only{padding:7px 9px;}
+.btn.danger{color:var(--red);}
+.seg{display:flex;background:var(--bg-elev2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.seg button{background:none;border:none;color:var(--text-dim);padding:7px 12px;font-size:13px;cursor:pointer;}
+.seg button.on{background:var(--accent);color:#fff;}
+.badge-count{background:var(--bg-elev3);color:var(--text-dim);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:600;}
+.filter-active-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block;margin-left:2px;}
+
+/* ---------- Popover / dropdown ---------- */
+.popover{position:absolute;background:var(--bg-elev2);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);z-index:80;padding:12px;min-width:220px;}
+.popover h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);}
+.popover .row{display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:13px;cursor:pointer;border-radius:6px;}
+.popover .row:hover{background:var(--bg-elev3);}
+.popover .divider{height:1px;background:var(--border-soft);margin:8px 0;}
+.chipsel{padding:3px 9px;border-radius:20px;font-size:12px;border:1px solid var(--border);cursor:pointer;color:var(--text-dim);}
+.chipsel.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ---------- Board ---------- */
+#board-scroll{flex:1;overflow:auto;padding:16px;display:flex;align-items:flex-start;gap:14px;}
+.column{background:var(--bg-elev1);border:1px solid var(--border);border-radius:12px;width:288px;min-width:288px;max-height:100%;display:flex;flex-direction:column;flex-shrink:0;}
+.column.over-wip{border-color:var(--red);}
+.column.drag-over{outline:2px dashed var(--accent);outline-offset:-2px;}
+.column-head{display:flex;align-items:center;gap:8px;padding:12px 12px 8px;cursor:grab;}
+.column-head .cname{font-weight:700;font-size:13.5px;flex:1;background:none;border:none;color:var(--text);outline:none;min-width:0;}
+.column-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.column-count{font-size:11.5px;color:var(--text-faint);background:var(--bg-elev3);border-radius:20px;padding:1px 8px;font-weight:600;}
+.column-count.over{background:var(--red);color:#fff;}
+.column-wip-label{font-size:10.5px;color:var(--text-faint);padding:0 12px 6px;}
+.column-body{flex:1;overflow-y:auto;padding:2px 10px 6px;display:flex;flex-direction:column;gap:8px;min-height:40px;}
+.column-add{padding:8px 10px 10px;}
+.column-add input{width:100%;background:var(--bg-elev2);border:1px solid var(--border);border-radius:7px;padding:7px 9px;color:var(--text);font-size:13px;outline:none;}
+.column-add input:focus{border-color:var(--accent);}
+.add-column-btn{width:288px;min-width:288px;flex-shrink:0;height:44px;border:1.5px dashed var(--border);border-radius:12px;background:none;color:var(--text-faint);cursor:pointer;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.add-column-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+
+/* ---------- Card ---------- */
+.card{background:var(--bg-elev2);border:1px solid var(--border-soft);border-radius:10px;padding:10px 11px;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:6px;}
+.card:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.15);}
+.card.dragging{opacity:.35;}
+.card.completed .card-title{text-decoration:line-through;color:var(--text-faint);}
+.card-cover{height:6px;border-radius:5px;margin:-10px -11px 2px;}
+.card-top{display:flex;align-items:flex-start;gap:8px;}
+.check-circle{width:17px;height:17px;border-radius:50%;border:2px solid var(--text-faint);flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;}
+.check-circle:hover{border-color:var(--accent);}
+.check-circle.done{background:var(--green);border-color:var(--green);color:#fff;}
+.card-title{font-size:13.5px;font-weight:600;flex:1;line-height:1.35;}
+.card-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.tag-pill{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;color:#fff;}
+.card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11.5px;color:var(--text-faint);}
+.meta-pill{display:flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;background:var(--bg-elev3);}
+.meta-pill.due-overdue{color:var(--red);background:rgba(231,76,60,.14);}
+.meta-pill.due-today{color:var(--orange);background:rgba(230,126,34,.15);}
+.meta-pill.due-soon{color:var(--yellow);}
+.prio-flag{width:6px;height:6px;border-radius:50%;display:inline-block;}
+.card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:2px;}
+.avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:#fff;flex-shrink:0;}
+.avatar.sm{width:18px;height:18px;font-size:8.5px;}
+.avatar.lg{width:34px;height:34px;font-size:13px;}
+.subtask-progress{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-faint);}
+.mini-bar{width:34px;height:4px;background:var(--bg-elev3);border-radius:3px;overflow:hidden;}
+.mini-bar > div{height:100%;background:var(--green);}
+
+/* ---------- List view ---------- */
+#list-scroll{flex:1;overflow:auto;padding:16px 20px;}
+table.task-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.task-table th{text-align:left;padding:8px 10px;color:var(--text-faint);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);}
+table.task-table td{padding:9px 10px;border-bottom:1px solid var(--border-soft);}
+table.task-table tr.task-row:hover{background:var(--bg-elev2);cursor:pointer;}
+table.task-table tr.completed td .lt{text-decoration:line-through;color:var(--text-faint);}
+.group-row td{padding:14px 10px 6px;font-weight:700;font-size:12.5px;color:var(--text-dim);border-bottom:none;text-transform:uppercase;letter-spacing:.4px;}
+
+/* ---------- Modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:200;animation:fadein .12s ease;}
+@keyframes fadein{from{opacity:0} to{opacity:1}}
+.modal{background:var(--bg-elev1);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);width:640px;max-width:92vw;max-height:88vh;overflow-y:auto;padding:22px 26px;}
+.modal.narrow{width:420px;}
+.modal-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.modal-title-input{flex:1;font-size:20px;font-weight:700;background:none;border:none;color:var(--text);outline:none;border-radius:6px;padding:4px 6px;}
+.modal-title-input:hover,.modal-title-input:focus{background:var(--bg-elev3);}
+.field-row{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px;}
+.field{display:flex;flex-direction:column;gap:5px;min-width:150px;flex:1;}
+.field label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.4px;font-weight:600;}
+.field select, .field input[type=date], .field input[type=text], textarea{background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 9px;font-size:13px;outline:none;font-family:inherit;}
+.field select:focus, .field input:focus, textarea:focus{border-color:var(--accent);}
+textarea{width:100%;resize:vertical;min-height:64px;}
+.section-label{font-size:12px;font-weight:700;color:var(--text-dim);margin:16px 0 8px;display:flex;align-items:center;justify-content:space-between;}
+.subtask-row{display:flex;align-items:center;gap:8px;padding:4px 0;}
+.subtask-row input[type=text]{flex:1;border:none;background:none;padding:3px 4px;}
+.subtask-row.done span{text-decoration:line-through;color:var(--text-faint);}
+.comment{display:flex;gap:9px;margin-bottom:12px;}
+.comment .body{flex:1;background:var(--bg-elev2);border-radius:10px;padding:8px 10px;}
+.comment .who{font-size:12px;font-weight:700;margin-bottom:2px;}
+.comment .when{color:var(--text-faint);font-weight:400;font-size:10.5px;margin-left:6px;}
+.comment .txt{font-size:13px;}
+.close-x{margin-left:auto;background:none;border:none;color:var(--text-faint);font-size:19px;cursor:pointer;line-height:1;}
+.close-x:hover{color:var(--text);}
+.color-swatch{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent;flex-shrink:0;}
+.color-swatch.on{border-color:var(--text);}
+.tag-manage-row{display:flex;align-items:center;gap:8px;padding:5px 0;}
+
+/* ---------- Toast ---------- */
+#toasts{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:8px;z-index:400;}
+.toast{background:var(--bg-elev3);border:1px solid var(--border);color:var(--text);padding:10px 16px;border-radius:9px;font-size:13px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;animation:slidein .18s ease;}
+@keyframes slidein{from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1}}
+.toast button{background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600;font-size:12.5px;}
+
+/* ---------- Activity / Trash panel ---------- */
+.side-panel{position:fixed;top:0;right:0;bottom:0;width:340px;background:var(--bg-elev1);border-left:1px solid var(--border);box-shadow:var(--shadow);z-index:150;display:flex;flex-direction:column;animation:slidepanel .16s ease;}
+@keyframes slidepanel{from{transform:translateX(20px);opacity:.4} to{transform:translateX(0);opacity:1}}
+.side-panel-head{display:flex;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px;gap:8px;}
+.side-panel-body{flex:1;overflow-y:auto;padding:10px 16px;}
+.activity-item{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;}
+.activity-item .t{color:var(--text-faint);font-size:11px;}
+.trash-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border-soft);}
+.trash-item .ti{flex:1;font-size:13px;}
+.empty-hint{color:var(--text-faint);font-size:12.5px;text-align:center;padding:30px 10px;}
+
+/* ---------- Misc ---------- */
+.hidden{display:none !important;}
+.kbd{background:var(--bg-elev3);border:1px solid var(--border);border-radius:4px;padding:0 5px;font-size:11px;font-family:monospace;}
+#dragplaceholder{border:2px dashed var(--accent);border-radius:10px;background:var(--accent-soft);}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="sidebar">
+    <div class="brand"><div class="logo">◆</div>Flowboard</div>
+
+    <div class="side-btn" id="btn-my-tasks"><span class="ic">☑</span>My tasks</div>
+    <div class="side-btn" id="btn-activity"><span class="ic">⏱</span>Activity</div>
+    <div class="side-btn" id="btn-trash"><span class="ic">🗑</span>Trash <span id="trash-count" class="badge-count hidden" style="margin-left:auto"></span></div>
+
+    <div class="side-section-label">Boards <span class="iconbtn" id="btn-add-board" title="New board">＋</span></div>
+    <div id="board-list"></div>
+
+    <div id="sidebar-bottom">
+      <div class="side-btn" id="btn-members"><span class="ic">👥</span>Members</div>
+      <div class="side-btn" id="btn-tags"><span class="ic">🏷</span>Tags</div>
+      <div class="side-btn" id="btn-export"><span class="ic">⭳</span>Export data</div>
+      <div class="side-btn" id="btn-import"><span class="ic">⭱</span>Import data</div>
+      <input type="file" id="import-file" accept=".json" class="hidden">
+      <div class="side-btn" id="btn-theme"><span class="ic" id="theme-ic">☀</span><span id="theme-label">Light mode</span></div>
+      <div class="user-chip"><div class="avatar sm" id="cur-user-avatar"></div><select id="cur-user-select"></select></div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="topbar">
+      <button class="iconbtn" id="btn-toggle-sidebar" title="Toggle sidebar" style="font-size:16px;">☰</button>
+      <input id="board-title" spellcheck="false">
+      <div class="seg" id="view-seg">
+        <button data-view="board" class="on">Board</button>
+        <button data-view="list">List</button>
+      </div>
+      <div class="search-box"><span class="ic">🔍</span><input id="search-input" placeholder="Search tasks... (/)"></div>
+      <button class="btn" id="btn-filter">⏚ Filter<span id="filter-dot"></span></button>
+      <button class="btn" id="btn-sort">⇅ Sort</button>
+      <div class="topbar-spacer"></div>
+      <button class="btn primary" id="btn-new-task">＋ New task</button>
+    </div>
+
+    <div id="board-scroll"></div>
+    <div id="list-scroll" class="hidden"></div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+<div id="toasts"></div>
+
+<script>
+/* ===================== Utilities ===================== */
+const uid = () => 'id' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+const esc = s => (s||'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const PALETTE = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#6c5ce7','#e84393','#00b894','#0984e3','#d35400','#8e44ad'];
+function colorFor(str){ let h=0; for(let i=0;i<str.length;i++){h=str.charCodeAt(i)+((h<<5)-h);} return PALETTE[Math.abs(h)%PALETTE.length]; }
+function initials(name){ return name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join(''); }
+function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function addDaysISO(days){ const d=new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+function dueStatus(iso){
+  if(!iso) return null;
+  const today = todayISO();
+  const diffDays = Math.round((new Date(iso+'T00:00:00') - new Date(today+'T00:00:00'))/86400000);
+  if(diffDays < 0) return 'overdue';
+  if(diffDays === 0) return 'today';
+  if(diffDays <= 2) return 'soon';
+  return null;
+}
+function timeAgo(ts){
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s<60) return 'just now';
+  if(s<3600) return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago';
+  if(s<86400*30) return Math.floor(s/86400)+'d ago';
+  return new Date(ts).toLocaleDateString();
+}
+const PRIORITIES = [
+  {id:'low', label:'Low', color:'#3498db'},
+  {id:'medium', label:'Medium', color:'#f1c40f'},
+  {id:'high', label:'High', color:'#e67e22'},
+  {id:'urgent', label:'Urgent', color:'#e74c3c'},
+];
+function prio(id){ return PRIORITIES.find(p=>p.id===id) || null; }
+
+/* ===================== Default seed data ===================== */
+function seedState(){
+  const members = [
+    {id:'u1', name:'Derek Reid'},
+    {id:'u2', name:'Aisha Khan'},
+    {id:'u3', name:'Tom Walsh'},
+    {id:'u4', name:'Priya Patel'},
+    {id:'u5', name:'Sam O\'Brien'},
+  ];
+  const tags = [
+    {id:'t1', name:'Design', color:'#8e44ad'},
+    {id:'t2', name:'Bug', color:'#e74c3c'},
+    {id:'t3', name:'Feature', color:'#2ecc71'},
+    {id:'t4', name:'Backend', color:'#3498db'},
+    {id:'t5', name:'Content', color:'#e67e22'},
+  ];
+  function T(title, opts={}){
+    return Object.assign({
+      id: uid(), title, desc:'', assigneeId:null, dueDate:null, priority:null,
+      tagIds:[], subtasks:[], comments:[], cover:null, completed:false, createdAt:Date.now(),
+    }, opts);
+  }
+  const b1tasks = {};
+  const mk = t => { b1tasks[t.id]=t; return t.id; };
+  const board1 = {
+    id:'b1', name:'Website Redesign', starred:true,
+    columns:[
+      {id:'c1', name:'Backlog', wipLimit:null, taskIds:[
+        mk(T('Competitor audit', {assigneeId:'u4', tagIds:['t5'], priority:'low'})),
+        mk(T('Define new brand palette', {assigneeId:'u2', tagIds:['t1'], priority:'medium'})),
+      ]},
+      {id:'c2', name:'To Do', wipLimit:4, taskIds:[
+        mk(T('Wireframe homepage', {assigneeId:'u2', tagIds:['t1'], priority:'high', dueDate:addDaysISO(2),
+          subtasks:[{id:uid(),text:'Header',done:true},{id:uid(),text:'Hero section',done:false},{id:uid(),text:'Footer',done:false}]})),
+        mk(T('Set up staging server', {assigneeId:'u3', tagIds:['t4'], priority:'medium', dueDate:addDaysISO(5)})),
+      ]},
+      {id:'c3', name:'In Progress', wipLimit:3, taskIds:[
+        mk(T('Build navigation component', {assigneeId:'u5', tagIds:['t3','t4'], priority:'high', dueDate:addDaysISO(1),
+          desc:'Responsive nav with mega-menu on desktop, drawer on mobile.',
+          comments:[{id:uid(), authorId:'u1', text:'Let\'s make sure it matches the new palette.', time:Date.now()-3600000}]})),
+        mk(T('Fix checkout button overlap on Safari', {assigneeId:'u3', tagIds:['t2'], priority:'urgent', dueDate:addDaysISO(-1)})),
+      ]},
+      {id:'c4', name:'Review', wipLimit:null, taskIds:[
+        mk(T('Copy pass on pricing page', {assigneeId:'u4', tagIds:['t5'], priority:'medium', dueDate:addDaysISO(0)})),
+      ]},
+      {id:'c5', name:'Done', wipLimit:null, taskIds:[
+        mk(T('Kickoff meeting notes', {assigneeId:'u1', tagIds:['t5'], priority:'low', completed:true})),
+      ]},
+    ],
+    tasks: b1tasks,
+  };
+  const b2tasks = {};
+  const mk2 = t => { b2tasks[t.id]=t; return t.id; };
+  const board2 = {
+    id:'b2', name:'Mobile App v2', starred:false,
+    columns:[
+      {id:'c6', name:'Ideas', wipLimit:null, taskIds:[ mk2(T('Dark mode for app', {assigneeId:'u1', tagIds:['t3'], priority:'low'})) ]},
+      {id:'c7', name:'In Progress', wipLimit:null, taskIds:[ mk2(T('Push notification service', {assigneeId:'u5', tagIds:['t4'], priority:'high', dueDate:addDaysISO(4)})) ]},
+      {id:'c8', name:'Shipped', wipLimit:null, taskIds:[]},
+    ],
+    tasks: b2tasks,
+  };
+  return {
+    theme:'dark', currentUserId:'u1', members, tags,
+    boards:[board1, board2], currentBoardId:'b1',
+    trash:[], activity:[], view:'board',
+    filters:{assignees:[], priorities:[], tagIds:[], due:null, search:''},
+  };
+}
+
+/* ===================== State load/save ===================== */
+const STORE_KEY = 'flowboard_v1';
+let state = load();
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return seedState();
+}
+function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+function curBoard(){ return state.boards.find(b=>b.id===state.currentBoardId) || state.boards[0]; }
+function memberById(id){ return state.members.find(m=>m.id===id); }
+function tagById(id){ return state.tags.find(t=>t.id===id); }
+function logActivity(text){
+  state.activity.unshift({id:uid(), text, time:Date.now()});
+  if(state.activity.length>200) state.activity.length=200;
+}
+
+/* ===================== Toasts ===================== */
+function toast(msg, actionLabel, actionFn){
+  const el = document.createElement('div');
+  el.className='toast';
+  el.innerHTML = `<span>${esc(msg)}</span>` + (actionLabel? `<button>${esc(actionLabel)}</button>`:'');
+  if(actionLabel) el.querySelector('button').onclick = ()=>{ actionFn(); el.remove(); };
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), 5000);
+}
+
+/* ===================== Rendering ===================== */
+function persistAndRender(){ save(); render(); }
+
+function render(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.getElementById('theme-ic').textContent = state.theme==='dark' ? '☀' : '🌙';
+  document.getElementById('theme-label').textContent = state.theme==='dark' ? 'Light mode' : 'Dark mode';
+  renderSidebar();
+  renderTopbar();
+  if(state.view==='board'){
+    document.getElementById('board-scroll').classList.remove('hidden');
+    document.getElementById('list-scroll').classList.add('hidden');
+    renderBoard();
+  } else {
+    document.getElementById('board-scroll').classList.add('hidden');
+    document.getElementById('list-scroll').classList.remove('hidden');
+    renderList();
+  }
+}
+
+function renderSidebar(){
+  const list = document.getElementById('board-list');
+  list.innerHTML = '';
+  state.boards.slice().sort((a,b)=> (b.starred-a.starred)).forEach(b=>{
+    const row = document.createElement('div');
+    row.className = 'board-row' + (b.id===state.currentBoardId?' active':'');
+    row.innerHTML = `<span class="dot" style="background:${colorFor(b.id)}"></span><span class="bname">${esc(b.name)}</span><span class="star ${b.starred?'on':''}">★</span>`;
+    row.onclick = (e)=>{
+      if(e.target.classList.contains('star')){ b.starred=!b.starred; persistAndRender(); return; }
+      state.currentBoardId = b.id; persistAndRender();
+    };
+    row.oncontextmenu = (e)=>{ e.preventDefault(); if(confirm(`Delete board "${b.name}"? This cannot be undone.`)){ deleteBoard(b.id); } };
+    list.appendChild(row);
+  });
+  document.getElementById('btn-my-tasks').classList.toggle('active', state.filters._myTasks===true);
+  const trashCountEl = document.getElementById('trash-count');
+  if(state.trash.length){ trashCountEl.textContent = state.trash.length; trashCountEl.classList.remove('hidden'); }
+  else trashCountEl.classList.add('hidden');
+
+  const sel = document.getElementById('cur-user-select');
+  sel.innerHTML = state.members.map(m=>`<option value="${m.id}" ${m.id===state.currentUserId?'selected':''}>${esc(m.name)}</option>`).join('');
+  document.getElementById('cur-user-avatar').style.background = colorFor(state.currentUserId);
+  document.getElementById('cur-user-avatar').textContent = initials(memberById(state.currentUserId)?.name || '?');
+}
+
+function renderTopbar(){
+  const b = curBoard();
+  const titleEl = document.getElementById('board-title');
+  if(document.activeElement !== titleEl) titleEl.value = b.name;
+  document.querySelectorAll('#view-seg button').forEach(btn=>btn.classList.toggle('on', btn.dataset.view===state.view));
+  const f = state.filters;
+  const active = f.assignees.length || f.priorities.length || f.tagIds.length || f.due;
+  document.getElementById('filter-dot').innerHTML = active ? '<span class="filter-active-dot"></span>' : '';
+}
+
+function taskMatchesFilters(t){
+  const f = state.filters;
+  if(f.search){
+    const s = f.search.toLowerCase();
+    const inTitle = t.title.toLowerCase().includes(s);
+    const inDesc = (t.desc||'').toLowerCase().includes(s);
+    const inTags = t.tagIds.some(id=> (tagById(id)?.name||'').toLowerCase().includes(s));
+    if(!inTitle && !inDesc && !inTags) return false;
+  }
+  if(f.assignees.length && !f.assignees.includes(t.assigneeId)) return false;
+  if(f.priorities.length && !f.priorities.includes(t.priority)) return false;
+  if(f.tagIds.length && !t.tagIds.some(id=>f.tagIds.includes(id))) return false;
+  if(f.due){
+    const ds = dueStatus(t.dueDate);
+    if(f.due==='overdue' && ds!=='overdue') return false;
+    if(f.due==='today' && ds!=='today') return false;
+    if(f.due==='week' && !(ds==='today'||ds==='soon'||ds==='overdue')) return false;
+    if(f.due==='none' && t.dueDate) return false;
+  }
+  if(f._myTasks && t.assigneeId !== state.currentUserId) return false;
+  return true;
+}
+
+function cardHTML(t, boardId){
+  const a = t.assigneeId ? memberById(t.assigneeId) : null;
+  const p = prio(t.priority);
+  const ds = dueStatus(t.dueDate);
+  const doneSub = t.subtasks.filter(s=>s.done).length;
+  return `
+  <div class="card ${t.completed?'completed':''}" draggable="true" data-task-id="${t.id}">
+    ${t.cover ? `<div class="card-cover" style="background:${t.cover}"></div>` : ''}
+    <div class="card-top">
+      <div class="check-circle ${t.completed?'done':''}" data-action="toggle-complete" data-id="${t.id}">✓</div>
+      <div class="card-title">${esc(t.title)}</div>
+    </div>
+    ${t.tagIds.length? `<div class="card-tags">${t.tagIds.map(id=>{const tg=tagById(id); return tg?`<span class="tag-pill" style="background:${tg.color}">${esc(tg.name)}</span>`:'';}).join('')}</div>`:''}
+    <div class="card-meta">
+      ${p?`<span class="meta-pill"><span class="prio-flag" style="background:${p.color}"></span>${p.label}</span>`:''}
+      ${t.dueDate?`<span class="meta-pill ${ds==='overdue'?'due-overdue':ds==='today'?'due-today':ds==='soon'?'due-soon':''}">📅 ${fmtDate(t.dueDate)}</span>`:''}
+      ${t.comments.length?`<span class="meta-pill">💬 ${t.comments.length}</span>`:''}
+    </div>
+    <div class="card-bottom">
+      ${t.subtasks.length? `<div class="subtask-progress"><div class="mini-bar"><div style="width:${Math.round(100*doneSub/t.subtasks.length)}%"></div></div>${doneSub}/${t.subtasks.length}</div>` : '<span></span>'}
+      ${a?`<div class="avatar" title="${esc(a.name)}" style="background:${colorFor(a.id)}">${initials(a.name)}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderBoard(){
+  const b = curBoard();
+  const wrap = document.getElementById('board-scroll');
+  wrap.innerHTML = '';
+  b.columns.forEach(col=>{
+    const visibleTasks = col.taskIds.map(id=>b.tasks[id]).filter(Boolean).filter(taskMatchesFilters);
+    const total = col.taskIds.length;
+    const overWip = col.wipLimit && total > col.wipLimit;
+    const colEl = document.createElement('div');
+    colEl.className = 'column' + (overWip? ' over-wip':'');
+    colEl.dataset.colId = col.id;
+    colEl.innerHTML = `
+      <div class="column-head" draggable="true" data-col-drag="${col.id}">
+        <span class="column-dot" style="background:${colorFor(col.id)}"></span>
+        <input class="cname" value="${esc(col.name)}" data-col-id="${col.id}" spellcheck="false">
+        <span class="column-count ${overWip?'over':''}">${total}${col.wipLimit?'/'+col.wipLimit:''}</span>
+        <button class="iconbtn" data-action="col-menu" data-col-id="${col.id}">⋯</button>
+      </div>
+      <div class="column-body" data-col-id="${col.id}">
+        ${visibleTasks.map(t=>cardHTML(t)).join('')}
+      </div>
+      <div class="column-add">
+        <input placeholder="＋ Add task..." data-add-col="${col.id}">
+      </div>`;
+    wrap.appendChild(colEl);
+  });
+  const addColBtn = document.createElement('button');
+  addColBtn.className = 'add-column-btn';
+  addColBtn.textContent = '＋ Add column';
+  addColBtn.onclick = ()=>{
+    const name = prompt('Column name:', 'New column');
+    if(!name) return;
+    b.columns.push({id:uid(), name, wipLimit:null, taskIds:[]});
+    logActivity(`Added column "${esc(name)}"`);
+    persistAndRender();
+  };
+  wrap.appendChild(addColBtn);
+  attachBoardHandlers();
+}
+
+function attachBoardHandlers(){
+  const b = curBoard();
+  document.querySelectorAll('.check-circle').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation(); const id = el.dataset.id; const t = b.tasks[id]; t.completed = !t.completed; logActivity(`${t.completed?'Completed':'Reopened'} "${t.title}"`); persistAndRender(); };
+  });
+  document.querySelectorAll('.card').forEach(el=>{
+    el.onclick = (e)=>{ if(e.target.closest('.check-circle')) return; openTaskModal(el.dataset.taskId); };
+    el.addEventListener('dragstart', (e)=>{ el.classList.add('dragging'); e.dataTransfer.setData('text/task-id', el.dataset.taskId); });
+    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+  });
+  document.querySelectorAll('.column-body').forEach(body=>{
+    body.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      const dragging = document.querySelector('.card.dragging');
+      if(!dragging) return;
+      const after = [...body.querySelectorAll('.card:not(.dragging)')].find(c=>{
+        const r = c.getBoundingClientRect();
+        return e.clientY < r.top + r.height/2;
+      });
+      if(after) body.insertBefore(dragging, after); else body.appendChild(dragging);
+    });
+    body.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      const taskId = e.dataTransfer.getData('text/task-id');
+      const destColId = body.dataset.colId;
+      moveTaskToColumn(taskId, destColId, [...body.querySelectorAll('.card')].map(c=>c.dataset.taskId));
+    });
+  });
+  document.querySelectorAll('input.cname').forEach(inp=>{
+    inp.onchange = ()=>{ const col = b.columns.find(c=>c.id===inp.dataset.colId); col.name = inp.value.trim()||col.name; persistAndRender(); };
+  });
+  document.querySelectorAll('[data-action=col-menu]').forEach(btn=>{
+    btn.onclick = (e)=>{ e.stopPropagation(); openColumnMenu(btn, btn.dataset.colId); };
+  });
+  document.querySelectorAll('[data-add-col]').forEach(inp=>{
+    inp.onkeydown = (e)=>{
+      if(e.key==='Enter' && inp.value.trim()){
+        const col = b.columns.find(c=>c.id===inp.dataset.addCol);
+        const t = { id:uid(), title:inp.value.trim(), desc:'', assigneeId:null, dueDate:null, priority:null, tagIds:[], subtasks:[], comments:[], cover:null, completed:false, createdAt:Date.now() };
+        b.tasks[t.id]=t; col.taskIds.push(t.id);
+        logActivity(`Added task "${esc(t.title)}"`);
+        inp.value='';
+        persistAndRender();
+      }
+    };
+  });
+  // column drag reorder
+  let draggedCol = null;
+  document.querySelectorAll('[data-col-drag]').forEach(head=>{
+    head.addEventListener('dragstart', (e)=>{ draggedCol = head.dataset.colDrag; e.dataTransfer.setData('text/col-id', draggedCol); });
+    head.closest('.column').addEventListener('dragover', (e)=>{
+      if(!e.dataTransfer.types.includes('text/col-id')) return;
+      e.preventDefault();
+    });
+    head.closest('.column').addEventListener('drop', (e)=>{
+      const colId = e.dataTransfer.getData('text/col-id');
+      if(!colId) return;
+      e.preventDefault();
+      const targetId = head.closest('.column').dataset.colId;
+      if(colId===targetId) return;
+      const from = b.columns.findIndex(c=>c.id===colId);
+      const to = b.columns.findIndex(c=>c.id===targetId);
+      const [moved] = b.columns.splice(from,1);
+      b.columns.splice(to,0,moved);
+      persistAndRender();
+    });
+  });
+}
+
+function moveTaskToColumn(taskId, destColId, orderedIdsInDom){
+  const b = curBoard();
+  const destCol = b.columns.find(c=>c.id===destColId);
+  const hiddenInDest = destCol.taskIds.filter(id=>id!==taskId && !orderedIdsInDom.includes(id));
+  b.columns.forEach(c=>{ c.taskIds = c.taskIds.filter(id=>id!==taskId); });
+  destCol.taskIds = [...orderedIdsInDom, ...hiddenInDest];
+  persistAndRender();
+}
+
+/* ===================== List view ===================== */
+function renderList(){
+  const b = curBoard();
+  const wrap = document.getElementById('list-scroll');
+  const allTasks = [];
+  b.columns.forEach(col=>{
+    col.taskIds.forEach(id=>{ const t=b.tasks[id]; if(t) allTasks.push({t, colName:col.name}); });
+  });
+  const filtered = allTasks.filter(x=>taskMatchesFilters(x.t));
+  const groups = {};
+  filtered.forEach(x=>{ (groups[x.colName]=groups[x.colName]||[]).push(x.t); });
+  let html = `<table class="task-table"><thead><tr><th></th><th>Task</th><th>Assignee</th><th>Priority</th><th>Due</th><th>Tags</th></tr></thead><tbody>`;
+  Object.keys(groups).forEach(g=>{
+    html += `<tr class="group-row"><td colspan="6">${esc(g)} · ${groups[g].length}</td></tr>`;
+    groups[g].forEach(t=>{
+      const a = t.assigneeId ? memberById(t.assigneeId) : null;
+      const p = prio(t.priority);
+      const ds = dueStatus(t.dueDate);
+      html += `<tr class="task-row ${t.completed?'completed':''}" data-task-id="${t.id}">
+        <td><div class="check-circle ${t.completed?'done':''}" data-action="toggle-complete" data-id="${t.id}">✓</div></td>
+        <td class="lt">${esc(t.title)}</td>
+        <td>${a?`<div class="avatar sm" style="background:${colorFor(a.id)}">${initials(a.name)}</div>`:'—'}</td>
+        <td>${p?`<span class="meta-pill"><span class="prio-flag" style="background:${p.color}"></span>${p.label}</span>`:'—'}</td>
+        <td>${t.dueDate?`<span class="meta-pill ${ds==='overdue'?'due-overdue':ds==='today'?'due-today':''}">${fmtDate(t.dueDate)}</span>`:'—'}</td>
+        <td>${t.tagIds.map(id=>{const tg=tagById(id);return tg?`<span class="tag-pill" style="background:${tg.color}">${esc(tg.name)}</span>`:'';}).join(' ')}</td>
+      </tr>`;
+    });
+  });
+  html += '</tbody></table>';
+  if(!filtered.length) html = '<div class="empty-hint">No tasks match your filters.</div>';
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.check-circle').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation(); const id=el.dataset.id; const t=b.tasks[id]; t.completed=!t.completed; persistAndRender(); };
+  });
+  wrap.querySelectorAll('.task-row').forEach(row=>{
+    row.onclick = (e)=>{ if(e.target.closest('.check-circle')) return; openTaskModal(row.dataset.taskId); };
+  });
+}
+
+/* ===================== Column menu ===================== */
+function closePopovers(){ document.querySelectorAll('.popover').forEach(p=>p.remove()); }
+function openColumnMenu(anchor, colId){
+  closePopovers();
+  const b = curBoard();
+  const col = b.columns.find(c=>c.id===colId);
+  const pop = document.createElement('div');
+  pop.className = 'popover';
+  const r = anchor.getBoundingClientRect();
+  pop.style.top = (r.bottom+6)+'px'; pop.style.left = Math.min(r.left, window.innerWidth-260)+'px';
+  pop.innerHTML = `
+    <h4>Sort cards</h4>
+    <div class="row" data-sort="due">By due date</div>
+    <div class="row" data-sort="priority">By priority</div>
+    <div class="row" data-sort="title">By title (A–Z)</div>
+    <div class="divider"></div>
+    <h4>WIP limit</h4>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <input type="number" min="0" id="wip-input" placeholder="None" value="${col.wipLimit||''}" style="width:70px;background:var(--bg-elev3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 7px;">
+      <button class="btn small" id="wip-set">Set</button>
+      <button class="btn small" id="wip-clear">Clear</button>
+    </div>
+    <div class="divider"></div>
+    <div class="row" data-action="clear-completed">Clear completed cards</div>
+    <div class="row" data-action="delete-col" style="color:var(--red)">Delete column</div>
+  `;
+  document.body.appendChild(pop);
+  pop.querySelectorAll('[data-sort]').forEach(row=>{
+    row.onclick = ()=>{
+      const key = row.dataset.sort;
+      col.taskIds.sort((a,c)=>{
+        const ta=b.tasks[a], tc=b.tasks[c];
+        if(key==='due') return (ta.dueDate||'9999').localeCompare(tc.dueDate||'9999');
+        if(key==='priority'){ const order={urgent:0,high:1,medium:2,low:3,null:4}; return (order[ta.priority]??4)-(order[tc.priority]??4); }
+        if(key==='title') return ta.title.localeCompare(tc.title);
+        return 0;
+      });
+      closePopovers(); persistAndRender();
+    };
+  });
+  pop.querySelector('#wip-set').onclick = ()=>{ const v=parseInt(pop.querySelector('#wip-input').value); col.wipLimit = isNaN(v)?null:v; closePopovers(); persistAndRender(); };
+  pop.querySelector('#wip-clear').onclick = ()=>{ col.wipLimit=null; closePopovers(); persistAndRender(); };
+  pop.querySelector('[data-action=clear-completed]').onclick = ()=>{
+    const removed = col.taskIds.filter(id=>b.tasks[id]?.completed);
+    removed.forEach(id=>{ state.trash.push({...b.tasks[id], _boardId:b.id, _colId:col.id, _deletedAt:Date.now()}); delete b.tasks[id]; });
+    col.taskIds = col.taskIds.filter(id=>!removed.includes(id));
+    logActivity(`Cleared ${removed.length} completed card(s) from "${col.name}"`);
+    closePopovers(); persistAndRender();
+  };
+  pop.querySelector('[data-action=delete-col]').onclick = ()=>{
+    if(confirm(`Delete column "${col.name}" and all its cards?`)){
+      col.taskIds.forEach(id=>delete b.tasks[id]);
+      b.columns = b.columns.filter(c=>c.id!==colId);
+      logActivity(`Deleted column "${col.name}"`);
+      closePopovers(); persistAndRender();
+    }
+  };
+  setTimeout(()=>document.addEventListener('click', outsideClose), 0);
+  function outsideClose(e){ if(!pop.contains(e.target)){ closePopovers(); document.removeEventListener('click', outsideClose); } }
+}
+
+/* ===================== Task Modal ===================== */
+function openTaskModal(taskId){
+  const b = curBoard();
+  const t = b.tasks[taskId];
+  if(!t) return;
+  const root = document.getElementById('modal-root');
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.innerHTML = `
+  <div class="modal">
+    <div class="modal-head">
+      <div class="check-circle ${t.completed?'done':''}" id="m-complete" style="margin-top:3px;">✓</div>
+      <input class="modal-title-input" id="m-title" value="${esc(t.title)}">
+      <button class="close-x" id="m-close">×</button>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Assignee</label>
+        <select id="m-assignee"><option value="">Unassigned</option>${state.members.map(m=>`<option value="${m.id}" ${m.id===t.assigneeId?'selected':''}>${esc(m.name)}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Due date</label><input type="date" id="m-due" value="${t.dueDate||''}"></div>
+      <div class="field"><label>Priority</label>
+        <select id="m-priority"><option value="">None</option>${PRIORITIES.map(p=>`<option value="${p.id}" ${p.id===t.priority?'selected':''}>${p.label}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field" style="flex:1;"><label>Tags</label>
+        <div id="m-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${state.tags.map(tg=>`<span class="chipsel ${t.tagIds.includes(tg.id)?'on':''}" data-tag="${tg.id}" style="${t.tagIds.includes(tg.id)?`background:${tg.color};border-color:${tg.color};color:#fff;`:''}">${esc(tg.name)}</span>`).join('')}
+        </div>
+      </div>
+      <div class="field" style="max-width:160px;"><label>Cover color</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="color-swatch ${!t.cover?'on':''}" data-cover="" style="background:var(--bg-elev3);border:1px solid var(--border);">✕</span>
+          ${PALETTE.slice(0,6).map(c=>`<span class="color-swatch ${t.cover===c?'on':''}" data-cover="${c}" style="background:${c}"></span>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="m-desc" placeholder="Add more detail...">${esc(t.desc)}</textarea></div>
+
+    <div class="section-label">Subtasks <span id="m-sub-progress" style="color:var(--text-faint);font-weight:400;"></span></div>
+    <div id="m-subtasks"></div>
+    <div style="display:flex;gap:6px;margin-top:4px;"><input type="text" id="m-new-sub" placeholder="Add subtask and press Enter" style="flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 9px;outline:none;"></div>
+
+    <div class="section-label">Comments</div>
+    <div id="m-comments"></div>
+    <div style="display:flex;gap:6px;">
+      <input type="text" id="m-new-comment" placeholder="Write a comment and press Enter" style="flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 9px;outline:none;">
+    </div>
+
+    <div style="display:flex;justify-content:space-between;margin-top:20px;border-top:1px solid var(--border-soft);padding-top:14px;">
+      <button class="btn danger" id="m-delete">🗑 Delete task</button>
+      <button class="btn" id="m-duplicate">⧉ Duplicate</button>
+    </div>
+  </div>`;
+  root.appendChild(overlay);
+
+  function renderSubtasks(){
+    const el = overlay.querySelector('#m-subtasks');
+    el.innerHTML = t.subtasks.map(s=>`
+      <div class="subtask-row ${s.done?'done':''}" data-sub="${s.id}">
+        <div class="check-circle ${s.done?'done':''}" data-sub-toggle="${s.id}" style="width:15px;height:15px;">✓</div>
+        <span style="flex:1;">${esc(s.text)}</span>
+        <button class="iconbtn" data-sub-del="${s.id}">✕</button>
+      </div>`).join('');
+    const done = t.subtasks.filter(s=>s.done).length;
+    overlay.querySelector('#m-sub-progress').textContent = t.subtasks.length? `${done}/${t.subtasks.length} complete` : '';
+    el.querySelectorAll('[data-sub-toggle]').forEach(c=>c.onclick=()=>{ const s=t.subtasks.find(x=>x.id===c.dataset.subToggle); s.done=!s.done; renderSubtasks(); persistAndRenderBackground(); });
+    el.querySelectorAll('[data-sub-del]').forEach(c=>c.onclick=()=>{ t.subtasks = t.subtasks.filter(x=>x.id!==c.dataset.subDel); renderSubtasks(); persistAndRenderBackground(); });
+  }
+  function renderComments(){
+    const el = overlay.querySelector('#m-comments');
+    if(!t.comments.length){ el.innerHTML = '<div class="empty-hint" style="padding:10px 0;">No comments yet.</div>'; return; }
+    el.innerHTML = t.comments.slice().reverse().map(c=>{
+      const a = memberById(c.authorId);
+      return `<div class="comment"><div class="avatar sm" style="background:${colorFor(c.authorId)}">${initials(a?a.name:'?')}</div>
+        <div class="body"><div class="who">${esc(a?a.name:'Unknown')}<span class="when">${timeAgo(c.time)}</span></div><div class="txt">${esc(c.text)}</div></div></div>`;
+    }).join('');
+  }
+  function persistAndRenderBackground(){ save(); }
+
+  renderSubtasks(); renderComments();
+
+  overlay.querySelector('#m-close').onclick = closeModal;
+  overlay.onclick = (e)=>{ if(e.target===overlay) closeModal(); };
+  function closeModal(){ overlay.remove(); persistAndRender(); }
+
+  overlay.querySelector('#m-complete').onclick = ()=>{ t.completed=!t.completed; overlay.querySelector('#m-complete').classList.toggle('done', t.completed); };
+  overlay.querySelector('#m-title').oninput = (e)=>{ t.title = e.target.value; };
+  overlay.querySelector('#m-assignee').onchange = (e)=>{ t.assigneeId = e.target.value||null; };
+  overlay.querySelector('#m-due').onchange = (e)=>{ t.dueDate = e.target.value||null; };
+  overlay.querySelector('#m-priority').onchange = (e)=>{ t.priority = e.target.value||null; };
+  overlay.querySelector('#m-desc').oninput = (e)=>{ t.desc = e.target.value; };
+  overlay.querySelectorAll('[data-tag]').forEach(chip=>{
+    chip.onclick = ()=>{
+      const id = chip.dataset.tag; const tg = tagById(id);
+      if(t.tagIds.includes(id)){ t.tagIds = t.tagIds.filter(x=>x!==id); chip.classList.remove('on'); chip.style.background=''; chip.style.borderColor=''; chip.style.color=''; }
+      else { t.tagIds.push(id); chip.classList.add('on'); chip.style.background=tg.color; chip.style.borderColor=tg.color; chip.style.color='#fff'; }
+    };
+  });
+  overlay.querySelectorAll('[data-cover]').forEach(sw=>{
+    sw.onclick = ()=>{ t.cover = sw.dataset.cover || null; overlay.querySelectorAll('[data-cover]').forEach(s2=>s2.classList.remove('on')); sw.classList.add('on'); };
+  });
+  overlay.querySelector('#m-new-sub').onkeydown = (e)=>{
+    if(e.key==='Enter' && e.target.value.trim()){ t.subtasks.push({id:uid(), text:e.target.value.trim(), done:false}); e.target.value=''; renderSubtasks(); }
+  };
+  overlay.querySelector('#m-new-comment').onkeydown = (e)=>{
+    if(e.key==='Enter' && e.target.value.trim()){
+      t.comments.push({id:uid(), authorId:state.currentUserId, text:e.target.value.trim(), time:Date.now()});
+      e.target.value=''; renderComments();
+      logActivity(`Commented on "${t.title}"`);
+    }
+  };
+  overlay.querySelector('#m-delete').onclick = ()=>{
+    if(confirm('Delete this task? You can restore it from Trash.')){
+      const col = b.columns.find(c=>c.taskIds.includes(t.id));
+      if(col) col.taskIds = col.taskIds.filter(id=>id!==t.id);
+      state.trash.push({...t, _boardId:b.id, _colId:col?col.id:null, _deletedAt:Date.now()});
+      delete b.tasks[t.id];
+      logActivity(`Deleted task "${t.title}"`);
+      overlay.remove();
+      persistAndRender();
+      toast('Task moved to trash', 'Undo', ()=>restoreFromTrashById(t.id));
+    }
+  };
+  overlay.querySelector('#m-duplicate').onclick = ()=>{
+    const copy = JSON.parse(JSON.stringify(t));
+    copy.id = uid(); copy.title = t.title + ' (copy)'; copy.comments=[];
+    b.tasks[copy.id]=copy;
+    const col = b.columns.find(c=>c.taskIds.includes(t.id));
+    col.taskIds.splice(col.taskIds.indexOf(t.id)+1, 0, copy.id);
+    logActivity(`Duplicated task "${t.title}"`);
+    overlay.remove();
+    persistAndRender();
+  };
+}
+
+/* ===================== Trash ===================== */
+function restoreFromTrashById(id){
+  const idx = state.trash.findIndex(x=>x.id===id);
+  if(idx<0) return;
+  restoreTrashItem(idx);
+}
+function restoreTrashItem(idx){
+  const item = state.trash[idx];
+  const board = state.boards.find(bd=>bd.id===item._boardId);
+  if(!board){ toast('Original board no longer exists'); return; }
+  const col = board.columns.find(c=>c.id===item._colId) || board.columns[0];
+  if(!col){ toast('No column to restore into'); return; }
+  const clean = {...item}; delete clean._boardId; delete clean._colId; delete clean._deletedAt;
+  board.tasks[clean.id] = clean;
+  col.taskIds.push(clean.id);
+  state.trash.splice(idx,1);
+  logActivity(`Restored task "${clean.title}"`);
+  persistAndRender();
+  renderTrashPanelIfOpen();
+}
+function renderTrashPanelIfOpen(){
+  const existing = document.getElementById('trash-panel');
+  if(existing) openTrashPanel();
+}
+function openTrashPanel(){
+  closeSidePanels();
+  const panel = document.createElement('div');
+  panel.className = 'side-panel'; panel.id='trash-panel';
+  panel.innerHTML = `<div class="side-panel-head">🗑 Trash <button class="close-x" id="trash-close" style="margin-left:auto">×</button></div>
+    <div class="side-panel-body" id="trash-body"></div>`;
+  document.body.appendChild(panel);
+  panel.querySelector('#trash-close').onclick = ()=>panel.remove();
+  const body = panel.querySelector('#trash-body');
+  if(!state.trash.length){ body.innerHTML = '<div class="empty-hint">Trash is empty.</div>'; return; }
+  body.innerHTML = state.trash.slice().reverse().map((item)=>{
+    const realIdx = state.trash.findIndex(x=>x.id===item.id);
+    return `<div class="trash-item"><div class="ti">${esc(item.title)}<div style="color:var(--text-faint);font-size:11px;">${timeAgo(item._deletedAt)}</div></div>
+      <button class="btn small" data-restore="${realIdx}">Restore</button>
+      <button class="iconbtn" data-purge="${realIdx}">✕</button></div>`;
+  }).join('');
+  body.querySelectorAll('[data-restore]').forEach(b=>b.onclick=()=>{ restoreTrashItem(parseInt(b.dataset.restore)); });
+  body.querySelectorAll('[data-purge]').forEach(b=>b.onclick=()=>{ state.trash.splice(parseInt(b.dataset.purge),1); save(); openTrashPanel(); renderSidebar(); });
+}
+function closeSidePanels(){ document.querySelectorAll('.side-panel').forEach(p=>p.remove()); }
+
+/* ===================== Activity panel ===================== */
+function openActivityPanel(){
+  closeSidePanels();
+  const panel = document.createElement('div');
+  panel.className = 'side-panel';
+  panel.innerHTML = `<div class="side-panel-head">⏱ Activity <button class="close-x" id="act-close" style="margin-left:auto">×</button></div>
+    <div class="side-panel-body" id="act-body"></div>`;
+  document.body.appendChild(panel);
+  panel.querySelector('#act-close').onclick = ()=>panel.remove();
+  const body = panel.querySelector('#act-body');
+  body.innerHTML = state.activity.length ? state.activity.map(a=>`<div class="activity-item"><span>📌</span><div><div>${esc(a.text)}</div><div class="t">${timeAgo(a.time)}</div></div></div>`).join('') : '<div class="empty-hint">No activity yet.</div>';
+}
+
+/* ===================== Members panel ===================== */
+function openMembersModal(){
+  const root = document.getElementById('modal-root');
+  const overlay = document.createElement('div');
+  overlay.className='overlay';
+  overlay.innerHTML = `<div class="modal narrow">
+    <div class="modal-head"><div style="font-weight:700;font-size:17px;">Members</div><button class="close-x" id="mm-close">×</button></div>
+    <div id="mm-list"></div>
+    <div style="display:flex;gap:6px;margin-top:10px;"><input id="mm-new" placeholder="New member name" style="flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 9px;outline:none;"><button class="btn primary" id="mm-add">Add</button></div>
+  </div>`;
+  root.appendChild(overlay);
+  overlay.onclick=(e)=>{ if(e.target===overlay) finish(); };
+  overlay.querySelector('#mm-close').onclick = finish;
+  function finish(){ overlay.remove(); persistAndRender(); }
+  function rerenderList(){
+    overlay.querySelector('#mm-list').innerHTML = state.members.map(m=>`
+      <div class="tag-manage-row"><div class="avatar sm" style="background:${colorFor(m.id)}">${initials(m.name)}</div>
+      <span style="flex:1;">${esc(m.name)}</span><button class="iconbtn" data-del-member="${m.id}">✕</button></div>`).join('');
+    overlay.querySelectorAll('[data-del-member]').forEach(b=>b.onclick=()=>{
+      if(state.members.length<=1){ toast('Must keep at least one member'); return; }
+      state.members = state.members.filter(m=>m.id!==b.dataset.delMember);
+      rerenderList();
+    });
+  }
+  rerenderList();
+  overlay.querySelector('#mm-add').onclick = ()=>{
+    const inp = overlay.querySelector('#mm-new');
+    if(inp.value.trim()){ state.members.push({id:uid(), name:inp.value.trim()}); inp.value=''; rerenderList(); }
+  };
+}
+
+/* ===================== Tags panel ===================== */
+function openTagsModal(){
+  const root = document.getElementById('modal-root');
+  const overlay = document.createElement('div');
+  overlay.className='overlay';
+  overlay.innerHTML = `<div class="modal narrow">
+    <div class="modal-head"><div style="font-weight:700;font-size:17px;">Tags</div><button class="close-x" id="tm-close">×</button></div>
+    <div id="tm-list"></div>
+    <div style="display:flex;gap:6px;margin-top:10px;align-items:center;">
+      <input id="tm-new" placeholder="New tag name" style="flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 9px;outline:none;">
+      <input type="color" id="tm-color" value="#3498db" style="width:36px;height:32px;border:none;background:none;cursor:pointer;">
+      <button class="btn primary" id="tm-add">Add</button>
+    </div>
+  </div>`;
+  root.appendChild(overlay);
+  overlay.onclick=(e)=>{ if(e.target===overlay) finish(); };
+  overlay.querySelector('#tm-close').onclick = finish;
+  function finish(){ overlay.remove(); persistAndRender(); }
+  function rerenderList(){
+    overlay.querySelector('#tm-list').innerHTML = state.tags.map(tg=>`
+      <div class="tag-manage-row"><span class="tag-pill" style="background:${tg.color}">${esc(tg.name)}</span>
+      <span style="flex:1;"></span><button class="iconbtn" data-del-tag="${tg.id}">✕</button></div>`).join('');
+    overlay.querySelectorAll('[data-del-tag]').forEach(b=>b.onclick=()=>{
+      state.tags = state.tags.filter(t=>t.id!==b.dataset.delTag);
+      state.boards.forEach(bd=>Object.values(bd.tasks).forEach(t=>{ t.tagIds = t.tagIds.filter(id=>id!==b.dataset.delTag); }));
+      rerenderList();
+    });
+  }
+  rerenderList();
+  overlay.querySelector('#tm-add').onclick = ()=>{
+    const inp = overlay.querySelector('#tm-new');
+    const col = overlay.querySelector('#tm-color');
+    if(inp.value.trim()){ state.tags.push({id:uid(), name:inp.value.trim(), color:col.value}); inp.value=''; rerenderList(); }
+  };
+}
+
+/* ===================== Filter popover ===================== */
+function openFilterPopover(anchor){
+  closePopovers();
+  const pop = document.createElement('div');
+  pop.className='popover';
+  const r = anchor.getBoundingClientRect();
+  pop.style.top=(r.bottom+6)+'px'; pop.style.right=(window.innerWidth-r.right)+'px';
+  const f = state.filters;
+  pop.innerHTML = `
+    <h4>Assignee</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+      ${state.members.map(m=>`<span class="chipsel ${f.assignees.includes(m.id)?'on':''}" data-fa="${m.id}">${esc(m.name)}</span>`).join('')}
+    </div>
+    <h4>Priority</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+      ${PRIORITIES.map(p=>`<span class="chipsel ${f.priorities.includes(p.id)?'on':''}" data-fp="${p.id}">${p.label}</span>`).join('')}
+    </div>
+    <h4>Tags</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+      ${state.tags.map(t=>`<span class="chipsel ${f.tagIds.includes(t.id)?'on':''}" data-ft="${t.id}">${esc(t.name)}</span>`).join('')}
+    </div>
+    <h4>Due</h4>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+      ${['overdue','today','week','none'].map(d=>`<span class="chipsel ${f.due===d?'on':''}" data-fd="${d}">${d}</span>`).join('')}
+    </div>
+    <div class="divider"></div>
+    <div class="row" id="filter-clear">Clear all filters</div>
+  `;
+  document.body.appendChild(pop);
+  pop.querySelectorAll('[data-fa]').forEach(c=>c.onclick=()=>{ toggleIn(f.assignees, c.dataset.fa); refresh(); });
+  pop.querySelectorAll('[data-fp]').forEach(c=>c.onclick=()=>{ toggleIn(f.priorities, c.dataset.fp); refresh(); });
+  pop.querySelectorAll('[data-ft]').forEach(c=>c.onclick=()=>{ toggleIn(f.tagIds, c.dataset.ft); refresh(); });
+  pop.querySelectorAll('[data-fd]').forEach(c=>c.onclick=()=>{ f.due = f.due===c.dataset.fd ? null : c.dataset.fd; refresh(); });
+  pop.querySelector('#filter-clear').onclick = ()=>{ f.assignees=[]; f.priorities=[]; f.tagIds=[]; f.due=null; refresh(); };
+  function toggleIn(arr, val){ const i=arr.indexOf(val); if(i>=0) arr.splice(i,1); else arr.push(val); }
+  function refresh(){ persistAndRender(); openFilterPopover(document.getElementById('btn-filter')); }
+  setTimeout(()=>document.addEventListener('click', outsideClose), 0);
+  function outsideClose(e){ if(!pop.contains(e.target) && e.target.id!=='btn-filter'){ closePopovers(); document.removeEventListener('click', outsideClose); } }
+}
+
+/* ===================== Board management ===================== */
+function deleteBoard(id){
+  if(state.boards.length<=1){ toast("Can't delete the only board"); return; }
+  state.boards = state.boards.filter(b=>b.id!==id);
+  if(state.currentBoardId===id) state.currentBoardId = state.boards[0].id;
+  logActivity('Deleted a board');
+  persistAndRender();
+}
+
+/* ===================== Export / Import ===================== */
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'flowboard-export.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!parsed.boards) throw new Error('bad file');
+      if(confirm('This will replace all current data. Continue?')){
+        state = parsed;
+        save(); render();
+        toast('Data imported');
+      }
+    }catch(e){ toast('Invalid file'); }
+  };
+  reader.readAsText(file);
+}
+
+/* ===================== Event wiring ===================== */
+document.getElementById('btn-toggle-sidebar').onclick = ()=>document.getElementById('sidebar').classList.toggle('collapsed');
+document.getElementById('btn-theme').onclick = ()=>{ state.theme = state.theme==='dark'?'light':'dark'; persistAndRender(); };
+document.getElementById('btn-add-board').onclick = ()=>{
+  const name = prompt('Board name:', 'New board');
+  if(!name) return;
+  const nb = {id:uid(), name, starred:false, columns:[
+    {id:uid(), name:'To Do', wipLimit:null, taskIds:[]},
+    {id:uid(), name:'In Progress', wipLimit:null, taskIds:[]},
+    {id:uid(), name:'Done', wipLimit:null, taskIds:[]},
+  ], tasks:{}};
+  state.boards.push(nb); state.currentBoardId = nb.id;
+  logActivity(`Created board "${esc(name)}"`);
+  persistAndRender();
+};
+document.getElementById('board-title').onchange = (e)=>{ curBoard().name = e.target.value.trim()||curBoard().name; persistAndRender(); };
+document.getElementById('btn-my-tasks').onclick = ()=>{ state.filters._myTasks = !state.filters._myTasks; persistAndRender(); };
+document.getElementById('btn-activity').onclick = openActivityPanel;
+document.getElementById('btn-trash').onclick = openTrashPanel;
+document.getElementById('btn-members').onclick = openMembersModal;
+document.getElementById('btn-tags').onclick = openTagsModal;
+document.getElementById('btn-export').onclick = exportData;
+document.getElementById('btn-import').onclick = ()=>document.getElementById('import-file').click();
+document.getElementById('import-file').onchange = (e)=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
+document.getElementById('cur-user-select').onchange = (e)=>{ state.currentUserId = e.target.value; persistAndRender(); };
+document.querySelectorAll('#view-seg button').forEach(btn=>{
+  btn.onclick = ()=>{ state.view = btn.dataset.view; persistAndRender(); };
+});
+document.getElementById('search-input').oninput = (e)=>{ state.filters.search = e.target.value; render(); };
+document.getElementById('btn-filter').onclick = (e)=>openFilterPopover(e.currentTarget);
+document.getElementById('btn-sort').onclick = ()=>{
+  const b = curBoard();
+  b.columns.forEach(col=>{ col.taskIds.sort((a,c)=> (b.tasks[a].dueDate||'9999').localeCompare(b.tasks[c].dueDate||'9999')); });
+  toast('Sorted all columns by due date');
+  persistAndRender();
+};
+document.getElementById('btn-new-task').onclick = ()=>{
+  const b = curBoard();
+  const col = b.columns[0];
+  if(!col){ toast('Add a column first'); return; }
+  const title = prompt('Task title:');
+  if(!title) return;
+  const t = { id:uid(), title, desc:'', assigneeId:null, dueDate:null, priority:null, tagIds:[], subtasks:[], comments:[], cover:null, completed:false, createdAt:Date.now() };
+  b.tasks[t.id]=t; col.taskIds.unshift(t.id);
+  logActivity(`Added task "${esc(title)}"`);
+  persistAndRender();
+  openTaskModal(t.id);
+};
+
+document.addEventListener('keydown', (e)=>{
+  const tag = (document.activeElement.tagName||'').toLowerCase();
+  const typing = tag==='input' || tag==='textarea' || document.activeElement.isContentEditable;
+  if(e.key==='Escape'){ closePopovers(); closeSidePanels(); document.querySelectorAll('.overlay').forEach(o=>{o.remove();}); persistAndRender(); return; }
+  if(typing) return;
+  if(e.key==='/'){ e.preventDefault(); document.getElementById('search-input').focus(); }
+  if(e.key.toLowerCase()==='n'){ e.preventDefault(); document.getElementById('btn-new-task').click(); }
+  if(e.key.toLowerCase()==='t'){ e.preventDefault(); state.theme = state.theme==='dark'?'light':'dark'; persistAndRender(); }
+});
+
+/* ===================== Init ===================== */
+render();
+</script>
+</body>
+</html>

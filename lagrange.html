@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lagrange Polynomial Interpolation</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --series-1:       #2a78d6;  /* curve */
+    --series-2:       #eb6834;  /* points */
+    --focus-ring:      #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+
+  header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    max-width: 60ch;
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px 6px 6px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .theme-toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .theme-toggle .icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--page);
+  }
+  .theme-toggle svg { width: 16px; height: 16px; }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .points-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 640px) {
+    .points-panel { grid-template-columns: 1fr; }
+  }
+
+  .point-input {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .point-input .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .point-input .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--series-2);
+    flex-shrink: 0;
+  }
+  .field-row { display: flex; gap: 8px; }
+  .field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .field label {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .field input {
+    width: 100%;
+    background: var(--page);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .field input:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+
+  .error-msg {
+    color: #e34948;
+    font-size: 13px;
+    margin: 12px 2px 0;
+    min-height: 18px;
+  }
+
+  .equation-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .equation-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .equation {
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chart-card { padding: 20px 20px 12px; }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch-line {
+    width: 16px; height: 2px; border-radius: 1px;
+    background: var(--series-1);
+  }
+  .legend-swatch-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--series-2);
+  }
+
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .baseline { stroke: var(--baseline); stroke-width: 1; }
+  .axis-label { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .curve-path { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .data-point {
+    fill: var(--series-2);
+    stroke: var(--surface-1);
+    stroke-width: 2;
+  }
+  .data-point-label {
+    fill: var(--text-secondary);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hit-target { fill: transparent; cursor: crosshair; }
+
+  .crosshair-line {
+    stroke: var(--text-muted);
+    stroke-width: 1;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .crosshair-dot {
+    fill: var(--surface-1);
+    stroke: var(--series-1);
+    stroke-width: 2;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    opacity: 0;
+    transition: opacity 0.08s ease;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  .tooltip .tt-value {
+    font-weight: 600;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+  }
+  .tooltip .tt-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+  }
+  .tooltip .tt-key .stroke {
+    width: 12px; height: 2px; background: var(--series-1); display: inline-block; border-radius: 1px;
+  }
+
+  .footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .table-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .table-toggle:hover { color: var(--text-primary); }
+  .table-toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+  .data-table.show { display: table; }
+  .data-table th, .data-table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--gridline);
+    font-variant-numeric: tabular-nums;
+  }
+  .data-table th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .data-table td { color: var(--text-primary); }
+
+  .steps-card { padding: 20px; }
+  .steps-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .steps-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .steps-toggle:hover { color: var(--text-primary); }
+  .steps-toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  .steps-body { margin-top: 12px; }
+  .steps-body.hidden { display: none; }
+
+  .step-block { padding: 14px 0; border-top: 1px solid var(--gridline); }
+  .step-block:first-child { border-top: none; padding-top: 4px; }
+  .step-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .step-line {
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    line-height: 1.7;
+    padding-left: 2px;
+  }
+  .step-line.muted { color: var(--text-secondary); }
+  .step-line .eq-indent { padding-left: 1.6em; }
+  .step-sum-row {
+    display: flex;
+    gap: 8px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.7;
+  }
+  .step-sum-row .term { color: var(--text-secondary); min-width: 1.4em; }
+  .step-result {
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Lagrange Polynomial Interpolation</h1>
+      <p>Enter three points and the unique quadratic (or lower-degree) polynomial passing through all of them is computed and plotted.</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">
+      <span class="icon" id="themeIcon"></span>
+      <span id="themeLabel">Dark mode</span>
+    </button>
+  </header>
+
+  <div class="card">
+    <div class="points-panel" id="pointsPanel"></div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <div class="card equation-card">
+    <div>
+      <div class="equation-label">Interpolating polynomial</div>
+      <div class="equation" id="equationOut">—</div>
+    </div>
+  </div>
+
+  <div class="card steps-card">
+    <div class="steps-header">
+      <div class="chart-title">Step-by-step calculation</div>
+      <button class="steps-toggle" id="stepsToggle" type="button" aria-expanded="true">Hide steps</button>
+    </div>
+    <div class="steps-body" id="stepsBody"></div>
+  </div>
+
+  <div class="card chart-card">
+    <div class="chart-header">
+      <div class="chart-title">P(x) over the given points</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-swatch-line"></span>Interpolated curve</span>
+        <span class="legend-item"><span class="legend-swatch-dot"></span>Data points</span>
+      </div>
+    </div>
+    <div style="position: relative;">
+      <svg class="chart" id="chart" viewBox="0 0 900 460" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+    <div class="footer-row">
+      <button class="table-toggle" id="tableToggle" type="button" aria-expanded="false">View as table</button>
+    </div>
+    <table class="data-table" id="dataTable">
+      <thead>
+        <tr><th>Point</th><th>x</th><th>y</th></tr>
+      </thead>
+      <tbody id="dataTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Theme ----------
+  var root = document.documentElement;
+  var themeToggle = document.getElementById('themeToggle');
+  var themeIcon = document.getElementById('themeIcon');
+  var themeLabel = document.getElementById('themeLabel');
+
+  var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>';
+
+  function systemPrefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function applyTheme(mode) {
+    // mode: 'light' | 'dark'
+    root.setAttribute('data-theme', mode);
+    var isDark = mode === 'dark';
+    themeToggle.setAttribute('aria-pressed', String(isDark));
+    themeIcon.innerHTML = isDark ? SUN : MOON;
+    themeLabel.textContent = isDark ? 'Light mode' : 'Dark mode';
+    try { localStorage.setItem('lagrange-theme', mode); } catch (e) {}
+  }
+
+  var storedTheme = null;
+  try { storedTheme = localStorage.getItem('lagrange-theme'); } catch (e) {}
+  applyTheme(storedTheme || (systemPrefersDark() ? 'dark' : 'light'));
+
+  themeToggle.addEventListener('click', function () {
+    var current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+    render();
+  });
+
+  // ---------- Point inputs ----------
+  var DEFAULT_POINTS = [
+    { x: -2, y: 4 },
+    { x: 1, y: -1 },
+    { x: 3, y: 5 }
+  ];
+
+  var pointsPanel = document.getElementById('pointsPanel');
+  var inputs = [];
+
+  DEFAULT_POINTS.forEach(function (pt, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'point-input';
+
+    var label = document.createElement('div');
+    label.className = 'label';
+    var dot = document.createElement('span');
+    dot.className = 'dot';
+    label.appendChild(dot);
+    label.appendChild(document.createTextNode('Point ' + (i + 1)));
+    wrap.appendChild(label);
+
+    var row = document.createElement('div');
+    row.className = 'field-row';
+
+    var xField = document.createElement('div');
+    xField.className = 'field';
+    var xLabel = document.createElement('label');
+    xLabel.textContent = 'x' + (i + 1);
+    var xInput = document.createElement('input');
+    xInput.type = 'number';
+    xInput.step = 'any';
+    xInput.value = pt.x;
+    xField.appendChild(xLabel);
+    xField.appendChild(xInput);
+
+    var yField = document.createElement('div');
+    yField.className = 'field';
+    var yLabel = document.createElement('label');
+    yLabel.textContent = 'y' + (i + 1);
+    var yInput = document.createElement('input');
+    yInput.type = 'number';
+    yInput.step = 'any';
+    yInput.value = pt.y;
+    yField.appendChild(yLabel);
+    yField.appendChild(yInput);
+
+    row.appendChild(xField);
+    row.appendChild(yField);
+    wrap.appendChild(row);
+    pointsPanel.appendChild(wrap);
+
+    inputs.push({ x: xInput, y: yInput });
+    xInput.addEventListener('input', render);
+    yInput.addEventListener('input', render);
+  });
+
+  // ---------- Table toggle ----------
+  var tableToggle = document.getElementById('tableToggle');
+  var dataTable = document.getElementById('dataTable');
+  tableToggle.addEventListener('click', function () {
+    var showing = dataTable.classList.toggle('show');
+    tableToggle.setAttribute('aria-expanded', String(showing));
+    tableToggle.textContent = showing ? 'Hide table' : 'View as table';
+  });
+
+  // ---------- Steps toggle ----------
+  var stepsToggle = document.getElementById('stepsToggle');
+  var stepsBody = document.getElementById('stepsBody');
+  stepsToggle.addEventListener('click', function () {
+    var hidden = stepsBody.classList.toggle('hidden');
+    stepsToggle.setAttribute('aria-expanded', String(!hidden));
+    stepsToggle.textContent = hidden ? 'Show steps' : 'Hide steps';
+  });
+
+  // ---------- Math ----------
+  function readPoints() {
+    return inputs.map(function (f) {
+      return { x: parseFloat(f.x.value), y: parseFloat(f.y.value) };
+    });
+  }
+
+  // Returns [c0, c1, c2] such that P(x) = c0 + c1*x + c2*x^2, or null if invalid.
+  // The array also carries a `.terms` property with the per-point derivation
+  // details, so the step-by-step display can be built from the same numbers
+  // used for the actual result (no separate re-derivation to drift out of sync).
+  function lagrangeCoefficients(pts) {
+    for (var i = 0; i < pts.length; i++) {
+      if (!isFinite(pts[i].x) || !isFinite(pts[i].y)) return null;
+    }
+    if (pts[0].x === pts[1].x || pts[0].x === pts[2].x || pts[1].x === pts[2].x) return null;
+
+    var coeffs = [0, 0, 0];
+    var terms = [];
+    for (var i = 0; i < 3; i++) {
+      var otherIdx = [0, 1, 2].filter(function (idx) { return idx !== i; });
+      var j = otherIdx[0], k = otherIdx[1];
+      var xj = pts[j].x, xk = pts[k].x;
+      var xi = pts[i].x, yi = pts[i].y;
+      var factor1 = xi - xj, factor2 = xi - xk;
+      var denom = factor1 * factor2;
+      // basis numerator: (x - xj)(x - xk) = x^2 - (xj+xk)x + xj*xk
+      var basis0 = (xj * xk) / denom;   // constant term
+      var basis1 = -(xj + xk) / denom;  // x term
+      var basis2 = 1 / denom;           // x^2 term
+      var contribution = [yi * basis0, yi * basis1, yi * basis2];
+      coeffs[0] += contribution[0];
+      coeffs[1] += contribution[1];
+      coeffs[2] += contribution[2];
+      terms.push({
+        i: i, xi: xi, yi: yi, xj: xj, xk: xk,
+        factor1: factor1, factor2: factor2, denom: denom,
+        basis: [basis0, basis1, basis2],
+        contribution: contribution
+      });
+    }
+    coeffs.terms = terms;
+    return coeffs;
+  }
+
+  function evalPoly(coeffs, x) {
+    return coeffs[0] + coeffs[1] * x + coeffs[2] * x * x;
+  }
+
+  function formatCoeff(v) {
+    var r = Math.round(v * 1000) / 1000;
+    return r === 0 ? 0 : r;
+  }
+
+  function equationString(coeffs) {
+    var c0 = formatCoeff(coeffs[0]);
+    var c1 = formatCoeff(coeffs[1]);
+    var c2 = formatCoeff(coeffs[2]);
+    var terms = [];
+
+    if (c2 !== 0) {
+      terms.push({ v: c2, suffix: 'x²' });
+    }
+    if (c1 !== 0) {
+      terms.push({ v: c1, suffix: 'x' });
+    }
+    if (c0 !== 0 || terms.length === 0) {
+      terms.push({ v: c0, suffix: '' });
+    }
+
+    var out = 'P(x) = ';
+    terms.forEach(function (t, i) {
+      var absV = Math.abs(t.v);
+      var sign = t.v < 0 ? '−' : '+';
+      if (i === 0) {
+        out += (t.v < 0 ? '−' : '') + absV + t.suffix;
+      } else {
+        out += ' ' + sign + ' ' + absV + t.suffix;
+      }
+    });
+    return out;
+  }
+
+  // ---------- Step-by-step derivation ----------
+  var SUB = { 0: '₀', 1: '₁', 2: '₂' };
+  var fmt = formatCoeff; // same rounding as the headline equation, so the two never visually disagree
+
+  // "x − v" / "x + v" with the sign folded in, e.g. xTerm(-2) -> "x + 2"
+  function xTerm(v) {
+    v = fmt(v);
+    if (v === 0) return 'x';
+    return v > 0 ? ('x − ' + v) : ('x + ' + Math.abs(v));
+  }
+
+  function signed(v, isFirst) {
+    v = fmt(v);
+    var abs = Math.abs(v);
+    if (isFirst) return (v < 0 ? '−' : '') + abs;
+    return (v < 0 ? ' − ' : ' + ') + abs;
+  }
+
+  // joins a list of numbers as "a − b + c", never a raw "+ -1"
+  function joinSigned(values) {
+    return values.map(function (v, idx) { return signed(v, idx === 0); }).join('');
+  }
+
+  // a standalone number for display, using the typographic minus (−) instead of a hyphen
+  function numStr(v) {
+    v = fmt(v);
+    return v < 0 ? ('−' + Math.abs(v)) : String(v);
+  }
+
+  // "a − b", but subtracting a negative reads as addition: subExpr(1, -2) -> "1 + 2"
+  function subExpr(a, b) {
+    b = fmt(b);
+    return b < 0 ? (numStr(a) + ' + ' + numStr(-b)) : (numStr(a) + ' − ' + numStr(b));
+  }
+
+  function addLine(container, text, opts) {
+    var line = document.createElement('div');
+    line.className = 'step-line' + (opts && opts.muted ? ' muted' : '') + (opts && opts.indent ? ' eq-indent' : '');
+    line.textContent = text;
+    container.appendChild(line);
+    return line;
+  }
+
+  function renderSteps(pts, coeffs) {
+    stepsBody.innerHTML = '';
+    if (!coeffs) {
+      addLine(stepsBody, 'Enter three points with distinct, numeric x values to see the derivation.', { muted: true });
+      return;
+    }
+    var terms = coeffs.terms;
+
+    // Block 1 — the general formula
+    var b1 = document.createElement('div');
+    b1.className = 'step-block';
+    var t1 = document.createElement('div');
+    t1.className = 'step-title';
+    t1.textContent = 'The Lagrange formula';
+    b1.appendChild(t1);
+    addLine(b1, 'P(x) = y₀·L₀(x) + y₁·L₁(x) + y₂·L₂(x)');
+    addLine(b1, 'where Lᵢ(x) = ∏ (x − xⱼ) / (xᵢ − xⱼ)  for every j ≠ i', { muted: true });
+    stepsBody.appendChild(b1);
+
+    // Block 2 — one derivation per basis polynomial
+    terms.forEach(function (t) {
+      var b = document.createElement('div');
+      b.className = 'step-block';
+      var title = document.createElement('div');
+      title.className = 'step-title';
+      title.textContent = 'Basis polynomial L' + SUB[t.i] + '(x)';
+      b.appendChild(title);
+
+      addLine(b, 'L' + SUB[t.i] + '(x) = (x − x' + SUB[[0,1,2].filter(function(idx){return idx!==t.i;})[0]] + ')(x − x' + SUB[[0,1,2].filter(function(idx){return idx!==t.i;})[1]] + ') / ((x' + SUB[t.i] + ' − x' + SUB[[0,1,2].filter(function(idx){return idx!==t.i;})[0]] + ')(x' + SUB[t.i] + ' − x' + SUB[[0,1,2].filter(function(idx){return idx!==t.i;})[1]] + '))', { muted: true });
+      addLine(b, '= (' + xTerm(t.xj) + ')(' + xTerm(t.xk) + ') / ((' + subExpr(t.xi, t.xj) + ')(' + subExpr(t.xi, t.xk) + '))');
+      addLine(b, '= (' + xTerm(t.xj) + ')(' + xTerm(t.xk) + ') / (' + numStr(t.factor1) + ' × ' + numStr(t.factor2) + ')');
+      addLine(b, '= (' + xTerm(t.xj) + ')(' + xTerm(t.xk) + ') / ' + numStr(t.denom));
+      stepsBody.appendChild(b);
+    });
+
+    // Block 3 — weighted sum, substituted
+    var b3 = document.createElement('div');
+    b3.className = 'step-block';
+    var t3 = document.createElement('div');
+    t3.className = 'step-title';
+    t3.textContent = 'Weighted sum';
+    b3.appendChild(t3);
+    addLine(b3, 'P(x) = y₀·L₀(x) + y₁·L₁(x) + y₂·L₂(x)');
+    var sumLine = terms.map(function (t, idx) {
+      var piece = numStr(t.yi) + '·(' + xTerm(t.xj) + ')(' + xTerm(t.xk) + ') / ' + numStr(t.denom);
+      return idx === 0 ? piece : ' + ' + piece;
+    }).join('');
+    addLine(b3, '= ' + sumLine);
+    stepsBody.appendChild(b3);
+
+    // Block 4 — expand each weighted term into ax^2 + bx + c
+    var b4 = document.createElement('div');
+    b4.className = 'step-block';
+    var t4 = document.createElement('div');
+    t4.className = 'step-title';
+    t4.textContent = 'Expand each term into standard form';
+    b4.appendChild(t4);
+    terms.forEach(function (t) {
+      var expanded = signed(t.basis[2], true) + 'x²' + signed(t.basis[1]) + 'x' + signed(t.basis[0]);
+      addLine(b4, 'y' + SUB[t.i] + '·L' + SUB[t.i] + '(x) = ' + numStr(t.yi) + '×(' + expanded + ')');
+      var contrib = signed(t.contribution[2], true) + 'x²' + signed(t.contribution[1]) + 'x' + signed(t.contribution[0]);
+      addLine(b4, '= ' + contrib, { indent: true });
+    });
+    stepsBody.appendChild(b4);
+
+    // Block 5 — sum the per-term coefficients
+    var b5 = document.createElement('div');
+    b5.className = 'step-block';
+    var t5 = document.createElement('div');
+    t5.className = 'step-title';
+    t5.textContent = 'Collect like terms';
+    b5.appendChild(t5);
+    ['x²', 'x¹', 'x⁰'].forEach(function (label, powerIdx) {
+      var coeffKey = 2 - powerIdx; // x^2 -> index2, x^1 -> index1, x^0 -> index0
+      var parts = joinSigned(terms.map(function (t) { return t.contribution[coeffKey]; }));
+      var row = document.createElement('div');
+      row.className = 'step-sum-row';
+      var termEl = document.createElement('div');
+      termEl.className = 'term';
+      termEl.textContent = label + ' :';
+      row.appendChild(termEl);
+      var valEl = document.createElement('div');
+      valEl.textContent = parts + ' = ' + numStr(coeffs[coeffKey]);
+      row.appendChild(valEl);
+      b5.appendChild(row);
+    });
+    stepsBody.appendChild(b5);
+
+    // Block 6 — final result
+    var b6 = document.createElement('div');
+    b6.className = 'step-block';
+    var t6 = document.createElement('div');
+    t6.className = 'step-title';
+    t6.textContent = 'Result';
+    b6.appendChild(t6);
+    var resultEl = document.createElement('div');
+    resultEl.className = 'step-line step-result';
+    resultEl.textContent = equationString(coeffs);
+    b6.appendChild(resultEl);
+    stepsBody.appendChild(b6);
+  }
+
+  // ---------- Chart ----------
+  var W = 900, H = 460;
+  var margin = { top: 24, right: 28, bottom: 44, left: 52 };
+  var plotW = W - margin.left - margin.right;
+  var plotH = H - margin.top - margin.bottom;
+
+  var svg = document.getElementById('chart');
+  var tooltip = document.getElementById('tooltip');
+  var errorMsg = document.getElementById('errorMsg');
+  var equationOut = document.getElementById('equationOut');
+  var dataTableBody = document.getElementById('dataTableBody');
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+
+  function el(tag, attrs) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function niceStep(range, targetTicks) {
+    var raw = range / targetTicks;
+    var mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
+    var norm = raw / mag;
+    var step;
+    if (norm < 1.5) step = 1;
+    else if (norm < 3) step = 2;
+    else if (norm < 7) step = 5;
+    else step = 10;
+    return step * mag;
+  }
+
+  function render() {
+    var pts = readPoints();
+    var coeffs = lagrangeCoefficients(pts);
+
+    svg.innerHTML = '';
+    dataTableBody.innerHTML = '';
+
+    pts.forEach(function (p, i) {
+      var tr = document.createElement('tr');
+      var tdLabel = document.createElement('td');
+      tdLabel.textContent = 'Point ' + (i + 1);
+      var tdX = document.createElement('td');
+      tdX.textContent = isFinite(p.x) ? p.x : '—';
+      var tdY = document.createElement('td');
+      tdY.textContent = isFinite(p.y) ? p.y : '—';
+      tr.appendChild(tdLabel);
+      tr.appendChild(tdX);
+      tr.appendChild(tdY);
+      dataTableBody.appendChild(tr);
+    });
+
+    if (!coeffs) {
+      var anyBlank = pts.some(function (p) { return !isFinite(p.x) || !isFinite(p.y); });
+      errorMsg.textContent = anyBlank
+        ? 'Enter numeric x and y values for all three points.'
+        : 'The three x values must be distinct — a polynomial can’t pass through two different y values at the same x.';
+      equationOut.textContent = '—';
+      renderSteps(pts, null);
+      return;
+    }
+    errorMsg.textContent = '';
+    equationOut.textContent = equationString(coeffs);
+    renderSteps(pts, coeffs);
+
+    // ---- domain ----
+    var xs = pts.map(function (p) { return p.x; });
+    var ys = pts.map(function (p) { return p.y; });
+    var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+    var xSpan = xMax - xMin || 1;
+    var xPad = xSpan * 0.35;
+    var domXMin = xMin - xPad, domXMax = xMax + xPad;
+
+    var SAMPLES = 240;
+    var curvePts = [];
+    for (var i = 0; i <= SAMPLES; i++) {
+      var x = domXMin + (domXMax - domXMin) * (i / SAMPLES);
+      curvePts.push({ x: x, y: evalPoly(coeffs, x) });
+    }
+    var curveYs = curvePts.map(function (p) { return p.y; });
+    var yMin = Math.min.apply(null, ys.concat(curveYs));
+    var yMax = Math.max.apply(null, ys.concat(curveYs));
+    if (yMin === yMax) { yMin -= 1; yMax += 1; }
+    var ySpan = yMax - yMin;
+    var yPad = ySpan * 0.15;
+    var domYMin = yMin - yPad, domYMax = yMax + yPad;
+
+    function sx(x) { return margin.left + (x - domXMin) / (domXMax - domXMin) * plotW; }
+    function sy(y) { return margin.top + plotH - (y - domYMin) / (domYMax - domYMin) * plotH; }
+
+    // ---- gridlines & axes ----
+    var xStep = niceStep(domXMax - domXMin, 8);
+    var yStep = niceStep(domYMax - domYMin, 6);
+
+    var gridGroup = el('g', {});
+    svg.appendChild(gridGroup);
+
+    var xTickStart = Math.ceil(domXMin / xStep) * xStep;
+    for (var gx = xTickStart; gx <= domXMax; gx += xStep) {
+      var px = sx(gx);
+      gridGroup.appendChild(el('line', { class: 'grid-line', x1: px, x2: px, y1: margin.top, y2: margin.top + plotH }));
+      var lbl = el('text', { class: 'axis-label', x: px, y: margin.top + plotH + 18, 'text-anchor': 'middle' });
+      lbl.textContent = Math.round(gx * 100) / 100;
+      svg.appendChild(lbl);
+    }
+
+    var yTickStart = Math.ceil(domYMin / yStep) * yStep;
+    for (var gy = yTickStart; gy <= domYMax; gy += yStep) {
+      var py = sy(gy);
+      gridGroup.appendChild(el('line', { class: 'grid-line', x1: margin.left, x2: margin.left + plotW, y1: py, y2: py }));
+      var ylbl = el('text', { class: 'axis-label', x: margin.left - 10, y: py + 4, 'text-anchor': 'end' });
+      ylbl.textContent = Math.round(gy * 100) / 100;
+      svg.appendChild(ylbl);
+    }
+
+    // baseline axes (x=0 / y=0 if in range)
+    if (domXMin <= 0 && domXMax >= 0) {
+      var zx = sx(0);
+      svg.appendChild(el('line', { class: 'baseline', x1: zx, x2: zx, y1: margin.top, y2: margin.top + plotH }));
+    }
+    if (domYMin <= 0 && domYMax >= 0) {
+      var zy = sy(0);
+      svg.appendChild(el('line', { class: 'baseline', x1: margin.left, x2: margin.left + plotW, y1: zy, y2: zy }));
+    } else {
+      svg.appendChild(el('line', { class: 'baseline', x1: margin.left, x2: margin.left + plotW, y1: margin.top + plotH, y2: margin.top + plotH }));
+    }
+
+    // ---- curve ----
+    var d = curvePts.map(function (p, i) {
+      return (i === 0 ? 'M' : 'L') + sx(p.x).toFixed(2) + ',' + sy(p.y).toFixed(2);
+    }).join(' ');
+    svg.appendChild(el('path', { class: 'curve-path', d: d }));
+
+    // ---- data points ----
+    pts.forEach(function (p, i) {
+      svg.appendChild(el('circle', { class: 'data-point', cx: sx(p.x), cy: sy(p.y), r: 5 }));
+      var lbl = el('text', {
+        class: 'data-point-label',
+        x: sx(p.x) + 9,
+        y: sy(p.y) - 9
+      });
+      lbl.textContent = '(' + p.x + ', ' + p.y + ')';
+      svg.appendChild(lbl);
+    });
+
+    // ---- crosshair ----
+    var crosshairLine = el('line', { class: 'crosshair-line', x1: 0, x2: 0, y1: margin.top, y2: margin.top + plotH });
+    var crosshairDot = el('circle', { class: 'crosshair-dot', r: 5 });
+    svg.appendChild(crosshairLine);
+    svg.appendChild(crosshairDot);
+
+    var hitTarget = el('rect', {
+      class: 'hit-target',
+      x: margin.left, y: margin.top, width: plotW, height: plotH
+    });
+    svg.appendChild(hitTarget);
+
+    function pointerToChart(evt) {
+      var rect = svg.getBoundingClientRect();
+      var scaleX = W / rect.width;
+      var clientX = (evt.touches ? evt.touches[0].clientX : evt.clientX);
+      return (clientX - rect.left) * scaleX;
+    }
+
+    function onMove(evt) {
+      var px = pointerToChart(evt);
+      var xVal = domXMin + (px - margin.left) / plotW * (domXMax - domXMin);
+      xVal = Math.max(domXMin, Math.min(domXMax, xVal));
+      var yVal = evalPoly(coeffs, xVal);
+
+      var cx = sx(xVal), cy = sy(yVal);
+      crosshairLine.setAttribute('x1', cx);
+      crosshairLine.setAttribute('x2', cx);
+      crosshairLine.style.opacity = 1;
+      crosshairDot.setAttribute('cx', cx);
+      crosshairDot.setAttribute('cy', cy);
+      crosshairDot.style.opacity = 1;
+
+      var xR = Math.round(xVal * 100) / 100;
+      var yR = Math.round(yVal * 100) / 100;
+      tooltip.innerHTML = '';
+      var key = document.createElement('div');
+      key.className = 'tt-key';
+      var stroke = document.createElement('span');
+      stroke.className = 'stroke';
+      key.appendChild(stroke);
+      key.appendChild(document.createTextNode('P(x)'));
+      var val = document.createElement('div');
+      val.className = 'tt-value';
+      val.textContent = 'x = ' + xR + ',  y = ' + yR;
+      tooltip.appendChild(key);
+      tooltip.appendChild(val);
+      tooltip.style.opacity = 1;
+
+      var wrapRect = svg.parentElement.getBoundingClientRect();
+      var svgRect = svg.getBoundingClientRect();
+      var scale = svgRect.width / W;
+      var left = cx * scale + 14;
+      var top = cy * scale - 40;
+      var maxLeft = wrapRect.width - 160;
+      if (left > maxLeft) left = cx * scale - 150;
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = Math.max(0, top) + 'px';
+    }
+
+    function onLeave() {
+      crosshairLine.style.opacity = 0;
+      crosshairDot.style.opacity = 0;
+      tooltip.style.opacity = 0;
+    }
+
+    hitTarget.addEventListener('pointermove', onMove);
+    hitTarget.addEventListener('pointerleave', onLeave);
+    hitTarget.addEventListener('touchmove', function (e) { onMove(e); e.preventDefault(); }, { passive: false });
+    hitTarget.addEventListener('touchend', onLeave);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
