@@ -112,6 +112,7 @@ a{color:var(--accent);}
 /* ---------- Card ---------- */
 .card{background:var(--bg-elev2);border:1px solid var(--border-soft);border-radius:10px;padding:10px 11px;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:6px;}
 .card:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.15);}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
 .card.dragging{opacity:.35;}
 .card.completed .card-title{text-decoration:line-through;color:var(--text-faint);}
 .card-cover{height:6px;border-radius:5px;margin:-10px -11px 2px;}
@@ -195,6 +196,83 @@ textarea{width:100%;resize:vertical;min-height:64px;}
 .hidden{display:none !important;}
 .kbd{background:var(--bg-elev3);border:1px solid var(--border);border-radius:4px;padding:0 5px;font-size:11px;font-family:monospace;}
 #dragplaceholder{border:2px dashed var(--accent);border-radius:10px;background:var(--accent-soft);}
+
+/* ---------- Board progress ---------- */
+.board-progress{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-faint);}
+.board-progress .bar{width:70px;height:5px;background:var(--bg-elev3);border-radius:4px;overflow:hidden;}
+.board-progress .bar>div{height:100%;background:var(--green);}
+.board-icon-btn{font-size:19px;background:none;border:none;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1;}
+.board-icon-btn:hover{background:var(--bg-elev3);}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:4px;max-width:220px;}
+.emoji-grid span{font-size:18px;cursor:pointer;padding:4px;border-radius:6px;}
+.emoji-grid span:hover{background:var(--bg-elev3);}
+
+/* ---------- Column collapse / color ---------- */
+.column.collapsed{width:44px;min-width:44px;}
+.column.collapsed .column-body,.column.collapsed .column-add,.column.collapsed .column-wip-label{display:none;}
+.column.collapsed .column-head{flex-direction:column;padding:10px 6px;gap:10px;cursor:default;}
+.column.collapsed .cname{writing-mode:vertical-rl;text-orientation:mixed;background:none;height:120px;text-align:left;cursor:pointer;}
+.column-collapse-btn{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:12px;padding:2px;}
+.column-collapse-btn:hover{color:var(--text);}
+.swatch-row{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* ---------- Today digest ---------- */
+.digest-count{margin-left:auto;background:var(--orange);color:#fff;border-radius:20px;padding:0 7px;font-size:11px;font-weight:700;}
+
+/* ---------- Bulk select ---------- */
+.card.selectable{padding-left:30px;}
+.select-box{position:absolute;left:9px;top:11px;width:16px;height:16px;border-radius:4px;border:2px solid var(--text-faint);background:var(--bg-elev2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;}
+.select-box.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+#bulk-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg-elev3);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);padding:10px 14px;display:flex;align-items:center;gap:10px;z-index:120;}
+#bulk-bar select{background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12.5px;}
+
+/* ---------- Command palette ---------- */
+.cmdk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:250;display:flex;align-items:flex-start;justify-content:center;padding-top:12vh;}
+.cmdk{background:var(--bg-elev1);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);width:520px;max-width:90vw;max-height:60vh;overflow:hidden;display:flex;flex-direction:column;}
+.cmdk input{border:none;background:none;outline:none;color:var(--text);font-size:16px;padding:16px 18px;border-bottom:1px solid var(--border);}
+.cmdk-results{overflow-y:auto;padding:6px;}
+.cmdk-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;}
+.cmdk-item.active,.cmdk-item:hover{background:var(--accent-soft);}
+.cmdk-item .tag{margin-left:auto;font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.4px;}
+
+/* ---------- Shortcuts modal ---------- */
+.shortcut-row{display:flex;justify-content:space-between;padding:7px 2px;border-bottom:1px solid var(--border-soft);font-size:13px;}
+
+/* ---------- Confetti ---------- */
+.confetti-piece{position:fixed;top:-10px;width:8px;height:14px;z-index:500;pointer-events:none;animation:confetti-fall linear forwards;}
+@keyframes confetti-fall{to{transform:translateY(105vh) rotate(540deg);opacity:.85;}}
+
+/* ---------- Swimlanes ---------- */
+#swimlane-select{background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 9px;font-size:13px;}
+#board-scroll.swimlane-mode{flex-direction:column;align-items:stretch;}
+.swimlane{border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:10px;}
+.swimlane:last-of-type{border-bottom:none;}
+.swimlane-head{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;padding:4px 2px 10px;color:var(--text-dim);}
+.swimlane-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.columns-row{display:flex;gap:14px;align-items:flex-start;}
+
+/* ---------- Calendar view ---------- */
+#calendar-scroll{flex:1;overflow:auto;padding:16px 20px;}
+.cal-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.cal-head h3{margin:0;font-size:17px;font-weight:700;flex:1;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.cal-dow{text-align:center;font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.4px;padding-bottom:4px;}
+.cal-cell{background:var(--bg-elev1);border:1px solid var(--border);border-radius:9px;min-height:96px;padding:6px;display:flex;flex-direction:column;gap:3px;}
+.cal-cell.other-month{opacity:.4;}
+.cal-cell.is-today{border-color:var(--accent);}
+.cal-daynum{font-size:11.5px;color:var(--text-faint);font-weight:600;}
+.cal-pill{font-size:10.5px;padding:2px 6px;border-radius:6px;background:var(--bg-elev3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.cal-pill.p-overdue{background:rgba(231,76,60,.2);color:var(--red);}
+
+/* ---------- Mentions ---------- */
+.mention{color:var(--accent);font-weight:600;background:var(--accent-soft);padding:0 3px;border-radius:4px;}
+.mention-suggest{position:absolute;background:var(--bg-elev2);border:1px solid var(--border);border-radius:9px;box-shadow:var(--shadow);z-index:90;overflow:hidden;min-width:160px;}
+.mention-suggest .row{padding:7px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.mention-suggest .row:hover,.mention-suggest .row.active{background:var(--accent-soft);}
+
+/* ---------- Attachments ---------- */
+.attach-row{display:flex;align-items:center;gap:8px;padding:5px 0;}
+.attach-row a{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;}
 </style>
 </head>
 <body>
@@ -203,6 +281,7 @@ textarea{width:100%;resize:vertical;min-height:64px;}
     <div class="brand"><div class="logo">◆</div>Flowboard</div>
 
     <div class="side-btn" id="btn-my-tasks"><span class="ic">☑</span>My tasks</div>
+    <div class="side-btn" id="btn-today"><span class="ic">☀</span>Due today / overdue<span id="today-count" class="digest-count hidden"></span></div>
     <div class="side-btn" id="btn-activity"><span class="ic">⏱</span>Activity</div>
     <div class="side-btn" id="btn-trash"><span class="ic">🗑</span>Trash <span id="trash-count" class="badge-count hidden" style="margin-left:auto"></span></div>
 
@@ -212,9 +291,12 @@ textarea{width:100%;resize:vertical;min-height:64px;}
     <div id="sidebar-bottom">
       <div class="side-btn" id="btn-members"><span class="ic">👥</span>Members</div>
       <div class="side-btn" id="btn-tags"><span class="ic">🏷</span>Tags</div>
+      <div class="side-btn" id="btn-templates"><span class="ic">📑</span>Templates</div>
       <div class="side-btn" id="btn-export"><span class="ic">⭳</span>Export data</div>
       <div class="side-btn" id="btn-import"><span class="ic">⭱</span>Import data</div>
       <input type="file" id="import-file" accept=".json" class="hidden">
+      <div class="side-btn" id="btn-shortcuts"><span class="ic">⌘</span>Keyboard shortcuts</div>
+      <div class="side-btn" id="btn-undo"><span class="ic">↺</span>Undo last action</div>
       <div class="side-btn" id="btn-theme"><span class="ic" id="theme-ic">☀</span><span id="theme-label">Light mode</span></div>
       <div class="user-chip"><div class="avatar sm" id="cur-user-avatar"></div><select id="cur-user-select"></select></div>
     </div>
@@ -223,22 +305,34 @@ textarea{width:100%;resize:vertical;min-height:64px;}
   <div id="main">
     <div id="topbar">
       <button class="iconbtn" id="btn-toggle-sidebar" title="Toggle sidebar" style="font-size:16px;">☰</button>
+      <button class="board-icon-btn" id="board-icon-btn" title="Change icon">📋</button>
       <input id="board-title" spellcheck="false">
+      <div class="board-progress" id="board-progress"><div class="bar"><div></div></div><span></span></div>
       <div class="seg" id="view-seg">
         <button data-view="board" class="on">Board</button>
         <button data-view="list">List</button>
+        <button data-view="calendar">Calendar</button>
       </div>
+      <select id="swimlane-select">
+        <option value="">No grouping</option>
+        <option value="assignee">Group by assignee</option>
+        <option value="priority">Group by priority</option>
+      </select>
       <div class="search-box"><span class="ic">🔍</span><input id="search-input" placeholder="Search tasks... (/)"></div>
       <button class="btn" id="btn-filter">⏚ Filter<span id="filter-dot"></span></button>
       <button class="btn" id="btn-sort">⇅ Sort</button>
+      <button class="btn" id="btn-select-mode">☑ Select</button>
+      <button class="btn icon-only" id="btn-cmdk" title="Command palette (Ctrl/Cmd+K)">⌘K</button>
       <div class="topbar-spacer"></div>
       <button class="btn primary" id="btn-new-task">＋ New task</button>
     </div>
 
     <div id="board-scroll"></div>
     <div id="list-scroll" class="hidden"></div>
+    <div id="calendar-scroll" class="hidden"></div>
   </div>
 </div>
+<div id="bulk-bar-root"></div>
 
 <div id="modal-root"></div>
 <div id="toasts"></div>
@@ -247,6 +341,15 @@ textarea{width:100%;resize:vertical;min-height:64px;}
 /* ===================== Utilities ===================== */
 const uid = () => 'id' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
 const esc = s => (s||'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function renderCommentText(text){
+  let out = esc(text);
+  state.members.slice().sort((a,b)=>b.name.length-a.name.length).forEach(m=>{
+    const escName = esc(m.name);
+    const re = new RegExp('@'+escName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+    out = out.replace(re, `<span class="mention">@${escName}</span>`);
+  });
+  return out;
+}
 const PALETTE = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#6c5ce7','#e84393','#00b894','#0984e3','#d35400','#8e44ad'];
 function colorFor(str){ let h=0; for(let i=0;i<str.length;i++){h=str.charCodeAt(i)+((h<<5)-h);} return PALETTE[Math.abs(h)%PALETTE.length]; }
 function initials(name){ return name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join(''); }
@@ -277,6 +380,45 @@ const PRIORITIES = [
   {id:'urgent', label:'Urgent', color:'#e74c3c'},
 ];
 function prio(id){ return PRIORITIES.find(p=>p.id===id) || null; }
+function newTask(title){
+  return { id:uid(), title, desc:'', assigneeId:null, dueDate:null, priority:null, tagIds:[], subtasks:[], comments:[], attachments:[], cover:null, completed:false, recurrence:null, blockedBy:[], customValues:{}, createdAt:Date.now() };
+}
+function addDaysFrom(iso, days){ const d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+let selectMode = false;
+let selectedTaskIds = new Set();
+function toggleSelection(id){ if(selectedTaskIds.has(id)) selectedTaskIds.delete(id); else selectedTaskIds.add(id); render(); }
+function toggleTaskComplete(board, t){
+  t.completed = !t.completed;
+  if(t.completed){
+    spawnConfetti();
+    logActivity(`Completed "${t.title}"`);
+    if(t.recurrence){
+      const col = board.columns.find(c=>c.taskIds.includes(t.id));
+      const next = JSON.parse(JSON.stringify(t));
+      next.id = uid(); next.completed = false; next.comments = [];
+      next.subtasks = next.subtasks.map(s=>({...s, done:false}));
+      const days = t.recurrence==='daily'?1:(t.recurrence==='weekly'?7:30);
+      next.dueDate = t.dueDate ? addDaysFrom(t.dueDate, days) : addDaysISO(days);
+      board.tasks[next.id] = next;
+      if(col) col.taskIds.push(next.id);
+      logActivity(`Recurring task "${t.title}" scheduled for ${fmtDate(next.dueDate)}`);
+    }
+  } else {
+    logActivity(`Reopened "${t.title}"`);
+  }
+}
+function spawnConfetti(){
+  for(let i=0;i<26;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = (Math.random()*100)+'vw';
+    el.style.background = PALETTE[i % PALETTE.length];
+    el.style.animationDuration = (0.9 + Math.random()*0.7)+'s';
+    el.style.transform = `rotate(${Math.floor(Math.random()*360)}deg)`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 2200);
+  }
+}
 
 /* ===================== Default seed data ===================== */
 function seedState(){
@@ -297,33 +439,36 @@ function seedState(){
   function T(title, opts={}){
     return Object.assign({
       id: uid(), title, desc:'', assigneeId:null, dueDate:null, priority:null,
-      tagIds:[], subtasks:[], comments:[], cover:null, completed:false, createdAt:Date.now(),
+      tagIds:[], subtasks:[], comments:[], attachments:[], cover:null, completed:false,
+      recurrence:null, blockedBy:[], customValues:{}, createdAt:Date.now(),
     }, opts);
   }
   const b1tasks = {};
   const mk = t => { b1tasks[t.id]=t; return t.id; };
   const board1 = {
-    id:'b1', name:'Website Redesign', starred:true,
+    id:'b1', name:'Website Redesign', starred:true, icon:'🚀', archived:false, customFields:[
+      {id:'f1', name:'Story points', type:'number'},
+    ],
     columns:[
-      {id:'c1', name:'Backlog', wipLimit:null, taskIds:[
+      {id:'c1', name:'Backlog', wipLimit:null, color:null, collapsed:false, taskIds:[
         mk(T('Competitor audit', {assigneeId:'u4', tagIds:['t5'], priority:'low'})),
         mk(T('Define new brand palette', {assigneeId:'u2', tagIds:['t1'], priority:'medium'})),
       ]},
-      {id:'c2', name:'To Do', wipLimit:4, taskIds:[
+      {id:'c2', name:'To Do', wipLimit:4, color:null, collapsed:false, taskIds:[
         mk(T('Wireframe homepage', {assigneeId:'u2', tagIds:['t1'], priority:'high', dueDate:addDaysISO(2),
           subtasks:[{id:uid(),text:'Header',done:true},{id:uid(),text:'Hero section',done:false},{id:uid(),text:'Footer',done:false}]})),
         mk(T('Set up staging server', {assigneeId:'u3', tagIds:['t4'], priority:'medium', dueDate:addDaysISO(5)})),
       ]},
-      {id:'c3', name:'In Progress', wipLimit:3, taskIds:[
+      {id:'c3', name:'In Progress', wipLimit:3, color:null, collapsed:false, taskIds:[
         mk(T('Build navigation component', {assigneeId:'u5', tagIds:['t3','t4'], priority:'high', dueDate:addDaysISO(1),
           desc:'Responsive nav with mega-menu on desktop, drawer on mobile.',
           comments:[{id:uid(), authorId:'u1', text:'Let\'s make sure it matches the new palette.', time:Date.now()-3600000}]})),
         mk(T('Fix checkout button overlap on Safari', {assigneeId:'u3', tagIds:['t2'], priority:'urgent', dueDate:addDaysISO(-1)})),
       ]},
-      {id:'c4', name:'Review', wipLimit:null, taskIds:[
+      {id:'c4', name:'Review', wipLimit:null, color:null, collapsed:false, taskIds:[
         mk(T('Copy pass on pricing page', {assigneeId:'u4', tagIds:['t5'], priority:'medium', dueDate:addDaysISO(0)})),
       ]},
-      {id:'c5', name:'Done', wipLimit:null, taskIds:[
+      {id:'c5', name:'Done', wipLimit:null, color:null, collapsed:false, taskIds:[
         mk(T('Kickoff meeting notes', {assigneeId:'u1', tagIds:['t5'], priority:'low', completed:true})),
       ]},
     ],
@@ -332,18 +477,23 @@ function seedState(){
   const b2tasks = {};
   const mk2 = t => { b2tasks[t.id]=t; return t.id; };
   const board2 = {
-    id:'b2', name:'Mobile App v2', starred:false,
+    id:'b2', name:'Mobile App v2', starred:false, icon:'📱', archived:false, customFields:[],
     columns:[
-      {id:'c6', name:'Ideas', wipLimit:null, taskIds:[ mk2(T('Dark mode for app', {assigneeId:'u1', tagIds:['t3'], priority:'low'})) ]},
-      {id:'c7', name:'In Progress', wipLimit:null, taskIds:[ mk2(T('Push notification service', {assigneeId:'u5', tagIds:['t4'], priority:'high', dueDate:addDaysISO(4)})) ]},
-      {id:'c8', name:'Shipped', wipLimit:null, taskIds:[]},
+      {id:'c6', name:'Ideas', wipLimit:null, color:null, collapsed:false, taskIds:[ mk2(T('Dark mode for app', {assigneeId:'u1', tagIds:['t3'], priority:'low'})) ]},
+      {id:'c7', name:'In Progress', wipLimit:null, color:null, collapsed:false, taskIds:[ mk2(T('Push notification service', {assigneeId:'u5', tagIds:['t4'], priority:'high', dueDate:addDaysISO(4)})) ]},
+      {id:'c8', name:'Shipped', wipLimit:null, color:null, collapsed:false, taskIds:[] },
     ],
     tasks: b2tasks,
   };
   return {
     theme:'dark', currentUserId:'u1', members, tags,
     boards:[board1, board2], currentBoardId:'b1',
-    trash:[], activity:[], view:'board',
+    trash:[], activity:[], view:'board', calendarCursor:null,
+    templates:[
+      {id:'tpl1', name:'Bug triage', subtasks:['Reproduce issue','Identify root cause','Write fix','Add regression test']},
+      {id:'tpl2', name:'Blog post', subtasks:['Outline','Draft','Edit','Add images','Publish']},
+    ],
+    showArchived:false, swimlaneBy:null,
     filters:{assignees:[], priorities:[], tagIds:[], due:null, search:''},
   };
 }
@@ -354,11 +504,46 @@ let state = load();
 function load(){
   try{
     const raw = localStorage.getItem(STORE_KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw) return migrate(JSON.parse(raw));
   }catch(e){}
   return seedState();
 }
-function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+function migrate(s){
+  if(s.calendarCursor===undefined) s.calendarCursor = null;
+  if(s.templates===undefined) s.templates = [];
+  if(s.showArchived===undefined) s.showArchived = false;
+  if(s.swimlaneBy===undefined) s.swimlaneBy = null;
+  (s.boards||[]).forEach(b=>{
+    if(!b.icon) b.icon = '📋';
+    if(b.archived===undefined) b.archived = false;
+    if(b.customFields===undefined) b.customFields = [];
+    b.columns.forEach(c=>{
+      if(c.color===undefined) c.color = null;
+      if(c.collapsed===undefined) c.collapsed = false;
+    });
+    Object.values(b.tasks).forEach(t=>{
+      if(!t.attachments) t.attachments = [];
+      if(t.recurrence===undefined) t.recurrence = null;
+      if(t.blockedBy===undefined) t.blockedBy = [];
+      if(t.customValues===undefined) t.customValues = {};
+    });
+  });
+  return s;
+}
+let undoStack = [];
+function save(){
+  const prev = localStorage.getItem(STORE_KEY);
+  if(prev){ undoStack.push(prev); if(undoStack.length>25) undoStack.shift(); }
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+function undo(){
+  if(!undoStack.length){ toast('Nothing to undo'); return; }
+  const prev = undoStack.pop();
+  state = migrate(JSON.parse(prev));
+  localStorage.setItem(STORE_KEY, prev);
+  render();
+  toast('Undid last action');
+}
 function curBoard(){ return state.boards.find(b=>b.id===state.currentBoardId) || state.boards[0]; }
 function memberById(id){ return state.members.find(m=>m.id===id); }
 function tagById(id){ return state.tags.find(t=>t.id===id); }
@@ -376,42 +561,149 @@ function toast(msg, actionLabel, actionFn){
   document.getElementById('toasts').appendChild(el);
   setTimeout(()=>el.remove(), 5000);
 }
+function clearAllFilters(){
+  const f = state.filters;
+  f.assignees=[]; f.priorities=[]; f.tagIds=[]; f.due=null; f.search=''; f._myTasks=false; f._todayDigest=false;
+  const searchInput = document.getElementById('search-input');
+  if(searchInput) searchInput.value='';
+  persistAndRender();
+}
+function warnIfHiddenByFilters(t){
+  if(!taskMatchesFilters(t)){
+    toast('Task added, but your current filters/search are hiding it', 'Clear filters', clearAllFilters);
+  }
+}
 
 /* ===================== Rendering ===================== */
 function persistAndRender(){ save(); render(); }
+const prefersDarkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function effectiveTheme(){
+  if(state.theme==='auto') return (prefersDarkMQ && prefersDarkMQ.matches) ? 'dark' : 'light';
+  return state.theme;
+}
+function cycleTheme(){
+  state.theme = state.theme==='dark' ? 'light' : (state.theme==='light' ? 'auto' : 'dark');
+  persistAndRender();
+}
+if(prefersDarkMQ && prefersDarkMQ.addEventListener){
+  prefersDarkMQ.addEventListener('change', ()=>{ if(state.theme==='auto') render(); });
+}
 
 function render(){
-  document.documentElement.setAttribute('data-theme', state.theme);
-  document.getElementById('theme-ic').textContent = state.theme==='dark' ? '☀' : '🌙';
-  document.getElementById('theme-label').textContent = state.theme==='dark' ? 'Light mode' : 'Dark mode';
+  document.documentElement.setAttribute('data-theme', effectiveTheme());
+  const themeIcons = {dark:'☀', light:'🌙', auto:'🖥'};
+  const themeLabels = {dark:'Switch to light mode', light:'Switch to auto (system)', auto:'Switch to dark mode'};
+  document.getElementById('theme-ic').textContent = themeIcons[state.theme] || '☀';
+  document.getElementById('theme-label').textContent = themeLabels[state.theme] || 'Light mode';
   renderSidebar();
   renderTopbar();
-  if(state.view==='board'){
-    document.getElementById('board-scroll').classList.remove('hidden');
-    document.getElementById('list-scroll').classList.add('hidden');
-    renderBoard();
-  } else {
-    document.getElementById('board-scroll').classList.add('hidden');
-    document.getElementById('list-scroll').classList.remove('hidden');
-    renderList();
-  }
+  document.getElementById('board-scroll').classList.toggle('hidden', state.view!=='board');
+  document.getElementById('list-scroll').classList.toggle('hidden', state.view!=='list');
+  document.getElementById('calendar-scroll').classList.toggle('hidden', state.view!=='calendar');
+  if(state.view==='board') renderBoard();
+  else if(state.view==='list') renderList();
+  else renderCalendar();
+  renderBulkBar();
+}
+
+function renderBulkBar(){
+  const root = document.getElementById('bulk-bar-root');
+  if(!selectMode || selectedTaskIds.size===0){ root.innerHTML=''; return; }
+  const b = curBoard();
+  root.innerHTML = `
+    <div id="bulk-bar">
+      <strong>${selectedTaskIds.size} selected</strong>
+      <select id="bulk-move"><option value="">Move to...</option>${b.columns.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select>
+      <select id="bulk-assign"><option value="">Assign to...</option><option value="__none__">Unassigned</option>${state.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select>
+      <select id="bulk-tag"><option value="">Add tag...</option>${state.tags.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
+      <button class="btn small" id="bulk-complete">✓ Complete</button>
+      <button class="btn small danger" id="bulk-delete">🗑 Delete</button>
+      <button class="btn small" id="bulk-clear">Clear</button>
+    </div>`;
+  document.getElementById('bulk-move').onchange = (e)=>{
+    const destId = e.target.value; if(!destId) return;
+    selectedTaskIds.forEach(id=>{
+      b.columns.forEach(c=>{ c.taskIds = c.taskIds.filter(x=>x!==id); });
+      b.columns.find(c=>c.id===destId).taskIds.push(id);
+    });
+    logActivity(`Moved ${selectedTaskIds.size} task(s)`);
+    selectedTaskIds.clear(); persistAndRender();
+  };
+  document.getElementById('bulk-assign').onchange = (e)=>{
+    const val = e.target.value; if(!val) return;
+    selectedTaskIds.forEach(id=>{ b.tasks[id].assigneeId = val==='__none__'?null:val; });
+    selectedTaskIds.clear(); persistAndRender();
+  };
+  document.getElementById('bulk-tag').onchange = (e)=>{
+    const val = e.target.value; if(!val) return;
+    selectedTaskIds.forEach(id=>{ const tk=b.tasks[id]; if(!tk.tagIds.includes(val)) tk.tagIds.push(val); });
+    selectedTaskIds.clear(); persistAndRender();
+  };
+  document.getElementById('bulk-complete').onclick = ()=>{
+    selectedTaskIds.forEach(id=>{ const tk=b.tasks[id]; if(!tk.completed) toggleTaskComplete(b, tk); });
+    selectedTaskIds.clear(); persistAndRender();
+  };
+  document.getElementById('bulk-delete').onclick = ()=>{
+    if(!confirm(`Delete ${selectedTaskIds.size} task(s)? They will be moved to Trash.`)) return;
+    selectedTaskIds.forEach(id=>{
+      const col = b.columns.find(c=>c.taskIds.includes(id));
+      if(col) col.taskIds = col.taskIds.filter(x=>x!==id);
+      state.trash.push({...b.tasks[id], _boardId:b.id, _colId:col?col.id:null, _deletedAt:Date.now()});
+      delete b.tasks[id];
+    });
+    logActivity(`Deleted ${selectedTaskIds.size} task(s)`);
+    selectedTaskIds.clear(); persistAndRender();
+  };
+  document.getElementById('bulk-clear').onclick = ()=>{ selectedTaskIds.clear(); persistAndRender(); };
 }
 
 function renderSidebar(){
   const list = document.getElementById('board-list');
   list.innerHTML = '';
-  state.boards.slice().sort((a,b)=> (b.starred-a.starred)).forEach(b=>{
+  const visibleBoards = state.boards.filter(b => state.showArchived || !b.archived);
+  visibleBoards.forEach(b=>{
     const row = document.createElement('div');
-    row.className = 'board-row' + (b.id===state.currentBoardId?' active':'');
-    row.innerHTML = `<span class="dot" style="background:${colorFor(b.id)}"></span><span class="bname">${esc(b.name)}</span><span class="star ${b.starred?'on':''}">★</span>`;
+    row.className = 'board-row' + (b.id===state.currentBoardId?' active':'') + (b.archived?' archived':'');
+    if(b.archived) row.style.opacity = '.55';
+    row.draggable = true;
+    row.dataset.boardId = b.id;
+    row.innerHTML = `<span style="font-size:13px;flex-shrink:0;">${b.icon||'📋'}</span><span class="bname">${esc(b.name)}${b.archived?' (archived)':''}</span><span class="star ${b.starred?'on':''}">★</span><button class="iconbtn" data-board-menu="${b.id}">⋯</button>`;
     row.onclick = (e)=>{
+      if(e.target.closest('[data-board-menu]')) return;
       if(e.target.classList.contains('star')){ b.starred=!b.starred; persistAndRender(); return; }
       state.currentBoardId = b.id; persistAndRender();
     };
-    row.oncontextmenu = (e)=>{ e.preventDefault(); if(confirm(`Delete board "${b.name}"? This cannot be undone.`)){ deleteBoard(b.id); } };
+    row.querySelector('[data-board-menu]').onclick = (e)=>{ e.stopPropagation(); openBoardMenu(e.currentTarget, b.id); };
+    row.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/board-id', b.id); });
+    row.addEventListener('dragover', (e)=>{ if(e.dataTransfer.types.includes('text/board-id')) e.preventDefault(); });
+    row.addEventListener('drop', (e)=>{
+      const dragId = e.dataTransfer.getData('text/board-id');
+      if(!dragId || dragId===b.id) return;
+      e.preventDefault();
+      const from = state.boards.findIndex(x=>x.id===dragId);
+      const to = state.boards.findIndex(x=>x.id===b.id);
+      const [moved] = state.boards.splice(from,1);
+      state.boards.splice(to,0,moved);
+      persistAndRender();
+    });
     list.appendChild(row);
   });
+  const archivedCount = state.boards.filter(b=>b.archived).length;
+  if(archivedCount){
+    const toggleRow = document.createElement('div');
+    toggleRow.className = 'side-btn';
+    toggleRow.style.fontSize = '12px';
+    toggleRow.style.color = 'var(--text-faint)';
+    toggleRow.textContent = state.showArchived ? 'Hide archived boards' : `Show archived boards (${archivedCount})`;
+    toggleRow.onclick = ()=>{ state.showArchived = !state.showArchived; persistAndRender(); };
+    list.appendChild(toggleRow);
+  }
   document.getElementById('btn-my-tasks').classList.toggle('active', state.filters._myTasks===true);
+  document.getElementById('btn-today').classList.toggle('active', state.filters._todayDigest===true);
+  const todayCount = Object.values(curBoard().tasks).filter(t=>!t.completed && (dueStatus(t.dueDate)==='today'||dueStatus(t.dueDate)==='overdue')).length;
+  const todayCountEl = document.getElementById('today-count');
+  if(todayCount){ todayCountEl.textContent = todayCount; todayCountEl.classList.remove('hidden'); }
+  else todayCountEl.classList.add('hidden');
   const trashCountEl = document.getElementById('trash-count');
   if(state.trash.length){ trashCountEl.textContent = state.trash.length; trashCountEl.classList.remove('hidden'); }
   else trashCountEl.classList.add('hidden');
@@ -426,10 +718,22 @@ function renderTopbar(){
   const b = curBoard();
   const titleEl = document.getElementById('board-title');
   if(document.activeElement !== titleEl) titleEl.value = b.name;
+  document.getElementById('board-icon-btn').textContent = b.icon || '📋';
   document.querySelectorAll('#view-seg button').forEach(btn=>btn.classList.toggle('on', btn.dataset.view===state.view));
+  const swimSel = document.getElementById('swimlane-select');
+  swimSel.classList.toggle('hidden', state.view!=='board');
+  swimSel.value = state.swimlaneBy || '';
   const f = state.filters;
   const active = f.assignees.length || f.priorities.length || f.tagIds.length || f.due;
   document.getElementById('filter-dot').innerHTML = active ? '<span class="filter-active-dot"></span>' : '';
+  const allTasks = Object.values(b.tasks);
+  const total = allTasks.length;
+  const done = allTasks.filter(t=>t.completed).length;
+  const pct = total ? Math.round(100*done/total) : 0;
+  const prog = document.getElementById('board-progress');
+  prog.querySelector('.bar>div').style.width = pct+'%';
+  prog.querySelector('span').textContent = total ? `${pct}% (${done}/${total})` : 'No tasks yet';
+  document.getElementById('btn-select-mode').classList.toggle('primary', selectMode);
 }
 
 function taskMatchesFilters(t){
@@ -452,16 +756,21 @@ function taskMatchesFilters(t){
     if(f.due==='none' && t.dueDate) return false;
   }
   if(f._myTasks && t.assigneeId !== state.currentUserId) return false;
+  if(f._todayDigest){ const ds = dueStatus(t.dueDate); if(!(ds==='today'||ds==='overdue') || t.completed) return false; }
   return true;
 }
 
-function cardHTML(t, boardId){
+function isBlocked(board, t){ return (t.blockedBy||[]).some(id=> board.tasks[id] && !board.tasks[id].completed); }
+function cardHTML(t){
+  const board = curBoard();
   const a = t.assigneeId ? memberById(t.assigneeId) : null;
   const p = prio(t.priority);
   const ds = dueStatus(t.dueDate);
   const doneSub = t.subtasks.filter(s=>s.done).length;
+  const numericFields = (board.customFields||[]).filter(f=>f.type==='number' && t.customValues[f.id]);
   return `
-  <div class="card ${t.completed?'completed':''}" draggable="true" data-task-id="${t.id}">
+  <div class="card ${t.completed?'completed':''} ${selectMode?'selectable':''}" draggable="true" tabindex="0" data-task-id="${t.id}">
+    ${selectMode? `<div class="select-box ${selectedTaskIds.has(t.id)?'on':''}" data-id="${t.id}">✓</div>`:''}
     ${t.cover ? `<div class="card-cover" style="background:${t.cover}"></div>` : ''}
     <div class="card-top">
       <div class="check-circle ${t.completed?'done':''}" data-action="toggle-complete" data-id="${t.id}">✓</div>
@@ -472,6 +781,8 @@ function cardHTML(t, boardId){
       ${p?`<span class="meta-pill"><span class="prio-flag" style="background:${p.color}"></span>${p.label}</span>`:''}
       ${t.dueDate?`<span class="meta-pill ${ds==='overdue'?'due-overdue':ds==='today'?'due-today':ds==='soon'?'due-soon':''}">📅 ${fmtDate(t.dueDate)}</span>`:''}
       ${t.comments.length?`<span class="meta-pill">💬 ${t.comments.length}</span>`:''}
+      ${isBlocked(board,t)?`<span class="meta-pill due-overdue">⛔ Blocked</span>`:''}
+      ${numericFields.map(f=>`<span class="meta-pill">${esc(f.name)}: ${esc(String(t.customValues[f.id]))}</span>`).join('')}
     </div>
     <div class="card-bottom">
       ${t.subtasks.length? `<div class="subtask-progress"><div class="mini-bar"><div style="width:${Math.round(100*doneSub/t.subtasks.length)}%"></div></div>${doneSub}/${t.subtasks.length}</div>` : '<span></span>'}
@@ -480,39 +791,72 @@ function cardHTML(t, boardId){
   </div>`;
 }
 
+function getLanes(){
+  if(state.swimlaneBy==='assignee') return [...state.members.map(m=>({key:m.id, label:m.name, color:colorFor(m.id)})), {key:'__unassigned__', label:'Unassigned', color:'#888'}];
+  if(state.swimlaneBy==='priority') return [...PRIORITIES.map(p=>({key:p.id, label:p.label, color:p.color})), {key:'__none__', label:'No priority', color:'#888'}];
+  return null;
+}
+function matchesLaneKey(t, laneKey){
+  if(state.swimlaneBy==='assignee') return (t.assigneeId||'__unassigned__')===laneKey;
+  if(state.swimlaneBy==='priority') return (t.priority||'__none__')===laneKey;
+  return true;
+}
+function laneKeyToFieldValue(laneKey){ return (laneKey==='__unassigned__'||laneKey==='__none__') ? null : laneKey; }
+function buildColumnEl(b, col, laneKey){
+  const visibleTasks = col.taskIds.map(id=>b.tasks[id]).filter(Boolean).filter(taskMatchesFilters).filter(t=> laneKey==null || matchesLaneKey(t, laneKey));
+  const total = col.taskIds.length;
+  const overWip = col.wipLimit && total > col.wipLimit;
+  const dotColor = col.color || colorFor(col.id);
+  const colEl = document.createElement('div');
+  colEl.className = 'column' + (overWip? ' over-wip':'') + (col.collapsed? ' collapsed':'');
+  colEl.dataset.colId = col.id;
+  const laneAttr = laneKey!=null ? `data-lane="${esc(laneKey)}"` : '';
+  colEl.innerHTML = `
+    <div class="column-head" draggable="true" data-col-drag="${col.id}">
+      <span class="column-dot" style="background:${dotColor}"></span>
+      <input class="cname" value="${esc(col.name)}" data-col-id="${col.id}" spellcheck="false" ${col.collapsed?'readonly':''}>
+      <span class="column-count ${overWip?'over':''}">${total}${col.wipLimit?'/'+col.wipLimit:''}</span>
+      <button class="column-collapse-btn" data-action="col-collapse" data-col-id="${col.id}" title="${col.collapsed?'Expand':'Collapse'}">${col.collapsed?'»':'«'}</button>
+      ${col.collapsed?'':`<button class="iconbtn" data-action="col-menu" data-col-id="${col.id}">⋯</button>`}
+    </div>
+    <div class="column-body" data-col-id="${col.id}" ${laneAttr}>
+      ${visibleTasks.map(t=>cardHTML(t)).join('')}
+    </div>
+    <div class="column-add">
+      <input placeholder="＋ Add task..." data-add-col="${col.id}" ${laneAttr}>
+    </div>`;
+  return colEl;
+}
+function buildColumnsRow(b, laneKey){
+  const row = document.createElement('div');
+  row.className = 'columns-row';
+  b.columns.forEach(col=> row.appendChild(buildColumnEl(b, col, laneKey)));
+  return row;
+}
 function renderBoard(){
   const b = curBoard();
   const wrap = document.getElementById('board-scroll');
   wrap.innerHTML = '';
-  b.columns.forEach(col=>{
-    const visibleTasks = col.taskIds.map(id=>b.tasks[id]).filter(Boolean).filter(taskMatchesFilters);
-    const total = col.taskIds.length;
-    const overWip = col.wipLimit && total > col.wipLimit;
-    const colEl = document.createElement('div');
-    colEl.className = 'column' + (overWip? ' over-wip':'');
-    colEl.dataset.colId = col.id;
-    colEl.innerHTML = `
-      <div class="column-head" draggable="true" data-col-drag="${col.id}">
-        <span class="column-dot" style="background:${colorFor(col.id)}"></span>
-        <input class="cname" value="${esc(col.name)}" data-col-id="${col.id}" spellcheck="false">
-        <span class="column-count ${overWip?'over':''}">${total}${col.wipLimit?'/'+col.wipLimit:''}</span>
-        <button class="iconbtn" data-action="col-menu" data-col-id="${col.id}">⋯</button>
-      </div>
-      <div class="column-body" data-col-id="${col.id}">
-        ${visibleTasks.map(t=>cardHTML(t)).join('')}
-      </div>
-      <div class="column-add">
-        <input placeholder="＋ Add task..." data-add-col="${col.id}">
-      </div>`;
-    wrap.appendChild(colEl);
-  });
+  const lanes = getLanes();
+  wrap.classList.toggle('swimlane-mode', !!lanes);
+  if(!lanes){
+    wrap.appendChild(buildColumnsRow(b, null));
+  } else {
+    lanes.forEach(lane=>{
+      const laneWrap = document.createElement('div');
+      laneWrap.className = 'swimlane';
+      laneWrap.innerHTML = `<div class="swimlane-head"><span class="swimlane-dot" style="background:${lane.color}"></span>${esc(lane.label)}</div>`;
+      laneWrap.appendChild(buildColumnsRow(b, lane.key));
+      wrap.appendChild(laneWrap);
+    });
+  }
   const addColBtn = document.createElement('button');
   addColBtn.className = 'add-column-btn';
   addColBtn.textContent = '＋ Add column';
   addColBtn.onclick = ()=>{
     const name = prompt('Column name:', 'New column');
     if(!name) return;
-    b.columns.push({id:uid(), name, wipLimit:null, taskIds:[]});
+    b.columns.push({id:uid(), name, wipLimit:null, color:null, collapsed:false, taskIds:[]});
     logActivity(`Added column "${esc(name)}"`);
     persistAndRender();
   };
@@ -523,12 +867,19 @@ function renderBoard(){
 function attachBoardHandlers(){
   const b = curBoard();
   document.querySelectorAll('.check-circle').forEach(el=>{
-    el.onclick = (e)=>{ e.stopPropagation(); const id = el.dataset.id; const t = b.tasks[id]; t.completed = !t.completed; logActivity(`${t.completed?'Completed':'Reopened'} "${t.title}"`); persistAndRender(); };
+    el.onclick = (e)=>{ e.stopPropagation(); const id = el.dataset.id; const t = b.tasks[id]; toggleTaskComplete(b, t); persistAndRender(); };
   });
   document.querySelectorAll('.card').forEach(el=>{
-    el.onclick = (e)=>{ if(e.target.closest('.check-circle')) return; openTaskModal(el.dataset.taskId); };
+    el.onclick = (e)=>{
+      if(e.target.closest('.check-circle')) return;
+      if(selectMode){ e.stopPropagation(); toggleSelection(el.dataset.taskId); return; }
+      openTaskModal(el.dataset.taskId);
+    };
     el.addEventListener('dragstart', (e)=>{ el.classList.add('dragging'); e.dataTransfer.setData('text/task-id', el.dataset.taskId); });
     el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+  });
+  document.querySelectorAll('.select-box').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation(); toggleSelection(el.dataset.id); };
   });
   document.querySelectorAll('.column-body').forEach(body=>{
     body.addEventListener('dragover', (e)=>{
@@ -545,24 +896,33 @@ function attachBoardHandlers(){
       e.preventDefault();
       const taskId = e.dataTransfer.getData('text/task-id');
       const destColId = body.dataset.colId;
-      moveTaskToColumn(taskId, destColId, [...body.querySelectorAll('.card')].map(c=>c.dataset.taskId));
+      moveTaskToColumn(taskId, destColId, [...body.querySelectorAll('.card')].map(c=>c.dataset.taskId), body.dataset.lane ?? null);
     });
   });
   document.querySelectorAll('input.cname').forEach(inp=>{
     inp.onchange = ()=>{ const col = b.columns.find(c=>c.id===inp.dataset.colId); col.name = inp.value.trim()||col.name; persistAndRender(); };
+    inp.onclick = ()=>{ if(inp.readOnly){ const col = b.columns.find(c=>c.id===inp.dataset.colId); col.collapsed=false; persistAndRender(); } };
   });
   document.querySelectorAll('[data-action=col-menu]').forEach(btn=>{
     btn.onclick = (e)=>{ e.stopPropagation(); openColumnMenu(btn, btn.dataset.colId); };
+  });
+  document.querySelectorAll('[data-action=col-collapse]').forEach(btn=>{
+    btn.onclick = (e)=>{ e.stopPropagation(); const col = b.columns.find(c=>c.id===btn.dataset.colId); col.collapsed = !col.collapsed; persistAndRender(); };
   });
   document.querySelectorAll('[data-add-col]').forEach(inp=>{
     inp.onkeydown = (e)=>{
       if(e.key==='Enter' && inp.value.trim()){
         const col = b.columns.find(c=>c.id===inp.dataset.addCol);
-        const t = { id:uid(), title:inp.value.trim(), desc:'', assigneeId:null, dueDate:null, priority:null, tagIds:[], subtasks:[], comments:[], cover:null, completed:false, createdAt:Date.now() };
+        const t = newTask(inp.value.trim());
+        if(inp.dataset.lane){
+          const field = state.swimlaneBy==='assignee' ? 'assigneeId' : 'priority';
+          t[field] = laneKeyToFieldValue(inp.dataset.lane);
+        }
         b.tasks[t.id]=t; col.taskIds.push(t.id);
         logActivity(`Added task "${esc(t.title)}"`);
         inp.value='';
         persistAndRender();
+        warnIfHiddenByFilters(t);
       }
     };
   });
@@ -589,12 +949,16 @@ function attachBoardHandlers(){
   });
 }
 
-function moveTaskToColumn(taskId, destColId, orderedIdsInDom){
+function moveTaskToColumn(taskId, destColId, orderedIdsInDom, laneKey){
   const b = curBoard();
   const destCol = b.columns.find(c=>c.id===destColId);
   const hiddenInDest = destCol.taskIds.filter(id=>id!==taskId && !orderedIdsInDom.includes(id));
   b.columns.forEach(c=>{ c.taskIds = c.taskIds.filter(id=>id!==taskId); });
   destCol.taskIds = [...orderedIdsInDom, ...hiddenInDest];
+  if(laneKey && b.tasks[taskId]){
+    const field = state.swimlaneBy==='assignee' ? 'assigneeId' : 'priority';
+    b.tasks[taskId][field] = laneKeyToFieldValue(laneKey);
+  }
   persistAndRender();
 }
 
@@ -630,11 +994,82 @@ function renderList(){
   if(!filtered.length) html = '<div class="empty-hint">No tasks match your filters.</div>';
   wrap.innerHTML = html;
   wrap.querySelectorAll('.check-circle').forEach(el=>{
-    el.onclick = (e)=>{ e.stopPropagation(); const id=el.dataset.id; const t=b.tasks[id]; t.completed=!t.completed; persistAndRender(); };
+    el.onclick = (e)=>{ e.stopPropagation(); const id=el.dataset.id; const t=b.tasks[id]; toggleTaskComplete(b, t); persistAndRender(); };
   });
   wrap.querySelectorAll('.task-row').forEach(row=>{
     row.onclick = (e)=>{ if(e.target.closest('.check-circle')) return; openTaskModal(row.dataset.taskId); };
   });
+}
+
+/* ===================== Calendar view ===================== */
+function renderCalendar(){
+  const b = curBoard();
+  const wrap = document.getElementById('calendar-scroll');
+  const cursor = state.calendarCursor || todayISO().slice(0,7);
+  const [year, month] = cursor.split('-').map(Number);
+  const first = new Date(year, month-1, 1);
+  const startOffset = first.getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const daysInPrevMonth = new Date(year, month-1, 0).getDate();
+  const todayStr = todayISO();
+  const tasksByDate = {};
+  Object.values(b.tasks).filter(taskMatchesFilters).forEach(t=>{
+    if(!t.dueDate) return;
+    (tasksByDate[t.dueDate] = tasksByDate[t.dueDate] || []).push(t);
+  });
+  const cells = [];
+  for(let i=0;i<startOffset;i++) cells.push({day:daysInPrevMonth-startOffset+i+1, other:true, dateStr:null});
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells.push({day:d, other:false, dateStr});
+  }
+  while(cells.length % 7 !== 0) cells.push({day:cells.length, other:true, dateStr:null});
+  const monthName = first.toLocaleDateString(undefined, {month:'long', year:'numeric'});
+  const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  wrap.innerHTML = `
+    <div class="cal-head">
+      <button class="btn small" id="cal-prev">‹</button>
+      <h3>${monthName}</h3>
+      <button class="btn small" id="cal-today">Today</button>
+      <button class="btn small" id="cal-next">›</button>
+    </div>
+    <div class="cal-grid">
+      ${dows.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells.map(c=>{
+        if(c.other) return `<div class="cal-cell other-month"><div class="cal-daynum">${c.day}</div></div>`;
+        const items = (tasksByDate[c.dateStr]||[]);
+        const isToday = c.dateStr===todayStr;
+        return `<div class="cal-cell ${isToday?'is-today':''}" data-cal-date="${c.dateStr}">
+          <div class="cal-daynum">${c.day}</div>
+          ${items.slice(0,4).map(t=>`<div class="cal-pill ${dueStatus(t.dueDate)==='overdue'&&!t.completed?'p-overdue':''}" draggable="true" data-task-id="${t.id}" style="${t.cover?`background:${t.cover};color:#fff;`:''}">${esc(t.title)}</div>`).join('')}
+          ${items.length>4?`<div class="cal-pill">+${items.length-4} more</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  wrap.querySelector('#cal-prev').onclick = ()=>{ shiftCalendar(year, month, -1); };
+  wrap.querySelector('#cal-next').onclick = ()=>{ shiftCalendar(year, month, 1); };
+  wrap.querySelector('#cal-today').onclick = ()=>{ state.calendarCursor = todayISO().slice(0,7); persistAndRender(); };
+  wrap.querySelectorAll('[data-task-id]').forEach(el=>{
+    el.onclick = ()=>openTaskModal(el.dataset.taskId);
+    el.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/task-id', el.dataset.taskId); e.stopPropagation(); });
+  });
+  wrap.querySelectorAll('[data-cal-date]').forEach(cell=>{
+    cell.addEventListener('dragover', (e)=>{ if(e.dataTransfer.types.includes('text/task-id')){ e.preventDefault(); cell.style.borderColor='var(--accent)'; } });
+    cell.addEventListener('dragleave', ()=>{ cell.style.borderColor=''; });
+    cell.addEventListener('drop', (e)=>{
+      const taskId = e.dataTransfer.getData('text/task-id');
+      if(!taskId) return;
+      e.preventDefault();
+      const tk = b.tasks[taskId];
+      if(tk){ tk.dueDate = cell.dataset.calDate; logActivity(`Rescheduled "${tk.title}" to ${fmtDate(tk.dueDate)}`); }
+      persistAndRender();
+    });
+  });
+}
+function shiftCalendar(year, month, delta){
+  const d = new Date(year, month-1+delta, 1);
+  state.calendarCursor = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  persistAndRender();
 }
 
 /* ===================== Column menu ===================== */
@@ -648,6 +1083,12 @@ function openColumnMenu(anchor, colId){
   const r = anchor.getBoundingClientRect();
   pop.style.top = (r.bottom+6)+'px'; pop.style.left = Math.min(r.left, window.innerWidth-260)+'px';
   pop.innerHTML = `
+    <h4>Column color</h4>
+    <div class="swatch-row">
+      <span class="color-swatch ${!col.color?'on':''}" data-colcolor="" style="background:var(--bg-elev3);border:1px solid var(--border);">✕</span>
+      ${PALETTE.map(c=>`<span class="color-swatch ${col.color===c?'on':''}" data-colcolor="${c}" style="background:${c}"></span>`).join('')}
+    </div>
+    <div class="divider"></div>
     <h4>Sort cards</h4>
     <div class="row" data-sort="due">By due date</div>
     <div class="row" data-sort="priority">By priority</div>
@@ -664,6 +1105,9 @@ function openColumnMenu(anchor, colId){
     <div class="row" data-action="delete-col" style="color:var(--red)">Delete column</div>
   `;
   document.body.appendChild(pop);
+  pop.querySelectorAll('[data-colcolor]').forEach(sw=>{
+    sw.onclick = ()=>{ col.color = sw.dataset.colcolor || null; closePopovers(); persistAndRender(); };
+  });
   pop.querySelectorAll('[data-sort]').forEach(row=>{
     row.onclick = ()=>{
       const key = row.dataset.sort;
@@ -728,6 +1172,14 @@ function openTaskModal(taskId){
           ${state.tags.map(tg=>`<span class="chipsel ${t.tagIds.includes(tg.id)?'on':''}" data-tag="${tg.id}" style="${t.tagIds.includes(tg.id)?`background:${tg.color};border-color:${tg.color};color:#fff;`:''}">${esc(tg.name)}</span>`).join('')}
         </div>
       </div>
+      <div class="field" style="max-width:130px;"><label>Repeat</label>
+        <select id="m-recurrence">
+          <option value="">Never</option>
+          <option value="daily" ${t.recurrence==='daily'?'selected':''}>Daily</option>
+          <option value="weekly" ${t.recurrence==='weekly'?'selected':''}>Weekly</option>
+          <option value="monthly" ${t.recurrence==='monthly'?'selected':''}>Monthly</option>
+        </select>
+      </div>
       <div class="field" style="max-width:160px;"><label>Cover color</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <span class="color-swatch ${!t.cover?'on':''}" data-cover="" style="background:var(--bg-elev3);border:1px solid var(--border);">✕</span>
@@ -735,11 +1187,39 @@ function openTaskModal(taskId){
         </div>
       </div>
     </div>
+    ${b.customFields.length? `<div class="field-row">
+      ${b.customFields.map(f=>`
+        <div class="field"><label>${esc(f.name)}</label>
+          ${f.type==='select'
+            ? `<select data-cf="${f.id}"><option value="">—</option>${f.options.map(o=>`<option value="${esc(o)}" ${t.customValues[f.id]===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`
+            : `<input type="${f.type==='number'?'number':'text'}" data-cf="${f.id}" value="${esc(t.customValues[f.id]!==undefined?String(t.customValues[f.id]):'')}">`}
+        </div>`).join('')}
+    </div>` : ''}
     <div class="field"><label>Description</label><textarea id="m-desc" placeholder="Add more detail...">${esc(t.desc)}</textarea></div>
 
     <div class="section-label">Subtasks <span id="m-sub-progress" style="color:var(--text-faint);font-weight:400;"></span></div>
     <div id="m-subtasks"></div>
-    <div style="display:flex;gap:6px;margin-top:4px;"><input type="text" id="m-new-sub" placeholder="Add subtask and press Enter" style="flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 9px;outline:none;"></div>
+    <div style="display:flex;gap:6px;margin-top:4px;">
+      <input type="text" id="m-new-sub" placeholder="Add subtask and press Enter" style="flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 9px;outline:none;">
+      <select id="m-apply-template" style="background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 9px;">
+        <option value="">Apply template...</option>
+        ${state.templates.map(tpl=>`<option value="${tpl.id}">${esc(tpl.name)}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="section-label">Blocked by</div>
+    <div id="m-blockers"></div>
+    <select id="m-add-blocker" style="width:100%;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 9px;margin-top:4px;">
+      <option value="">Add a blocking task...</option>
+    </select>
+
+    <div class="section-label">Attachments</div>
+    <div id="m-attachments"></div>
+    <div style="display:flex;gap:6px;margin-top:4px;">
+      <input type="text" id="m-att-title" placeholder="Link title" style="flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 9px;outline:none;">
+      <input type="text" id="m-att-url" placeholder="https://..." style="flex:1;background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 9px;outline:none;">
+      <button class="btn small" id="m-att-add">Add</button>
+    </div>
 
     <div class="section-label">Comments</div>
     <div id="m-comments"></div>
@@ -773,23 +1253,78 @@ function openTaskModal(taskId){
     el.innerHTML = t.comments.slice().reverse().map(c=>{
       const a = memberById(c.authorId);
       return `<div class="comment"><div class="avatar sm" style="background:${colorFor(c.authorId)}">${initials(a?a.name:'?')}</div>
-        <div class="body"><div class="who">${esc(a?a.name:'Unknown')}<span class="when">${timeAgo(c.time)}</span></div><div class="txt">${esc(c.text)}</div></div></div>`;
+        <div class="body"><div class="who">${esc(a?a.name:'Unknown')}<span class="when">${timeAgo(c.time)}</span></div><div class="txt">${renderCommentText(c.text)}</div></div></div>`;
     }).join('');
   }
+  function renderAttachments(){
+    const el = overlay.querySelector('#m-attachments');
+    if(!t.attachments.length){ el.innerHTML = '<div class="empty-hint" style="padding:6px 0;">No links yet.</div>'; return; }
+    el.innerHTML = t.attachments.map(a=>`
+      <div class="attach-row" data-att="${a.id}">🔗 <a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">${esc(a.title||a.url)}</a>
+      <button class="iconbtn" data-att-del="${a.id}">✕</button></div>`).join('');
+    el.querySelectorAll('[data-att-del]').forEach(btn=>btn.onclick=()=>{ t.attachments = t.attachments.filter(a=>a.id!==btn.dataset.attDel); renderAttachments(); });
+  }
+  function renderBlockers(){
+    const el = overlay.querySelector('#m-blockers');
+    if(!t.blockedBy.length){ el.innerHTML = '<div class="empty-hint" style="padding:6px 0;">Not blocked by anything.</div>'; }
+    else {
+      el.innerHTML = t.blockedBy.map(id=>{
+        const bt = b.tasks[id];
+        if(!bt) return '';
+        return `<div class="attach-row" data-blocker="${id}">${bt.completed?'✅':'⛔'} <a href="#" data-open-blocker="${id}">${esc(bt.title)}</a><button class="iconbtn" data-blocker-del="${id}">✕</button></div>`;
+      }).join('');
+      el.querySelectorAll('[data-blocker-del]').forEach(btn=>btn.onclick=()=>{ t.blockedBy = t.blockedBy.filter(id=>id!==btn.dataset.blockerDel); renderBlockers(); populateBlockerSelect(); });
+      el.querySelectorAll('[data-open-blocker]').forEach(link=>link.onclick=(e)=>{ e.preventDefault(); overlay.remove(); persistAndRender(); openTaskModal(link.dataset.openBlocker); });
+    }
+  }
+  function populateBlockerSelect(){
+    const sel = overlay.querySelector('#m-add-blocker');
+    const candidates = Object.values(b.tasks).filter(x=>x.id!==t.id && !t.blockedBy.includes(x.id));
+    sel.innerHTML = '<option value="">Add a blocking task...</option>' + candidates.map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join('');
+  }
+  overlay.querySelector('#m-add-blocker').onchange = (e)=>{
+    if(e.target.value){ t.blockedBy.push(e.target.value); renderBlockers(); populateBlockerSelect(); }
+  };
+  overlay.querySelector('#m-apply-template').onchange = (e)=>{
+    const tpl = state.templates.find(x=>x.id===e.target.value);
+    if(tpl){ tpl.subtasks.forEach(txt=>t.subtasks.push({id:uid(), text:txt, done:false})); renderSubtasks(); }
+    e.target.value = '';
+  };
   function persistAndRenderBackground(){ save(); }
 
-  renderSubtasks(); renderComments();
+  renderSubtasks(); renderComments(); renderAttachments(); renderBlockers(); populateBlockerSelect();
 
   overlay.querySelector('#m-close').onclick = closeModal;
   overlay.onclick = (e)=>{ if(e.target===overlay) closeModal(); };
-  function closeModal(){ overlay.remove(); persistAndRender(); }
+  function closeModal(){ if(mentionBox) mentionBox.remove(); overlay.remove(); persistAndRender(); }
 
-  overlay.querySelector('#m-complete').onclick = ()=>{ t.completed=!t.completed; overlay.querySelector('#m-complete').classList.toggle('done', t.completed); };
+  overlay.querySelector('#m-complete').onclick = ()=>{ toggleTaskComplete(b, t); overlay.querySelector('#m-complete').classList.toggle('done', t.completed); };
   overlay.querySelector('#m-title').oninput = (e)=>{ t.title = e.target.value; };
   overlay.querySelector('#m-assignee').onchange = (e)=>{ t.assigneeId = e.target.value||null; };
   overlay.querySelector('#m-due').onchange = (e)=>{ t.dueDate = e.target.value||null; };
   overlay.querySelector('#m-priority').onchange = (e)=>{ t.priority = e.target.value||null; };
   overlay.querySelector('#m-desc').oninput = (e)=>{ t.desc = e.target.value; };
+  overlay.querySelector('#m-recurrence').onchange = (e)=>{ t.recurrence = e.target.value||null; };
+  overlay.querySelectorAll('[data-cf]').forEach(inp=>{
+    const apply = ()=>{
+      const f = b.customFields.find(x=>x.id===inp.dataset.cf);
+      const v = inp.value;
+      if(v==='') delete t.customValues[inp.dataset.cf];
+      else t.customValues[inp.dataset.cf] = f && f.type==='number' ? Number(v) : v;
+    };
+    inp.onchange = apply;
+    if(inp.tagName==='INPUT') inp.oninput = apply;
+  });
+  overlay.querySelector('#m-att-add').onclick = ()=>{
+    const urlInp = overlay.querySelector('#m-att-url');
+    const titleInp = overlay.querySelector('#m-att-title');
+    if(!urlInp.value.trim()) return;
+    let url = urlInp.value.trim();
+    if(!/^https?:\/\//i.test(url)) url = 'https://'+url;
+    t.attachments.push({id:uid(), title:titleInp.value.trim(), url});
+    urlInp.value=''; titleInp.value='';
+    renderAttachments();
+  };
   overlay.querySelectorAll('[data-tag]').forEach(chip=>{
     chip.onclick = ()=>{
       const id = chip.dataset.tag; const tg = tagById(id);
@@ -803,10 +1338,36 @@ function openTaskModal(taskId){
   overlay.querySelector('#m-new-sub').onkeydown = (e)=>{
     if(e.key==='Enter' && e.target.value.trim()){ t.subtasks.push({id:uid(), text:e.target.value.trim(), done:false}); e.target.value=''; renderSubtasks(); }
   };
+  const commentInput = overlay.querySelector('#m-new-comment');
+  let mentionBox = null;
+  function hideMentionBox(){ if(mentionBox){ mentionBox.remove(); mentionBox = null; } }
+  commentInput.oninput = ()=>{
+    const m = commentInput.value.match(/@([A-Za-z]*)$/);
+    hideMentionBox();
+    if(!m) return;
+    const frag = m[1].toLowerCase();
+    const matches = state.members.filter(mem=>mem.name.toLowerCase().includes(frag));
+    if(!matches.length) return;
+    mentionBox = document.createElement('div');
+    mentionBox.className = 'mention-suggest';
+    const r = commentInput.getBoundingClientRect();
+    mentionBox.style.left = r.left+'px'; mentionBox.style.top = (r.top-Math.min(matches.length,5)*34-6)+'px';
+    mentionBox.innerHTML = matches.slice(0,5).map((mem,i)=>`<div class="row ${i===0?'active':''}" data-mention="${mem.id}"><span class="avatar sm" style="background:${colorFor(mem.id)}">${initials(mem.name)}</span>${esc(mem.name)}</div>`).join('');
+    document.body.appendChild(mentionBox);
+    mentionBox.querySelectorAll('[data-mention]').forEach(row=>{
+      row.onclick = ()=>{
+        const mem = memberById(row.dataset.mention);
+        commentInput.value = commentInput.value.replace(/@([A-Za-z]*)$/, `@${mem.name} `);
+        hideMentionBox(); commentInput.focus();
+      };
+    });
+  };
   overlay.querySelector('#m-new-comment').onkeydown = (e)=>{
+    if(e.key==='Escape' && mentionBox){ e.stopPropagation(); hideMentionBox(); return; }
+    if(e.key==='Enter' && mentionBox){ e.preventDefault(); mentionBox.querySelector('.row')?.click(); return; }
     if(e.key==='Enter' && e.target.value.trim()){
       t.comments.push({id:uid(), authorId:state.currentUserId, text:e.target.value.trim(), time:Date.now()});
-      e.target.value=''; renderComments();
+      e.target.value=''; hideMentionBox(); renderComments();
       logActivity(`Commented on "${t.title}"`);
     }
   };
@@ -959,6 +1520,87 @@ function openTagsModal(){
   };
 }
 
+function openCustomFieldsModal(boardId){
+  const b = state.boards.find(x=>x.id===boardId);
+  const root = document.getElementById('modal-root');
+  const overlay = document.createElement('div');
+  overlay.className='overlay';
+  overlay.innerHTML = `<div class="modal narrow">
+    <div class="modal-head"><div style="font-weight:700;font-size:17px;">Custom fields — ${esc(b.name)}</div><button class="close-x" id="cf-close">×</button></div>
+    <div id="cf-list"></div>
+    <div class="divider"></div>
+    <div class="field-row">
+      <div class="field"><label>Field name</label><input id="cf-name" placeholder="e.g. Story points"></div>
+      <div class="field"><label>Type</label>
+        <select id="cf-type"><option value="text">Text</option><option value="number">Number</option><option value="select">Select</option></select>
+      </div>
+    </div>
+    <div class="field hidden" id="cf-options-field"><label>Options (comma separated)</label><input id="cf-options" placeholder="Small, Medium, Large"></div>
+    <button class="btn primary" id="cf-add">Add field</button>
+  </div>`;
+  root.appendChild(overlay);
+  overlay.onclick = (e)=>{ if(e.target===overlay) finish(); };
+  overlay.querySelector('#cf-close').onclick = finish;
+  function finish(){ overlay.remove(); persistAndRender(); }
+  overlay.querySelector('#cf-type').onchange = (e)=>{ overlay.querySelector('#cf-options-field').classList.toggle('hidden', e.target.value!=='select'); };
+  function rerenderList(){
+    overlay.querySelector('#cf-list').innerHTML = b.customFields.length ? b.customFields.map(f=>`
+      <div class="tag-manage-row"><span style="flex:1;">${esc(f.name)} <span style="color:var(--text-faint);font-size:11.5px;">(${f.type}${f.type==='select'?': '+f.options.join(', '):''})</span></span>
+      <button class="iconbtn" data-del-field="${f.id}">✕</button></div>`).join('') : '<div class="empty-hint">No custom fields yet.</div>';
+    overlay.querySelectorAll('[data-del-field]').forEach(btn=>btn.onclick=()=>{
+      const fid = btn.dataset.delField;
+      b.customFields = b.customFields.filter(f=>f.id!==fid);
+      Object.values(b.tasks).forEach(t=>{ delete t.customValues[fid]; });
+      rerenderList();
+    });
+  }
+  rerenderList();
+  overlay.querySelector('#cf-add').onclick = ()=>{
+    const nameInp = overlay.querySelector('#cf-name');
+    const type = overlay.querySelector('#cf-type').value;
+    const optionsRaw = overlay.querySelector('#cf-options').value;
+    if(!nameInp.value.trim()) return;
+    const field = {id:uid(), name:nameInp.value.trim(), type, options: type==='select' ? optionsRaw.split(',').map(s=>s.trim()).filter(Boolean) : []};
+    b.customFields.push(field);
+    nameInp.value=''; overlay.querySelector('#cf-options').value='';
+    rerenderList();
+  };
+}
+
+function openTemplatesModal(){
+  const root = document.getElementById('modal-root');
+  const overlay = document.createElement('div');
+  overlay.className='overlay';
+  overlay.innerHTML = `<div class="modal narrow">
+    <div class="modal-head"><div style="font-weight:700;font-size:17px;">Task templates</div><button class="close-x" id="tpl-close">×</button></div>
+    <div id="tpl-list"></div>
+    <div class="divider"></div>
+    <div class="field"><label>Template name</label><input id="tpl-name" placeholder="e.g. Bug triage" style="background:var(--bg-elev2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 9px;outline:none;"></div>
+    <div class="field"><label>Subtasks (one per line)</label><textarea id="tpl-subtasks" placeholder="Reproduce issue&#10;Write fix&#10;Add test"></textarea></div>
+    <button class="btn primary" id="tpl-add" style="margin-top:6px;">Add template</button>
+  </div>`;
+  root.appendChild(overlay);
+  overlay.onclick = (e)=>{ if(e.target===overlay) finish(); };
+  overlay.querySelector('#tpl-close').onclick = finish;
+  function finish(){ overlay.remove(); persistAndRender(); }
+  function rerenderList(){
+    overlay.querySelector('#tpl-list').innerHTML = state.templates.length ? state.templates.map(tpl=>`
+      <div class="tag-manage-row"><span style="flex:1;">${esc(tpl.name)} <span style="color:var(--text-faint);font-size:11.5px;">(${tpl.subtasks.length} items)</span></span>
+      <button class="iconbtn" data-del-tpl="${tpl.id}">✕</button></div>`).join('') : '<div class="empty-hint">No templates yet.</div>';
+    overlay.querySelectorAll('[data-del-tpl]').forEach(btn=>btn.onclick=()=>{ state.templates = state.templates.filter(x=>x.id!==btn.dataset.delTpl); rerenderList(); });
+  }
+  rerenderList();
+  overlay.querySelector('#tpl-add').onclick = ()=>{
+    const nameInp = overlay.querySelector('#tpl-name');
+    const subsInp = overlay.querySelector('#tpl-subtasks');
+    const subtasks = subsInp.value.split('\n').map(s=>s.trim()).filter(Boolean);
+    if(nameInp.value.trim() && subtasks.length){
+      state.templates.push({id:uid(), name:nameInp.value.trim(), subtasks});
+      nameInp.value=''; subsInp.value=''; rerenderList();
+    }
+  };
+}
+
 /* ===================== Filter popover ===================== */
 function openFilterPopover(anchor){
   closePopovers();
@@ -999,6 +1641,106 @@ function openFilterPopover(anchor){
   function outsideClose(e){ if(!pop.contains(e.target) && e.target.id!=='btn-filter'){ closePopovers(); document.removeEventListener('click', outsideClose); } }
 }
 
+/* ===================== Command palette ===================== */
+function buildCommandItems(){
+  const items = [];
+  items.push({icon:'＋', label:'New task', tag:'action', run:()=>document.getElementById('btn-new-task').click()});
+  items.push({icon:'＋', label:'New board', tag:'action', run:()=>document.getElementById('btn-add-board').click()});
+  items.push({icon:'🌓', label:'Cycle theme (dark / light / auto)', tag:'action', run:cycleTheme});
+  items.push({icon:'↺', label:'Undo last action', tag:'action', run:undo});
+  items.push({icon:'☑', label:'Toggle My Tasks filter', tag:'action', run:()=>document.getElementById('btn-my-tasks').click()});
+  items.push({icon:'🗑', label:'Open Trash', tag:'action', run:openTrashPanel});
+  items.push({icon:'⏱', label:'Open Activity log', tag:'action', run:openActivityPanel});
+  items.push({icon:'📑', label:'Manage templates', tag:'action', run:openTemplatesModal});
+  items.push({icon:'🧩', label:'Manage custom fields', tag:'action', run:()=>openCustomFieldsModal(curBoard().id)});
+  items.push({icon:'⭳', label:'Export data (JSON)', tag:'action', run:exportData});
+  items.push({icon:'📋', label:'Board view', tag:'view', run:()=>{ state.view='board'; persistAndRender(); }});
+  items.push({icon:'📋', label:'List view', tag:'view', run:()=>{ state.view='list'; persistAndRender(); }});
+  items.push({icon:'📋', label:'Calendar view', tag:'view', run:()=>{ state.view='calendar'; persistAndRender(); }});
+  items.push({icon:'🧵', label:'Group by assignee (swimlanes)', tag:'view', run:()=>{ state.swimlaneBy='assignee'; state.view='board'; persistAndRender(); }});
+  items.push({icon:'🧵', label:'Group by priority (swimlanes)', tag:'view', run:()=>{ state.swimlaneBy='priority'; state.view='board'; persistAndRender(); }});
+  items.push({icon:'🧵', label:'Remove grouping', tag:'view', run:()=>{ state.swimlaneBy=null; persistAndRender(); }});
+  state.boards.forEach(b=>{
+    items.push({icon:b.icon||'📋', label:`Go to board: ${b.name}`, tag:'board', run:()=>{ state.currentBoardId=b.id; persistAndRender(); }});
+  });
+  state.boards.forEach(bd=>{
+    Object.values(bd.tasks).forEach(t=>{
+      const sameBoard = bd.id===state.currentBoardId;
+      items.push({
+        icon: t.completed?'✅':'▢',
+        label: sameBoard ? t.title : `${t.title}  —  ${bd.name}`,
+        tag:'task',
+        run: ()=>{ state.currentBoardId = bd.id; persistAndRender(); openTaskModal(t.id); },
+      });
+    });
+  });
+  return items;
+}
+function openCommandPalette(){
+  document.querySelectorAll('.cmdk-overlay').forEach(o=>o.remove());
+  const allItems = buildCommandItems();
+  let active = 0;
+  const overlay = document.createElement('div');
+  overlay.className = 'cmdk-overlay';
+  overlay.innerHTML = `<div class="cmdk">
+    <input type="text" id="cmdk-input" placeholder="Search tasks, boards, actions...">
+    <div class="cmdk-results" id="cmdk-results"></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
+  const input = overlay.querySelector('#cmdk-input');
+  const resultsEl = overlay.querySelector('#cmdk-results');
+  let shown = allItems.slice(0, 40);
+  function draw(){
+    resultsEl.innerHTML = shown.map((it,i)=>`<div class="cmdk-item ${i===active?'active':''}" data-i="${i}"><span>${it.icon}</span><span>${esc(it.label)}</span><span class="tag">${it.tag}</span></div>`).join('') || '<div class="empty-hint">No matches.</div>';
+    resultsEl.querySelectorAll('.cmdk-item').forEach(el=>{
+      el.onclick = ()=>{ shown[parseInt(el.dataset.i)].run(); overlay.remove(); };
+    });
+  }
+  input.oninput = ()=>{
+    const q = input.value.toLowerCase();
+    shown = (q? allItems.filter(it=>it.label.toLowerCase().includes(q)) : allItems).slice(0,40);
+    active = 0; draw();
+  };
+  input.onkeydown = (e)=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); active = Math.min(active+1, shown.length-1); draw(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); active = Math.max(active-1, 0); draw(); }
+    else if(e.key==='Enter'){ e.preventDefault(); if(shown[active]){ shown[active].run(); overlay.remove(); } }
+  };
+  draw();
+  setTimeout(()=>input.focus(), 0);
+}
+
+/* ===================== Shortcuts modal ===================== */
+function openShortcutsModal(){
+  const root = document.getElementById('modal-root');
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  const rows = [
+    ['/', 'Focus search'],
+    ['n', 'New task'],
+    ['t', 'Toggle dark / light mode'],
+    ['? ', 'Show this help'],
+    ['Ctrl/Cmd + K', 'Open command palette'],
+    ['Ctrl/Cmd + Z', 'Undo last action'],
+    ['Esc', 'Close modal / panel / popover'],
+    ['Click check circle', 'Mark task complete'],
+    ['Arrow keys (on focused card)', 'Move focus between cards / columns'],
+    ['Enter (on focused card)', 'Open task'],
+    ['Space (on focused card)', 'Toggle complete'],
+    ['Drag card', 'Move between / reorder within columns'],
+    ['Drag column header', 'Reorder columns'],
+    ['Drag board (sidebar)', 'Reorder boards'],
+  ];
+  overlay.innerHTML = `<div class="modal narrow">
+    <div class="modal-head"><div style="font-weight:700;font-size:17px;">Keyboard shortcuts</div><button class="close-x" id="sc-close">×</button></div>
+    ${rows.map(r=>`<div class="shortcut-row"><span>${esc(r[1])}</span><span class="kbd">${esc(r[0])}</span></div>`).join('')}
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = (e)=>{ if(e.target===overlay) overlay.remove(); };
+  overlay.querySelector('#sc-close').onclick = ()=>overlay.remove();
+}
+
 /* ===================== Board management ===================== */
 function deleteBoard(id){
   if(state.boards.length<=1){ toast("Can't delete the only board"); return; }
@@ -1006,6 +1748,71 @@ function deleteBoard(id){
   if(state.currentBoardId===id) state.currentBoardId = state.boards[0].id;
   logActivity('Deleted a board');
   persistAndRender();
+}
+
+const BOARD_EMOJIS = ['📋','🚀','📱','🎯','🛠','💡','📊','🎨','🐛','📦','🧪','🏗','📣','🗂','⚙️','🌱'];
+function openBoardMenu(anchor, boardId){
+  closePopovers();
+  const b = state.boards.find(x=>x.id===boardId);
+  const pop = document.createElement('div');
+  pop.className = 'popover';
+  const r = anchor.getBoundingClientRect();
+  pop.style.top = (r.bottom+6)+'px'; pop.style.left = Math.min(r.left, window.innerWidth-260)+'px';
+  pop.innerHTML = `
+    <h4>Icon</h4>
+    <div class="emoji-grid">${BOARD_EMOJIS.map(em=>`<span data-icon="${em}">${em}</span>`).join('')}</div>
+    <div class="divider"></div>
+    <div class="row" data-action="rename">Rename board</div>
+    <div class="row" data-action="duplicate">Duplicate board</div>
+    <div class="row" data-action="archive">${b.archived?'Unarchive board':'Archive board'}</div>
+    <div class="row" data-action="fields">Custom fields...</div>
+    <div class="divider"></div>
+    <div class="row" data-action="delete" style="color:var(--red)">Delete board</div>
+  `;
+  document.body.appendChild(pop);
+  pop.querySelectorAll('[data-icon]').forEach(sp=>sp.onclick=()=>{ b.icon = sp.dataset.icon; closePopovers(); persistAndRender(); });
+  pop.querySelector('[data-action=rename]').onclick = ()=>{
+    const name = prompt('Board name:', b.name);
+    if(name && name.trim()){ b.name = name.trim(); }
+    closePopovers(); persistAndRender();
+  };
+  pop.querySelector('[data-action=duplicate]').onclick = ()=>{
+    const copy = JSON.parse(JSON.stringify(b));
+    copy.id = uid(); copy.name = b.name + ' (copy)'; copy.starred = false;
+    const idMap = {};
+    copy.columns.forEach(col=>{
+      const oldTaskIds = col.taskIds;
+      col.id = uid();
+      col.taskIds = oldTaskIds.map(oldId=>{
+        const newId = uid(); idMap[oldId] = newId; return newId;
+      });
+    });
+    const newTasks = {};
+    Object.keys(b.tasks).forEach(oldId=>{
+      if(idMap[oldId]) newTasks[idMap[oldId]] = {...b.tasks[oldId], id:idMap[oldId]};
+    });
+    copy.tasks = newTasks;
+    state.boards.push(copy);
+    state.currentBoardId = copy.id;
+    logActivity(`Duplicated board "${b.name}"`);
+    closePopovers(); persistAndRender();
+  };
+  pop.querySelector('[data-action=archive]').onclick = ()=>{
+    b.archived = !b.archived;
+    if(b.archived && state.currentBoardId===b.id){
+      const fallback = state.boards.find(x=>!x.archived);
+      if(fallback) state.currentBoardId = fallback.id;
+    }
+    logActivity(`${b.archived?'Archived':'Unarchived'} board "${b.name}"`);
+    closePopovers(); persistAndRender();
+  };
+  pop.querySelector('[data-action=fields]').onclick = ()=>{ closePopovers(); openCustomFieldsModal(b.id); };
+  pop.querySelector('[data-action=delete]').onclick = ()=>{
+    if(confirm(`Delete board "${b.name}"? This cannot be undone.`)) deleteBoard(boardId);
+    closePopovers();
+  };
+  setTimeout(()=>document.addEventListener('click', outsideClose), 0);
+  function outsideClose(e){ if(!pop.contains(e.target)){ closePopovers(); document.removeEventListener('click', outsideClose); } }
 }
 
 /* ===================== Export / Import ===================== */
@@ -1035,14 +1842,14 @@ function importData(file){
 
 /* ===================== Event wiring ===================== */
 document.getElementById('btn-toggle-sidebar').onclick = ()=>document.getElementById('sidebar').classList.toggle('collapsed');
-document.getElementById('btn-theme').onclick = ()=>{ state.theme = state.theme==='dark'?'light':'dark'; persistAndRender(); };
+document.getElementById('btn-theme').onclick = cycleTheme;
 document.getElementById('btn-add-board').onclick = ()=>{
   const name = prompt('Board name:', 'New board');
   if(!name) return;
-  const nb = {id:uid(), name, starred:false, columns:[
-    {id:uid(), name:'To Do', wipLimit:null, taskIds:[]},
-    {id:uid(), name:'In Progress', wipLimit:null, taskIds:[]},
-    {id:uid(), name:'Done', wipLimit:null, taskIds:[]},
+  const nb = {id:uid(), name, starred:false, icon:'📋', archived:false, customFields:[], columns:[
+    {id:uid(), name:'To Do', wipLimit:null, color:null, collapsed:false, taskIds:[]},
+    {id:uid(), name:'In Progress', wipLimit:null, color:null, collapsed:false, taskIds:[]},
+    {id:uid(), name:'Done', wipLimit:null, color:null, collapsed:false, taskIds:[]},
   ], tasks:{}};
   state.boards.push(nb); state.currentBoardId = nb.id;
   logActivity(`Created board "${esc(name)}"`);
@@ -1050,10 +1857,13 @@ document.getElementById('btn-add-board').onclick = ()=>{
 };
 document.getElementById('board-title').onchange = (e)=>{ curBoard().name = e.target.value.trim()||curBoard().name; persistAndRender(); };
 document.getElementById('btn-my-tasks').onclick = ()=>{ state.filters._myTasks = !state.filters._myTasks; persistAndRender(); };
+document.getElementById('btn-today').onclick = ()=>{ state.filters._todayDigest = !state.filters._todayDigest; persistAndRender(); };
+document.getElementById('board-icon-btn').onclick = (e)=>openBoardMenu(e.currentTarget, curBoard().id);
 document.getElementById('btn-activity').onclick = openActivityPanel;
 document.getElementById('btn-trash').onclick = openTrashPanel;
 document.getElementById('btn-members').onclick = openMembersModal;
 document.getElementById('btn-tags').onclick = openTagsModal;
+document.getElementById('btn-templates').onclick = openTemplatesModal;
 document.getElementById('btn-export').onclick = exportData;
 document.getElementById('btn-import').onclick = ()=>document.getElementById('import-file').click();
 document.getElementById('import-file').onchange = (e)=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
@@ -1061,6 +1871,7 @@ document.getElementById('cur-user-select').onchange = (e)=>{ state.currentUserId
 document.querySelectorAll('#view-seg button').forEach(btn=>{
   btn.onclick = ()=>{ state.view = btn.dataset.view; persistAndRender(); };
 });
+document.getElementById('swimlane-select').onchange = (e)=>{ state.swimlaneBy = e.target.value || null; persistAndRender(); };
 document.getElementById('search-input').oninput = (e)=>{ state.filters.search = e.target.value; render(); };
 document.getElementById('btn-filter').onclick = (e)=>openFilterPopover(e.currentTarget);
 document.getElementById('btn-sort').onclick = ()=>{
@@ -1069,27 +1880,65 @@ document.getElementById('btn-sort').onclick = ()=>{
   toast('Sorted all columns by due date');
   persistAndRender();
 };
+document.getElementById('btn-select-mode').onclick = ()=>{ selectMode = !selectMode; if(!selectMode) selectedTaskIds.clear(); render(); };
+
+document.getElementById('board-scroll').addEventListener('keydown', (e)=>{
+  const card = e.target.closest ? e.target.closest('.card') : null;
+  if(!card) return;
+  const currentBody = card.closest('.column-body');
+  const cardsInBody = [...currentBody.querySelectorAll('.card')];
+  const idx = cardsInBody.indexOf(card);
+  if(e.key==='ArrowDown'){ e.preventDefault(); cardsInBody[idx+1]?.focus(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); cardsInBody[idx-1]?.focus(); }
+  else if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
+    e.preventDefault();
+    const allBodies = [...document.querySelectorAll('#board-scroll .column-body')];
+    const bodyIdx = allBodies.indexOf(currentBody);
+    const targetBody = allBodies[bodyIdx + (e.key==='ArrowRight'?1:-1)];
+    if(targetBody){
+      const targetCards = [...targetBody.querySelectorAll('.card')];
+      if(targetCards.length) targetCards[Math.min(idx, targetCards.length-1)].focus();
+    }
+  }
+  else if(e.key==='Enter'){ e.preventDefault(); openTaskModal(card.dataset.taskId); }
+  else if(e.key===' '){
+    e.preventDefault();
+    const b = curBoard(); const t = b.tasks[card.dataset.taskId];
+    if(t){ toggleTaskComplete(b, t); const taskId = t.id; persistAndRender(); document.querySelector(`.card[data-task-id="${taskId}"]`)?.focus(); }
+  }
+});
 document.getElementById('btn-new-task').onclick = ()=>{
   const b = curBoard();
   const col = b.columns[0];
   if(!col){ toast('Add a column first'); return; }
   const title = prompt('Task title:');
   if(!title) return;
-  const t = { id:uid(), title, desc:'', assigneeId:null, dueDate:null, priority:null, tagIds:[], subtasks:[], comments:[], cover:null, completed:false, createdAt:Date.now() };
+  const t = newTask(title);
   b.tasks[t.id]=t; col.taskIds.unshift(t.id);
   logActivity(`Added task "${esc(title)}"`);
   persistAndRender();
   openTaskModal(t.id);
 };
 
+document.getElementById('btn-cmdk').onclick = openCommandPalette;
+document.getElementById('btn-shortcuts').onclick = openShortcutsModal;
+document.getElementById('btn-undo').onclick = undo;
+
 document.addEventListener('keydown', (e)=>{
   const tag = (document.activeElement.tagName||'').toLowerCase();
   const typing = tag==='input' || tag==='textarea' || document.activeElement.isContentEditable;
-  if(e.key==='Escape'){ closePopovers(); closeSidePanels(); document.querySelectorAll('.overlay').forEach(o=>{o.remove();}); persistAndRender(); return; }
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); openCommandPalette(); return; }
+  if(e.key==='Escape'){
+    closePopovers(); closeSidePanels();
+    document.querySelectorAll('.overlay,.cmdk-overlay').forEach(o=>o.remove());
+    persistAndRender(); return;
+  }
   if(typing) return;
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); return; }
   if(e.key==='/'){ e.preventDefault(); document.getElementById('search-input').focus(); }
   if(e.key.toLowerCase()==='n'){ e.preventDefault(); document.getElementById('btn-new-task').click(); }
-  if(e.key.toLowerCase()==='t'){ e.preventDefault(); state.theme = state.theme==='dark'?'light':'dark'; persistAndRender(); }
+  if(e.key.toLowerCase()==='t'){ e.preventDefault(); cycleTheme(); }
+  if(e.key==='?'){ e.preventDefault(); openShortcutsModal(); }
 });
 
 /* ===================== Init ===================== */
