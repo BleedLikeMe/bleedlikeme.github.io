@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book of Shadows</title>
+<style>
+  :root{
+    --bg0:#0b0713;
+    --bg1:#160f24;
+    --bg2:#1f1633;
+    --parchment:#e9dcc0;
+    --parchment-dim:#c9b892;
+    --gold:#c9a24d;
+    --gold-bright:#e8c877;
+    --purple:#8a5fb0;
+    --purple-dim:#5c3d78;
+    --ink:#2a1f14;
+    --red:#a8433a;
+    --green:#4f7a52;
+    --blue:#3f6b8a;
+    --card-bg:#1c1428;
+    --border:#4a3760;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 20% 0%, #241a38 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, #201530 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1) 40%, var(--bg2));
+    color:var(--parchment);
+    font-family:"Palatino Linotype","Book Antiqua",Georgia,"Times New Roman",serif;
+    min-height:100vh;
+  }
+  h1,h2,h3,h4{
+    font-family:"Copperplate","Cinzel","Trajan Pro",Georgia,serif;
+    letter-spacing:.04em;
+    color:var(--gold-bright);
+    text-shadow:0 0 12px rgba(200,160,80,.25);
+    margin:0 0 .4em 0;
+  }
+  a{color:var(--gold-bright);}
+  ::selection{background:var(--purple-dim);color:var(--parchment);}
+
+  /* ---------- Cover ---------- */
+  #cover{
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:2em;
+    position:relative;
+    overflow:hidden;
+  }
+  #cover::before{
+    content:"";position:absolute;inset:0;
+    background:
+      repeating-radial-gradient(circle at 50% 50%, rgba(200,160,80,.03) 0 2px, transparent 2px 60px);
+    pointer-events:none;
+  }
+  .cover-pentacle{width:180px;height:180px;margin-bottom:.5em;filter:drop-shadow(0 0 18px rgba(200,160,80,.35));}
+  .cover-flicker{animation:flicker 3.4s infinite ease-in-out;}
+  @keyframes flicker{
+    0%,100%{opacity:1;}
+    45%{opacity:.88;}
+    50%{opacity:1;}
+    55%{opacity:.92;}
+    70%{opacity:1;}
+  }
+  #cover h1{font-size:2.6em;margin-bottom:.1em;}
+  #cover .subtitle{color:var(--purple);font-style:italic;font-size:1.1em;letter-spacing:.08em;margin-bottom:1.4em;}
+  #cover .flavor{max-width:520px;color:var(--parchment-dim);font-size:.92em;font-style:italic;line-height:1.5;margin-bottom:2em;}
+  .open-btn{
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    color:#241a08;border:none;padding:.9em 2.2em;font-size:1.1em;
+    font-family:"Copperplate","Cinzel",Georgia,serif;letter-spacing:.06em;
+    border-radius:2px;cursor:pointer;
+    box-shadow:0 0 22px rgba(200,160,80,.4), inset 0 1px 0 rgba(255,255,255,.4);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .open-btn:hover{transform:translateY(-2px);box-shadow:0 4px 28px rgba(200,160,80,.55);}
+  .cover-oracle{margin-top:2.4em;font-size:.85em;color:var(--parchment-dim);}
+  .cover-oracle b{color:var(--gold-bright);}
+
+  /* ---------- Book shell ---------- */
+  #book{display:none;max-width:1080px;margin:0 auto;padding:1.2em 1.2em 4em;}
+  header.top{
+    display:flex;flex-wrap:wrap;gap:1em;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--border);padding-bottom:1em;margin-bottom:1em;
+  }
+  header.top h1{font-size:1.5em;margin:0;}
+  header.top .moon-widget{font-size:.85em;color:var(--parchment-dim);text-align:right;}
+  header.top .moon-widget .moon-emoji{font-size:1.6em;vertical-align:middle;}
+
+  .search-wrap{position:relative;flex:1 1 260px;min-width:220px;}
+  #search{
+    width:100%;padding:.6em .9em;font-size:1em;
+    background:var(--card-bg);border:1px solid var(--border);color:var(--parchment);
+    border-radius:4px;font-family:inherit;
+  }
+  #search:focus{outline:none;border-color:var(--gold);}
+  #search-results{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:20;
+    background:#150e20;border:1px solid var(--border);border-radius:4px;
+    max-height:340px;overflow-y:auto;display:none;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  #search-results.show{display:block;}
+  #search-results .res{
+    padding:.55em .8em;cursor:pointer;border-bottom:1px solid #2a2038;
+    display:flex;justify-content:space-between;gap:.6em;font-size:.9em;
+  }
+  #search-results .res:hover{background:#241a34;}
+  #search-results .res .rt{color:var(--purple);font-size:.78em;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+  #search-results .none{padding:.6em .8em;color:var(--parchment-dim);font-size:.9em;font-style:italic;}
+
+  nav.tabs{display:flex;flex-wrap:wrap;gap:.4em;margin-bottom:1.2em;}
+  .tab-btn{
+    background:var(--card-bg);border:1px solid var(--border);color:var(--parchment-dim);
+    padding:.5em 1em;border-radius:20px;cursor:pointer;font-family:inherit;font-size:.88em;
+    transition:all .15s ease;
+  }
+  .tab-btn:hover{color:var(--parchment);border-color:var(--purple);}
+  .tab-btn.active{background:var(--purple-dim);color:var(--gold-bright);border-color:var(--purple);}
+
+  section.tab-pane{display:none;}
+  section.tab-pane.active{display:block;animation:fadeIn .3s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .subtabs{display:flex;flex-wrap:wrap;gap:.35em;margin-bottom:1em;}
+  .subtab-btn{
+    background:transparent;border:1px solid var(--border);color:var(--parchment-dim);
+    padding:.35em .8em;border-radius:14px;cursor:pointer;font-family:inherit;font-size:.8em;
+  }
+  .subtab-btn.active{background:var(--purple-dim);color:var(--gold-bright);border-color:var(--purple);}
+
+  .filter-row{display:flex;flex-wrap:wrap;gap:.35em;margin-bottom:1em;}
+  .filter-btn{
+    background:transparent;border:1px solid var(--border);color:var(--parchment-dim);
+    padding:.3em .75em;border-radius:14px;cursor:pointer;font-family:inherit;font-size:.78em;
+  }
+  .filter-btn.active{background:var(--gold);color:#241a08;border-color:var(--gold);font-weight:bold;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.9em;}
+
+  .card{
+    background:linear-gradient(180deg,var(--card-bg),#170f22);
+    border:1px solid var(--border);border-radius:6px;padding:0;overflow:hidden;
+  }
+  .card > summary{
+    list-style:none;cursor:pointer;padding:.8em 1em;display:flex;align-items:center;justify-content:space-between;gap:.6em;
+  }
+  .card > summary::-webkit-details-marker{display:none;}
+  .card > summary::after{content:"▾";color:var(--purple);margin-left:auto;transition:transform .15s;}
+  .card[open] > summary::after{transform:rotate(180deg);}
+  .card .card-title{font-family:"Copperplate","Cinzel",Georgia,serif;color:var(--gold-bright);font-size:1.02em;}
+  .card .card-body{padding:0 1em 1em;border-top:1px solid #2a2038;padding-top:.7em;}
+  .card .meta{font-size:.85em;color:var(--parchment-dim);margin:.25em 0;}
+  .card .meta strong{color:var(--purple);}
+  .card p{line-height:1.5;font-size:.94em;}
+  .card .spell-intent{font-style:italic;color:var(--parchment-dim);margin:.2em 0 .7em;font-size:.9em;}
+  .card .steps{margin:.2em 0 .7em 1.1em;padding:0;}
+  .card .steps li{margin-bottom:.4em;font-size:.9em;line-height:1.5;padding-left:.2em;}
+  .card .spell-note{margin-top:.5em;font-size:.82em;color:var(--parchment-dim);font-style:italic;border-left:2px solid var(--purple-dim);padding-left:.6em;}
+  .card .spell-note em{color:var(--purple);font-style:normal;font-weight:bold;}
+  .card.flash, .flash{animation:flash 1.6s ease;}
+  @keyframes flash{0%{box-shadow:0 0 0 2px var(--gold-bright);}100%{box-shadow:0 0 0 0 transparent;}}
+
+  .badge{font-size:.68em;padding:.2em .6em;border-radius:10px;white-space:nowrap;font-weight:bold;letter-spacing:.03em;}
+  .badge-protection{background:#3f6b8a;color:#eaf3f8;}
+  .badge-love{background:#a8437a;color:#fbeaf3;}
+  .badge-prosperity{background:#4f7a52;color:#eaf6ec;}
+  .badge-healing{background:#7a9c4f;color:#f2f8e9;}
+  .badge-banishing{background:#a8433a;color:#fbeaea;}
+  .badge-cleansing{background:#3f8a80;color:#eaf8f6;}
+  .badge-luck{background:#c9a24d;color:#2a1f0a;}
+  .badge-divination{background:#8a5fb0;color:#f4ecf9;}
+  .badge-binding{background:#5b4a3a;color:#f4ede4;}
+  .badge-ritual{background:#6b4a8a;color:#f2e9f8;}
+
+  .tags{display:flex;flex-wrap:wrap;gap:.3em;margin-top:.6em;}
+  .tag{background:#241a34;color:var(--parchment-dim);border:1px solid var(--border);font-size:.72em;padding:.15em .55em;border-radius:10px;}
+
+  .icon{width:46px;height:46px;flex:0 0 auto;}
+  .icon-row{display:flex;align-items:center;gap:.7em;}
+
+  .corr-card{display:flex;gap:.8em;align-items:flex-start;padding:.8em 1em;}
+  .corr-card .icon{width:38px;height:38px;margin-top:.1em;}
+  .corr-card h4{margin:0 0 .2em;font-size:1em;color:var(--gold-bright);}
+  .corr-card p{margin:0;font-size:.85em;color:var(--parchment-dim);line-height:1.45;}
+  .corr-card .glyph{font-size:1.6em;width:38px;text-align:center;line-height:1;color:var(--gold-bright);}
+
+  .wheel-wrap{display:flex;flex-wrap:wrap;gap:2em;align-items:flex-start;margin-bottom:1.4em;}
+  .wheel-svg{width:280px;height:280px;flex:0 0 auto;}
+  .sabbat-list{flex:1 1 300px;min-width:260px;}
+
+  .tools-note, .oath-note{
+    background:#1a1226;border-left:3px solid var(--purple);padding:.8em 1em;margin-bottom:1.2em;
+    font-size:.88em;color:var(--parchment-dim);font-style:italic;line-height:1.5;
+  }
+
+  .divination-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2em;}
+  .div-box{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:1.1em;text-align:center;}
+  .div-box h3{margin-bottom:.3em;}
+  .div-box .hint{font-size:.8em;color:var(--parchment-dim);margin-bottom:.9em;}
+  .div-btn{
+    background:var(--purple-dim);color:var(--parchment);border:1px solid var(--purple);
+    padding:.5em 1.1em;border-radius:18px;cursor:pointer;font-family:inherit;font-size:.9em;margin:.2em;
+  }
+  .div-btn:hover{background:var(--purple);}
+  .draw-result{margin-top:1em;text-align:left;}
+
+  .sigil-section{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:1.1em;margin-top:1.4em;}
+  .sigil-section .hint{font-size:.8em;color:var(--parchment-dim);margin-bottom:1em;}
+  .sigil-layout{display:flex;flex-wrap:wrap;gap:1.4em;align-items:flex-start;}
+  .sigil-controls{flex:1 1 220px;min-width:220px;}
+  .sigil-controls input[type=text]{
+    width:100%;padding:.55em .8em;background:#150e20;border:1px solid var(--border);color:var(--parchment);
+    border-radius:4px;font-family:inherit;font-size:.92em;
+  }
+  .sigil-controls .meta{margin-top:.7em;}
+  .sigil-canvas-wrap{flex:0 0 auto;}
+  #sigil-canvas svg{width:220px;height:220px;background:#150e20;border:1px solid var(--border);border-radius:8px;}
+  .sigil-gallery-item{background:#150e20;border:1px solid var(--border);border-radius:6px;padding:.7em;text-align:center;}
+  .sigil-gallery-item svg{width:120px;height:120px;background:#1c1428;border-radius:6px;}
+  .sigil-gallery-item .sigil-caption{font-size:.78em;color:var(--parchment-dim);margin:.5em 0;word-break:break-word;}
+  .sigil-gallery-item .form-actions{justify-content:center;}
+  .draw-card{background:#150e20;border:1px solid var(--border);border-radius:6px;padding:.7em .9em;margin-bottom:.5em;}
+  .draw-card .glyph-big{font-size:1.8em;margin-right:.3em;}
+  .draw-card .name{font-family:"Copperplate","Cinzel",Georgia,serif;color:var(--gold-bright);}
+  .draw-card .rev{color:var(--red);font-size:.78em;}
+  .draw-card .meaning{font-size:.85em;color:var(--parchment-dim);margin-top:.25em;}
+
+  .pendulum-stage{height:150px;position:relative;margin-bottom:.6em;}
+  .pendulum-string{position:absolute;top:0;left:50%;width:1px;height:70px;background:var(--gold);transform-origin:top center;}
+  .pendulum-bob{position:absolute;top:70px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 60%, #7a5c1f);box-shadow:0 0 10px rgba(200,160,80,.5);}
+  .pendulum-rig{position:absolute;top:0;left:50%;transform-origin:top center;}
+  .pendulum-rig.swinging{animation:swing 1.4s ease-in-out 0s 1;}
+  @keyframes swing{
+    0%{transform:rotate(0deg);}
+    25%{transform:rotate(-26deg);}
+    50%{transform:rotate(20deg);}
+    75%{transform:rotate(-12deg);}
+    100%{transform:rotate(0deg);}
+  }
+  .pendulum-answer{font-size:1.3em;color:var(--gold-bright);font-family:"Copperplate","Cinzel",Georgia,serif;min-height:1.6em;}
+
+  form.grimoire-form{background:var(--card-bg);border:1px solid var(--border);border-radius:6px;padding:1em;margin-bottom:1.4em;}
+  form.grimoire-form label{display:block;font-size:.8em;color:var(--purple);margin:.5em 0 .2em;}
+  form.grimoire-form input[type=text], form.grimoire-form textarea, form.grimoire-form select{
+    width:100%;padding:.5em;background:#150e20;border:1px solid var(--border);color:var(--parchment);
+    border-radius:4px;font-family:inherit;font-size:.9em;
+  }
+  form.grimoire-form textarea{min-height:80px;resize:vertical;}
+  .form-row{display:flex;gap:.8em;flex-wrap:wrap;}
+  .form-row > div{flex:1 1 160px;}
+  .form-actions{margin-top:.8em;display:flex;gap:.5em;}
+  .btn{
+    background:var(--gold);color:#241a08;border:none;padding:.5em 1.1em;border-radius:4px;
+    cursor:pointer;font-family:inherit;font-weight:bold;font-size:.85em;
+  }
+  .btn.secondary{background:transparent;border:1px solid var(--border);color:var(--parchment-dim);font-weight:normal;}
+  .btn.danger{background:var(--red);color:#fff;}
+  .empty-msg{color:var(--parchment-dim);font-style:italic;padding:1em 0;}
+
+  footer.book-footer{text-align:center;color:var(--parchment-dim);font-size:.8em;margin-top:2.5em;font-style:italic;}
+
+  @media (max-width:600px){
+    .wheel-wrap{justify-content:center;}
+    header.top .moon-widget{text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<div id="cover">
+  <svg class="cover-pentacle cover-flicker" viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="92" fill="none" stroke="#c9a24d" stroke-width="2.5"/>
+    <polygon points="100,14 122.9,74.1 187.5,74.1 135.3,111.9 155.3,172.1 100,134.3 44.7,172.1 64.7,111.9 12.5,74.1 77.1,74.1"
+      fill="none" stroke="#e8c877" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>
+  <h1>Book of Shadows</h1>
+  <div class="subtitle">A Gardnerian Grimoire</div>
+  <div class="flavor">
+    A personal, non-oathbound devotional grimoire for the Gardnerian tradition —
+    spells, rites, and correspondences for study and craft, the secret liturgy of coven.
+  </div>
+  <button class="open-btn" onclick="openBook()">Open the Book</button>
+  <div class="cover-oracle" id="cover-oracle"></div>
+</div>
+
+<div id="book">
+  <header class="top">
+    <h1>☾ Book of Shadows ☽</h1>
+    <div class="search-wrap">
+      <input id="search" type="text" placeholder="Search spells, rites, herbs, tools…" autocomplete="off">
+      <div id="search-results"></div>
+    </div>
+    <div class="moon-widget" id="moon-widget"></div>
+  </header>
+
+  <nav class="tabs" id="main-tabs">
+    <button class="tab-btn active" data-tab="grimoire">Grimoire</button>
+    <button class="tab-btn" data-tab="rites">Rites &amp; Ritual</button>
+    <button class="tab-btn" data-tab="wheel">Wheel of the Year</button>
+    <button class="tab-btn" data-tab="correspondences">Correspondences</button>
+    <button class="tab-btn" data-tab="tools">Tools &amp; Craft</button>
+    <button class="tab-btn" data-tab="divination">Divination</button>
+    <button class="tab-btn" data-tab="mybook">My Grimoire</button>
+  </nav>
+
+  <section class="tab-pane active" id="tab-grimoire">
+    <h2>Workings &amp; Spells</h2>
+    <div class="filter-row" id="spell-filters"></div>
+    <div class="grid" id="spell-grid"></div>
+  </section>
+
+  <section class="tab-pane" id="tab-rites">
+    <h2>Rites &amp; Ritual</h2>
+    <div class="tools-note">The rites below describe the shape and spirit of Gardnerian-style ritual practice — circle casting, esbat and initiatory structure — in general, publicly-known terms. Coven-specific wording, the Three Degrees' initiation liturgy, and oathbound material are deliberately not reproduced here.</div>
+    <div class="icon-row" id="deity-icons" style="justify-content:center;gap:2.2em;margin-bottom:1.4em;"></div>
+    <div class="grid" id="rite-grid"></div>
+  </section>
+
+  <section class="tab-pane" id="tab-wheel">
+    <h2>The Wheel of the Year</h2>
+    <div class="wheel-wrap">
+      <svg class="wheel-svg" id="wheel-svg" viewBox="0 0 300 300"></svg>
+      <div class="sabbat-list grid" id="sabbat-grid"></div>
+    </div>
+  </section>
+
+  <section class="tab-pane" id="tab-correspondences">
+    <h2>Correspondences</h2>
+    <div class="subtabs" id="corr-subtabs"></div>
+    <div class="grid" id="corr-grid"></div>
+  </section>
+
+  <section class="tab-pane" id="tab-tools">
+    <h2>Tools &amp; Craft</h2>
+    <div class="tools-note">The athame is never used to cut anything physical — it directs will and energy only. Traditionally, working tools are personally consecrated before first use (see Rites).</div>
+    <div class="grid" id="tools-grid"></div>
+  </section>
+
+  <section class="tab-pane" id="tab-divination">
+    <h2>Divination</h2>
+    <div class="divination-grid">
+      <div class="div-box">
+        <h3>Tarot</h3>
+        <div class="hint">Draw a single card, or a three-card Past · Present · Future spread.</div>
+        <button class="div-btn" onclick="drawTarot(1)">Draw One Card</button>
+        <button class="div-btn" onclick="drawTarot(3)">Three-Card Spread</button>
+        <div class="draw-result" id="tarot-result"></div>
+      </div>
+      <div class="div-box">
+        <h3>Runes</h3>
+        <div class="hint">Elder Futhark — cast a single rune for guidance.</div>
+        <button class="div-btn" onclick="castRune()">Cast a Rune</button>
+        <div class="draw-result" id="rune-result"></div>
+      </div>
+      <div class="div-box">
+        <h3>Pendulum</h3>
+        <div class="hint">Still your mind, ask a yes/no question, then let it swing.</div>
+        <div class="pendulum-stage">
+          <div class="pendulum-rig" id="pendulum-rig">
+            <div class="pendulum-string"></div>
+            <div class="pendulum-bob"></div>
+          </div>
+        </div>
+        <button class="div-btn" onclick="askPendulum()">Ask the Pendulum</button>
+        <div class="pendulum-answer" id="pendulum-answer"></div>
+      </div>
+    </div>
+
+    <div class="sigil-section">
+      <h3>Sigil Crafting</h3>
+      <div class="hint">Write a statement of intent ("I will find courage," "My home is protected"). Repeated letters and vowels are stripped away, and the remaining consonants are traced as a single line across a wheel of the alphabet — the classic chaos-magic technique for turning a sentence into a personal, abstract sigil.</div>
+      <div class="sigil-layout">
+        <div class="sigil-controls">
+          <label for="sigil-intent" style="display:block;font-size:.8em;color:var(--purple);margin-bottom:.3em;">Statement of intent</label>
+          <input type="text" id="sigil-intent" placeholder="e.g. I will find courage">
+          <div class="form-actions" style="margin-top:.6em;">
+            <button class="btn" type="button" onclick="generateSigil()">Generate</button>
+            <button class="btn secondary" type="button" onclick="shuffleSigilWheel()">Shuffle Wheel</button>
+          </div>
+          <div class="form-actions">
+            <button class="btn secondary" type="button" onclick="saveSigil()">Save to My Sigils</button>
+            <button class="btn secondary" type="button" onclick="downloadCurrentSigil()">Download SVG</button>
+          </div>
+          <div class="meta" id="sigil-letters"></div>
+        </div>
+        <div class="sigil-canvas-wrap">
+          <div id="sigil-canvas"></div>
+        </div>
+      </div>
+      <h4 style="margin-top:1.4em;">My Sigils</h4>
+      <div class="grid" id="sigil-gallery"></div>
+    </div>
+  </section>
+
+  <section class="tab-pane" id="tab-mybook">
+    <h2>My Grimoire</h2>
+    <div class="tools-note">Your own workings, kept only in this browser (localStorage) — nothing leaves this page. Since clearing your browser's data would erase them for good, export a backup file now and then, especially before clearing site data or switching browsers.</div>
+    <div class="form-actions" style="margin-bottom:1.2em;">
+      <button type="button" class="btn secondary" onclick="exportPersonal()">⭳ Export My Grimoire</button>
+      <button type="button" class="btn secondary" onclick="document.getElementById('pf-import-file').click()">⭱ Import from File</button>
+      <input type="file" id="pf-import-file" accept="application/json,.json" style="display:none;" onchange="importPersonal(event)">
+    </div>
+    <form class="grimoire-form" id="personal-form">
+      <input type="hidden" id="pf-editing-id">
+      <label>Title</label>
+      <input type="text" id="pf-title" required>
+      <div class="form-row">
+        <div>
+          <label>Category</label>
+          <select id="pf-category">
+            <option value="protection">Protection</option>
+            <option value="love">Love</option>
+            <option value="prosperity">Prosperity</option>
+            <option value="healing">Healing</option>
+            <option value="banishing">Banishing</option>
+            <option value="cleansing">Cleansing</option>
+            <option value="luck">Luck</option>
+            <option value="binding">Binding</option>
+            <option value="ritual">Ritual</option>
+          </select>
+        </div>
+        <div>
+          <label>Best Cast</label>
+          <select id="pf-moon">
+            <option>New</option><option>Waxing</option><option>Full</option><option>Waning</option><option>Any</option>
+          </select>
+        </div>
+      </div>
+      <label>Ingredients / Tools (comma-separated)</label>
+      <input type="text" id="pf-ingredients" placeholder="e.g. white candle, salt, bay leaf">
+      <label>Working / Notes</label>
+      <textarea id="pf-text" required></textarea>
+      <label>Tags (comma-separated)</label>
+      <input type="text" id="pf-tags" placeholder="e.g. protection, home, quick">
+      <div class="form-actions">
+        <button type="submit" class="btn">Add to My Grimoire</button>
+        <button type="button" class="btn secondary" onclick="resetPersonalForm()">Clear</button>
+      </div>
+    </form>
+    <div class="grid" id="personal-grid"></div>
+  </section>
+
+  <footer class="book-footer">“An it harm none, do what ye will.” · Kept in reverence, not in secrecy.</footer>
+</div>
+
+<script>
+/* ============ DATA ============ */
+
+const CATEGORY_LABELS = {
+  protection:'Protection', love:'Love', prosperity:'Prosperity', healing:'Healing',
+  banishing:'Banishing', cleansing:'Cleansing', luck:'Luck', binding:'Binding', ritual:'Ritual'
+};
+
+const SPELLS = [
+  {id:'s1', title:'Threshold Ward', category:'protection', moon:'Waning', day:'Saturday (Saturn) or Tuesday (Mars)',
+    ingredients:['black salt','rosemary (fresh or dried)','black candle','small dish for the salt'], tags:['home','ward','doorway','malice'],
+    intent:'To seal every entrance of a home against ill will, hostile magic, and unwelcome visitors.',
+    steps:[
+      'Work at dusk, when the boundary between day and night mirrors the threshold itself.',
+      'Blend black salt if you have not already — plain sea salt worked with a pinch of ash or scraped candle soot, plus crushed dried rosemary, makes a reliable substitute.',
+      'Standing just inside the door, sprinkle a thin unbroken line of the mixture across the threshold, moving left to right as you face outward.',
+      'As the line is laid, picture a dome of deep violet light rising from the salt and arching fully over the doorway.',
+      'Light the black candle just inside the door and let it burn all the way down under supervision, naming the home aloud as a place no ill will may cross.',
+      'Renew the salt line every new moon, or whenever the ward feels "thin."'
+    ],
+    note:'Black salt is not edible and should never be mixed with cooking salt — keep the dish labelled and out of reach of children and pets.'},
+  {id:'s2', title:'Honeyed Tongue Charm', category:'love', moon:'Waxing', day:'Friday (Venus)',
+    ingredients:['pink candle','honey','rose petals (fresh or dried)','small square of paper','small jar with lid'], tags:['attraction','harmony','speech','reconciliation'],
+    intent:'To soften an existing bond and encourage warmth, patience, and kind speech between yourself and another.',
+    steps:[
+      'On a waxing Friday evening, write the specific kindness you hope will grow between you and the other person — your own intention to act with warmth, not a demand for their feelings.',
+      'Fold the paper three times toward yourself, sealing your own resolve rather than binding anyone else\'s will.',
+      'Layer rose petals into the jar, tuck the folded paper among them, then cover everything with honey and seal the jar.',
+      'Light the pink candle beside the jar and let it burn a while before pinching or snuffing it out — never blow it out, so as not to scatter the intention.',
+      'Repeat the candle-lighting on three consecutive nights of the waxing moon, always ending before the honey is disturbed.',
+      'Once the moon is full, store the jar somewhere warm and out of direct light and leave it unopened — its work continues sealed.'
+    ],
+    note:'Love magic should only ever be worked on your own heart and actions, never to override another person\'s free will or consent.'},
+  {id:'s3', title:'Coin in the Cauldron', category:'prosperity', moon:'Waxing', day:'Thursday (Jupiter)',
+    ingredients:['green candle','cinnamon (ground or a stick)','a coin you carry often','small cauldron or heatproof bowl'], tags:['money','abundance','job'],
+    intent:'To draw a specific, named piece of prosperity — not vague "wealth," but the actual sum, opportunity, or raise you need.',
+    steps:[
+      'Warm the coin between your palms until it holds your body heat.',
+      'Sprinkle a pinch of cinnamon into the cauldron or bowl, then set the coin down on top of it.',
+      'Light the green candle and circle its flame three times sunwise above the bowl.',
+      'State your need aloud in one plain sentence — a number, a job title, a bill to be cleared — precision is what prosperity magic answers to.',
+      'Let the candle burn for at least an hour while you take one real practical step toward the same goal (an application sent, a budget reviewed).',
+      'Carry the coin until the need is met, then return it to general circulation rather than keeping it forever.'
+    ],
+    note:'Prosperity magic works best paired with ordinary effort — it opens doors, it doesn\'t walk through them for you.'},
+  {id:'s4', title:'Mending Poppet', category:'healing', moon:'Waxing', day:'Sunday (Sun) or Monday (Moon)',
+    ingredients:['plain cloth poppet','lavender','yarrow','blue thread','a small item belonging to the person, with consent'], tags:['health','recovery','comfort','sympathetic magic'],
+    intent:'To lend strength and comfort to someone\'s recovery, worked only with their knowledge and consent.',
+    steps:[
+      'Confirm with the person that they welcome the working — this Craft does not cross the boundary of consent, even with kind intentions.',
+      'Stuff the poppet with a blend of lavender and yarrow, tucking the personal item in near the poppet\'s heart if one was given.',
+      'Name the poppet for the person as you close the stuffing, speaking their name clearly once.',
+      'Stitch it shut with blue thread, picturing wholeness and steady healing returning to them with every stitch.',
+      'Keep the poppet near their resting place, or near you if they are far away, checking in on it — and on them — regularly.',
+      'When they are well, thank the poppet, remove the stuffing, and either bury the herbs or return the cloth to plain use.'
+    ],
+    note:'A poppet lends comfort; it is never a substitute for medical care — pair this working with real treatment, not instead of it.'},
+  {id:'s5', title:'Bell, Book, and Broom', category:'banishing', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['bell','besom','dried chili flakes or black peppercorns'], tags:['exorcism','unwanted energy','sweep','house-clearing'],
+    intent:'To clear a specific room or home of stagnant, hostile, or simply "off" energy that has built up.',
+    steps:[
+      'Open a window or door in the room to give the cleared energy somewhere to go.',
+      'Starting at the centre of the room, ring the bell sharply once, then move outward toward each door and window, ringing again at each.',
+      'Sweep the floor with the besom in the same outward pattern, working from centre to exits, sweeping the energy ahead of you.',
+      'At the final threshold, scatter a small pinch of chili flakes or black pepper just outside the door.',
+      'Close by ringing the bell once more at the open threshold and stating firmly that the space is clear.',
+      'Air the room out for the rest of the day before resuming normal use.'
+    ],
+    note:'This clears atmosphere, not conflict — it is not a substitute for addressing real disagreements with the people who share the space.'},
+  {id:'s6', title:'Floor Wash of Clearing', category:'cleansing', moon:'Any', day:'Saturday (Saturn) preferred, but suited to any day when needed',
+    ingredients:['sea salt','lemon','hyssop or sage (dried)','a bucket of hot water'], tags:['home','purification','routine','monthly-cleansing'],
+    intent:'A routine purification to keep a home\'s energy light — best done monthly rather than only in crisis.',
+    steps:[
+      'Steep hyssop or sage in a jug of just-boiled water for ten minutes, then strain.',
+      'Add the herbal water, a squeeze of fresh lemon, and a pinch of sea salt to a full bucket of warm water.',
+      'Starting in the room farthest from the front door, wash the floor and thresholds, working steadily toward the exit.',
+      'With the final section of floor, right at the front door, picture sweeping the last of any stagnant energy out with the rinse.',
+      'Pour the last of the wash water out of the front door, or down an outside drain, rather than an indoor sink.',
+      'Repeat monthly, or after any argument, illness, or run of bad luck in the home.'
+    ],
+    note:'Keep this wash off unsealed wood and stone that citrus or salt could damage — test a small patch first.'},
+  {id:'s7', title:'Four-Leaf Fortune Sachet', category:'luck', moon:'Waxing', day:'Thursday (Jupiter)',
+    ingredients:['green cloth square','whole nutmeg or a pressed four-leaf clover','a silver coin','string or ribbon'], tags:['gambling','opportunity','travel'],
+    intent:'To favour luck around a single named opportunity — a journey, an application, a game of chance.',
+    steps:[
+      'Lay the nutmeg (or clover) and the silver coin in the centre of the green cloth.',
+      'Fold the cloth corners in over the items, forming a small parcel.',
+      'Tie it closed with string or ribbon, knotting it seven times.',
+      'With each knot, name aloud the specific opportunity you hope luck will favour.',
+      'Carry the sachet close to the body whenever that opportunity is in play.',
+      'Refresh the sachet with fresh contents once the occasion has passed, rather than reusing old ones indefinitely.'
+    ],
+    note:'Luck charms sharpen odds, they don\'t rig them — use ordinary judgement alongside this working, especially around money or gambling.'},
+  {id:'s8', title:'Cord of Restraint', category:'binding', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['red cord','paper naming the behaviour','black candle'], tags:['harmful behaviour','stop','contain'],
+    intent:'To contain a specific harmful behaviour or habit — never a person\'s free will, personality, or feelings.',
+    steps:[
+      'Write the exact behaviour that must stop on the paper, framed around the action, not the person\'s whole self.',
+      'Fold the paper away from you — the opposite of a drawing-toward fold — symbolically containing rather than inviting.',
+      'Wrap the folded paper in the red cord, knotting it nine times while the black candle burns nearby.',
+      'With each knot, restate the behaviour being bound.',
+      'Bury the bound parcel away from the home, or seal it somewhere it will not be opened, until the behaviour has genuinely ceased.',
+      'Once resolved, dispose of the binding (burn or bury it) as an act of closure.'
+    ],
+    note:'Binding is a serious, narrowly-targeted tool for real harm — never for petty grievances, and never to control another person\'s choices or free will.'},
+  {id:'s9', title:'Dream Pillow of the Owl', category:'healing', moon:'Full', day:'Monday (Moon)',
+    ingredients:['mugwort','lavender','small muslin bag'], tags:['dreams','sleep','psychic'],
+    intent:'To encourage vivid, memorable, and easily-recalled dreams.',
+    steps:[
+      'On the night of the full moon, blend roughly equal parts mugwort and lavender.',
+      'Fill the small muslin bag with the blend and tie it closed.',
+      'Slip the sachet beneath your pillow just before sleep.',
+      'Before closing your eyes, ask plainly for dreams you will remember clearly.',
+      'Keep a notebook or phone nearby to record anything on waking, even fragments.',
+      'Refresh the herbs every few months, as their scent — and effect — fades with age.'
+    ],
+    note:'Mugwort is traditionally avoided during pregnancy — use lavender alone as a gentler substitute if that applies to you.'},
+  {id:'s10', title:'Lion\'s Heart Working', category:'protection', moon:'Waxing', day:'Tuesday (Mars) or Sunday (Sun)',
+    ingredients:['orange candle','carnelian','a bay leaf','something fireproof to catch ash'], tags:['confidence','courage','interview'],
+    intent:'To steady the nerves and raise courage before any event that requires nerve — interviews, performances, difficult conversations.',
+    steps:[
+      'Beforehand, write the specific fear or worry on the bay leaf in a few words.',
+      'Light the orange candle and hold the leaf briefly to the flame over a fireproof dish, letting it catch and burn safely.',
+      'As it burns, hold the carnelian in your dominant hand and feel for its warmth.',
+      'Breathe slowly, drawing that warmth up through your palm, arm, and chest.',
+      'Carry the carnelian with you to the event itself.',
+      'Afterwards, thank the stone and set it aside to "rest" for a day before using it again.'
+    ],
+    note:'This working steadies nerves; it does not replace preparation — pair it with rehearsal or research for the best result.'},
+  {id:'s11', title:'Closing the Cord', category:'cleansing', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['black cord','scissors'], tags:['cord-cutting','release','ex-partner'],
+    intent:'To release an attachment to a person, relationship, or habit that must be let go of, without ill will.',
+    steps:[
+      'Sit quietly and hold one end of the black cord in each hand, imagining the far end tied — however loosely — to what you are releasing.',
+      'Speak your intention aloud: naming what is being released, and a wish to part in peace rather than anger.',
+      'When ready, cut the cord cleanly with scissors in one motion.',
+      'Hold the two halves separately for a moment, noticing the physical sense of separation.',
+      'Bury or burn the two halves in different places, so they are not reunited.',
+      'Ground yourself afterward — a meal, a walk, or a warm drink helps settle the working.'
+    ],
+    note:'Wishing someone well while releasing them is not the same as forgiving what happened — take whatever time and support you actually need alongside this working.'},
+  {id:'s12', title:'Hearth-Blessing Working', category:'prosperity', moon:'Full', day:'Thursday (Jupiter)',
+    ingredients:['salt','bread (homemade if possible)','a besom'], tags:['home','abundance','new house'],
+    intent:'To bless a new or struggling home so that it wants for nothing.',
+    steps:[
+      'Beginning at the innermost room, sweep outward toward the front door with the besom, room by room.',
+      'At the hearth, stove, or kitchen counter, set down a small pinch of salt and a piece of bread.',
+      'Speak the wish aloud: that the home and its people want for nothing, in food, warmth, or welcome.',
+      'Leave the offering overnight.',
+      'Compost it or leave it out for wildlife the next morning rather than eating it.',
+      'Repeat at each new moon for the home\'s first year, or whenever the household has been through a hard patch.'
+    ],
+    note:'A genuinely troubled home — structural issues, unsafe conditions — needs practical repair alongside any blessing; this working complements upkeep, it doesn\'t replace it.'},
+  {id:'s13', title:'Silver Tongue for Interviews', category:'prosperity', moon:'Waxing', day:'Wednesday (Mercury)',
+    ingredients:['yellow candle','a whole clove','a mirror'], tags:['career','job','communication'],
+    intent:'To steady and sharpen your speech before an interview or important conversation.',
+    steps:[
+      'The night or morning before, light the yellow candle in front of a mirror.',
+      'Hold a whole clove between your lips without biting down or swallowing it.',
+      'Looking at your own reflection, speak your case for the role aloud three times.',
+      'Remove the clove once you feel steady and clear, and let the candle burn a while longer before extinguishing.',
+      'Carry the same clove with you to the interview, in a pocket rather than in your mouth.',
+      'Afterwards, dispose of the clove with thanks, rather than reusing it for a different working.'
+    ],
+    note:'This working sharpens delivery, not content — prepare real answers and research beforehand for the best result.'},
+  {id:'s14', title:'Iron Nail Ward', category:'protection', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['iron nail','black thread','a trowel or something to dig with'], tags:['malice','ward','iron','threshold'],
+    intent:'To turn aside deliberate malice or hostile magic directed at a specific threshold.',
+    steps:[
+      'Choose a nail with some age or weight to it if possible — old iron carries the association more strongly than bright new steel.',
+      'Wind black thread crosswise around the nail several times, binding it firmly.',
+      'Speak aloud what the ward is meant to turn aside, naming the malice rather than any person.',
+      'Bury the nail point-down just outside the threshold that has drawn ill will.',
+      'Tamp the earth down firmly and mark the spot in your memory so it isn\'t accidentally disturbed.',
+      'Renew or replace the nail if the ward is ever disturbed or the threshold is renovated.'
+    ],
+    note:'Iron wards are a very old, very blunt tool — reserve them for genuine hostility, not ordinary bad moods or minor friction.'},
+  {id:'s15', title:'Reconciliation Candle', category:'love', moon:'Full', day:'Friday (Venus)',
+    ingredients:['two pink candles','white thread'], tags:['friendship','family','healing rift'],
+    intent:'To gently mend a rift with a friend or family member, at a pace that respects both people.',
+    steps:[
+      'Set the two candles a hand\'s width apart on a stable, fireproof surface, one representing you and one the other person.',
+      'Light them separately, speaking a small wish for the relationship\'s mending as each one catches.',
+      'Let them burn a while, then extinguish both.',
+      'Over several following nights, move the candles fractionally closer together each time you relight them, until their flames very nearly touch.',
+      'On the final night, loosely bind the space between the two candlesticks with white thread as a gesture of mended trust.',
+      'Reach out to the person in the ordinary way soon after — the working supports the gesture, it doesn\'t replace it.'
+    ],
+    note:'This spell shapes your own openness to reconciliation; it cannot and should not be used to force someone else to forgive before they are ready.'},
+  {id:'s16', title:'Waning Moon Debt Release', category:'banishing', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['black candle','paper','fireproof dish'], tags:['debt','burden','letting go'],
+    intent:'To release the weight of a burden — financial, emotional, or otherwise — as the moon shrinks toward dark.',
+    steps:[
+      'Choose a night during the waning moon, ideally as it nears the last quarter or dark.',
+      'Write the burden on paper in full honesty — the actual debt, the actual regret, whatever it is.',
+      'Light the black candle and, holding the paper at a safe distance over the fireproof dish, let it catch and burn completely.',
+      'Once cool, scatter the ash outside, away from the home, or bury it.',
+      'Follow up with one concrete practical step — a payment plan, a hard conversation, an apology — within the week.',
+      'Note the date in your own Book of Shadows so you can look back on what was released.'
+    ],
+    note:'For real financial hardship, pair this working with practical debt advice — magic can ease the burden of dealing with a problem, not erase the problem itself.'},
+  {id:'s17', title:'Witch Bottle of Old', category:'protection', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['small glass bottle with a lid','iron nails or pins','rosemary','sharp bits of thorn if available','vinegar or red wine'], tags:['home','folk magic','deflection','old ways'],
+    intent:'A very old piece of British folk protection: a sealed bottle of sharp, bitter, and binding things, buried or hidden to absorb and turn aside malice aimed at the home.',
+    steps:[
+      'Gather bent iron nails, pins, or thorns — anything sharp — along with a handful of dried rosemary.',
+      'Layer the sharp items and rosemary into the bottle, naming the home as you fill it.',
+      'Top the bottle up with vinegar or red wine, sharp and bitter, so that anything ill-wishing the home finds nothing sweet within it.',
+      'Seal the lid firmly, sealing wax if you have it, and shake the bottle once to mix the contents.',
+      'Bury the bottle upside-down near the property\'s boundary, under the doorstep, or hide it deep in a cupboard if burial isn\'t possible.',
+      'Leave the bottle undisturbed for as long as the home stands — traditionally, a witch bottle is buried once and never dug up again.'
+    ],
+    note:'Once buried, a witch bottle is traditionally left in peace — digging it up again is thought to undo or even reverse its work, so choose the spot with real care.'},
+  {id:'s18', title:'Mirror Deflection Ward', category:'protection', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['small mirror','black cloth or box','black candle'], tags:['deflection','malice','boundary'],
+    intent:'To turn deliberate ill will back the way it came, without adding new harm of your own — a shield, not a weapon.',
+    steps:[
+      'Choose a small mirror you can dedicate to this single purpose.',
+      'Wrap it in black cloth, or set it inside a small black box, facing outward toward the direction the trouble comes from.',
+      'Light the black candle beside it and state plainly that this mirror returns only what is sent, and adds nothing further of your own.',
+      'Keep the wrapped mirror near the affected threshold, window, or workspace, mirror-side facing outward.',
+      'Unwrap and re-consecrate the mirror every few months, or as soon as the trouble it was set for has passed.',
+      'Once the situation has genuinely ended, retire the mirror rather than leaving it "loaded" indefinitely.'
+    ],
+    note:'This ward is built to deflect, not to curse — under the Threefold Law, anything sent out returns threefold, so let this mirror simply hand malice back rather than amplify it.'},
+  {id:'s19', title:'Rowan and Red Thread', category:'protection', moon:'Waxing', day:'Sunday (Sun)',
+    ingredients:['a rowan twig or two crossed rowan sticks','red thread or wool'], tags:['folk magic','doorway','old ways','witch ward'],
+    intent:'An old Scottish and northern-English charm — "rowan tree and red thread, put the witches to their speed" — hung over a door or byre to turn aside ill fortune.',
+    steps:[
+      'Cut a small rowan twig, or cross two short sticks into an equal-armed shape, asking the tree\'s permission and thanking it if it is still living.',
+      'Bind the twig, or the crossed sticks, tightly with red thread or wool, winding it several times.',
+      'Speak the old charm, or your own version of it, as you tie the final knot.',
+      'Hang the finished charm over the inside of the main door, or above a barn or byre door if you keep animals.',
+      'Leave it in place year-round, replacing it each Beltane or whenever the wood dries and cracks.',
+      'Burn the old charm respectfully when it is replaced, rather than simply discarding it.'
+    ],
+    note:'Rowan is one of the oldest protective trees in British folk belief — never strip a living tree bare, and always ask before cutting.'},
+  {id:'s20', title:'Self-Love Mirror Working', category:'love', moon:'Waxing', day:'Friday (Venus)',
+    ingredients:['pink or white candle','a mirror','rose quartz'], tags:['self-love','confidence','healing self-image'],
+    intent:'To rebuild warmth toward yourself before extending it outward — the oldest rule of love magic is that it begins at home.',
+    steps:[
+      'Sit before the mirror with the candle lit beside it and the rose quartz held in both hands.',
+      'Look at your own reflection steadily, resisting the urge to look away or to critique.',
+      'Speak one genuine kindness about yourself aloud — not flattery, something true.',
+      'Repeat this on three consecutive waxing evenings, adding a new kindness each time.',
+      'On the final night, hold the rose quartz to your heart and simply sit with the accumulated words for a few minutes.',
+      'Carry the rose quartz with you afterward as a small daily reminder.'
+    ],
+    note:'If old grief or self-criticism surfaces strongly during this working, that is worth bringing to a counsellor or trusted person too — magic can support healing, it isn\'t a replacement for it.'},
+  {id:'s21', title:'Cup of Shared Fate', category:'love', moon:'Waxing', day:'Friday (Venus)',
+    ingredients:['two cups','tea, wine, or juice to share','honey','cinnamon'], tags:['new relationship','harmony','shared intention'],
+    intent:'A small shared working for the early days of a relationship, blessing time spent together rather than trying to bind anyone\'s feelings.',
+    steps:[
+      'Prepare a warm drink for two, sweetened with honey and a pinch of cinnamon.',
+      'Pour it into two matching cups, and set both on the table between you.',
+      'Before drinking, each person names one hope for the relationship — kept general and about your own conduct, not demands of the other.',
+      'Drink together, unhurried.',
+      'Keep the two cups paired and use them together again at future turning points in the relationship.',
+      'If the relationship ends, the cups can be separated and returned to ordinary use with no ill effect.'
+    ],
+    note:'Because this working is done together and openly, with both people\'s free consent and knowledge, it sits comfortably within the Craft\'s rule against binding another\'s will.'},
+  {id:'s22', title:'Fidelity Knot (Self-Commitment)', category:'love', moon:'Full', day:'Friday (Venus)',
+    ingredients:['a length of cord in a colour meaningful to the relationship','scissors'], tags:['commitment','anniversary','self-vow'],
+    intent:'A knot working for your own commitment and constancy within a relationship — never to compel someone else\'s faithfulness or feelings.',
+    steps:[
+      'Cut a length of cord long enough to tie nine knots with room to spare.',
+      'Holding the cord, speak your own intentions for the relationship — honesty, care, effort — one for each knot you are about to tie.',
+      'Tie nine knots along the cord\'s length, one per stated intention.',
+      'Keep the knotted cord somewhere private and significant — a drawer, a box of keepsakes.',
+      'Revisit it each anniversary, adding a fresh knot if a new intention has grown, or simply holding it in memory.',
+      'If the relationship ends, untie or burn the cord as a clean close, releasing the vow rather than leaving it "active."'
+    ],
+    note:'This working binds only the speaker\'s own conduct — it should never be adapted into a working aimed at controlling another person\'s feelings or fidelity.'},
+  {id:'s23', title:'Abundance Jar', category:'prosperity', moon:'Waxing', day:'Thursday (Jupiter)',
+    ingredients:['a jar with a lid','rice or dried beans','a few coins','bay leaf','cinnamon stick','green or gold ribbon'], tags:['money','ongoing working','abundance'],
+    intent:'A "kept" prosperity working, layered once and then fed occasionally, rather than a single one-off spell.',
+    steps:[
+      'On a waxing Thursday, layer rice or beans into the jar as a base.',
+      'Add a few coins, a bay leaf with your main financial goal written on it, and a cinnamon stick.',
+      'Tie green or gold ribbon around the jar\'s neck and seal the lid.',
+      'Set the jar somewhere it will be seen daily — a kitchen shelf, a desk — rather than hidden away.',
+      'Once a month, on a Thursday, shake the jar gently and add one more coin to "feed" it.',
+      'If a major financial goal is met, thank the jar, empty it with gratitude, and either retire it or begin a fresh one.'
+    ],
+    note:'A jar that is fed regularly and paired with real budgeting tends to outperform one left forgotten in a cupboard — attention is half the working.'},
+  {id:'s24', title:'Crossroads Opportunity Working', category:'prosperity', moon:'New', day:'Wednesday (Mercury)',
+    ingredients:['a small offering (coin, bread, or tobacco)','a piece of paper naming the opportunity you seek'], tags:['new paths','folk magic','opportunity','luck'],
+    intent:'An old crossroads working for opening up new directions — a job, a move, a new path — at a literal meeting of ways.',
+    steps:[
+      'Find an actual crossroads near you — four ways meeting is traditional, though a T-junction will serve if that\'s what\'s available.',
+      'Go at dusk or dawn, the crossroads\' own "in-between" times, on a new moon if possible.',
+      'Stand at the centre and name aloud the kind of new path or opportunity you are asking to be shown.',
+      'Leave your small offering at the centre of the crossroads, out of the way of traffic and safely.',
+      'Turn and walk away without looking back until you are well clear of the spot.',
+      'Stay genuinely open in the following days — crossroads workings often answer through an ordinary conversation, advert, or invitation rather than anything dramatic.'
+    ],
+    note:'Choose a crossroads and a time where you can stand safely away from traffic — the working is symbolic, and no offering is worth risking your safety for.'},
+  {id:'s25', title:'Business Blessing Broom', category:'prosperity', moon:'Waxing', day:'Thursday (Jupiter)',
+    ingredients:['a small besom','cinnamon or basil oil (or crushed dried herb)','green ribbon'], tags:['business','shop','trade','livelihood'],
+    intent:'To bless a besom kept behind the door of a shop, stall, or workspace, encouraging steady trade and a welcoming atmosphere for customers.',
+    steps:[
+      'Choose or make a small besom sized for indoor use.',
+      'Rub the bristles lightly with cinnamon or basil oil, or press crushed dried herb into them.',
+      'Tie green ribbon around the handle, naming the business as you knot it.',
+      'On the next waxing Thursday, sweep the doorway of the business from inside to out, drawing custom inward rather than sweeping it away.',
+      'Stand the besom bristle-up behind the door where customers won\'t trip on it — bristle-up is the traditional way to keep a besom\'s working "charged."',
+      'Refresh the oil or herb every few months, especially before a known busy season.'
+    ],
+    note:'A besom encourages goodwill and footfall — it works alongside good service and fair prices, not instead of them.'},
+  {id:'s26', title:'Health Ward Amulet', category:'healing', moon:'Waxing', day:'Sunday (Sun)',
+    ingredients:['small drawstring pouch','bloodstone or clear quartz','angelica root or a pinch of dried angelica','a small photo or written name of the wearer'], tags:['protection of health','ongoing wellbeing','amulet'],
+    intent:'A wearable amulet meant to support ongoing good health and steady recovery, worn daily rather than used once.',
+    steps:[
+      'Choose the stone — bloodstone for vitality and strength, clear quartz if you\'d rather keep the working general.',
+      'Place the stone, a pinch of angelica, and the name or photo into the pouch together.',
+      'Hold the closed pouch and state plainly what health and strength you are asking to be supported.',
+      'Wear or carry the pouch daily, tucking it under clothing or in a bag.',
+      'Recharge it under the next several full moons by setting it briefly on a windowsill in the moonlight.',
+      'Retire the amulet with thanks once the health concern has resolved, rather than carrying it indefinitely out of habit.'
+    ],
+    note:'This amulet supports wellbeing; it is not a treatment, and any real health concern should be seen by a qualified professional alongside any working like this.'},
+  {id:'s27', title:'Recovery Bath Ritual', category:'healing', moon:'Waxing', day:'Monday (Moon)',
+    ingredients:['chamomile','lavender','sea salt','a candle safe for the bathroom'], tags:['convalescence','rest','gentle healing'],
+    intent:'A gentle ritual bath to support rest and recovery during convalescence from illness or exhaustion.',
+    steps:[
+      'Steep chamomile and lavender in a jug of hot water for ten minutes, then strain.',
+      'Run a warm (not hot) bath and add the herbal water along with a handful of sea salt.',
+      'Light a single candle nearby rather than using bright overhead light.',
+      'Soak for as long as is comfortable, breathing slowly and picturing strength returning with each breath.',
+      'As you drain the bath, picture tiredness and illness draining away with the water.',
+      'Rest immediately afterward rather than returning straight to activity.'
+    ],
+    note:'Keep bath water comfortably warm rather than hot if you are feverish, light-headed, or pregnant, and never leave a lit candle unattended near water.'},
+  {id:'s28', title:'Grief Ease Candle Working', category:'healing', moon:'Waning', day:'Monday (Moon)',
+    ingredients:['a white or blue candle','a photo or memento of what was lost','tissue or soft cloth'], tags:['grief','loss','comfort','remembrance'],
+    intent:'Not to banish grief, which has its own necessary season, but to sit with it gently and make room for comfort alongside it.',
+    steps:[
+      'Set the photo or memento where you can see it, with the candle beside it.',
+      'Light the candle and allow yourself simply to sit with whatever feeling arises, without rushing to feel differently.',
+      'Speak aloud to what or whom you have lost, if that feels right — thanks, apology, or simply an update on your life.',
+      'Let the candle burn for as long as feels right, then extinguish it gently.',
+      'Repeat this working whenever grief resurfaces strongly — anniversaries, birthdays, ordinary hard days — there is no fixed schedule to grief.',
+      'Keep the memento somewhere you can return to it, rather than putting this working away as "finished."'
+    ],
+    note:'Grief is not a problem to be solved by spellwork — this working offers comfort and space, and sitting with a counsellor, friend, or support group alongside it is a strength, not a failure.'},
+  {id:'s29', title:'Banish Nightmares Working', category:'banishing', moon:'Waning', day:'Monday (Moon)',
+    ingredients:['dried rue or bay leaf','black cloth','a bell'], tags:['nightmares','sleep','protection while dreaming'],
+    intent:'To clear away recurring nightmares or an unsettled night\'s sleep, as distinct from encouraging good dreams outright.',
+    steps:[
+      'Before bed, ring the bell once in each corner of the bedroom to unsettle any stagnant energy.',
+      'Wrap a few leaves of dried rue or bay in a small scrap of black cloth.',
+      'Tuck the wrapped herb under the mattress corner nearest the head of the bed.',
+      'State plainly, aloud or silently, that this is a night of undisturbed rest.',
+      'Repeat nightly for a week, then remove the wrapped herb and dispose of it away from the home.',
+      'If nightmares persist beyond a few weeks, this is worth mentioning to a doctor, as recurring nightmares can have straightforward medical or psychological causes.'
+    ],
+    note:'Rue is safe to keep dried and wrapped under a mattress, but should not be handled with bare hands fresh, as its sap can irritate skin, especially in sunlight.'},
+  {id:'s30', title:'Uncrossing Working', category:'cleansing', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['hyssop','sea salt','a white candle','a bath or basin'], tags:['bad luck streak','reversal','deep cleansing'],
+    intent:'A deep-cleansing working for when nothing seems to be going right — a run of bad luck, tangled circumstances, or a sense of being "crossed."',
+    steps:[
+      'Steep hyssop in hot water for ten minutes, then strain and add to a bath or a large basin of warm water along with a generous handful of sea salt.',
+      'Light the white candle nearby and step into the bath, or wash with the basin water from the top of the body downward.',
+      'As you wash, picture tangled, sticky, or stuck energy loosening and rinsing away.',
+      'Once finished, let the water drain away completely before leaving the room.',
+      'Dress in clean clothes afterward rather than anything worn during the difficult stretch.',
+      'Follow with the Floor Wash of Clearing for the whole home within the same week, to complete the working.'
+    ],
+    note:'If a genuine run of bad luck lines up with a real external problem — debt, a hostile person, ill health — treat this as a support alongside practical steps, not a replacement for them.'},
+  {id:'s31', title:'Smoke Cleansing of a New Space', category:'cleansing', moon:'New', day:'Any',
+    ingredients:['dried sage, cedar, or rosemary','a heatproof dish or shell','matches'], tags:['moving house','new start','smoke cleansing'],
+    intent:'To clear the accumulated energy of previous occupants from a new home or workspace before settling in.',
+    steps:[
+      'Open every window and door in the space before beginning, even briefly in cold weather.',
+      'Light the dried herb in the heatproof dish until it smoulders and produces smoke.',
+      'Starting at the front door, walk the smoke through every room, paying particular attention to corners, cupboards, and the space above doorways.',
+      'Move in one continuous direction through the home, finishing at the point farthest from where you began.',
+      'Let the last of the smoke drift out of an open window or door rather than closing it in.',
+      'Extinguish the herb fully in the dish before leaving it unattended.'
+    ],
+    note:'Never leave smouldering herbs unattended, keep well clear of smoke detectors during the working (or briefly disable and remember to re-enable them), and ensure good ventilation throughout.'},
+  {id:'s32', title:'Witches\' Ladder of Nine Knots', category:'luck', moon:'Waxing', day:'Thursday (Jupiter)',
+    ingredients:['a length of cord, ideally in three colours plaited together','small charms, beads, or feathers (optional)'], tags:['witches ladder','general luck','ongoing charm'],
+    intent:'A traditional knot charm for general good fortune, built once and kept as an ongoing household charm rather than a single-use spell.',
+    steps:[
+      'Plait or twist the cord, weaving in any small charms, beads, or feathers as you go if you are using them.',
+      'Tie nine knots evenly along its length, naming one wish, blessing, or intention at each knot.',
+      'Work from one end to the other without rushing, taking real time between knots.',
+      'Once complete, hang the ladder somewhere it will be seen daily — a doorway, a beam, a garden shed.',
+      'Touch or gently swing the ladder occasionally as a small reminder of the intentions it holds.',
+      'Retire it respectfully — burial or burning — once its intentions feel fulfilled or outgrown, rather than leaving it up indefinitely unremembered.'
+    ],
+    note:'A witches\' ladder is meant to be a living, tended charm — one that is hung and forgotten tends to lose its potency far faster than one that stays part of daily life.'},
+  {id:'s33', title:'Traveler\'s Ward', category:'luck', moon:'Waxing', day:'Wednesday (Mercury)',
+    ingredients:['comfrey','a small stone or coin carried from home','a small pouch'], tags:['travel','safe journey','luck'],
+    intent:'To favour a safe and smooth journey, whether a daily commute or a long trip abroad.',
+    steps:[
+      'Place a pinch of dried comfrey and the small stone or coin from home into the pouch.',
+      'Hold the pouch and state the journey being undertaken and the safe return you\'re hoping for.',
+      'Carry the pouch in hand luggage, a coat pocket, or the glovebox for the duration of the trip.',
+      'Touch the pouch briefly at the start of each new leg of a longer journey.',
+      'On safe return, empty the pouch and return the stone or coin to its place at home.',
+      'Keep the same stone or coin for future trips, building a personal "travelling charm" over time.'
+    ],
+    note:'This ward supports peace of mind on the journey — ordinary precautions (insurance, checked routes, vehicle maintenance) remain the first line of real safety.'},
+  {id:'s34', title:'Binding of a Habit', category:'binding', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['black cord','paper naming the habit','small box or tin'], tags:['self-binding','habit','discipline'],
+    intent:'To bind one of your own harmful habits — unlike other binding work, this is turned inward, on yourself, by your own consent.',
+    steps:[
+      'Name the habit plainly on paper — smoking, overspending, a cutting habit of speech, whatever it is.',
+      'Fold the paper toward yourself, since this binding is chosen rather than imposed.',
+      'Wrap it in black cord, knotting it nine times, naming one small concrete step you will take against the habit at each knot.',
+      'Seal the bound parcel in a small box or tin and keep it somewhere you will see it — not hidden away.',
+      'Take the concrete steps you named, checking back against the parcel as a reminder of your own commitment.',
+      'Once the habit is genuinely broken, open the parcel, thank yourself for the effort, and dispose of the cord and paper.'
+    ],
+    note:'Self-binding works best paired with real support — a doctor, a support group, a trusted friend — especially for habits with a physical or addictive component.'},
+  {id:'s35', title:'Peaceful Home Binding', category:'binding', moon:'Waning', day:'Saturday (Saturn)',
+    ingredients:['blue cord','a small dish of dried lavender and vervain','paper naming the conflict'], tags:['household peace','arguing','harmony'],
+    intent:'To contain a pattern of arguing or tension within a household — binding the pattern of conflict itself, not any one person\'s will.',
+    steps:[
+      'Write a plain description of the recurring conflict on paper — the pattern, not a person\'s name.',
+      'Lay the paper in the dish, cover it with lavender and vervain, and fold the dish\'s contents closed if it has a lid.',
+      'Wrap blue cord around the dish or the folded paper, knotting it seven times.',
+      'State clearly that this working contains the pattern of conflict, and asks for calm and fair hearing between everyone in the home.',
+      'Keep the bound dish somewhere central but out of the way — a hallway shelf, a windowsill.',
+      'Undo the working once the household has found its footing again, releasing the herbs outdoors with thanks.'
+    ],
+    note:'A household in real, ongoing conflict deserves an honest conversation — mediated if needed — alongside this working; binding a pattern is not a substitute for addressing its cause.'}
+];
+
+const RITES = [
+  {id:'r1', title:'Casting the Circle',
+    purpose:'To create a bounded, protected sacred space — sometimes described as being "between the worlds" — in which ritual energy can be safely raised and contained.',
+    steps:[
+      'Sweep the physical space with a besom, even if it looks clean, to clear it symbolically as well as literally.',
+      'Walk the boundary of the working area once, tracing its edge in the mind\'s eye without tools, to feel out its size and shape.',
+      'Walk the boundary a second time, tracing it now with the point of the athame or the tip of the wand, moving sunwise.',
+      'On the third pass, visualise a wall of blue-white flame rising from the traced line, sealing the space into a continuous, unbroken sphere.',
+      'Starting in the East, call each quarter in turn — East, South, West, North — lighting a candle or acknowledging each element as it is called.',
+      'State clearly that the circle is cast and the working may now begin.'
+    ],
+    ingredients:['athame or wand','candles for the quarters','besom'],
+    note:'Once cast, tradition holds a circle should not be physically crossed until it is closed — if someone must leave, a small "door" is cut and resealed behind them.'},
+  {id:'r2', title:'Drawing Down the Moon',
+    purpose:'An esbat rite, most often worked at the full moon, in which the High Priestess enters a light trance to embody the Goddess for the working that follows.',
+    steps:[
+      'Ground and centre fully before beginning — this rite asks for stillness, not haste.',
+      'Cast the circle and call the quarters as usual.',
+      'The High Priestess stands facing the altar, often arms raised, while an invocation is spoken over her by another present, or inwardly if solitary.',
+      'A period of silence follows, allowing the trance and the sense of the Goddess\'s presence to settle rather than be forced.',
+      'Words, blessings, or guidance that arise are received and, if apt, spoken aloud to those present.',
+      'The rite closes gently, allowing time to fully return to ordinary awareness before the working continues.'
+    ],
+    ingredients:['altar','full moon timing','an invocation'],
+    note:'The exact words used for the invocation are traditionally a coven\'s own — what\'s shown here is the shape of the rite, not any specific coven\'s liturgy.'},
+  {id:'r3', title:'Cakes and Wine',
+    purpose:'A rite of thanksgiving and communion, usually performed near the close of a gathering, before the circle is closed.',
+    steps:[
+      'After the main working is complete, fill the chalice with wine (or juice, or water) and set it on the altar.',
+      'Lower the athame slowly into the chalice, point just touching the liquid, as words of blessing and joining are spoken.',
+      'Bless the wine and pour a small portion out as a libation, into a bowl on the altar or outdoors afterward.',
+      'Bless the cakes or bread in turn, often touching them to the pentacle.',
+      'Share the blessed drink and food among all present, in a spirit of thanksgiving.',
+      'Return any leftover libation to the earth outdoors rather than discarding it indoors.'
+    ],
+    ingredients:['chalice','wine or juice','cakes or bread','athame'],
+    note:'For solitary practitioners, this rite is easily adapted — the sharing becomes an act of gratitude with yourself, rather than a group communion.'},
+  {id:'r4', title:'Consecration of Tools',
+    purpose:'To cleanse and dedicate a new working tool before its first ritual use, aligning it with the four elements and its intended purpose.',
+    steps:[
+      'Clean the tool physically first — nothing spiritual substitutes for a simple wipe-down or wash.',
+      'Pass the tool through incense smoke, naming this as its blessing by Air.',
+      'Pass the tool briefly and safely through or near a candle flame, naming this as its blessing by Fire.',
+      'Sprinkle or touch the tool with water, naming this as its blessing by Water.',
+      'Touch the tool to a dish of salt or earth, naming this as its blessing by Earth.',
+      'Hold the tool and state aloud, in your own words, the purpose it is dedicated to.'
+    ],
+    ingredients:['salt','water','a candle','incense'],
+    note:'A tool consecrated for one purpose — a working athame, say — is traditionally not lent out or used for unrelated mundane tasks afterward.'},
+  {id:'r5', title:'Grounding and Centering',
+    purpose:'To settle scattered energy and steady the body and mind before any working, and to release excess energy safely afterward.',
+    steps:[
+      'Sit or stand comfortably, feet flat if seated, and close your eyes.',
+      'Breathe slowly and evenly for several breaths, letting the body settle.',
+      'Imagine roots extending from the base of the spine or the soles of the feet, reaching down into the earth.',
+      'On each inbreath, imagine drawing steady, calm strength up through those roots.',
+      'On each outbreath, imagine releasing scattered, excess, or anxious energy down through the same roots.',
+      'Continue for as long as needed before moving on to cast a circle or close a working.'
+    ],
+    ingredients:['none required'],
+    note:'This is worth practicing on its own, outside of ritual, until it becomes quick and reliable — it is the single most-used skill in the whole Craft.'},
+  {id:'r6', title:'Self-Dedication',
+    purpose:'For a solitary practitioner, a private rite committing to ongoing study and practice of the Craft, distinct from initiation into a coven\'s lineage.',
+    steps:[
+      'Choose a meaningful date — a sabbat, an esbat, or simply a date that matters to you.',
+      'Prepare a simple altar with a candle and any tools you already have.',
+      'Ground and centre, then light the candle.',
+      'Speak a personal vow in your own words — commitment to study, to the Wiccan Rede, to ongoing honest practice.',
+      'Sit with the commitment for a while in silence before closing the working.',
+      'Record the date and the words used in your own Book of Shadows, to revisit in future years.'
+    ],
+    ingredients:['altar','candle','a personal vow, written or spoken'],
+    note:'Self-dedication is a real and meaningful commitment, but it is not the same as formal initiation through a coven\'s Three Degrees — it\'s worth being honest with yourself about which one you\'re doing.'},
+  {id:'r7', title:'The Great Rite (Symbolic Form)',
+    purpose:'A rite of union between the God and Goddess, most commonly performed in its symbolic form, representing the generative force behind the Craft\'s workings.',
+    steps:[
+      'Cast the circle and call the quarters as usual.',
+      'Fill the chalice with wine and hold it, representing the Goddess.',
+      'Hold the athame, representing the God.',
+      'Speak words of union between the two, often referencing the joining of principles as the root of all creation.',
+      'Lower the athame slowly into the chalice, point just touching the wine, as the words conclude.',
+      'The blessed wine may then be shared, often leading directly into Cakes and Wine.'
+    ],
+    ingredients:['athame','chalice','wine'],
+    note:'The symbolic form shown here is the version most widely taught and written about; any literal enactment between partners is a private matter of full, freely given consent between adults, and lies entirely outside what a page like this can or should describe.'},
+  {id:'r8', title:'Sabbat Rite (General Shape)',
+    purpose:'A seasonal rite marking one of the eight points on the Wheel of the Year, each with its own myth, mood, and symbolism.',
+    steps:[
+      'Dress the altar to suit the season — evergreen and candles for Yule, flowers and eggs for Ostara, a sheaf of grain for Lughnasadh.',
+      'Cast the circle and call the quarters.',
+      'Speak or enact the myth or turning point associated with the sabbat.',
+      'Make an offering appropriate to the season, whether food, drink, or a spoken thanksgiving.',
+      'Share Cakes and Wine as a closing communion.',
+      'Close the circle, thanking the quarters and the Old Ones, and take time afterward to enjoy the season\'s specific foods or traditions.'
+    ],
+    ingredients:['seasonal altar dressing','an offering','circle-casting tools'],
+    note:'See the Wheel of the Year tab for each sabbat\'s specific date and theme to adapt this general shape to.'},
+  {id:'r9', title:'Closing the Circle',
+    purpose:'The necessary counterpart to Casting the Circle — releasing the boundary drawn at the start of a working so that its energy is neither left open nor left lingering.',
+    steps:[
+      'Once all workings, offerings, and Cakes and Wine are finished, return attention to the circle\'s edge.',
+      'Thank each quarter in turn, starting where you began (traditionally the East) and moving through South, West, and North.',
+      'Extinguish or set aside each quarter candle as it is thanked, rather than leaving them burning unattended afterward.',
+      'Walk the boundary once more, this time tracing it in reverse — widdershins (anticlockwise) — with the athame or wand, drawing the light back in as you go.',
+      'State clearly that the circle is now open but unbroken, and that the rite has ended.',
+      'Ground any leftover energy through a final grounding and centring before returning fully to ordinary activity.'
+    ],
+    ingredients:['athame or wand','the same quarter candles used to open the rite'],
+    note:'A circle left "open" without formally closing it is thought to leave loose ends — always build in enough time at the end of a working to close properly, even if the working overran.'},
+  {id:'r10', title:'Calling the Quarters (Elemental Invocation)',
+    purpose:'A fuller form of the brief quarter-calling folded into Casting the Circle — inviting each element and direction individually to stand witness and lend its quality to the working.',
+    steps:[
+      'Face East first, the direction of Air and of new beginnings, and light or acknowledge its candle (traditionally yellow), inviting clear thought and communication into the rite.',
+      'Turn to face South, the direction of Fire, lighting its candle (traditionally red), inviting will, passion, and courage into the rite.',
+      'Turn to face West, the direction of Water, lighting its candle (traditionally blue), inviting emotion, intuition, and healing into the rite.',
+      'Turn to face North, the direction of Earth, lighting its candle (traditionally green), inviting stability, abundance, and grounding into the rite.',
+      'Return to the altar at centre and acknowledge Spirit — the fifth point — as the element that binds the other four together.',
+      'Proceed with the main working now that all quarters stand witness.'
+    ],
+    ingredients:['four quarter candles (yellow, red, blue, green, or any colours consistently used)','a compass or known cardinal directions'],
+    note:'Solitary practitioners often shorten this to a brief acknowledgment of each quarter; the fuller form here suits group work or any rite where the elements themselves are the focus.'},
+  {id:'r11', title:'Charging and Blessing a New Altar',
+    purpose:'To dedicate a newly set-up altar space — whether a permanent piece of furniture or a small temporary surface — as sacred working space.',
+    steps:[
+      'Clean the physical surface thoroughly before anything is placed on it.',
+      'Lay a cloth if you are using one, then arrange the basic tools — representations of the God and Goddess, a candle for each, your working tools.',
+      'Pass a lit candle briefly over the whole surface, naming it as a place set apart for the Craft.',
+      'Sprinkle a little water and a pinch of salt across the surface (away from any electronics or paper) as a further blessing.',
+      'Stand or sit before the finished altar and state its purpose aloud — study, ritual, spellwork, or all three.',
+      'Use the altar for a first small working soon after — grounding and centring is a gentle way to "break it in."'
+    ],
+    ingredients:['a cloth (optional)','representations of the God and Goddess','candles','salt and water'],
+    note:'An altar does not need to be elaborate or permanent — a shelf, a windowsill, or a tray that\'s put away between workings all serve equally well once dedicated.'},
+  {id:'r12', title:'Esbat Rite (Full Moon, Complete Form)',
+    purpose:'The full shape of a monthly esbat gathering, held at the full moon, weaving together several shorter rites into one evening\'s work.',
+    steps:[
+      'Ground and centre, then cast the circle and call the quarters.',
+      'Perform Drawing Down the Moon, allowing time for stillness and any words that arise.',
+      'Undertake the evening\'s main working — spellwork, celebration, or simply honouring the full moon\'s peak energy.',
+      'Charge any tools, water, or crystals that need recharging by setting them briefly in the moon\'s light, indoors on a windowsill or outdoors if practical.',
+      'Share Cakes and Wine as thanksgiving and communion.',
+      'Close the circle fully, thanking the quarters and the Goddess and God, before returning to ordinary time.'
+    ],
+    ingredients:['altar','full moon timing','chalice, wine, and cakes','any tools or crystals due for recharging'],
+    note:'Not every esbat needs every element here — a solitary practitioner short on time might simply ground, cast, sit with the full moon, and close, and that is a complete rite in itself.'},
+  {id:'r13', title:'New Moon Intention-Setting Rite',
+    purpose:'A quieter counterpart to the full moon esbat, held at the new moon to plant intentions for the month ahead while the sky itself is dark and beginning again.',
+    steps:[
+      'Ground and centre, then cast a simple circle if the working calls for it — this rite can also be done informally, without a full circle.',
+      'Light a single white or silver candle to represent the returning light.',
+      'Write down, in a few clear sentences, what you hope to grow or begin over the coming month.',
+      'Read the intentions aloud once, then fold the paper and place it on or under the altar, or somewhere you will see it daily.',
+      'Sit in the near-darkness for a few minutes, letting the quiet of the new moon settle before ending the rite.',
+      'Revisit the paper at the next full moon to see what has already begun to take shape.'
+    ],
+    ingredients:['a white or silver candle','paper and pen'],
+    note:'This rite pairs naturally with the new-moon entries in the Correspondences tab and with any working there listed as best cast under a new moon.'},
+  {id:'r14', title:'Home Blessing Rite',
+    purpose:'A fuller ritual form of blessing a home — beyond the single Hearth-Blessing spell — suited to moving in, a difficult year passing, or simply an annual renewal.',
+    steps:[
+      'Smoke-cleanse the home first (see the Smoke Cleansing working) so the blessing begins on a clear slate.',
+      'Cast a circle around the home as a whole if space allows, or around a central room standing in for the whole house.',
+      'Walk through every room in turn, sprinkling a little salted water at each doorway and naming the room\'s purpose and the wellbeing you wish for it.',
+      'At the hearth, stove, or main gathering room, leave a small offering of bread and salt.',
+      'Close the working with a simple statement that the home is blessed, protected, and welcoming.',
+      'Repeat annually, traditionally near the home\'s "birthday" (moving-in date) or at Imbolc, the old festival of hearth and home.'
+    ],
+    ingredients:['salted water','bread and salt for the offering','circle-casting tools (optional, for the whole-home version)'],
+    note:'This rite complements, rather than replaces, the simpler single Hearth-Blessing Working in the Grimoire tab — use the shorter spell for a quick top-up, and this fuller rite for a proper occasion.'},
+  {id:'r15', title:'Handfasting (General Form)',
+    purpose:'A Wiccan rite of committed partnership. What follows is the widely-published general shape of the ceremony, not any particular coven or couple\'s private vows.',
+    steps:[
+      'Cast the circle and call the quarters, with family and friends welcomed inside if it is a witnessed ceremony.',
+      'The couple stand before the altar, often with the High Priestess or High Priest officiating.',
+      'Each partner speaks their own vows, in their own words or from a shared text they have written together.',
+      'The couple\'s joined hands are bound with cord or ribbon — the origin of the term "tying the knot" — while their commitment is affirmed aloud.',
+      'Rings or other tokens are blessed and exchanged if the couple has chosen to use them.',
+      'Cakes and Wine are shared with all present as communion and celebration, before the circle is closed.'
+    ],
+    ingredients:['cord or ribbon for the hand-binding','rings or tokens (optional)','chalice, wine, and cakes for those attending'],
+    note:'Many Wiccan handfastings are performed for a fixed term ("a year and a day") with an option to renew, alongside or instead of a legally binding marriage — couples vary widely in how they choose to combine the two.'},
+  {id:'r16', title:'Wiccaning / Saining (Child Blessing, General Form)',
+    purpose:'A naming and blessing rite for a new child, welcoming them into the family and asking the God and Goddess\'s protection over their life, without binding the child to any particular path.',
+    steps:[
+      'Cast a gentle circle, keeping the mood warm and unhurried rather than solemn.',
+      'The child is presented to each quarter in turn, or simply held facing each direction, introducing them to the elements.',
+      'The parents or guardians speak the child\'s name aloud for the first time within the circle.',
+      'A blessing is spoken over the child, asking for health, protection, and the freedom to choose their own path in adulthood.',
+      'Godparents or chosen guardians, if any, make their own promises of care and guidance.',
+      'The rite closes with a shared toast or small celebration among those gathered.'
+    ],
+    ingredients:['a small blessing item for the child (a charm, a stone, a candle) to keep'],
+    note:'A Wiccaning is explicitly not an initiation — the point is stated within many versions of the rite itself, that the child will choose their own beliefs when they are old enough to do so.'},
+  {id:'r17', title:'Rite of Passing (Requiem for the Dead)',
+    purpose:'A memorial rite for someone who has died, most often held near Samhain when the veil between the worlds is considered thinnest, though it may be held at any time grief calls for it.',
+    steps:[
+      'Set a photo, memento, or simply a lit candle for the departed on the altar.',
+      'Cast the circle and call the quarters as usual, keeping the pace slow and unhurried.',
+      'Speak the name of the person who has died, and share a memory or words about their life.',
+      'Offer a libation — wine, water, or another drink poured out — in their honour, given to the earth after the rite.',
+      'Sit in silence for a time, allowing space for grief, gratitude, or both.',
+      'Close the circle gently, and consider leaving the candle to burn afterward (safely, and attended) as a continued remembrance.'
+    ],
+    ingredients:['a photo or memento of the departed','a candle','a libation to pour out afterward'],
+    note:'This rite sits alongside, not instead of, ordinary grieving and any funeral or memorial service already held — it offers a further, quieter space to mark loss in the Craft\'s own terms.'},
+  {id:'r18', title:'Ritual Cleansing Bath (Pre-Working Purification)',
+    purpose:'A bath taken before a significant rite — an esbat, a sabbat, a dedication — to arrive at the circle cleansed and centred rather than carrying the ordinary day in with you.',
+    steps:[
+      'Draw a warm bath and add a handful of sea salt, dissolved fully before entering.',
+      'Add a small handful of a cleansing herb appropriate to the occasion — rosemary or hyssop are reliable all-purpose choices.',
+      'Light a single candle nearby rather than using bright electric light.',
+      'Soak quietly, letting the ordinary concerns of the day settle and fall away rather than trying to force them out.',
+      'As you leave the bath, picture stepping out cleansed and ready, leaving the day\'s residue in the water behind you.',
+      'Dress in clean clothing set aside specifically for the coming rite, if you keep ritual garments.'
+    ],
+    ingredients:['sea salt','rosemary or hyssop','a candle'],
+    note:'This is a preparation, not the working itself — build enough time into the evening for both the bath and the rite that follows, rather than rushing between them.'}
+];
+
+const SABBATS = [
+  {name:'Samhain', date:'31 Oct', angle:0,
+    theme:'The veil thins; ancestors and the beloved dead are honoured. The Wiccan new year and the descent into the dark half of the Wheel.',
+    etymology:'Samhain (pronounced roughly "SAH-win") comes from Old Irish, meaning "summer\'s end" — it marks the old boundary between the light and dark halves of the Celtic year.',
+    mythology:'Considered the Wiccan New Year, Samhain is the night the veil between the living and the dead is at its thinnest, allowing remembrance and communication with ancestors and the beloved dead. It is associated with the Crone aspect of the Goddess and the God\'s death, who will be reborn at Yule; in some traditions, the Wild Hunt is said to ride on this night.',
+    customs:['Setting a place at the table, or lighting a candle in the window, for the beloved dead.','Carving turnips or pumpkins into lanterns to ward off wandering spirits.','Divination of all kinds, since the thin veil is thought to make the future especially visible.','A "dumb supper" eaten in silence in honour of the departed.'],
+    colors:['black','orange','deep purple'], foods:['pumpkin and root vegetables','apples','nuts','spiced cider','soul cakes'],
+    correspondences:['mugwort','rosemary (for remembrance)','obsidian','bay laurel'],
+    observance:'Light a candle for someone you\'ve lost, set their photo on the altar, and speak their name aloud — a simple, complete way to keep this night.'},
+  {name:'Yule', date:'21 Dec', angle:45,
+    theme:'The Winter Solstice — the Oak King defeats the Holly King and the sun\'s slow return is welcomed with light and evergreen.',
+    etymology:'Yule derives from the Old Norse "jól," a midwinter festival that predates and heavily influenced the modern Christmas.',
+    mythology:'At the Winter Solstice, the longest night of the year, the Oak King (ruler of the waxing year) is born and defeats the Holly King (ruler of the waning year) in their endless cyclical battle for the year\'s throne. The Goddess, having passed through the Crone, gives birth to the reborn Sun God, and the slow return of the light begins.',
+    customs:['Burning a Yule log, traditionally saved from the previous year\'s fire and burned for twelve nights.','Decorating the home with evergreen — holly, ivy, mistletoe, fir — as a sign of life persisting through winter.','Wassailing fruit trees to ensure a good harvest in the coming year.','Exchanging small gifts as the light begins its return.'],
+    colors:['red','green','gold','white'], foods:['roast root vegetables','mulled wine','gingerbread','dried fruit and nuts'],
+    correspondences:['holly','mistletoe','cinnamon','frankincense','bay laurel'],
+    observance:'Light a candle at the darkest point of the evening and let it burn as you watch for the first light of solstice morning, welcoming the sun\'s slow return.'},
+  {name:'Imbolc', date:'1 Feb', angle:90,
+    theme:'First stirrings of spring, sacred to Brighid; a festival of the hearth flame, purification, and returning light.',
+    etymology:'Imbolc likely derives from the Old Irish "i mbolg," meaning "in the belly," referring to the pregnancy of ewes at this point in the farming year.',
+    mythology:'Sacred to Brighid, goddess of the hearth flame, healing, poetry, and smithcraft, Imbolc marks the first stirrings of spring beneath the still-cold ground. The Goddess recovers from childbirth as the young God grows, and the land shows its first faint signs of returning life.',
+    customs:['Lighting every candle in the house, even briefly, to honour the returning light.','Making a Brighid\'s cross from rushes or straw to hang over the door for protection.','Weather divination — the old root of the later folk custom of groundhog day.','Spring-cleaning the home as a symbolic clearing of winter\'s stagnation.'],
+    colors:['white','pale yellow','light green'], foods:['dairy foods','seed cakes','bread','early spring greens'],
+    correspondences:['snowdrop','rosemary','clear quartz','candles of every colour'],
+    observance:'Light a white candle in every room of the house, even for a few minutes each, as a small echo of Brighid\'s returning flame.'},
+  {name:'Ostara', date:'21 Mar', angle:135,
+    theme:'The Spring Equinox — day and night in balance, fertility and new growth celebrated with eggs and seeds.',
+    etymology:'Ostara takes its name from Eostre, a Germanic goddess of spring and dawn recorded by the early English monk Bede — the same root that gives us "Easter."',
+    mythology:'At the Spring Equinox, day and night stand in perfect balance before daylight begins to win out. The God and Goddess, both young, court one another as the earth turns green, and fertility and new growth are the working themes of the season.',
+    customs:['Decorating and hiding eggs, an old symbol of fertility and potential predating their modern Easter use.','Planting seeds, literal and symbolic, for what you hope to grow in the coming year.','Walking the land to note the first blossoms and returning birds.','Balancing rituals that honour the equal day and night.'],
+    colors:['pastel shades','light green','yellow','pink'], foods:['eggs','honey cakes','early greens','dairy'],
+    correspondences:['daffodil','violet','rose quartz','citrine'],
+    observance:'Plant a seed — literal, or written on paper and buried — for something you want to grow across the coming year, and tend it as the season turns.'},
+  {name:'Beltane', date:'1 May', angle:180,
+    theme:'The God and Goddess wed; a fire festival of fertility, passion, and the full flowering of spring into summer.',
+    etymology:'Beltane likely derives from a Celtic root meaning "bright fire," referring to the great bonfires traditionally lit on this night.',
+    mythology:'The God and Goddess wed and consummate their union at Beltane, the year\'s great fertility festival, mirrored in the earth\'s own flowering. This is the setting most traditionally associated with the (usually symbolic) Great Rite, and it marks the year\'s full turn into the light half.',
+    customs:['Dancing the Maypole, its ribbons winding the pole in a symbolic union of male and female energies.','Leaping over the Beltane bonfire, safely and at a sensible height, for luck, protection, and fertility in the year ahead.','Gathering hawthorn blossom — though traditionally not before this date — to dress the home.','Handfasting ceremonies, since Beltane is a traditionally favoured date for Wiccan weddings.'],
+    colors:['green','red','white'], foods:['oatcakes','dairy','early berries','May wine (woodruff-infused wine)'],
+    correspondences:['hawthorn','rose','green aventurine','frankincense'],
+    observance:'Weave a small braid of ribbons in the colours of the season and tie it to a tree or hang it in the home as a simple, personal Maypole.'},
+  {name:'Litha', date:'21 Jun', angle:225,
+    theme:'The Summer Solstice, the sun at its height — the Holly King begins his return as the year turns toward the dark once more.',
+    etymology:'Litha is an Old English name for the summer solstice period, recorded by the Venerable Bede alongside Yule as one of the year\'s two great turning points.',
+    mythology:'At Midsummer, the sun reaches the height of its power on the longest day of the year — and, in the same moment, the Holly King begins his slow return, since the light can only wane from here. It is a festival of the sun\'s fullest strength held in the same breath as the first turn toward autumn.',
+    customs:['Bonfires and staying up to greet the dawn, mirroring Yule\'s vigil at the opposite pole of the year.','Gathering St. John\'s Wort and other sun-herbs at their most potent.','Handfasting, alongside Beltane, remains a popular date for this warm, high-summer festival.','Leaving offerings for the fair folk, said to be especially active at Midsummer.'],
+    colors:['gold','yellow','orange','sun-bright shades'], foods:['summer fruit','honey','fresh bread','sun tea'],
+    correspondences:['St. John\'s Wort','sunflower','citrine','clear quartz'],
+    observance:'Rise before dawn to watch the sunrise on the longest day, and gather (or simply appreciate) a sun-ruled herb at its yearly peak.'},
+  {name:'Lughnasadh', date:'1 Aug', angle:270,
+    theme:'The first harvest, sacred to Lugh; bread is baked and gratitude offered for the first fruits of the year\'s labour.',
+    etymology:'Lughnasadh (also called Lammas, from the Old English "hlaf-mæsse," or "loaf mass") is named for the Irish god Lugh, whose funeral games for his foster-mother Tailtiu are the festival\'s traditional origin.',
+    mythology:'The first of three harvest festivals on the Wheel, Lughnasadh marks the cutting of the first grain and the bittersweet knowledge that the God\'s strength, like the grain, must be cut down so that others may be fed — an early note of the descent that completes at Samhain.',
+    customs:['Baking bread from the first-cut grain and sharing it as a community act of thanksgiving.','Weaving corn dollies from the last stalks of harvest, kept until spring planting.','Games and contests, echoing Lugh\'s funeral games for Tailtiu.','Visiting high places or holy wells, a custom recorded widely across Ireland at this date.'],
+    colors:['gold','orange','brown','corn-yellow'], foods:['fresh-baked bread','corn','berries','early apples'],
+    correspondences:['wheat and grain of any kind','sunflower','citrine','tiger\'s eye'],
+    observance:'Bake or buy a loaf of bread specifically for this day, and share it with thanks for whatever abundance the past season has brought you.'},
+  {name:'Mabon', date:'21 Sep', angle:315,
+    theme:'The Autumn Equinox — a second balance point and second harvest, a time of thanksgiving before the descent to Samhain.',
+    etymology:'Mabon is a modern name, adopted in the 1970s from the Welsh mythological figure Mabon ap Modron, applied to what earlier folk tradition simply called the autumn equinox or "harvest home."',
+    mythology:'The second balance point of the year, Mabon holds day and night equal once more before the dark half fully takes hold. It is the second harvest and a time of thanksgiving — often thought of as the Wiccan equivalent of a harvest-home festival — as the God begins his true decline toward Samhain.',
+    customs:['Harvest-home suppers, sharing the last of the season\'s abundance with family and community.','Making wine or preserving fruit and vegetables for the coming winter.','A second balancing rite, mirroring Ostara at the opposite point of the year.','Giving thanks specifically for what has been gathered, learned, or completed since spring.'],
+    colors:['deep orange','brown','dark red','gold'], foods:['apples','root vegetables','late harvest fruit','wine or cider'],
+    correspondences:['oak','acorn','apple','carnelian','smoky quartz'],
+    observance:'Share a meal made entirely from the last of the season\'s harvest, and speak aloud one thing you are grateful the year has brought so far.'}
+];
+
+const HERB_INTRO = [
+  'Herb magic works on the old principle of correspondence: every plant carries a bundle of associations — its ruling planet, its element, the shape of its leaf or the colour of its flower, where and how it grows — and folk tradition has matched these qualities to magical purpose over many centuries. A fiery, quick-growing herb like basil suits prosperity and protection; a cool, water-ruled flower like rose suits love and grief. None of this is fixed law — different herbals disagree on details — but the correspondences below are drawn from widely-shared, long-recorded folk tradition.',
+  'Herbs are worked into spells in a handful of simple forms: dried and sewn into a sachet or poppet, burned as loose incense or bound into a smoke-cleansing bundle, infused in oil to dress a candle, steeped as a wash for floors and thresholds, or added to a ritual bath. Some are also taken as a mild tea — but treat that use with real caution (see below). Whichever form you choose, a herb\'s magical effect is layered on top of, not a replacement for, its ordinary physical properties.',
+  'Gathering herbs thoughtfully is part of the craft. Where you can, grow your own or buy from a reputable herbalist rather than picking from the wild, since over-harvesting has genuinely endangered several traditional magical plants (sandalwood and wild American ginseng among them). If you do gather from a living plant, take only what you need, leave the plant able to recover, and it is traditional — and simply good manners — to speak a word of thanks or leave a small token (a pinch of tobacco, a coin, a little water) in return. Many traditions also hold that herbs gathered at dawn, or under a moon phase and planetary day suited to their purpose, work best of all.',
+  'Store dried herbs in airtight, clearly labelled jars out of direct sunlight, and refresh your supply every year or so — a herb that has lost its scent has largely lost its potency too, magical and otherwise. Keep a small working stock for spells separate from any culinary herbs of the same name, so a jar reserved for banishing work never accidentally ends up in the soup.',
+  'A serious caution belongs here. Magical correspondence describes folklore and symbolism, not medical fact, and several herbs traditionally used in spellwork are genuinely toxic, interact with medication, or are unsafe in pregnancy — these are flagged wherever relevant below. Never ingest an unfamiliar herb, never give one to a child, pet, or pregnant person without checking first, and treat any recipe here as being for sachets, incense, baths, and symbolic use unless you have independently confirmed with a doctor or qualified herbalist that internal use is safe for you specifically. When in doubt, keep the herb on the altar rather than in the body — the working loses nothing by it.'
+];
+
+const HERBS = [
+  {name:'Basil', botanical:'Ocimum basilicum', part:'Leaf', planet:'Mars', element:'Fire',
+    props:'Long used to guard the home and business, basil is scattered near doorways or grown on a windowsill to keep hostility and gossip at bay. In love magic it is carried to attract, and in kitchen witchery a pinch added to cooking is said to sweeten the mood of a household. Folklore holds that a thriving basil plant blesses a home with prosperity, while one that suddenly withers is thought to warn of trouble ahead.'},
+  {name:'Rosemary', botanical:'Salvia rosmarinus', part:'Leaf', planet:'Sun', element:'Fire',
+    props:'Rosemary is the great all-purpose herb of the Craft — reach for it when no more specific herb comes to hand. Burned or worn, it protects; steeped, it purifies; tucked under a pillow, it aids memory and wards off nightmares. It has long been placed at both weddings and funerals for remembrance, marking it as an herb of continuity between joy and grief alike.'},
+  {name:'Lavender', botanical:'Lavandula angustifolia', part:'Flower', planet:'Mercury', element:'Air',
+    props:'Lavender\'s scent alone is calming enough that many workings need nothing more than a sachet by the bed. It draws peaceful sleep, gentles grief, and is added to love workings for its undemanding sweetness. Historically strewn on floors to freshen sickrooms, it carries a long association with healing spaces as well as romantic ones.'},
+  {name:'Sage', botanical:'Salvia officinalis', part:'Leaf', planet:'Jupiter', element:'Air',
+    props:'The classic European cleansing herb, culinary sage is burned to clear a space of stagnant or hostile energy and carried for wisdom and long life. A sprig kept in a purse is a traditional charm for steady, sensible prosperity rather than sudden windfall. Note that "smudging" with white sage is a specific, sacred practice belonging to Indigenous American traditions — burning garden sage for cleansing is a distinct, separately-documented European folk custom, and it\'s worth keeping that difference in mind and using the right words for each.'},
+  {name:'Mugwort', botanical:'Artemisia vulgaris', part:'Leaf', planet:'Venus', element:'Earth',
+    props:'Mugwort is the diviner\'s herb, traditionally burned lightly or simply kept beneath the pillow to encourage vivid, prophetic dreaming and ease of astral work. It was once tucked into travellers\' shoes for protection and stamina on long journeys, and bunches were hung over doorways at Midsummer to ward the home for the coming year.',
+    caution:'Avoid during pregnancy, and take care with mugwort if you have ragweed allergies, as the two plants are closely related.'},
+  {name:'Rose', botanical:'Rosa spp.', part:'Flower / petal', planet:'Venus', element:'Water',
+    props:'No herb speaks more plainly of love than rose — petals in a sachet, oil on a candle, or dried buds in tea all carry the same message of affection, beauty, and gentle self-worth. Rose is equally at home in workings of grief and remembrance, reflecting the same tenderness turned toward loss rather than romance.'},
+  {name:'Cinnamon', botanical:'Cinnamomum verum', part:'Bark', planet:'Sun', element:'Fire',
+    props:'A quick-acting herb of success and money, cinnamon\'s heat is added to prosperity workings to speed their pace — a stick in a money jar, or a pinch stirred into an abundance working, both call it into use. It doubles as a herb of protection and love, making it a natural companion whenever a working needs a little extra urgency.',
+    caution:'Ground cinnamon can irritate skin in quantity — keep it to a pinch when using it directly on the body.'},
+  {name:'Bay Laurel', botanical:'Laurus nobilis', part:'Leaf', planet:'Sun', element:'Fire',
+    props:'Bay leaves are the wish-granting herb of the kitchen witch\'s cupboard: write a wish on a leaf and burn it safely to send the request outward, a technique reused throughout this grimoire\'s own spells. Bay also protects and sharpens psychic ability, and a leaf kept in a wallet is a simple ongoing charm for steady fortune.'},
+  {name:'Chamomile', botanical:'Matricaria chamomilla', part:'Flower', planet:'Sun', element:'Water',
+    props:'Best known as a gentle sleep and calming herb, chamomile also draws a soft, steady kind of prosperity rather than sudden windfall — fitting for its unhurried, soothing nature. It is traditionally used in purification baths for babies and the unwell alike, on account of its exceptional mildness.'},
+  {name:'Mint', botanical:'Mentha spp.', part:'Leaf', planet:'Mercury', element:'Air',
+    props:'Mint\'s quick growth and quicker scent make it an herb of speed — for travel, for fast-moving prosperity, and for banishing exhaustion. A few leaves rubbed on the hands before a working is a simple way to sharpen focus, and mint left by a till or cash box is an old shopkeeper\'s charm for brisk trade.'},
+  {name:'Rue', botanical:'Ruta graveolens', part:'Leaf', planet:'Mars', element:'Fire',
+    props:'One of the oldest herbs of protection and hex-breaking in European folk magic, rue was carried by healers, and a sprig above the door was thought to keep out both illness and ill intention. It is also associated with clarity of mind and burned, sparingly and with good ventilation, to cut through confusion.',
+    caution:'Rue\'s fresh sap is phototoxic and can cause serious skin burns in sunlight — always handle with gloves and never apply fresh rue directly to skin; dried rue kept in a sachet is the safer traditional form for most workings.'},
+  {name:'Vervain', botanical:'Verbena officinalis', part:'Leaf / flower', planet:'Venus', element:'Water',
+    props:'Sacred to the Druids and long called "the enchanter\'s herb," vervain protects, purifies, and is said to encourage artistic and prophetic inspiration when carried or kept close by. It was traditionally gathered at dawn without being seen by anyone, a small ritual of secrecy some practitioners still keep today.'},
+  {name:'Yarrow', botanical:'Achillea millefolium', part:'Flower / leaf', planet:'Venus', element:'Water',
+    props:'Yarrow is a herb of courage as much as love, traditionally carried by soldiers for protection in battle and by brides for a lasting marriage — an odd but enduring pairing that speaks to its association with steadfastness. It is also a classic divination herb, its dried stalks once used directly to cast the I Ching.'},
+  {name:'Thyme', botanical:'Thymus vulgaris', part:'Leaf', planet:'Venus', element:'Water',
+    props:'Thyme steadies courage and eases grief in equal measure, and was traditionally placed among the belongings of the dead as a passage-herb to ease their journey onward. Burned lightly, it is also said to grant a glimpse of the fair folk — a working best approached with real respect rather than casual curiosity.'},
+  {name:'St. John\'s Wort', botanical:'Hypericum perforatum', part:'Flower', planet:'Sun', element:'Fire',
+    props:'Named for the saint whose feast falls near Midsummer, this sun-gold flower is gathered at that time of year to protect against malevolent influence and to strengthen resolve and health. Hung over doors and windows, it was the classic Midsummer ward of the British and European countryside.',
+    caution:'St. John\'s Wort interacts with a wide range of prescription medications, including contraceptives and antidepressants — never take it internally without checking with a doctor or pharmacist first.'},
+  {name:'Dandelion', botanical:'Taraxacum officinale', part:'Root / flower / whole plant', planet:'Jupiter', element:'Air',
+    props:'Dandelion\'s wish-granting reputation is familiar even outside the Craft — the seed head blown to the wind carries a spoken wish away to be granted. Its root is used in divination and to strengthen communication with spirits, while the whole plant is considered a generous, ordinary sort of magic, freely available to anyone with a garden or a verge.'},
+  {name:'Nettle', botanical:'Urtica dioica', part:'Leaf', planet:'Mars', element:'Fire',
+    props:'Nettle\'s sting mirrors its magical reputation as a fierce protector, traditionally strewn or burned to drive out hostile influence and to turn a curse back toward its sender. It is also, perhaps surprisingly, an old herb of desire and vigour, once added to workings meant to rekindle a flagging passion.',
+    caution:'Handle fresh nettle with gloves — its sting is a genuine skin irritant. Dried nettle for sachets and workings is safe to handle bare-handed.'},
+  {name:'Comfrey', botanical:'Symphytum officinale', part:'Root / leaf', planet:'Saturn', element:'Water',
+    props:'Known in folk tradition as "knitbone" for its historic use in poultices, comfrey\'s magical reputation follows the same theme — it is carried to keep money and possessions from "breaking away," making it a favourite herb to tuck into luggage for safe travel and slip into a wallet to prevent funds from slipping out.',
+    caution:'Comfrey is toxic if taken internally in any quantity and is no longer considered safe to ingest even in small folk-remedy doses — use only externally, in sachets, or as a written/symbolic herb on the altar.'},
+  {name:'Elder', botanical:'Sambucus nigra', part:'Flower / berry / wood', planet:'Venus', element:'Water',
+    props:'Elder is one of the most protected trees in British folklore, said to house a guardian spirit — the Elder Mother — who must be asked politely before any wood is cut. Its flowers and berries feature in prosperity and healing workings, while unasked-for cutting of the living tree is traditionally thought to invite serious bad luck.',
+    caution:'Raw elderberries, and all parts of the plant other than the ripe cooked berries and dried flowers, contain compounds that are toxic if eaten — use for magical rather than culinary purposes unless you know exactly what you are doing.'},
+  {name:'Hawthorn', botanical:'Crataegus monogyna', part:'Flower / berry / wood', planet:'Mars', element:'Fire',
+    props:'Hawthorn marks the old boundary between the everyday world and the world of the fair folk, and a solitary "fairy thorn" standing alone in a field is traditionally never cut down. Its blossom is carried for protection and happiness, particularly around Beltane, when hawthorn flower was once gathered to dress the home.',
+    caution:'Hawthorn blossom brought indoors before Beltane is traditionally considered unlucky in British folklore — if you keep this custom, wait until May to bring branches inside.'},
+  {name:'Mullein', botanical:'Verbascum thapsus', part:'Leaf / flower', planet:'Saturn', element:'Fire',
+    props:'Tall and torch-like, mullein has long been dried and used historically as lamp-wick material, lending it an association with courage, illumination, and driving away fear of the dark and of malevolent influence alike. It is also a traditional divination herb, its dried leaves sometimes used in place of graveyard dust in older folk formulas — a gentler and more straightforward substitute.'},
+  {name:'Clove', botanical:'Syzygium aromaticum', part:'Flower bud', planet:'Jupiter', element:'Fire',
+    props:'Clove\'s sharp heat protects, purifies, and is added to love and money workings alike to speed their effect, much like its cousin cinnamon. Held in the mouth without swallowing before an important conversation, it is a traditional charm to sharpen and steady the speaker\'s words — the basis of this grimoire\'s own Silver Tongue working.',
+    caution:'Clove oil is strong enough to irritate skin and gums in concentrated form — whole dried cloves, not the essential oil, are the safer traditional choice for spellwork involving the mouth.'},
+  {name:'Ginger', botanical:'Zingiber officinale', part:'Root', planet:'Mars', element:'Fire',
+    props:'Ginger\'s heat is added to any working that needs speeding up — money spells, love spells, courage spells — much as it is added to food for warmth and vigour. It is considered a herb of personal power, carried as a small dried piece before an event requiring confidence or stamina.'},
+  {name:'Patchouli', botanical:'Pogostemon cablin', part:'Leaf', planet:'Saturn', element:'Earth',
+    props:'Patchouli\'s deep, earthy scent ties it to money and material abundance, and a few drops of the oil (or the dried leaf itself) rubbed onto a purse or wallet is a common prosperity charm. It carries a secondary reputation as an herb of physical desire, inherited largely from its long association with 1960s and \'70s perfumery.'},
+  {name:'Sandalwood', botanical:'Santalum album', part:'Wood', planet:'Moon', element:'Water',
+    props:'Sandalwood is burned to protect and to raise the spiritual tone of a space, and is a traditional base note in incense meant to aid meditation, trance work, and contact with the dead. Its scent is considered calming enough to soothe an anxious mind before any working requiring focus.',
+    caution:'True sandalwood (Santalum album) is an endangered and heavily over-harvested species — buy only from suppliers who can confirm sustainable sourcing, or substitute the more available Australian sandalwood (Santalum spicatum).'},
+  {name:'Frankincense', botanical:'Boswellia sacra', part:'Resin', planet:'Sun', element:'Fire',
+    props:'Frankincense is the great consecrating resin, burned to bless tools, spaces, and rites of every kind across an unusually wide range of religious traditions, Wicca among them. Its smoke is considered to raise a space\'s spiritual vibration and to carry prayers and requests upward and outward.'},
+  {name:'Myrrh', botanical:'Commiphora myrrha', part:'Resin', planet:'Moon', element:'Water',
+    props:'Myrrh is frankincense\'s quieter, more introspective sibling, favoured for healing, protection, and workings connected to grief, endings, and the dead. The two resins are very often burned together, frankincense lending an outward, active quality and myrrh a deeper, inward one.'},
+  {name:'Cedar', botanical:'Cedrus / Thuja spp.', part:'Wood', planet:'Sun', element:'Fire',
+    props:'Cedar\'s resistance to rot and insects lent it an early reputation for purification and protection, and cedar chips or shavings are burned or scattered to cleanse a space and encourage prosperity. Cedar wood kept among stored clothes or important papers is a traditional, practical form of ongoing protective charm.'},
+  {name:'Juniper', botanical:'Juniperus communis', part:'Berry', planet:'Sun', element:'Fire',
+    props:'Juniper berries burned or hung in bunches are one of the oldest European protections against theft, illness, and hostile influence, historically burned in sickrooms and stables alike. They are also carried for love and health, and a few berries added to a charm bag lend it a sharp, no-nonsense protective edge.'},
+  {name:'Angelica', botanical:'Angelica archangelica', part:'Root / leaf', planet:'Sun', element:'Fire',
+    props:'Angelica is named for its supposed revelation by an archangel as a plague remedy, and it has carried a reputation for powerful protection and banishing of malevolent influence ever since. Root pieces are carried as an all-purpose protective charm, and the whole plant is associated with visionary and prophetic work.',
+    caution:'Angelica can increase skin\'s sensitivity to sunlight — as with rue, take care with prolonged sun exposure after handling the fresh plant.'},
+  {name:'Marigold / Calendula', botanical:'Calendula officinalis', part:'Flower', planet:'Sun', element:'Fire',
+    props:'Calendula\'s bright gold petals are strewn or worn for protection, especially against gossip and legal trouble, and were traditionally scattered on the doorstep to keep harm from entering. In love divination, unmarried girls once tucked marigold petals under their pillow hoping to dream of a future spouse.'},
+  {name:'Catnip', botanical:'Nepeta cataria', part:'Leaf', planet:'Venus', element:'Water',
+    props:'Beyond its famous effect on cats, catnip is a gentle herb of love, friendship, and playful happiness, traditionally given as an offering to a witch\'s familiar or companion animal. A sachet of catnip kept by the bed is said to draw affectionate, easy-going energy into the home.'},
+  {name:'Anise / Aniseed', botanical:'Pimpinella anisum', part:'Seed', planet:'Jupiter', element:'Air',
+    props:'Aniseed wards off malevolent influence and nightmares alike, traditionally placed under the pillow for peaceful, protected sleep, and its liquorice-sweet scent is also used to raise psychic awareness before divination work.'},
+  {name:'Fennel', botanical:'Foeniculum vulgare', part:'Seed / leaf', planet:'Mercury', element:'Fire',
+    props:'Fennel hung over the door on Midsummer\'s Eve was a traditional ward against spirits trying to slip inside, a custom recorded across much of medieval Europe. It is also carried for courage and clear-headed protection, particularly useful before a confrontation or difficult decision.'},
+  {name:'Violet', botanical:'Viola odorata', part:'Flower', planet:'Venus', element:'Water',
+    props:'Violet is a gentle herb of modest, faithful love and of luck, traditionally worn or carried by those hoping for a steady rather than dramatic romance. Its old association with faithfulness made it a popular addition to Victorian love tokens and posies.'},
+  {name:'Jasmine', botanical:'Jasminum officinale', part:'Flower', planet:'Moon', element:'Water',
+    props:'Jasmine\'s heady night-blooming scent ties it to lunar and psychic workings, burned or worn to attract love, encourage prophetic dreams, and draw money through good fortune rather than direct effort. It is considered one of the more sensuous love herbs, well suited to workings around attraction and confidence.'},
+  {name:'Vanilla', botanical:'Vanilla planifolia', part:'Pod / bean', planet:'Venus', element:'Water',
+    props:'Vanilla\'s warm sweetness is added to love and desire workings for its immediate, comforting sensory pull, and a bean kept in a jar of sugar or added to baking is a simple kitchen-witch charm to sweeten a household\'s mood.'},
+  {name:'Orris Root', botanical:'Iris germanica', part:'Root', planet:'Venus', element:'Water',
+    props:'Powdered orris root is prized in love sachets both for its own gentle floral-woody scent and for its usefulness as a fixative, holding other scents in a sachet or incense for far longer than they would last alone. Whole orris root is also carried as a love-drawing charm in its own right.'},
+  {name:'Dragon\'s Blood Resin', botanical:'Daemonorops spp.', part:'Resin', planet:'Mars', element:'Fire',
+    props:'This deep-red resin is one of the most powerful all-purpose boosting agents in the Craft — added in a small pinch to almost any incense, it is said to strengthen and speed whatever working it joins. Burned alone, it protects, purifies, and lends courage and personal power.',
+    caution:'Dragon\'s blood resin produces a thick, heavy smoke — use only a small pinch at a time and ensure good ventilation.'},
+  {name:'Star Anise', botanical:'Illicium verum', part:'Seed pod', planet:'Jupiter', element:'Fire',
+    props:'The distinctive eight-pointed pod is itself considered a small natural symbol of luck and protection, often carried whole rather than ground for that reason. It is added to prosperity and psychic-awareness workings, and a whole pod is a traditional gift of good fortune.',
+    caution:'Only true star anise (Illicium verum) should ever be used — the closely related but toxic Japanese star anise (Illicium anisatum) has caused poisoning when the two are confused; buy only from a reputable culinary or herbal supplier.'},
+  {name:'Valerian', botanical:'Valeriana officinalis', part:'Root', planet:'Venus', element:'Water',
+    props:'Valerian root is a powerful sleep and calming herb, tucked under the pillow for peaceful rest and added to protection sachets for its old dual reputation of drawing love while repelling negativity. Cats are drawn to it much as they are to catnip.',
+    caution:'Valerian has a very strong, musky smell that some find unpleasant in quantity, and it should not be combined with sedative medication without medical advice.'},
+  {name:'Passionflower', botanical:'Passiflora incarnata', part:'Flower / leaf', planet:'Venus', element:'Water',
+    props:'Despite its name, passionflower is used chiefly for peace and calm rather than romance — its intricate bloom was seen by early Christian missionaries as a symbol of the Passion of Christ, giving the plant its name quite apart from its actual magical use. It is added to sleep sachets and to workings meant to ease anxiety before a difficult event.'},
+  {name:'Lemon Balm', botanical:'Melissa officinalis', part:'Leaf', planet:'Moon', element:'Water',
+    props:'Lemon balm\'s bright, cheerful scent lifts low mood and is used in workings for success, healing, and gentle romantic affection alike. Bees are said to be drawn to it, and hives were traditionally rubbed with the crushed leaf to keep the colony content and settled.'},
+  {name:'Lemongrass', botanical:'Cymbopogon citratus', part:'Leaf / stalk', planet:'Mercury', element:'Air',
+    props:'Lemongrass sharpens psychic awareness and is added to divination incense for clarity, while its bright citrus scent doubles as a purifying herb against negativity and pests alike.'},
+  {name:'Rowan', botanical:'Sorbus aucuparia', part:'Berry / wood', planet:'Sun', element:'Fire',
+    props:'Rowan is one of the great protective trees of British and Norse folklore, its wood and berries used against enchantment, ill will, and the mischief of the fair folk — the basis of this grimoire\'s own Rowan and Red Thread charm. A rowan tree grown by the door is traditionally thought to ward the whole household.'},
+  {name:'Oak', botanical:'Quercus robur', part:'Wood / acorn / leaf', planet:'Sun', element:'Fire',
+    props:'Oak is the king of the sacred trees in Druidic and Wiccan tradition alike, its wood, leaves, and acorns all carried for strength, protection, and endurance. An acorn kept on a windowsill is an old charm against lightning and misfortune, and oak groves were traditionally considered natural temples in their own right.'},
+  {name:'Willow', botanical:'Salix spp.', part:'Wood / bark / leaf', planet:'Moon', element:'Water',
+    props:'Willow bends without breaking, and its magic follows the same theme — flexibility, healing, and connection to the moon and to grief. Its wood is a traditional choice for wands meant for emotional or intuitive work, and its branches were once used in mourning wreaths.'},
+  {name:'Holly', botanical:'Ilex aquifolium', part:'Leaf / berry / wood', planet:'Mars', element:'Fire',
+    props:'Holly is the Holly King\'s own tree, ruling the waning half of the year from Midsummer to Yule, and its evergreen leaves are brought indoors at Yule as a sign of life persisting through winter. Its sharp leaves are also carried for protection, particularly against lightning and hostile influence.',
+    caution:'Holly berries are toxic if eaten, especially by children and pets — use the leaves and wood for magical purposes and keep berry-bearing sprigs safely out of reach.'},
+  {name:'Mistletoe', botanical:'Viscum album', part:'Berry / sprig', planet:'Sun', element:'Air',
+    props:'Sacred to the Druids, who were said to cut it with a golden sickle and never let it touch the ground, mistletoe is a herb of protection, fertility, and reconciliation — the origin of the custom of kissing beneath a sprig at Yule. Traditionally it is never bought for oneself but received as a gift.',
+    caution:'All parts of mistletoe, especially the berries, are toxic if ingested — hang sprigs safely out of reach of children and pets, and never use it in any working intended for internal use.'},
+  {name:'Ivy', botanical:'Hedera helix', part:'Leaf / vine', planet:'Saturn', element:'Water',
+    props:'Ivy\'s clinging growth ties it to fidelity, binding, and protection, traditionally grown up the outside of a house (never allowed to enter fully) to guard against misfortune. Woven into a wreath alongside holly, it is a classic Yule decoration representing the season\'s receptive, feminine half.',
+    caution:'Ivy berries and leaves are mildly toxic if eaten and the sap can irritate skin for some people — handle with care and keep out of reach of pets and children.'},
+  {name:'Blackberry / Bramble', botanical:'Rubus fruticosus', part:'Leaf / berry / bramble', planet:'Venus', element:'Water',
+    props:'Bramble arches are a well-known folk cure and protection charm — crawling beneath a naturally-arched blackberry bramble was once believed to cure ailments from whooping cough to boils. The berries themselves are used in abundance and healing workings, tying the plant to both generous harvest and old-fashioned home remedy.'}
+];
+
+const CRYSTAL_INTRO = [
+  'Crystal magic works on much the same principle as herb magic — correspondence — but through mineral rather than plant qualities: colour, hardness, clarity, and the way a stone was formed all feed into its traditional associations. Many modern correspondence lists, this one included, also pair stones with the seven-chakra system, a framework from Hindu and yogic tradition that entered Western esoteric practice more recently, in the twentieth century — worth knowing where it comes from rather than assuming it originated within Wicca itself.',
+  'Crystals are used by holding them during meditation or spellwork, carrying them in a pocket or pouch, wearing them as jewellery, placing them on an altar or around a room, or laying them directly on the body during a working. A stone chosen for a specific spell is often "programmed" with a single clear intention beforehand, much as a candle is dressed with oil.',
+  'Cleansing a crystal clears whatever energy it has absorbed since its last use, and charging restores its own working strength — but the method matters, because not every stone tolerates every method. Moonlight, especially a full moon, is close to universally safe and is the simplest default. Running water, salt, and direct sunlight, by contrast, can damage or fade a number of common stones — selenite dissolves in water, pyrite tarnishes with moisture, amethyst and fluorite can fade or grow brittle in strong sun — so it is always worth checking a stone\'s specific care notes, given below, before assuming water or salt are safe for it.',
+  'Where you can, buy crystals from suppliers who can speak to their sourcing — crystal mining carries real environmental and, in some cases, labour concerns, much like the over-harvesting pressure on sandalwood or wild ginseng in the herbal world. Secondhand and inherited stones are equally welcome in the Craft, and many practitioners consider a stone with an existing history to already carry useful energy, worth cleansing before its first use in your own workings rather than avoiding altogether.',
+  'A brief safety note: a few common crystals — malachite chief among them — contain compounds that are genuinely toxic if the raw stone\'s dust is inhaled or ingested, so avoid tumbling, cutting, or handling these in ways that create dust, and always wash your hands after handling raw specimens. Keep small tumbled stones away from small children and pets, who may try to put them in their mouths.'
+];
+
+const CRYSTALS = [
+  {name:'Clear Quartz', chakra:'Crown (all-purpose)', care:'Safe to cleanse by any method, including running water and direct sun.',
+    props:'Considered the "master healer" for its ability to amplify whatever intention or energy is directed through it, clear quartz is the single most versatile stone in any collection — reach for it when no more specific crystal comes to hand, much as rosemary serves the same role among herbs. It is often "programmed" with a specific intention, then placed somewhere it will be seen daily.'},
+  {name:'Amethyst', chakra:'Third Eye / Crown', care:'Fades in strong direct sunlight over time — avoid prolonged sun exposure; brief water rinsing is fine.',
+    props:'Amethyst\'s link to sobriety comes from its name, from the Greek "amethystos," meaning "not intoxicated" — the ancient Greeks carried it to guard against drunkenness. It remains a stone of calm, clear-headed protection, one of the most popular for psychic and meditative work, and is often kept on the nightstand for peaceful, protected sleep.'},
+  {name:'Rose Quartz', chakra:'Heart', care:'Safe with water; can fade very slightly with long-term strong sun exposure.',
+    props:'The stone of unconditional love in every form — self-love, family, friendship, and romance alike — rose quartz is traditionally the first stone recommended to anyone doing self-worth or heart-healing work. Sleeping with a piece under the pillow is a common charm for gentle emotional healing.'},
+  {name:'Black Tourmaline', chakra:'Root', care:'Durable — safe with most cleansing methods, including water and burial in earth.',
+    props:'One of the most effective grounding and protective stones available, black tourmaline is often kept by the front door or desk to absorb and neutralise negative or chaotic energy before it spreads further into the home or workspace.'},
+  {name:'Citrine', chakra:'Solar Plexus', care:'Natural citrine tolerates sunlight well; said to never need cleansing since it does not hold negative energy, though occasional charging is still worthwhile.',
+    props:'Called the "merchant\'s stone," citrine is kept in a cash register or wallet as a magnet for prosperity and confident, generous abundance rather than hoarding. Much commercial citrine is actually heat-treated amethyst — genuine natural citrine is paler and somewhat harder to find.'},
+  {name:'Carnelian', chakra:'Sacral', care:'Durable — safe with water and sun.',
+    props:'Carnelian\'s fiery orange carries courage, vitality, and creative motivation, and it was worn by ancient Egyptian and Roman soldiers alike for protection and boldness in battle. It remains a favourite stone to carry into any situation requiring nerve, as used in this grimoire\'s own Lion\'s Heart Working.'},
+  {name:'Selenite', chakra:'Crown', care:'Never cleanse with water — selenite is a form of gypsum and will dissolve or grow cloudy and damaged. Cleanse by moonlight, sound, or smoke only.',
+    props:'Named for Selene, the Greek moon goddess, selenite carries an exceptionally high, calm vibration and is prized for its ability to cleanse other crystals simply by proximity — a selenite charging plate is a common way to clear a whole collection at once without individually cleansing each stone.'},
+  {name:'Smoky Quartz', chakra:'Root', care:'Durable — safe with water and sun.',
+    props:'A gentler, more grounding cousin of clear quartz, smoky quartz absorbs and transmutes negative energy rather than simply reflecting it away, making it a good choice for anyone processing grief, stress, or a difficult transition.'},
+  {name:'Moonstone', chakra:'Sacral / Third Eye', care:'Avoid harsh ultrasonic cleaning; a gentle water rinse and moonlight charging (fittingly) are both safe.',
+    props:'Moonstone\'s shifting inner glimmer, called adularescence, ties it directly to lunar cycles, intuition, and the divine feminine, and it is traditionally worn or carried by those navigating major life transitions, particularly around fertility, pregnancy, and new beginnings.'},
+  {name:'Labradorite', chakra:'Third Eye', care:'Durable — safe with water.',
+    props:'Labradorite\'s flash of hidden colour beneath a plain grey surface earned it a reputation as a stone of transformation and hidden magic, said to shield the aura from others\' unwanted energy or attention while quietly strengthening the bearer\'s own intuition.'},
+  {name:'Obsidian', chakra:'Root', care:'Durable but can chip or shatter if dropped on a hard surface; safe with water.',
+    props:'Formed from rapidly cooled volcanic glass, obsidian is an unflinchingly honest stone, used in shadow work and truth-seeking for its refusal to let illusions stand. Polished obsidian mirrors have a long history as scrying tools, most famously the obsidian mirror associated with the Elizabethan magician John Dee.'},
+  {name:'Tiger\'s Eye', chakra:'Solar Plexus', care:'Durable — safe with water.',
+    props:'Tiger\'s Eye combines protection with confidence and personal willpower, its banded golden-brown shimmer said to mirror the focus of its namesake animal. It is a favoured stone for anyone needing to act with clear-headed courage rather than impulsive bravado.'},
+  {name:'Lapis Lazuli', chakra:'Third Eye / Throat', care:'Avoid prolonged water soaking — it can be somewhat porous, and dyed material may bleed colour.',
+    props:'Ground into pigment for royal and sacred art for millennia, from Egyptian burial masks to Renaissance paintings, lapis lazuli carries an old association with truth, royalty, and psychic insight, and is worn to encourage honest, wise communication.'},
+  {name:'Malachite', chakra:'Heart', care:'Never let raw or polished malachite dust contact skin or be inhaled; avoid prolonged water exposure.',
+    props:'Malachite\'s swirling green bands are traditionally used for deep transformation and protection, said to absorb negative energy and pollutants from a room so effectively that older folk practice recommended replacing a piece entirely once it had visibly "done its work."',
+    caution:'Malachite contains copper compounds that are toxic if ingested or inhaled as dust — never handle it in a way that could release dust or let it contact food or drink, and wash hands after handling raw pieces.'},
+  {name:'Hematite', chakra:'Root', care:'Durable but can rust if unsealed hematite is left wet for long periods — dry it promptly after any water cleansing.',
+    props:'Hematite\'s heavy, metallic weight — it is, in fact, an iron ore — grounds scattered or anxious energy quickly and firmly, and it is a favoured stone to hold directly before any working requiring calm, focused willpower.'},
+  {name:'Fluorite', chakra:'Third Eye', care:'Soft and somewhat brittle — avoid dropping it and skip ultrasonic cleaners; a brief water rinse is fine.',
+    props:'Fluorite\'s banded rainbow colouring is associated with mental clarity and protection from psychic manipulation or overload, and it is a common choice for students or anyone doing focused study, kept on a desk to aid concentration.'},
+  {name:'Garnet', chakra:'Root / Heart', care:'Durable — safe with water.',
+    props:'Garnet\'s deep red ties it to passion, commitment, and safe travel, and it was carried by medieval travellers as protection on long journeys, believed to glow faintly to warn its wearer of approaching danger.'},
+  {name:'Aquamarine', chakra:'Throat', care:'Can fade very slightly with prolonged strong sunlight; safe with water.',
+    props:'Named for its resemblance to seawater, aquamarine was the traditional talisman of sailors, carried for courage and protection at sea and for calm, clear communication in negotiation or difficult conversation.'},
+  {name:'Sodalite', chakra:'Throat / Third Eye', care:'Durable — safe with water.',
+    props:'Sodalite pairs logic with intuition, encouraging honest, rational communication grounded in a deeper sense of truth, and is a popular stone for writers, teachers, and anyone needing to present a clear argument calmly.'},
+  {name:'Pyrite', chakra:'Solar Plexus', care:'Keep dry — pyrite reacts with moisture over time and can develop a dulling coating. Cleanse with smoke, sound, or brief sun rather than water.',
+    props:'Nicknamed "fool\'s gold," pyrite is kept for prosperity and confidence precisely because it looks like a wealth it doesn\'t literally contain — a reminder that its magic lies in willpower and self-belief rather than any promise of literal riches.'},
+  {name:'Amber', chakra:'Solar Plexus', care:'Soft and scratches easily — avoid harsh chemicals and ultrasonic cleaners; wipe gently rather than soak.',
+    props:'Technically fossilised tree resin rather than a mineral, amber carries the sun\'s old warmth and is worn for purification, healing, and luck, and was historically given to teething babies to hold — a folk practice now understood to carry a choking risk and not recommended today.'},
+  {name:'Jade', chakra:'Heart', care:'Durable — safe with water.',
+    props:'Jade has carried an association with luck, prosperity, and harmony across Chinese culture for thousands of years, traditionally carved into protective charms and passed down as a family heirloom believed to absorb and hold its wearer\'s protective energy over a lifetime.'},
+  {name:'Onyx', chakra:'Root', care:'Durable — safe with water.',
+    props:'Onyx grounds and steadies, encouraging quiet self-control and resilience through difficult periods, and is traditionally worn during times of grief or major change as a stone that helps its bearer stay standing.'},
+  {name:'Bloodstone', chakra:'Root / Heart', care:'Durable — safe with water.',
+    props:'Named for the small red flecks scattered through its deep green surface — said in one Christian legend to represent the blood of Christ, or simply battle wounds in older pagan use — bloodstone is carried for courage, vitality, and strength in adversity, particularly in workings around physical health and healing.'}
+];
+
+const COLORS = [
+  {name:'White', props:'White is the Goddess\'s own colour and the great substitute — light it for any other colour\'s job when the right one isn\'t to hand. It represents purity, truth, and new beginnings, and is a safe default for protection, blessing, or any working where you\'re unsure which colour best fits.'},
+  {name:'Black', props:'Black absorbs and binds rather than reflecting outward, making it the natural choice for banishing, protection, and any working that needs to contain or end something firmly. It is not inherently "evil" in Craft use — quite the opposite, it is often the most protective colour on the altar.'},
+  {name:'Red', props:'Red carries the God\'s own fire — passion, courage, physical strength, and the raw life-force itself. It suits any working needing urgency, energy, or a fight worth having, from courage spells to matters of desire.'},
+  {name:'Pink', props:'A gentler shade of red\'s passion, pink softens love magic toward friendship, emotional healing, and harmony rather than urgent desire, making it the natural choice for self-love and reconciliation work.'},
+  {name:'Orange', props:'Orange draws attention and encouragement, useful for workings around success, celebration, and drawing new opportunity or interest toward you — a livelier, more sociable cousin of red.'},
+  {name:'Yellow', props:'Ruled by Air, yellow sharpens intellect, communication, and confidence, making it the natural choice for study, public speaking, and any working that depends on clear thinking or a persuasive tongue.'},
+  {name:'Green', props:'Green belongs to Earth and to growing things, tying it firmly to prosperity, fertility, and material growth of every kind — the default colour for money and abundance work throughout this grimoire.'},
+  {name:'Blue', props:'Ruled by Water, blue calms and heals, and is carried for peace, honest communication, and safe travel — particularly travel over water, echoing its old maritime association.'},
+  {name:'Purple', props:'Purple is the colour of psychic power, spirituality, and ambition, historically associated with higher initiatory grades in ceremonial and Wiccan tradition alike, owing to its old link with royalty and the rarity of purple dye.'},
+  {name:'Brown', props:'An unglamorous, practical colour, brown grounds a working in the material and animal world, suited to workings involving pets, livestock, or simple material stability rather than any more dramatic aim.'},
+  {name:'Gray', props:'Gray is a colour of neutrality and glamour (illusion-work, in the older magical sense), used to cancel out an unwanted influence or to work unnoticed rather than to draw attention.'},
+  {name:'Gold / Silver', props:'Gold carries the God and the Sun\'s confident, outward strength, while silver carries the Goddess and the Moon\'s quieter, reflective power — the two are often used together on an altar to represent both deities equally.'}
+];
+
+const MOON_PHASES = [
+  {name:'New Moon', props:'The sky\'s darkest point invites new beginnings — set intentions, plant symbolic seeds, and start anything you want to grow across the coming month. Many practitioners consider this the best time to begin a new working of any kind, even outside formal spellwork.'},
+  {name:'Waxing Crescent', props:'As the first sliver of light returns, early growth workings and anything meant to build momentum are favoured — the moon\'s own increasing light lends itself to things drawing toward you rather than away.'},
+  {name:'First Quarter', props:'Half-lit and gathering strength, the first quarter favours decisive action and pushing through obstacles that have stalled a working begun at the new moon.'},
+  {name:'Waxing Gibbous', props:'Nearly full, this phase favours refinement and patience — tending and adjusting a working already in motion rather than starting something new.'},
+  {name:'Full Moon', props:'The month\'s peak power, traditionally the time for Drawing Down the Moon, charging tools and crystals, divination, and any working that needs full strength behind it.'},
+  {name:'Waning Gibbous', props:'As the light first begins to shrink, this phase favours gratitude and sharing abundance already gathered, and a gentle first turn toward release.'},
+  {name:'Last Quarter', props:'Half-lit and shrinking, the last quarter is well suited to releasing, forgiving, breaking habits, and cord-cutting — undoing rather than building.'},
+  {name:'Waning Crescent', props:'The final sliver before dark favours rest, banishing, and deep cleansing — a fitting quiet close to the month\'s cycle before the new moon begins it again.'}
+];
+
+const ELEMENTS = [
+  {name:'Earth', dir:'North', props:'Earth governs the body, material stability, and prosperity, and stands opposite Air on the Wheel. It is the element of patient, grounded growth — slow to move but nearly impossible to shift once settled — ruling the season of winter, the tarot suit of Pentacles, and the pentacle as its ritual tool.'},
+  {name:'Air', dir:'East', props:'Air governs intellect, communication, and new beginnings, ruling the season of spring when the year\'s ideas first take root. It is quick and changeable, tied traditionally to the tarot suit of Swords and to the athame or wand as its ritual tool.'},
+  {name:'Fire', dir:'South', props:'Fire governs will, passion, and transformation, ruling high summer when its strength peaks. It acts rather than reflects, tied to the tarot suit of Wands, and is the element most associated with sudden, decisive change.'},
+  {name:'Water', dir:'West', props:'Water governs emotion, intuition, and healing, ruling autumn\'s turn toward reflection. It is the element of the tarot suit of Cups and of the chalice as ritual tool, moving around obstacles rather than through them.'}
+];
+
+const DAYS = [
+  {name:'Sunday', planet:'Sun', props:'Ruled by the Sun, Sunday favours success, vitality, healing, and leadership — start any working needing confidence or recognition on this day. Its metal is gold.'},
+  {name:'Monday', planet:'Moon', props:'Ruled by the Moon, Monday favours intuition, dreams, family, and the Goddess in her lunar aspect — the natural day for esbats that fall on it and for any working around cycles, emotion, or the psychic. Its metal is silver.'},
+  {name:'Tuesday', planet:'Mars', props:'Ruled by Mars, Tuesday favours courage, conflict, protection, and passion — a fitting day for confrontation, competition, or any working that needs real force behind it. Its metal is iron.'},
+  {name:'Wednesday', planet:'Mercury', props:'Ruled by Mercury, Wednesday favours communication, study, travel, and divination — the best day of the week to send an important message, sit an exam, or consult the cards. Its metal is quicksilver (mercury itself).'},
+  {name:'Thursday', planet:'Jupiter', props:'Ruled by Jupiter, Thursday favours prosperity, luck, expansion, and generosity — the traditional day for money magic and any working that asks for more room to grow. Its metal is tin.'},
+  {name:'Friday', planet:'Venus', props:'Ruled by Venus, Friday favours love, beauty, friendship, and pleasure — the best day of the week for love magic of every kind, from romance to simple self-care. Its metal is copper.'},
+  {name:'Saturday', planet:'Saturn', props:'Ruled by Saturn, Saturday favours banishing, protection, boundaries, and endings — the traditional day for binding work, uncrossing, and anything that needs a firm, disciplined close. Its metal is lead.'}
+];
+
+const PLANET_GLYPH = {Sun:'☉',Moon:'☽',Mars:'♂',Mercury:'☿',Jupiter:'♃',Venus:'♀',Saturn:'♄'};
+
+const TOOLS = [
+  {name:'Athame', use:'The black-handled ritual knife used to direct will and energy and to cast the circle. Never used to cut anything physical.', icon:'athame'},
+  {name:'Boline', use:'The white-handled working knife reserved for practical cutting — cords, herbs, candle wax — where the athame must not be used.', icon:'boline'},
+  {name:'Wand', use:'An alternative to the athame for invocation and gentler workings; often favoured for calling spirits or the Goddess/God.', icon:'wand'},
+  {name:'Chalice', use:'Represents the Goddess and the element of Water; holds the wine or water blessed in Cakes and Wine and the Great Rite.', icon:'chalice'},
+  {name:'Pentacle', use:'A disc inscribed with a five-pointed star representing Earth; used to consecrate other tools and to bless food.', icon:'pentacle'},
+  {name:'Cauldron', use:'Symbol of the Goddess as womb and transformer; used for scrying, brewing, and burning workings.', icon:'cauldron'},
+  {name:'Besom', use:'The ritual broom used to sweep a working space clean of unwanted energy before the circle is cast.', icon:'besom'},
+  {name:'Candles', use:'Mark the quarters, the altar, and colour-correspond to the working at hand.', icon:'candle'},
+  {name:'Bell', use:'Rung to mark the opening and closing of a rite, or to banish unwanted energy from a space.', icon:'bell'},
+  {name:'Censer', use:'Holds incense whose smoke carries intention, blesses tools, and represents the element of Air.', icon:'censer'},
+  {name:'Cords', use:'Knotted cords in the coven\'s colours, worn to denote grade and used to measure the circle and in binding work.', icon:'cords'},
+  {name:'Book of Shadows', use:'The practitioner\'s own record of rites, spells, and correspondences — traditionally copied by hand from a teacher, then added to over a lifetime.', icon:'book'}
+];
+
+const TAROT = [
+  {n:0,name:'The Fool',glyph:'🃏',meaning:'New beginnings, innocence, spontaneity, a leap of faith'},
+  {n:1,name:'The Magician',glyph:'🪄',meaning:'Manifestation, resourcefulness, willpower, inspired action'},
+  {n:2,name:'The High Priestess',glyph:'🌙',meaning:'Intuition, sacred knowledge, the subconscious, mystery'},
+  {n:3,name:'The Empress',glyph:'👑',meaning:'Abundance, nurturing, fertility, connection to nature'},
+  {n:4,name:'The Emperor',glyph:'♦',meaning:'Authority, structure, fatherhood, stable foundations'},
+  {n:5,name:'The Hierophant',glyph:'⛪',meaning:'Tradition, institutions, spiritual guidance, conformity'},
+  {n:6,name:'The Lovers',glyph:'💞',meaning:'Love, harmony, values aligning, a meaningful choice'},
+  {n:7,name:'The Chariot',glyph:'🏇',meaning:'Willpower, determination, victory through control'},
+  {n:8,name:'Strength',glyph:'🦁',meaning:'Courage, patience, compassion, quiet inner strength'},
+  {n:9,name:'The Hermit',glyph:'🏮',meaning:'Introspection, solitude, seeking inner guidance'},
+  {n:10,name:'Wheel of Fortune',glyph:'☸',meaning:'Cycles, fate, turning points, change beyond your control'},
+  {n:11,name:'Justice',glyph:'⚖',meaning:'Fairness, truth, cause and effect, accountability'},
+  {n:12,name:'The Hanged Man',glyph:'🙃',meaning:'Surrender, letting go, a new perspective, a necessary pause'},
+  {n:13,name:'Death',glyph:'🦴',meaning:'Endings, transformation, release, a threshold passed'},
+  {n:14,name:'Temperance',glyph:'⚗',meaning:'Balance, moderation, patience, blending opposites'},
+  {n:15,name:'The Devil',glyph:'⛓',meaning:'Attachment, restriction, the shadow self, old patterns'},
+  {n:16,name:'The Tower',glyph:'🗼',meaning:'Sudden upheaval, revelation, a necessary awakening'},
+  {n:17,name:'The Star',glyph:'⭐',meaning:'Hope, faith, renewal, quiet spiritual guidance'},
+  {n:18,name:'The Moon',glyph:'🌕',meaning:'Illusion, fear, the subconscious, things not yet clear'},
+  {n:19,name:'The Sun',glyph:'☀',meaning:'Joy, vitality, success, plain and simple happiness'},
+  {n:20,name:'Judgement',glyph:'📯',meaning:'Reflection, reckoning, awakening, a call to rise'},
+  {n:21,name:'The World',glyph:'🌍',meaning:'Completion, integration, fulfillment, a cycle closed'}
+];
+
+const RUNES = [
+  {name:'Fehu',glyph:'ᚠ',meaning:'Wealth, abundance, new beginnings'},
+  {name:'Uruz',glyph:'ᚢ',meaning:'Strength, vitality, raw potential'},
+  {name:'Thurisaz',glyph:'ᚦ',meaning:'Conflict, defense, a necessary catharsis'},
+  {name:'Ansuz',glyph:'ᚨ',meaning:'Communication, wisdom, a message received'},
+  {name:'Raidho',glyph:'ᚱ',meaning:'A journey, movement, the right path forward'},
+  {name:'Kenaz',glyph:'ᚲ',meaning:'Creativity, knowledge, the spark of insight'},
+  {name:'Gebo',glyph:'ᚷ',meaning:'A gift, partnership, balance in exchange'},
+  {name:'Wunjo',glyph:'ᚹ',meaning:'Joy, harmony, fellowship'},
+  {name:'Hagalaz',glyph:'ᚺ',meaning:'Disruption, natural forces beyond control'},
+  {name:'Nauthiz',glyph:'ᚾ',meaning:'Need, resistance, endurance through hardship'},
+  {name:'Isa',glyph:'ᛁ',meaning:'Stillness, a standstill, patience required'},
+  {name:'Jera',glyph:'ᛃ',meaning:'Harvest, the reward of a completed cycle'},
+  {name:'Eihwaz',glyph:'ᛇ',meaning:'Endurance, defence, the World Tree'},
+  {name:'Perthro',glyph:'ᛈ',meaning:'Fate, mystery, chance and hidden things'},
+  {name:'Algiz',glyph:'ᛉ',meaning:'Protection, sanctuary, following instinct'},
+  {name:'Sowilo',glyph:'ᛊ',meaning:'Success, wholeness, the sun\'s clarity'},
+  {name:'Tiwaz',glyph:'ᛏ',meaning:'Honour, justice, principled leadership'},
+  {name:'Berkano',glyph:'ᛒ',meaning:'Growth, fertility, new beginnings taking root'},
+  {name:'Ehwaz',glyph:'ᛖ',meaning:'Partnership, trust, steady progress'},
+  {name:'Mannaz',glyph:'ᛗ',meaning:'The self, humanity, community'},
+  {name:'Laguz',glyph:'ᛚ',meaning:'Intuition, flow, the unconscious'},
+  {name:'Ingwaz',glyph:'ᛜ',meaning:'Fertility, internal growth, quiet gestation'},
+  {name:'Dagaz',glyph:'ᛞ',meaning:'Breakthrough, awakening, sudden clarity'},
+  {name:'Othala',glyph:'ᛟ',meaning:'Heritage, home, ancestral inheritance'}
+];
+
+const PENDULUM_ANSWERS = ['Yes','No','Ask again later','The answer is not yet clear','Yes, but not in the way you expect','No — look deeper at your question'];
+
+/* ============ UTIL ============ */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function tagEl(t){ return '<span class="tag">'+esc(t)+'</span>'; }
+function downloadText(filename, content, mime){
+  const blob = new Blob([content], {type: mime||'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============ ICONS ============ */
+function svgWrap(inner, vb){ return '<svg class="icon" viewBox="'+(vb||'0 0 100 100')+'" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>'; }
+const STROKE = 'stroke="#c9a24d" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+const FILLGOLD = 'fill="#c9a24d"';
+
+const TOOL_ICONS = {
+  athame: svgWrap('<rect x="46" y="10" width="8" height="46" rx="2" '+FILLGOLD+'/><polygon points="50,4 58,16 42,16" '+FILLGOLD+'/><rect x="38" y="56" width="24" height="10" rx="2" fill="#5c3d78"/><rect x="44" y="66" width="12" height="26" rx="3" fill="#3a2a1a"/>'),
+  boline: svgWrap('<path d="M30,60 Q30,20 70,15 Q60,30 55,60 Z" fill="#e9dcc0"/><rect x="38" y="60" width="14" height="28" rx="3" fill="#3a2a1a"/>'),
+  wand: svgWrap('<rect x="46" y="14" width="8" height="70" rx="4" fill="#8a5c3a" transform="rotate(20 50 50)"/><circle cx="68" cy="16" r="7" '+FILLGOLD+'/>'),
+  chalice: svgWrap('<path d="M32,14 Q32,42 50,46 Q68,42 68,14 Z" '+STROKE+'/><line x1="50" y1="46" x2="50" y2="76" '+STROKE+'/><ellipse cx="50" cy="86" rx="18" ry="6" '+STROKE+'/>'),
+  pentacle: svgWrap('<circle cx="50" cy="50" r="42" '+STROKE+'/><polygon points="50,14 61.5,42.9 92.4,42.9 67.8,60.9 76.9,90.5 50,72.2 23.1,90.5 32.2,60.9 7.6,42.9 38.5,42.9" '+STROKE+'/>'),
+  cauldron: svgWrap('<path d="M18,42 Q18,80 50,84 Q82,80 82,42" '+STROKE+'/><ellipse cx="50" cy="42" rx="32" ry="9" '+STROKE+'/><path d="M22,34 Q50,20 78,34" stroke="#8a5c3a" stroke-width="4" fill="none"/>'),
+  besom: svgWrap('<rect x="46" y="6" width="7" height="52" fill="#8a5c3a"/><path d="M30,58 L70,58 L78,92 L22,92 Z" fill="#c9a24d" opacity=".85"/><line x1="35" y1="60" x2="28" y2="90" stroke="#5c3d78" stroke-width="1.5"/><line x1="50" y1="60" x2="50" y2="92" stroke="#5c3d78" stroke-width="1.5"/><line x1="65" y1="60" x2="72" y2="90" stroke="#5c3d78" stroke-width="1.5"/>'),
+  candle: svgWrap('<rect x="42" y="30" width="16" height="60" rx="2" fill="#e9dcc0"/><path d="M50,4 C58,16 44,20 50,30 C56,20 42,16 50,4 Z" fill="#e8c877"/>'),
+  bell: svgWrap('<path d="M50,14 C34,14 30,34 30,50 L26,70 L74,70 L70,50 C70,34 66,14 50,14 Z" '+STROKE+'/><circle cx="50" cy="80" r="6" '+FILLGOLD+'/>'),
+  censer: svgWrap('<path d="M30,50 Q50,60 70,50 L64,80 Q50,88 36,80 Z" '+STROKE+'/><path d="M40,44 Q50,12 44,4 M50,44 Q56,16 50,4 M60,44 Q66,18 58,6" stroke="#8a5fb0" stroke-width="3" fill="none" opacity=".7"/>'),
+  cords: svgWrap('<path d="M20,30 Q50,10 80,30" stroke="#a8433a" stroke-width="4" fill="none"/><path d="M20,50 Q50,30 80,50" stroke="#4f7a52" stroke-width="4" fill="none"/><path d="M20,70 Q50,50 80,70" stroke="#3f6b8a" stroke-width="4" fill="none"/>'),
+  book: svgWrap('<rect x="20" y="18" width="60" height="64" rx="3" '+STROKE+'/><line x1="50" y1="18" x2="50" y2="82" stroke="#c9a24d" stroke-width="3"/>')
+};
+
+const ELEMENT_ICONS = {
+  Earth: svgWrap('<polygon points="50,20 80,70 20,70" '+STROKE+'/><line x1="30" y1="60" x2="70" y2="60" '+STROKE+'/>'),
+  Air: svgWrap('<polygon points="50,20 80,70 20,70" '+STROKE+'/><line x1="34" y1="52" x2="66" y2="52" '+STROKE+'/>'),
+  Fire: svgWrap('<polygon points="50,20 80,70 20,70" '+STROKE+'/>'),
+  Water: svgWrap('<polygon points="50,80 80,30 20,30" '+STROKE+'/>')
+};
+
+function triGoddess(){
+  return svgWrap(
+    '<rect x="0" y="0" width="100" height="100" fill="none"/>'+
+    '<circle cx="26" cy="50" r="15" fill="none" stroke="#e8c877" stroke-width="3"/>'+
+    '<circle cx="16" cy="50" r="15" fill="#1c1428" stroke="none"/>'+
+    '<circle cx="50" cy="50" r="15" fill="#e8c877"/>'+
+    '<circle cx="74" cy="50" r="15" fill="none" stroke="#e8c877" stroke-width="3"/>'+
+    '<circle cx="84" cy="50" r="15" fill="#1c1428" stroke="none"/>'
+  );
+}
+function hornedGod(){
+  return svgWrap(
+    '<circle cx="50" cy="58" r="24" '+STROKE+'/>'+
+    '<path d="M50,34 C40,10 20,8 14,20 C26,18 34,26 38,36" '+STROKE+'/>'+
+    '<path d="M50,34 C60,10 80,8 86,20 C74,18 66,26 62,36" '+STROKE+'/>'
+  );
+}
+function renderDeityIcons(){
+  const wrap = document.getElementById('deity-icons');
+  if (!wrap) return;
+  wrap.innerHTML =
+    '<div style="text-align:center;">'+triGoddess().replace('class="icon"','class="icon" style="width:64px;height:64px;"')+
+    '<div class="meta">The Triple Goddess<br>Maiden · Mother · Crone</div></div>'+
+    '<div style="text-align:center;">'+hornedGod().replace('class="icon"','class="icon" style="width:64px;height:64px;"')+
+    '<div class="meta">The Horned God<br>Lord of the Wild &amp; the Hunt</div></div>';
+}
+
+/* ============ MOON PHASE ============ */
+function moonPhase(date){
+  const synodic = 29.530588853;
+  const known = Date.UTC(2000,0,6,18,14,0);
+  let diff = (date.getTime() - known) / 86400000;
+  let phase = (diff % synodic) / synodic;
+  if (phase < 0) phase += 1;
+  return phase;
+}
+function moonPhaseInfo(phase){
+  if (phase < 0.03 || phase >= 0.97) return {name:'New Moon', emoji:'🌑'};
+  if (phase < 0.22) return {name:'Waxing Crescent', emoji:'🌒'};
+  if (phase < 0.28) return {name:'First Quarter', emoji:'🌓'};
+  if (phase < 0.47) return {name:'Waxing Gibbous', emoji:'🌔'};
+  if (phase < 0.53) return {name:'Full Moon', emoji:'🌕'};
+  if (phase < 0.72) return {name:'Waning Gibbous', emoji:'🌖'};
+  if (phase < 0.78) return {name:'Last Quarter', emoji:'🌗'};
+  return {name:'Waning Crescent', emoji:'🌘'};
+}
+
+function renderMoonWidget(){
+  const now = new Date();
+  const info = moonPhaseInfo(moonPhase(now));
+  const el = document.getElementById('moon-widget');
+  el.innerHTML = '<span class="moon-emoji">'+info.emoji+'</span> Tonight: <b style="color:var(--gold-bright)">'+info.name+'</b>';
+  const dateStr = now.toDateString();
+  let hash = 0;
+  for (let i=0;i<dateStr.length;i++) hash = (hash*31 + dateStr.charCodeAt(i)) >>> 0;
+  const card = TAROT[hash % TAROT.length];
+  document.getElementById('cover-oracle').innerHTML =
+    info.emoji+' The moon is <b>'+info.name+'</b> tonight &nbsp;·&nbsp; Card of the day: <b>'+card.glyph+' '+esc(card.name)+'</b>';
+}
+
+/* ============ RENDER: SPELLS ============ */
+function spellCardHtml(s, personal){
+  const idAttr = personal ? 'card-personal-'+s.id : 'card-spell-'+s.id;
+  const ingredients = (Array.isArray(s.ingredients) ? s.ingredients.join(', ') : s.ingredients) || '';
+  const tagsArr = Array.isArray(s.tags) ? s.tags : (s.tags ? s.tags.split(',').map(t=>t.trim()).filter(Boolean) : []);
+  let extra = '';
+  if (personal){
+    extra = '<div class="form-actions">'+
+      '<button class="btn secondary" onclick="editPersonal(\''+s.id+'\')">Edit</button>'+
+      '<button class="btn danger" onclick="deletePersonal(\''+s.id+'\')">Delete</button></div>';
+  }
+  const stepsHtml = Array.isArray(s.steps) && s.steps.length
+    ? '<ol class="steps">'+s.steps.map(st=>'<li>'+esc(st)+'</li>').join('')+'</ol>'
+    : (s.text ? '<p>'+esc(s.text)+'</p>' : '');
+  return '<details class="card spell-card" id="'+idAttr+'" data-cat="'+esc(s.category)+'">'+
+    '<summary><span class="card-title">'+esc(s.title)+'</span>'+
+    '<span class="badge badge-'+esc(s.category)+'">'+esc(CATEGORY_LABELS[s.category]||s.category)+'</span></summary>'+
+    '<div class="card-body">'+
+      '<p class="meta"><strong>Best cast:</strong> '+esc(s.moon||'Any')+' moon'+(s.day?', '+esc(s.day):'')+'</p>'+
+      (ingredients ? '<p class="meta"><strong>You will need:</strong> '+esc(ingredients)+'</p>' : '')+
+      (s.intent ? '<p class="spell-intent">'+esc(s.intent)+'</p>' : '')+
+      stepsHtml+
+      (s.note ? '<p class="spell-note"><em>Note:</em> '+esc(s.note)+'</p>' : '')+
+      (tagsArr.length ? '<div class="tags">'+tagsArr.map(tagEl).join('')+'</div>' : '')+
+      extra+
+    '</div></details>';
+}
+
+function renderSpellFilters(){
+  const cats = ['all', ...Object.keys(CATEGORY_LABELS)];
+  const wrap = document.getElementById('spell-filters');
+  wrap.innerHTML = cats.map(c =>
+    '<button class="filter-btn'+(c==='all'?' active':'')+'" data-filter="'+c+'" onclick="filterSpells(\''+c+'\', this)">'+
+    (c==='all'?'All':esc(CATEGORY_LABELS[c]))+'</button>'
+  ).join('');
+}
+function filterSpells(cat, btn){
+  document.querySelectorAll('#spell-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#spell-grid .spell-card').forEach(card=>{
+    card.style.display = (cat==='all' || card.dataset.cat===cat) ? '' : 'none';
+  });
+}
+function renderSpells(){
+  document.getElementById('spell-grid').innerHTML = SPELLS.map(s=>spellCardHtml(s,false)).join('');
+}
+
+/* ============ RENDER: RITES ============ */
+function renderRites(){
+  document.getElementById('rite-grid').innerHTML = RITES.map(r=>{
+    const stepsHtml = Array.isArray(r.steps) && r.steps.length
+      ? '<ol class="steps">'+r.steps.map(st=>'<li>'+esc(st)+'</li>').join('')+'</ol>'
+      : (r.text ? '<p>'+esc(r.text)+'</p>' : '');
+    return '<details class="card" id="card-rite-'+r.id+'">'+
+    '<summary><span class="card-title">'+esc(r.title)+'</span><span class="badge badge-ritual">Rite</span></summary>'+
+    '<div class="card-body">'+
+      '<p class="meta"><strong>Tools:</strong> '+esc(r.ingredients.join(', '))+'</p>'+
+      (r.purpose ? '<p class="spell-intent">'+esc(r.purpose)+'</p>' : '')+
+      stepsHtml+
+      (r.note ? '<p class="spell-note"><em>Note:</em> '+esc(r.note)+'</p>' : '')+
+    '</div></details>';
+  }).join('');
+}
+
+/* ============ RENDER: WHEEL ============ */
+function renderWheel(){
+  const cx=150, cy=150, rOuter=110, rInner=80, rDot=6;
+  let svg = '<circle cx="150" cy="150" r="'+rOuter+'" fill="none" stroke="#4a3760" stroke-width="2"/>';
+  svg += '<circle cx="150" cy="150" r="'+rInner+'" fill="none" stroke="#2a2038" stroke-width="1"/>';
+  SABBATS.forEach(s=>{
+    const rad = (s.angle - 90) * Math.PI/180;
+    const x1 = cx, y1 = cy;
+    const x2 = cx + rOuter*Math.cos(rad);
+    const y2 = cy + rOuter*Math.sin(rad);
+    const lx = cx + (rOuter+34)*Math.cos(rad);
+    const ly = cy + (rOuter+34)*Math.sin(rad);
+    svg += '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#5c3d78" stroke-width="1"/>';
+    svg += '<circle cx="'+x2+'" cy="'+y2+'" r="'+rDot+'" fill="#e8c877"/>';
+    svg += '<text x="'+lx+'" y="'+ly+'" fill="#e9dcc0" font-size="11" text-anchor="middle" dominant-baseline="middle" font-family="Georgia, serif">'+esc(s.name)+'</text>';
+    svg += '<text x="'+lx+'" y="'+(ly+13)+'" fill="#8a7ba0" font-size="8.5" text-anchor="middle" dominant-baseline="middle" font-family="Georgia, serif">'+esc(s.date)+'</text>';
+  });
+  svg += '<circle cx="150" cy="150" r="4" fill="#8a5fb0"/>';
+  document.getElementById('wheel-svg').innerHTML = svg;
+
+  document.getElementById('sabbat-grid').innerHTML = SABBATS.map(s=>{
+    const customsHtml = Array.isArray(s.customs) && s.customs.length
+      ? '<p class="meta"><strong>Customs:</strong></p><ul class="steps">'+s.customs.map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul>'
+      : '';
+    return '<details class="card" id="card-sabbat-'+s.name.toLowerCase()+'">'+
+    '<summary><span class="card-title">'+esc(s.name)+'</span><span class="badge badge-ritual">'+esc(s.date)+'</span></summary>'+
+    '<div class="card-body">'+
+      '<p>'+esc(s.theme)+'</p>'+
+      (s.etymology ? '<p class="spell-intent">'+esc(s.etymology)+'</p>' : '')+
+      (s.mythology ? '<p>'+esc(s.mythology)+'</p>' : '')+
+      customsHtml+
+      (s.colors ? '<p class="meta"><strong>Altar colours:</strong> '+esc(s.colors.join(', '))+'</p>' : '')+
+      (s.foods ? '<p class="meta"><strong>Foods:</strong> '+esc(s.foods.join(', '))+'</p>' : '')+
+      (s.correspondences ? '<p class="meta"><strong>Correspondences:</strong> '+esc(s.correspondences.join(', '))+'</p>' : '')+
+      (s.observance ? '<p class="spell-note"><em>Simple observance:</em> '+esc(s.observance)+'</p>' : '')+
+    '</div></details>';
+  }).join('');
+}
+
+/* ============ RENDER: CORRESPONDENCES ============ */
+const CORR_TYPES = ['herbs','crystals','colors','moon','elements','days'];
+const CORR_LABELS = {herbs:'Herbs', crystals:'Crystals', colors:'Colours', moon:'Moon Phases', elements:'Elements', days:'Days & Planets'};
+let activeCorr = 'herbs';
+
+function corrCardHtml(glyphHtml, name, desc, id){
+  return '<div class="card corr-card"'+(id?' id="'+id+'"':'')+'><div class="glyph">'+glyphHtml+'</div><div><h4>'+esc(name)+'</h4><p>'+esc(desc)+'</p></div></div>';
+}
+function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+function herbCardHtml(h){
+  return '<details class="card" id="card-herb-'+slugify(h.name)+'">'+
+    '<summary><span class="card-title">🌿 '+esc(h.name)+'</span>'+
+    '<span class="badge" style="background:var(--purple-dim);color:var(--parchment);">'+esc(h.planet)+' · '+esc(h.element)+'</span></summary>'+
+    '<div class="card-body">'+
+      '<p class="meta"><em>'+esc(h.botanical)+'</em> · Part used: '+esc(h.part)+'</p>'+
+      '<p>'+esc(h.props)+'</p>'+
+      (h.caution ? '<p class="spell-note"><em>Caution:</em> '+esc(h.caution)+'</p>' : '')+
+    '</div></details>';
+}
+function introHtml(paragraphs){
+  return '<div class="tools-note" style="grid-column:1/-1;">'+paragraphs.map(p=>'<p style="margin:0 0 .7em;">'+esc(p)+'</p>').join('')+'</div>';
+}
+
+function crystalCardHtml(c){
+  return '<details class="card" id="card-crystal-'+slugify(c.name)+'">'+
+    '<summary><span class="card-title">◆ '+esc(c.name)+'</span>'+
+    '<span class="badge" style="background:var(--purple-dim);color:var(--parchment);">'+esc(c.chakra)+'</span></summary>'+
+    '<div class="card-body">'+
+      '<p>'+esc(c.props)+'</p>'+
+      (c.care ? '<p class="meta"><strong>Care &amp; cleansing:</strong> '+esc(c.care)+'</p>' : '')+
+      (c.caution ? '<p class="spell-note"><em>Caution:</em> '+esc(c.caution)+'</p>' : '')+
+    '</div></details>';
+}
+
+function renderCorrSubtabs(){
+  document.getElementById('corr-subtabs').innerHTML = CORR_TYPES.map(t=>
+    '<button class="subtab-btn'+(t===activeCorr?' active':'')+'" onclick="switchCorr(\''+t+'\')">'+CORR_LABELS[t]+'</button>'
+  ).join('');
+}
+function switchCorr(t){
+  activeCorr = t;
+  renderCorrSubtabs();
+  renderCorrGrid();
+}
+function renderCorrGrid(){
+  const grid = document.getElementById('corr-grid');
+  if (activeCorr === 'herbs'){
+    grid.innerHTML = introHtml(HERB_INTRO) + HERBS.map(h=>herbCardHtml(h)).join('');
+  } else if (activeCorr === 'crystals'){
+    grid.innerHTML = introHtml(CRYSTAL_INTRO) + CRYSTALS.map(c=>crystalCardHtml(c)).join('');
+  } else if (activeCorr === 'colors'){
+    grid.innerHTML = COLORS.map(c=>corrCardHtml('●', c.name, c.props, 'card-color-'+slugify(c.name))).join('');
+  } else if (activeCorr === 'moon'){
+    grid.innerHTML = MOON_PHASES.map(m=>{
+      const idx = MOON_PHASES.indexOf(m);
+      const emojis = ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
+      return corrCardHtml(emojis[idx], m.name, m.props, 'card-moon-'+slugify(m.name));
+    }).join('');
+  } else if (activeCorr === 'elements'){
+    grid.innerHTML = ELEMENTS.map(e=>corrCardHtml(ELEMENT_ICONS[e.name], e.name+' ('+e.dir+')', e.props, 'card-element-'+slugify(e.name))).join('');
+  } else if (activeCorr === 'days'){
+    grid.innerHTML = DAYS.map(d=>corrCardHtml(PLANET_GLYPH[d.planet], d.name+' — '+d.planet, d.props, 'card-day-'+slugify(d.name))).join('');
+  }
+}
+
+/* ============ RENDER: TOOLS ============ */
+function renderTools(){
+  document.getElementById('tools-grid').innerHTML = TOOLS.map(t=>
+    '<div class="card"><div class="icon-row" style="padding:.8em 1em .3em;">'+
+    (TOOL_ICONS[t.icon]||'')+
+    '<span class="card-title">'+esc(t.name)+'</span></div>'+
+    '<div class="card-body" style="border-top:none;"><p>'+esc(t.use)+'</p></div></div>'
+  ).join('');
+}
+
+/* ============ DIVINATION ============ */
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function drawTarot(n){
+  const drawn = shuffle(TAROT).slice(0,n);
+  const labels = n===3 ? ['Past','Present','Future'] : ['Your Card'];
+  const html = drawn.map((c,i)=>{
+    const reversed = Math.random() < 0.35;
+    return '<div class="draw-card"><span class="glyph-big">'+c.glyph+'</span>'+
+      '<span class="name">'+(n===3?labels[i]+': ':'')+esc(c.name)+'</span>'+
+      (reversed ? ' <span class="rev">(reversed)</span>' : '')+
+      '<div class="meaning">'+esc(c.meaning)+(reversed ? ' — turned inward, blocked, or delayed.' : '.')+'</div></div>';
+  }).join('');
+  document.getElementById('tarot-result').innerHTML = html;
+}
+function castRune(){
+  const r = RUNES[Math.floor(Math.random()*RUNES.length)];
+  const reversed = Math.random() < 0.3;
+  document.getElementById('rune-result').innerHTML =
+    '<div class="draw-card"><span class="glyph-big">'+r.glyph+'</span><span class="name">'+esc(r.name)+'</span>'+
+    (reversed ? ' <span class="rev">(merkstave)</span>' : '')+
+    '<div class="meaning">'+esc(r.meaning)+(reversed ? ' — its energy is blocked, delayed, or turned inward.' : '.')+'</div></div>';
+}
+function askPendulum(){
+  const rig = document.getElementById('pendulum-rig');
+  const answerEl = document.getElementById('pendulum-answer');
+  answerEl.textContent = '';
+  rig.classList.remove('swinging');
+  void rig.offsetWidth;
+  rig.classList.add('swinging');
+  setTimeout(()=>{
+    answerEl.textContent = PENDULUM_ANSWERS[Math.floor(Math.random()*PENDULUM_ANSWERS.length)];
+  }, 1400);
+}
+
+/* ============ SIGIL CRAFTING ============ */
+let sigilWheel = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+let sigilCurrent = {intent:'', letters:[], wheel:sigilWheel.slice()};
+
+function reduceIntent(text){
+  const letters = text.toUpperCase().replace(/[^A-Z]/g,'').split('');
+  const seen = new Set();
+  const result = [];
+  letters.forEach(ch=>{
+    if ('AEIOU'.includes(ch)) return;
+    if (seen.has(ch)) return;
+    seen.add(ch);
+    result.push(ch);
+  });
+  return result;
+}
+function shuffleArray(arr){
+  const a = arr.slice();
+  for (let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function sigilSvg(letters, wheel, size){
+  size = size || 200;
+  const cx = size/2, cy = size/2, r = size*0.4;
+  const map = {};
+  wheel.forEach((l,i)=>{ map[l] = i; });
+  const pts = letters.map(l=>{
+    const idx = map[l];
+    const angle = (idx/26)*2*Math.PI - Math.PI/2;
+    return {x:(cx+r*Math.cos(angle)).toFixed(1), y:(cy+r*Math.sin(angle)).toFixed(1)};
+  });
+  let inner = '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#2a2038" stroke-width="1"/>';
+  if (pts.length){
+    const path = pts.map(p=>p.x+','+p.y).join(' ');
+    inner += '<polyline points="'+path+'" fill="none" stroke="#e8c877" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+    inner += '<circle cx="'+pts[0].x+'" cy="'+pts[0].y+'" r="6" fill="#8a5fb0"/>';
+    const last = pts[pts.length-1];
+    inner += '<circle cx="'+last.x+'" cy="'+last.y+'" r="4" fill="none" stroke="#c9a24d" stroke-width="2.5"/>';
+  }
+  return '<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>';
+}
+function generateSigil(){
+  const intentEl = document.getElementById('sigil-intent');
+  const intent = intentEl.value.trim();
+  if (!intent){ alert('Write a statement of intent first.'); return; }
+  const letters = reduceIntent(intent);
+  if (!letters.length){ alert('That statement leaves no consonants to trace once vowels and repeats are stripped — try adding a few more words.'); return; }
+  sigilCurrent = {intent, letters, wheel:sigilWheel.slice()};
+  renderSigilCanvas();
+}
+function shuffleSigilWheel(){
+  sigilWheel = shuffleArray(sigilWheel);
+  sigilCurrent.wheel = sigilWheel.slice();
+  renderSigilCanvas();
+}
+function renderSigilCanvas(){
+  document.getElementById('sigil-canvas').innerHTML = sigilSvg(sigilCurrent.letters, sigilCurrent.wheel);
+  document.getElementById('sigil-letters').innerHTML = sigilCurrent.letters.length
+    ? '<strong>Reduced letters:</strong> '+esc(sigilCurrent.letters.join(' — '))
+    : '';
+}
+function downloadCurrentSigil(){
+  if (!sigilCurrent.letters.length){ alert('Generate a sigil first.'); return; }
+  const svg = '<?xml version="1.0" encoding="UTF-8"?>\n'+sigilSvg(sigilCurrent.letters, sigilCurrent.wheel);
+  downloadText('sigil-'+slugify(sigilCurrent.intent||'untitled')+'.svg', svg, 'image/svg+xml');
+}
+function loadSigils(){
+  try { return JSON.parse(localStorage.getItem('bos_sigils')||'[]'); } catch(e){ return []; }
+}
+function saveSigils(list){ localStorage.setItem('bos_sigils', JSON.stringify(list)); }
+function saveSigil(){
+  if (!sigilCurrent.letters.length){ alert('Generate a sigil first.'); return; }
+  const list = loadSigils();
+  list.push({id:'sig'+Math.random().toString(36).slice(2,10), intent:sigilCurrent.intent, letters:sigilCurrent.letters, wheel:sigilCurrent.wheel});
+  saveSigils(list);
+  renderSigilGallery();
+  buildSearchIndex();
+}
+function deleteSigil(id){
+  if (!confirm('Remove this sigil from My Sigils?')) return;
+  saveSigils(loadSigils().filter(s=>s.id!==id));
+  renderSigilGallery();
+  buildSearchIndex();
+}
+function downloadSigil(id){
+  const item = loadSigils().find(s=>s.id===id);
+  if (!item) return;
+  const svg = '<?xml version="1.0" encoding="UTF-8"?>\n'+sigilSvg(item.letters, item.wheel);
+  downloadText('sigil-'+slugify(item.intent||'untitled')+'.svg', svg, 'image/svg+xml');
+}
+function renderSigilGallery(){
+  const list = loadSigils();
+  const gallery = document.getElementById('sigil-gallery');
+  if (!list.length){
+    gallery.innerHTML = '<p class="empty-msg">No saved sigils yet — generate one above and click "Save to My Sigils."</p>';
+    return;
+  }
+  gallery.innerHTML = list.map(s=>
+    '<div class="sigil-gallery-item" id="card-sigil-'+s.id+'">'+sigilSvg(s.letters, s.wheel, 150)+
+    '<div class="sigil-caption">'+esc(s.intent||'(untitled)')+'</div>'+
+    '<div class="form-actions"><button class="btn secondary" onclick="downloadSigil(\''+s.id+'\')">Download</button>'+
+    '<button class="btn danger" onclick="deleteSigil(\''+s.id+'\')">Delete</button></div></div>'
+  ).join('');
+}
+
+/* ============ PERSONAL GRIMOIRE ============ */
+function loadPersonal(){
+  try { return JSON.parse(localStorage.getItem('bos_personal')||'[]'); } catch(e){ return []; }
+}
+function savePersonal(list){ localStorage.setItem('bos_personal', JSON.stringify(list)); }
+
+function exportPersonal(){
+  const list = loadPersonal();
+  if (!list.length){ alert('Your personal grimoire is empty — nothing to export yet.'); return; }
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadText('my-book-of-shadows-'+stamp+'.json', JSON.stringify(list, null, 2), 'application/json');
+}
+function importPersonal(event){
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(){
+    let incoming;
+    try { incoming = JSON.parse(reader.result); }
+    catch(e){ alert('That file isn\'t valid Book of Shadows JSON — import cancelled.'); return; }
+    if (!Array.isArray(incoming)){ alert('That file isn\'t a Book of Shadows export — import cancelled.'); return; }
+    const existing = loadPersonal();
+    const existingIds = new Set(existing.map(s=>s.id));
+    const merged = existing.slice();
+    let added = 0;
+    incoming.forEach(item=>{
+      if (!item || typeof item.title !== 'string' || typeof item.text !== 'string') return;
+      let id = typeof item.id === 'string' ? item.id : '';
+      if (!id || existingIds.has(id)) id = 'p'+Math.random().toString(36).slice(2,10);
+      existingIds.add(id);
+      merged.push({
+        id, title:item.title, category:item.category||'protection', moon:item.moon||'Any',
+        ingredients:Array.isArray(item.ingredients)?item.ingredients:[],
+        text:item.text, tags:Array.isArray(item.tags)?item.tags:[]
+      });
+      added++;
+    });
+    savePersonal(merged);
+    renderPersonal();
+    buildSearchIndex();
+    alert('Imported '+added+' working'+(added===1?'':'s')+' into My Grimoire (merged with what was already there).');
+  };
+  reader.readAsText(file);
+}
+
+function renderPersonal(){
+  const list = loadPersonal();
+  const grid = document.getElementById('personal-grid');
+  if (!list.length){
+    grid.innerHTML = '<p class="empty-msg">Your personal grimoire is empty. Add your first working above.</p>';
+    return;
+  }
+  grid.innerHTML = list.map(s=>spellCardHtml(s, true)).join('');
+}
+function resetPersonalForm(){
+  document.getElementById('personal-form').reset();
+  document.getElementById('pf-editing-id').value = '';
+  document.querySelector('#personal-form button[type=submit]').textContent = 'Add to My Grimoire';
+}
+function editPersonal(id){
+  const list = loadPersonal();
+  const item = list.find(s=>s.id===id);
+  if (!item) return;
+  document.getElementById('pf-editing-id').value = item.id;
+  document.getElementById('pf-title').value = item.title;
+  document.getElementById('pf-category').value = item.category;
+  document.getElementById('pf-moon').value = item.moon;
+  document.getElementById('pf-ingredients').value = Array.isArray(item.ingredients) ? item.ingredients.join(', ') : (item.ingredients||'');
+  document.getElementById('pf-text').value = item.text;
+  document.getElementById('pf-tags').value = Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags||'');
+  document.querySelector('#personal-form button[type=submit]').textContent = 'Save Changes';
+  document.getElementById('tab-mybook').scrollIntoView({behavior:'smooth'});
+}
+function deletePersonal(id){
+  if (!confirm('Remove this entry from your personal grimoire?')) return;
+  let list = loadPersonal();
+  list = list.filter(s=>s.id!==id);
+  savePersonal(list);
+  renderPersonal();
+  buildSearchIndex();
+}
+document.getElementById('personal-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  const editingId = document.getElementById('pf-editing-id').value;
+  const entry = {
+    id: editingId || ('p'+Math.random().toString(36).slice(2,10)),
+    title: document.getElementById('pf-title').value.trim(),
+    category: document.getElementById('pf-category').value,
+    moon: document.getElementById('pf-moon').value,
+    ingredients: document.getElementById('pf-ingredients').value.split(',').map(s=>s.trim()).filter(Boolean),
+    text: document.getElementById('pf-text').value.trim(),
+    tags: document.getElementById('pf-tags').value.split(',').map(s=>s.trim()).filter(Boolean)
+  };
+  if (!entry.title || !entry.text) return;
+  let list = loadPersonal();
+  if (editingId){
+    list = list.map(s => s.id===editingId ? entry : s);
+  } else {
+    list.push(entry);
+  }
+  savePersonal(list);
+  renderPersonal();
+  resetPersonalForm();
+  buildSearchIndex();
+});
+
+/* ============ SEARCH ============ */
+let SEARCH_INDEX = [];
+function buildSearchIndex(){
+  SEARCH_INDEX = [];
+  SPELLS.forEach(s=>SEARCH_INDEX.push({type:'Spell', tab:'grimoire', anchor:'card-spell-'+s.id, title:s.title,
+    text:[s.title,s.category,s.day,s.intent,s.text,s.note,(s.steps||[]).join(' '),(s.tags||[]).join(' '),(s.ingredients||[]).join(' ')].join(' ').toLowerCase()}));
+  RITES.forEach(r=>SEARCH_INDEX.push({type:'Rite', tab:'rites', anchor:'card-rite-'+r.id, title:r.title,
+    text:[r.title,r.purpose,r.text,r.note,(r.steps||[]).join(' '),(r.ingredients||[]).join(' ')].join(' ').toLowerCase()}));
+  SABBATS.forEach(s=>SEARCH_INDEX.push({type:'Sabbat', tab:'wheel', anchor:'card-sabbat-'+s.name.toLowerCase(), title:s.name,
+    text:[s.name,s.theme,s.date,s.etymology,s.mythology,s.observance,(s.customs||[]).join(' '),(s.foods||[]).join(' '),(s.correspondences||[]).join(' ')].join(' ').toLowerCase()}));
+  HERBS.forEach(h=>SEARCH_INDEX.push({type:'Herb', tab:'correspondences', corr:'herbs', anchor:'card-herb-'+slugify(h.name), title:h.name,
+    text:[h.name,h.botanical,h.part,h.props,h.caution,h.planet,h.element].join(' ').toLowerCase()}));
+  CRYSTALS.forEach(c=>SEARCH_INDEX.push({type:'Crystal', tab:'correspondences', corr:'crystals', anchor:'card-crystal-'+slugify(c.name), title:c.name,
+    text:[c.name,c.props,c.chakra,c.care,c.caution].join(' ').toLowerCase()}));
+  COLORS.forEach(c=>SEARCH_INDEX.push({type:'Colour', tab:'correspondences', corr:'colors', anchor:'card-color-'+slugify(c.name), title:c.name,
+    text:[c.name,c.props].join(' ').toLowerCase()}));
+  MOON_PHASES.forEach(m=>SEARCH_INDEX.push({type:'Moon Phase', tab:'correspondences', corr:'moon', anchor:'card-moon-'+slugify(m.name), title:m.name,
+    text:[m.name,m.props].join(' ').toLowerCase()}));
+  ELEMENTS.forEach(e=>SEARCH_INDEX.push({type:'Element', tab:'correspondences', corr:'elements', anchor:'card-element-'+slugify(e.name), title:e.name,
+    text:[e.name,e.dir,e.props].join(' ').toLowerCase()}));
+  DAYS.forEach(d=>SEARCH_INDEX.push({type:'Day', tab:'correspondences', corr:'days', anchor:'card-day-'+slugify(d.name), title:d.name,
+    text:[d.name,d.planet,d.props].join(' ').toLowerCase()}));
+  TOOLS.forEach(t=>SEARCH_INDEX.push({type:'Tool', tab:'tools', title:t.name,
+    text:[t.name,t.use].join(' ').toLowerCase()}));
+  loadPersonal().forEach(s=>SEARCH_INDEX.push({type:'My Grimoire', tab:'mybook', anchor:'card-personal-'+s.id, title:s.title,
+    text:[s.title,s.category,s.text,(s.tags||[]).join(' ')].join(' ').toLowerCase()}));
+  loadSigils().forEach(s=>SEARCH_INDEX.push({type:'My Sigil', tab:'divination', anchor:'card-sigil-'+s.id, title:s.intent||'(untitled sigil)',
+    text:[s.intent,(s.letters||[]).join(' ')].join(' ').toLowerCase()}));
+}
+function runSearch(q){
+  const resultsEl = document.getElementById('search-results');
+  q = q.trim().toLowerCase();
+  if (!q){ resultsEl.classList.remove('show'); resultsEl.innerHTML=''; return; }
+  const matches = SEARCH_INDEX.filter(item => item.text.includes(q)).slice(0,20);
+  if (!matches.length){
+    resultsEl.innerHTML = '<div class="none">No matches in the book.</div>';
+  } else {
+    resultsEl.innerHTML = matches.map((m,i)=>
+      '<div class="res" data-i="'+i+'"><span>'+esc(m.title)+'</span><span class="rt">'+esc(m.type)+'</span></div>'
+    ).join('');
+    resultsEl.querySelectorAll('.res').forEach((el,i)=>{
+      el.addEventListener('click', ()=>goToResult(matches[i]));
+    });
+  }
+  resultsEl.classList.add('show');
+}
+function goToResult(m){
+  switchTab(m.tab);
+  if (m.corr){ switchCorr(m.corr); }
+  document.getElementById('search-results').classList.remove('show');
+  document.getElementById('search').value = '';
+  if (m.anchor){
+    setTimeout(()=>{
+      const el = document.getElementById(m.anchor);
+      if (el){
+        if (el.tagName === 'DETAILS') el.open = true;
+        el.scrollIntoView({behavior:'smooth', block:'center'});
+        el.classList.add('flash');
+        setTimeout(()=>el.classList.remove('flash'), 1600);
+      }
+    }, 60);
+  }
+}
+document.getElementById('search').addEventListener('input', e => runSearch(e.target.value));
+document.addEventListener('click', e=>{
+  if (!e.target.closest('.search-wrap')) document.getElementById('search-results').classList.remove('show');
+});
+
+/* ============ TABS ============ */
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active', p.id === 'tab-'+name));
+}
+document.querySelectorAll('#main-tabs .tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>switchTab(btn.dataset.tab));
+});
+
+/* ============ INIT ============ */
+function openBook(){
+  document.getElementById('cover').style.display = 'none';
+  document.getElementById('book').style.display = 'block';
+}
+renderMoonWidget();
+renderSpellFilters();
+renderSpells();
+renderRites();
+renderDeityIcons();
+renderWheel();
+renderCorrSubtabs();
+renderCorrGrid();
+renderTools();
+renderSigilCanvas();
+renderSigilGallery();
+renderPersonal();
+buildSearchIndex();
+</script>
+</body>
+</html>
