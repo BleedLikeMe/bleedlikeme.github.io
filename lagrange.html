@@ -17,6 +17,7 @@
     --border:         rgba(11,11,11,0.10);
     --series-1:       #2a78d6;  /* curve */
     --series-2:       #eb6834;  /* points */
+    --series-3:       #7a4fd1;  /* custom polynomial curve */
     --focus-ring:      #2a78d6;
   }
   @media (prefers-color-scheme: dark) {
@@ -32,6 +33,7 @@
       --border:         rgba(255,255,255,0.10);
       --series-1:       #3987e5;
       --series-2:       #d95926;
+      --series-3:       #a679e0;
     }
   }
   :root[data-theme="dark"] {
@@ -46,6 +48,7 @@
     --border:         rgba(255,255,255,0.10);
     --series-1:       #3987e5;
     --series-2:       #d95926;
+    --series-3:       #a679e0;
   }
 
   * { box-sizing: border-box; }
@@ -117,7 +120,7 @@
 
   .points-panel {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 16px;
   }
   @media (max-width: 640px) {
@@ -136,6 +139,12 @@
     margin-bottom: 8px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .point-input .label-main {
+    display: flex;
+    align-items: center;
     gap: 6px;
   }
   .point-input .dot {
@@ -143,6 +152,60 @@
     background: var(--series-2);
     flex-shrink: 0;
   }
+  .point-remove {
+    width: 20px; height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .point-remove:hover:not(:disabled) { color: var(--text-primary); border-color: var(--text-muted); }
+  .point-remove:disabled { opacity: 0.3; cursor: not-allowed; }
+  .point-remove:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  .points-actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .add-point-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .add-point-btn:hover:not(:disabled) { color: var(--text-primary); }
+  .add-point-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .add-point-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .toggle-row input { width: 16px; height: 16px; accent-color: var(--series-3); cursor: pointer; }
+
+  .coeff-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .coeff-panel .field { min-width: 110px; flex: 0 0 auto; }
   .field-row { display: flex; gap: 8px; }
   .field {
     flex: 1;
@@ -227,12 +290,18 @@
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--series-2);
   }
+  .legend-swatch-line.alt { background: var(--series-3); }
 
   svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
   .grid-line { stroke: var(--gridline); stroke-width: 1; }
   .baseline { stroke: var(--baseline); stroke-width: 1; }
   .axis-label { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
   .curve-path { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .custom-curve-path {
+    fill: none; stroke: var(--series-3); stroke-width: 2;
+    stroke-dasharray: 6 4;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
   .data-point {
     fill: var(--series-2);
     stroke: var(--surface-1);
@@ -258,6 +327,7 @@
     pointer-events: none;
     opacity: 0;
   }
+  .crosshair-dot.alt { stroke: var(--series-3); }
 
   .tooltip {
     position: absolute;
@@ -288,6 +358,8 @@
   .tooltip .tt-key .stroke {
     width: 12px; height: 2px; background: var(--series-1); display: inline-block; border-radius: 1px;
   }
+  .tooltip .tt-key .stroke.alt { background: var(--series-3); }
+  .tooltip > div + div { margin-top: 4px; }
 
   .footer-row {
     display: flex;
@@ -396,7 +468,7 @@
   <header>
     <div>
       <h1>Lagrange Polynomial Interpolation</h1>
-      <p>Enter three points and the unique quadratic (or lower-degree) polynomial passing through all of them is computed and plotted.</p>
+      <p>Enter two to six points and the unique polynomial (degree one less than the number of points, or lower) passing through all of them is computed and plotted.</p>
     </div>
     <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">
       <span class="icon" id="themeIcon"></span>
@@ -406,6 +478,9 @@
 
   <div class="card">
     <div class="points-panel" id="pointsPanel"></div>
+    <div class="points-actions">
+      <button class="add-point-btn" id="addPointBtn" type="button">+ Add point</button>
+    </div>
     <div class="error-msg" id="errorMsg"></div>
   </div>
 
@@ -424,12 +499,33 @@
     <div class="steps-body" id="stepsBody"></div>
   </div>
 
+  <div class="card">
+    <div class="chart-header">
+      <div class="chart-title">Plot your own polynomial</div>
+      <label class="toggle-row">
+        <input type="checkbox" id="customPolyToggle">
+        Show on chart
+      </label>
+    </div>
+    <div class="coeff-panel" id="coeffPanel"></div>
+    <div class="points-actions">
+      <button class="add-point-btn" id="removeCoeffBtn" type="button">− Remove term</button>
+      <button class="add-point-btn" id="addCoeffBtn" type="button">+ Add term</button>
+    </div>
+    <div class="error-msg" id="customErrorMsg"></div>
+    <div style="margin-top: 10px;">
+      <div class="equation-label">Your polynomial</div>
+      <div class="equation" id="customEquationOut">—</div>
+    </div>
+  </div>
+
   <div class="card chart-card">
     <div class="chart-header">
       <div class="chart-title">P(x) over the given points</div>
       <div class="legend">
         <span class="legend-item"><span class="legend-swatch-line"></span>Interpolated curve</span>
         <span class="legend-item"><span class="legend-swatch-dot"></span>Data points</span>
+        <span class="legend-item" id="customLegendItem" style="display: none;"><span class="legend-swatch-line alt"></span>Your polynomial</span>
       </div>
     </div>
     <div style="position: relative;">
@@ -487,6 +583,9 @@
   });
 
   // ---------- Point inputs ----------
+  var MIN_POINTS = 2;
+  var MAX_POINTS = 6;
+
   var DEFAULT_POINTS = [
     { x: -2, y: 4 },
     { x: 1, y: -1 },
@@ -494,54 +593,95 @@
   ];
 
   var pointsPanel = document.getElementById('pointsPanel');
+  var addPointBtn = document.getElementById('addPointBtn');
   var inputs = [];
 
-  DEFAULT_POINTS.forEach(function (pt, i) {
-    var wrap = document.createElement('div');
-    wrap.className = 'point-input';
+  function currentValues() {
+    return inputs.map(function (f) { return { x: f.x.value, y: f.y.value }; });
+  }
 
-    var label = document.createElement('div');
-    label.className = 'label';
-    var dot = document.createElement('span');
-    dot.className = 'dot';
-    label.appendChild(dot);
-    label.appendChild(document.createTextNode('Point ' + (i + 1)));
-    wrap.appendChild(label);
+  function buildPanel(values) {
+    pointsPanel.innerHTML = '';
+    inputs = [];
 
-    var row = document.createElement('div');
-    row.className = 'field-row';
+    values.forEach(function (pt, i) {
+      var wrap = document.createElement('div');
+      wrap.className = 'point-input';
 
-    var xField = document.createElement('div');
-    xField.className = 'field';
-    var xLabel = document.createElement('label');
-    xLabel.textContent = 'x' + (i + 1);
-    var xInput = document.createElement('input');
-    xInput.type = 'number';
-    xInput.step = 'any';
-    xInput.value = pt.x;
-    xField.appendChild(xLabel);
-    xField.appendChild(xInput);
+      var label = document.createElement('div');
+      label.className = 'label';
+      var labelMain = document.createElement('span');
+      labelMain.className = 'label-main';
+      var dot = document.createElement('span');
+      dot.className = 'dot';
+      labelMain.appendChild(dot);
+      labelMain.appendChild(document.createTextNode('Point ' + (i + 1)));
+      label.appendChild(labelMain);
 
-    var yField = document.createElement('div');
-    yField.className = 'field';
-    var yLabel = document.createElement('label');
-    yLabel.textContent = 'y' + (i + 1);
-    var yInput = document.createElement('input');
-    yInput.type = 'number';
-    yInput.step = 'any';
-    yInput.value = pt.y;
-    yField.appendChild(yLabel);
-    yField.appendChild(yInput);
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'point-remove';
+      removeBtn.textContent = '×';
+      removeBtn.setAttribute('aria-label', 'Remove point ' + (i + 1));
+      removeBtn.disabled = values.length <= MIN_POINTS;
+      removeBtn.addEventListener('click', function () {
+        var vals = currentValues();
+        vals.splice(i, 1);
+        buildPanel(vals);
+        render();
+      });
+      label.appendChild(removeBtn);
+      wrap.appendChild(label);
 
-    row.appendChild(xField);
-    row.appendChild(yField);
-    wrap.appendChild(row);
-    pointsPanel.appendChild(wrap);
+      var row = document.createElement('div');
+      row.className = 'field-row';
 
-    inputs.push({ x: xInput, y: yInput });
-    xInput.addEventListener('input', render);
-    yInput.addEventListener('input', render);
+      var xField = document.createElement('div');
+      xField.className = 'field';
+      var xLabel = document.createElement('label');
+      xLabel.textContent = 'x' + (i + 1);
+      var xInput = document.createElement('input');
+      xInput.type = 'number';
+      xInput.step = 'any';
+      xInput.value = pt.x;
+      xField.appendChild(xLabel);
+      xField.appendChild(xInput);
+
+      var yField = document.createElement('div');
+      yField.className = 'field';
+      var yLabel = document.createElement('label');
+      yLabel.textContent = 'y' + (i + 1);
+      var yInput = document.createElement('input');
+      yInput.type = 'number';
+      yInput.step = 'any';
+      yInput.value = pt.y;
+      yField.appendChild(yLabel);
+      yField.appendChild(yInput);
+
+      row.appendChild(xField);
+      row.appendChild(yField);
+      wrap.appendChild(row);
+      pointsPanel.appendChild(wrap);
+
+      inputs.push({ x: xInput, y: yInput });
+      xInput.addEventListener('input', render);
+      yInput.addEventListener('input', render);
+    });
+
+    addPointBtn.disabled = values.length >= MAX_POINTS;
+  }
+
+  addPointBtn.addEventListener('click', function () {
+    var values = currentValues();
+    if (values.length >= MAX_POINTS) return;
+    var xs = values.map(function (v) { return parseFloat(v.x); }).filter(isFinite);
+    var nextX = xs.length ? Math.max.apply(null, xs) + 1 : values.length;
+    values.push({ x: nextX, y: 0 });
+    buildPanel(values);
+    render();
   });
+
+  buildPanel(DEFAULT_POINTS);
 
   // ---------- Table toggle ----------
   var tableToggle = document.getElementById('tableToggle');
@@ -568,7 +708,18 @@
     });
   }
 
-  // Returns [c0, c1, c2] such that P(x) = c0 + c1*x + c2*x^2, or null if invalid.
+  // Multiplies a polynomial (ascending coefficients) by the linear factor (x - r).
+  function multiplyByLinearFactor(poly, r) {
+    var result = new Array(poly.length + 1).fill(0);
+    for (var k = 0; k < poly.length; k++) {
+      result[k] += -r * poly[k];
+      result[k + 1] += poly[k];
+    }
+    return result;
+  }
+
+  // Returns ascending coefficients [c0, c1, ..., c_{n-1}] such that
+  // P(x) = c0 + c1*x + ... + c_{n-1}*x^(n-1), or null if invalid.
   // The array also carries a `.terms` property with the per-point derivation
   // details, so the step-by-step display can be built from the same numbers
   // used for the actual result (no separate re-derivation to drift out of sync).
@@ -576,30 +727,37 @@
     for (var i = 0; i < pts.length; i++) {
       if (!isFinite(pts[i].x) || !isFinite(pts[i].y)) return null;
     }
-    if (pts[0].x === pts[1].x || pts[0].x === pts[2].x || pts[1].x === pts[2].x) return null;
+    for (var a = 0; a < pts.length; a++) {
+      for (var b = a + 1; b < pts.length; b++) {
+        if (pts[a].x === pts[b].x) return null;
+      }
+    }
 
-    var coeffs = [0, 0, 0];
+    var n = pts.length;
+    var coeffs = new Array(n).fill(0);
     var terms = [];
-    for (var i = 0; i < 3; i++) {
-      var otherIdx = [0, 1, 2].filter(function (idx) { return idx !== i; });
-      var j = otherIdx[0], k = otherIdx[1];
-      var xj = pts[j].x, xk = pts[k].x;
+    for (var i = 0; i < n; i++) {
+      var otherIdx = [];
+      for (var m = 0; m < n; m++) { if (m !== i) otherIdx.push(m); }
       var xi = pts[i].x, yi = pts[i].y;
-      var factor1 = xi - xj, factor2 = xi - xk;
-      var denom = factor1 * factor2;
-      // basis numerator: (x - xj)(x - xk) = x^2 - (xj+xk)x + xj*xk
-      var basis0 = (xj * xk) / denom;   // constant term
-      var basis1 = -(xj + xk) / denom;  // x term
-      var basis2 = 1 / denom;           // x^2 term
-      var contribution = [yi * basis0, yi * basis1, yi * basis2];
-      coeffs[0] += contribution[0];
-      coeffs[1] += contribution[1];
-      coeffs[2] += contribution[2];
+
+      var numerator = [1]; // ascending coefficients of ∏ (x - x_j)
+      var factors = [];
+      for (var oi = 0; oi < otherIdx.length; oi++) {
+        var xj = pts[otherIdx[oi]].x;
+        numerator = multiplyByLinearFactor(numerator, xj);
+        factors.push(xi - xj);
+      }
+      var denom = factors.reduce(function (acc, f) { return acc * f; }, 1);
+
+      var basis = numerator.map(function (c) { return c / denom; });
+      var contribution = basis.map(function (c) { return c * yi; });
+      for (var p = 0; p < contribution.length; p++) coeffs[p] += contribution[p];
+
       terms.push({
-        i: i, xi: xi, yi: yi, xj: xj, xk: xk,
-        factor1: factor1, factor2: factor2, denom: denom,
-        basis: [basis0, basis1, basis2],
-        contribution: contribution
+        i: i, xi: xi, yi: yi, others: otherIdx,
+        factors: factors, denom: denom,
+        basis: basis, contribution: contribution
       });
     }
     coeffs.terms = terms;
@@ -607,7 +765,9 @@
   }
 
   function evalPoly(coeffs, x) {
-    return coeffs[0] + coeffs[1] * x + coeffs[2] * x * x;
+    var result = 0, p = 1;
+    for (var i = 0; i < coeffs.length; i++) { result += coeffs[i] * p; p *= x; }
+    return result;
   }
 
   function formatCoeff(v) {
@@ -615,21 +775,23 @@
     return r === 0 ? 0 : r;
   }
 
-  function equationString(coeffs) {
-    var c0 = formatCoeff(coeffs[0]);
-    var c1 = formatCoeff(coeffs[1]);
-    var c2 = formatCoeff(coeffs[2]);
-    var terms = [];
+  // Superscript digits used for exponents 2-5 in the rendered equation/steps.
+  var SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵' };
 
-    if (c2 !== 0) {
-      terms.push({ v: c2, suffix: 'x²' });
+  function powerSuffix(p) {
+    if (p === 0) return '';
+    if (p === 1) return 'x';
+    return 'x' + SUP[p];
+  }
+
+  function equationString(coeffs) {
+    var degree = coeffs.length - 1;
+    var terms = [];
+    for (var p = degree; p >= 0; p--) {
+      var v = formatCoeff(coeffs[p]);
+      if (v !== 0) terms.push({ v: v, suffix: powerSuffix(p) });
     }
-    if (c1 !== 0) {
-      terms.push({ v: c1, suffix: 'x' });
-    }
-    if (c0 !== 0 || terms.length === 0) {
-      terms.push({ v: c0, suffix: '' });
-    }
+    if (terms.length === 0) terms.push({ v: 0, suffix: '' });
 
     var out = 'P(x) = ';
     terms.forEach(function (t, i) {
@@ -645,7 +807,7 @@
   }
 
   // ---------- Step-by-step derivation ----------
-  var SUB = { 0: '₀', 1: '₁', 2: '₂' };
+  var SUB = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅' };
   var fmt = formatCoeff; // same rounding as the headline equation, so the two never visually disagree
 
   // "x − v" / "x + v" with the sign folded in, e.g. xTerm(-2) -> "x + 2"
@@ -687,13 +849,57 @@
     return line;
   }
 
+  // "(x − a)(x − b)..." with actual values substituted in, via xTerm
+  function factorsPlain(xs) {
+    return xs.map(function (x) { return '(' + xTerm(x) + ')'; }).join('');
+  }
+
+  // "(x − xⱼ)(x − xₖ)..." generic form, referencing the other points by subscript
+  function factorsGeneric(idxs) {
+    return idxs.map(function (m) { return '(x − x' + SUB[m] + ')'; }).join('');
+  }
+
+  // "(xᵢ − xⱼ)(xᵢ − xₖ)..." generic denominator, referencing point i and the others
+  function denomGenericLabel(i, idxs) {
+    return idxs.map(function (m) { return '(x' + SUB[i] + ' − x' + SUB[m] + ')'; }).join('');
+  }
+
+  // "(xᵢ − a)(xᵢ − b)..." with values substituted in
+  function denomSubstituted(xi, xs) {
+    return xs.map(function (x) { return '(' + subExpr(xi, x) + ')'; }).join('');
+  }
+
+  // "a × b × ..." for the numeric denominator factors
+  function denomFactorsNumeric(factors) {
+    return factors.map(function (f) { return numStr(f); }).join(' × ');
+  }
+
+  // "y₀·L₀(x) + y₁·L₁(x) + ... " header line shared by blocks 1 and 3
+  function weightedSumLabel(n) {
+    var parts = [];
+    for (var i = 0; i < n; i++) parts.push('y' + SUB[i] + '·L' + SUB[i] + '(x)');
+    return 'P(x) = ' + parts.join(' + ');
+  }
+
+  // renders an ascending-coefficient polynomial as "c_D x^D + ... + c0", using signed()
+  function expandedString(coeffsAsc) {
+    var degree = coeffsAsc.length - 1;
+    var parts = [];
+    for (var p = degree; p >= 0; p--) parts.push(p);
+    return parts.map(function (p, idx) {
+      return signed(coeffsAsc[p], idx === 0) + powerSuffix(p);
+    }).join('');
+  }
+
   function renderSteps(pts, coeffs) {
     stepsBody.innerHTML = '';
     if (!coeffs) {
-      addLine(stepsBody, 'Enter three points with distinct, numeric x values to see the derivation.', { muted: true });
+      addLine(stepsBody, 'Enter points with distinct, numeric x values to see the derivation.', { muted: true });
       return;
     }
     var terms = coeffs.terms;
+    var n = pts.length;
+    var degree = n - 1;
 
     // Block 1 — the general formula
     var b1 = document.createElement('div');
@@ -702,7 +908,7 @@
     t1.className = 'step-title';
     t1.textContent = 'The Lagrange formula';
     b1.appendChild(t1);
-    addLine(b1, 'P(x) = y₀·L₀(x) + y₁·L₁(x) + y₂·L₂(x)');
+    addLine(b1, weightedSumLabel(n));
     addLine(b1, 'where Lᵢ(x) = ∏ (x − xⱼ) / (xᵢ − xⱼ)  for every j ≠ i', { muted: true });
     stepsBody.appendChild(b1);
 
@@ -715,10 +921,11 @@
       title.textContent = 'Basis polynomial L' + SUB[t.i] + '(x)';
       b.appendChild(title);
 
-      addLine(b, 'L' + SUB[t.i] + '(x) = (x − x' + SUB[[0,1,2].filter(function(idx){return idx!==t.i;})[0]] + ')(x − x' + SUB[[0,1,2].filter(function(idx){return idx!==t.i;})[1]] + ') / ((x' + SUB[t.i] + ' − x' + SUB[[0,1,2].filter(function(idx){return idx!==t.i;})[0]] + ')(x' + SUB[t.i] + ' − x' + SUB[[0,1,2].filter(function(idx){return idx!==t.i;})[1]] + '))', { muted: true });
-      addLine(b, '= (' + xTerm(t.xj) + ')(' + xTerm(t.xk) + ') / ((' + subExpr(t.xi, t.xj) + ')(' + subExpr(t.xi, t.xk) + '))');
-      addLine(b, '= (' + xTerm(t.xj) + ')(' + xTerm(t.xk) + ') / (' + numStr(t.factor1) + ' × ' + numStr(t.factor2) + ')');
-      addLine(b, '= (' + xTerm(t.xj) + ')(' + xTerm(t.xk) + ') / ' + numStr(t.denom));
+      var othersX = t.others.map(function (m) { return pts[m].x; });
+      addLine(b, 'L' + SUB[t.i] + '(x) = ' + factorsGeneric(t.others) + ' / (' + denomGenericLabel(t.i, t.others) + ')', { muted: true });
+      addLine(b, '= ' + factorsPlain(othersX) + ' / (' + denomSubstituted(t.xi, othersX) + ')');
+      addLine(b, '= ' + factorsPlain(othersX) + ' / (' + denomFactorsNumeric(t.factors) + ')');
+      addLine(b, '= ' + factorsPlain(othersX) + ' / ' + numStr(t.denom));
       stepsBody.appendChild(b);
     });
 
@@ -729,15 +936,16 @@
     t3.className = 'step-title';
     t3.textContent = 'Weighted sum';
     b3.appendChild(t3);
-    addLine(b3, 'P(x) = y₀·L₀(x) + y₁·L₁(x) + y₂·L₂(x)');
+    addLine(b3, weightedSumLabel(n));
     var sumLine = terms.map(function (t, idx) {
-      var piece = numStr(t.yi) + '·(' + xTerm(t.xj) + ')(' + xTerm(t.xk) + ') / ' + numStr(t.denom);
+      var othersX = t.others.map(function (m) { return pts[m].x; });
+      var piece = numStr(t.yi) + '·' + factorsPlain(othersX) + ' / ' + numStr(t.denom);
       return idx === 0 ? piece : ' + ' + piece;
     }).join('');
     addLine(b3, '= ' + sumLine);
     stepsBody.appendChild(b3);
 
-    // Block 4 — expand each weighted term into ax^2 + bx + c
+    // Block 4 — expand each weighted term into standard form
     var b4 = document.createElement('div');
     b4.className = 'step-block';
     var t4 = document.createElement('div');
@@ -745,10 +953,8 @@
     t4.textContent = 'Expand each term into standard form';
     b4.appendChild(t4);
     terms.forEach(function (t) {
-      var expanded = signed(t.basis[2], true) + 'x²' + signed(t.basis[1]) + 'x' + signed(t.basis[0]);
-      addLine(b4, 'y' + SUB[t.i] + '·L' + SUB[t.i] + '(x) = ' + numStr(t.yi) + '×(' + expanded + ')');
-      var contrib = signed(t.contribution[2], true) + 'x²' + signed(t.contribution[1]) + 'x' + signed(t.contribution[0]);
-      addLine(b4, '= ' + contrib, { indent: true });
+      addLine(b4, 'y' + SUB[t.i] + '·L' + SUB[t.i] + '(x) = ' + numStr(t.yi) + '×(' + expandedString(t.basis) + ')');
+      addLine(b4, '= ' + expandedString(t.contribution), { indent: true });
     });
     stepsBody.appendChild(b4);
 
@@ -759,20 +965,21 @@
     t5.className = 'step-title';
     t5.textContent = 'Collect like terms';
     b5.appendChild(t5);
-    ['x²', 'x¹', 'x⁰'].forEach(function (label, powerIdx) {
-      var coeffKey = 2 - powerIdx; // x^2 -> index2, x^1 -> index1, x^0 -> index0
-      var parts = joinSigned(terms.map(function (t) { return t.contribution[coeffKey]; }));
-      var row = document.createElement('div');
-      row.className = 'step-sum-row';
-      var termEl = document.createElement('div');
-      termEl.className = 'term';
-      termEl.textContent = label + ' :';
-      row.appendChild(termEl);
-      var valEl = document.createElement('div');
-      valEl.textContent = parts + ' = ' + numStr(coeffs[coeffKey]);
-      row.appendChild(valEl);
-      b5.appendChild(row);
-    });
+    for (var p = degree; p >= 0; p--) {
+      (function (coeffKey) {
+        var parts = joinSigned(terms.map(function (t) { return t.contribution[coeffKey]; }));
+        var row = document.createElement('div');
+        row.className = 'step-sum-row';
+        var termEl = document.createElement('div');
+        termEl.className = 'term';
+        termEl.textContent = 'x' + SUP[coeffKey] + ' :';
+        row.appendChild(termEl);
+        var valEl = document.createElement('div');
+        valEl.textContent = parts + ' = ' + numStr(coeffs[coeffKey]);
+        row.appendChild(valEl);
+        b5.appendChild(row);
+      })(p);
+    }
     stepsBody.appendChild(b5);
 
     // Block 6 — final result
@@ -788,6 +995,84 @@
     b6.appendChild(resultEl);
     stepsBody.appendChild(b6);
   }
+
+  // ---------- Custom polynomial ----------
+  var MIN_COEFF_TERMS = 1;
+  var MAX_COEFF_TERMS = 6;
+  var DEFAULT_COEFF_VALUES = [0, 0, 1]; // 0 + 0x + 1x² = x²
+
+  var customPolyToggle = document.getElementById('customPolyToggle');
+  var coeffPanel = document.getElementById('coeffPanel');
+  var addCoeffBtn = document.getElementById('addCoeffBtn');
+  var removeCoeffBtn = document.getElementById('removeCoeffBtn');
+  var customErrorMsg = document.getElementById('customErrorMsg');
+  var customEquationOut = document.getElementById('customEquationOut');
+  var customLegendItem = document.getElementById('customLegendItem');
+
+  var customCoeffInputs = [];
+
+  function coeffFieldLabel(p) {
+    if (p === 0) return 'c₀ (constant)';
+    if (p === 1) return 'c₁ (x)';
+    return 'c' + SUB[p] + ' (x' + SUP[p] + ')';
+  }
+
+  function buildCoeffPanel(values) {
+    coeffPanel.innerHTML = '';
+    customCoeffInputs = [];
+
+    values.forEach(function (v, p) {
+      var field = document.createElement('div');
+      field.className = 'field';
+      var label = document.createElement('label');
+      label.textContent = coeffFieldLabel(p);
+      var input = document.createElement('input');
+      input.type = 'number';
+      input.step = 'any';
+      input.value = v;
+      field.appendChild(label);
+      field.appendChild(input);
+      coeffPanel.appendChild(field);
+      customCoeffInputs.push(input);
+      input.addEventListener('input', render);
+    });
+
+    removeCoeffBtn.disabled = values.length <= MIN_COEFF_TERMS;
+    addCoeffBtn.disabled = values.length >= MAX_COEFF_TERMS;
+  }
+
+  function currentCoeffValues() {
+    return customCoeffInputs.map(function (f) { return f.value; });
+  }
+
+  function readCustomCoeffs() {
+    var coeffs = customCoeffInputs.map(function (f) { return parseFloat(f.value); });
+    for (var i = 0; i < coeffs.length; i++) { if (!isFinite(coeffs[i])) return null; }
+    return coeffs;
+  }
+
+  customPolyToggle.addEventListener('change', function () {
+    customLegendItem.style.display = customPolyToggle.checked ? '' : 'none';
+    render();
+  });
+
+  addCoeffBtn.addEventListener('click', function () {
+    var values = currentCoeffValues();
+    if (values.length >= MAX_COEFF_TERMS) return;
+    values.push(0);
+    buildCoeffPanel(values);
+    render();
+  });
+
+  removeCoeffBtn.addEventListener('click', function () {
+    var values = currentCoeffValues();
+    if (values.length <= MIN_COEFF_TERMS) return;
+    values.pop();
+    buildCoeffPanel(values);
+    render();
+  });
+
+  buildCoeffPanel(DEFAULT_COEFF_VALUES);
 
   // ---------- Chart ----------
   var W = 900, H = 460;
@@ -842,36 +1127,63 @@
       dataTableBody.appendChild(tr);
     });
 
+    var rawCustomCoeffs = readCustomCoeffs();
+    if (rawCustomCoeffs) {
+      customErrorMsg.textContent = '';
+      customEquationOut.textContent = equationString(rawCustomCoeffs);
+    } else {
+      customErrorMsg.textContent = 'Enter numeric coefficients for every term.';
+      customEquationOut.textContent = '—';
+    }
+    var customCoeffs = (customPolyToggle.checked && rawCustomCoeffs) ? rawCustomCoeffs : null;
+
     if (!coeffs) {
       var anyBlank = pts.some(function (p) { return !isFinite(p.x) || !isFinite(p.y); });
       errorMsg.textContent = anyBlank
-        ? 'Enter numeric x and y values for all three points.'
-        : 'The three x values must be distinct — a polynomial can’t pass through two different y values at the same x.';
+        ? 'Enter numeric x and y values for all points.'
+        : 'The x values must all be distinct — a polynomial can’t pass through two different y values at the same x.';
       equationOut.textContent = '—';
       renderSteps(pts, null);
-      return;
+    } else {
+      errorMsg.textContent = '';
+      equationOut.textContent = equationString(coeffs);
+      renderSteps(pts, coeffs);
     }
-    errorMsg.textContent = '';
-    equationOut.textContent = equationString(coeffs);
-    renderSteps(pts, coeffs);
+
+    if (!coeffs && !customCoeffs) return; // nothing valid to plot
 
     // ---- domain ----
-    var xs = pts.map(function (p) { return p.x; });
-    var ys = pts.map(function (p) { return p.y; });
-    var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
-    var xSpan = xMax - xMin || 1;
-    var xPad = xSpan * 0.35;
-    var domXMin = xMin - xPad, domXMax = xMax + xPad;
+    var domXMin, domXMax;
+    if (coeffs) {
+      var xs = pts.map(function (p) { return p.x; });
+      var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+      var xSpan = xMax - xMin || 1;
+      var xPad = xSpan * 0.35;
+      domXMin = xMin - xPad; domXMax = xMax + xPad;
+    } else {
+      domXMin = -10; domXMax = 10; // no valid points yet — fall back to a generic viewing window
+    }
 
     var SAMPLES = 240;
     var curvePts = [];
-    for (var i = 0; i <= SAMPLES; i++) {
-      var x = domXMin + (domXMax - domXMin) * (i / SAMPLES);
-      curvePts.push({ x: x, y: evalPoly(coeffs, x) });
+    if (coeffs) {
+      for (var i = 0; i <= SAMPLES; i++) {
+        var x = domXMin + (domXMax - domXMin) * (i / SAMPLES);
+        curvePts.push({ x: x, y: evalPoly(coeffs, x) });
+      }
     }
-    var curveYs = curvePts.map(function (p) { return p.y; });
-    var yMin = Math.min.apply(null, ys.concat(curveYs));
-    var yMax = Math.max.apply(null, ys.concat(curveYs));
+    var customCurvePts = [];
+    if (customCoeffs) {
+      for (var ci = 0; ci <= SAMPLES; ci++) {
+        var cx0 = domXMin + (domXMax - domXMin) * (ci / SAMPLES);
+        customCurvePts.push({ x: cx0, y: evalPoly(customCoeffs, cx0) });
+      }
+    }
+
+    var ys = coeffs ? pts.map(function (p) { return p.y; }) : [];
+    var allYs = ys.concat(curvePts.map(function (p) { return p.y; }))
+      .concat(customCurvePts.map(function (p) { return p.y; }));
+    var yMin = Math.min.apply(null, allYs), yMax = Math.max.apply(null, allYs);
     if (yMin === yMax) { yMin -= 1; yMax += 1; }
     var ySpan = yMax - yMin;
     var yPad = ySpan * 0.15;
@@ -918,28 +1230,42 @@
     }
 
     // ---- curve ----
-    var d = curvePts.map(function (p, i) {
-      return (i === 0 ? 'M' : 'L') + sx(p.x).toFixed(2) + ',' + sy(p.y).toFixed(2);
-    }).join(' ');
-    svg.appendChild(el('path', { class: 'curve-path', d: d }));
+    if (coeffs) {
+      var d = curvePts.map(function (p, i) {
+        return (i === 0 ? 'M' : 'L') + sx(p.x).toFixed(2) + ',' + sy(p.y).toFixed(2);
+      }).join(' ');
+      svg.appendChild(el('path', { class: 'curve-path', d: d }));
+    }
+
+    // ---- custom polynomial curve ----
+    if (customCoeffs) {
+      var dCustom = customCurvePts.map(function (p, i) {
+        return (i === 0 ? 'M' : 'L') + sx(p.x).toFixed(2) + ',' + sy(p.y).toFixed(2);
+      }).join(' ');
+      svg.appendChild(el('path', { class: 'custom-curve-path', d: dCustom }));
+    }
 
     // ---- data points ----
-    pts.forEach(function (p, i) {
-      svg.appendChild(el('circle', { class: 'data-point', cx: sx(p.x), cy: sy(p.y), r: 5 }));
-      var lbl = el('text', {
-        class: 'data-point-label',
-        x: sx(p.x) + 9,
-        y: sy(p.y) - 9
+    if (coeffs) {
+      pts.forEach(function (p, i) {
+        svg.appendChild(el('circle', { class: 'data-point', cx: sx(p.x), cy: sy(p.y), r: 5 }));
+        var lbl = el('text', {
+          class: 'data-point-label',
+          x: sx(p.x) + 9,
+          y: sy(p.y) - 9
+        });
+        lbl.textContent = '(' + p.x + ', ' + p.y + ')';
+        svg.appendChild(lbl);
       });
-      lbl.textContent = '(' + p.x + ', ' + p.y + ')';
-      svg.appendChild(lbl);
-    });
+    }
 
     // ---- crosshair ----
     var crosshairLine = el('line', { class: 'crosshair-line', x1: 0, x2: 0, y1: margin.top, y2: margin.top + plotH });
     var crosshairDot = el('circle', { class: 'crosshair-dot', r: 5 });
+    var crosshairDotCustom = el('circle', { class: 'crosshair-dot alt', r: 5 });
     svg.appendChild(crosshairLine);
-    svg.appendChild(crosshairDot);
+    if (coeffs) svg.appendChild(crosshairDot);
+    if (customCoeffs) svg.appendChild(crosshairDotCustom);
 
     var hitTarget = el('rect', {
       class: 'hit-target',
@@ -954,43 +1280,66 @@
       return (clientX - rect.left) * scaleX;
     }
 
-    function onMove(evt) {
-      var px = pointerToChart(evt);
-      var xVal = domXMin + (px - margin.left) / plotW * (domXMax - domXMin);
-      xVal = Math.max(domXMin, Math.min(domXMax, xVal));
-      var yVal = evalPoly(coeffs, xVal);
-
-      var cx = sx(xVal), cy = sy(yVal);
-      crosshairLine.setAttribute('x1', cx);
-      crosshairLine.setAttribute('x2', cx);
-      crosshairLine.style.opacity = 1;
-      crosshairDot.setAttribute('cx', cx);
-      crosshairDot.setAttribute('cy', cy);
-      crosshairDot.style.opacity = 1;
-
-      var xR = Math.round(xVal * 100) / 100;
+    // xR is already the rounded, displayed x — y must be evaluated from that same
+    // rounded value, not the raw mouse position, or the displayed (x, y) pair won't
+    // actually satisfy y = P(x).
+    function tooltipRow(label, xR, yVal, altColor) {
       var yR = Math.round(yVal * 100) / 100;
-      tooltip.innerHTML = '';
       var key = document.createElement('div');
       key.className = 'tt-key';
       var stroke = document.createElement('span');
-      stroke.className = 'stroke';
+      stroke.className = 'stroke' + (altColor ? ' alt' : '');
       key.appendChild(stroke);
-      key.appendChild(document.createTextNode('P(x)'));
+      key.appendChild(document.createTextNode(label));
       var val = document.createElement('div');
       val.className = 'tt-value';
       val.textContent = 'x = ' + xR + ',  y = ' + yR;
-      tooltip.appendChild(key);
-      tooltip.appendChild(val);
+      var row = document.createElement('div');
+      row.appendChild(key);
+      row.appendChild(val);
+      return row;
+    }
+
+    function onMove(evt) {
+      var px = pointerToChart(evt);
+      var rawX = domXMin + (px - margin.left) / plotW * (domXMax - domXMin);
+      rawX = Math.max(domXMin, Math.min(domXMax, rawX));
+      var xR = Math.round(rawX * 100) / 100;
+
+      tooltip.innerHTML = '';
+      var primaryCx = null, primaryCy = null;
+
+      if (coeffs) {
+        var yVal = evalPoly(coeffs, xR);
+        var cx = sx(xR), cy = sy(yVal);
+        primaryCx = cx; primaryCy = cy;
+        crosshairDot.setAttribute('cx', cx);
+        crosshairDot.setAttribute('cy', cy);
+        crosshairDot.style.opacity = 1;
+        tooltip.appendChild(tooltipRow('P(x)', xR, yVal, false));
+      }
+      if (customCoeffs) {
+        var yValC = evalPoly(customCoeffs, xR);
+        var cxC = sx(xR), cyC = sy(yValC);
+        if (primaryCx === null) { primaryCx = cxC; primaryCy = cyC; }
+        crosshairDotCustom.setAttribute('cx', cxC);
+        crosshairDotCustom.setAttribute('cy', cyC);
+        crosshairDotCustom.style.opacity = 1;
+        tooltip.appendChild(tooltipRow('Your polynomial', xR, yValC, true));
+      }
+
+      crosshairLine.setAttribute('x1', primaryCx);
+      crosshairLine.setAttribute('x2', primaryCx);
+      crosshairLine.style.opacity = 1;
       tooltip.style.opacity = 1;
 
       var wrapRect = svg.parentElement.getBoundingClientRect();
       var svgRect = svg.getBoundingClientRect();
       var scale = svgRect.width / W;
-      var left = cx * scale + 14;
-      var top = cy * scale - 40;
+      var left = primaryCx * scale + 14;
+      var top = primaryCy * scale - 40;
       var maxLeft = wrapRect.width - 160;
-      if (left > maxLeft) left = cx * scale - 150;
+      if (left > maxLeft) left = primaryCx * scale - 150;
       tooltip.style.left = left + 'px';
       tooltip.style.top = Math.max(0, top) + 'px';
     }
@@ -998,6 +1347,7 @@
     function onLeave() {
       crosshairLine.style.opacity = 0;
       crosshairDot.style.opacity = 0;
+      crosshairDotCustom.style.opacity = 0;
       tooltip.style.opacity = 0;
     }
 
