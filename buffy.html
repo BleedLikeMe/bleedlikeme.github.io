@@ -1,0 +1,2062 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0710">
+<title>SLAYER — Sunnydale Nights</title>
+<style>
+  :root{
+    --bg:#0b0710; --bg2:#140a1c; --panel:#1a0f24; --panel2:#211430;
+    --purple:#8b2fc9; --purple2:#a855e6; --blood:#b3122d; --blood2:#e8283f;
+    --gold:#d4af37; --gold2:#f0cf5f; --text:#e8dfee; --dim:#a894ba; --line:#3a2450;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{overflow-x:hidden;}
+  body{overscroll-behavior-y:contain;}
+  body{
+    margin:0; min-height:100vh; background:
+      radial-gradient(ellipse at 50% -10%, #2a1240 0%, transparent 60%),
+      radial-gradient(ellipse at 90% 110%, #1a0620 0%, transparent 55%),
+      linear-gradient(180deg,var(--bg2),var(--bg));
+    color:var(--text); font-family:Georgia,'Times New Roman',serif;
+    -webkit-text-size-adjust:100%;
+  }
+  #app{
+    max-width:1200px;margin:0 auto;padding:16px;
+    padding-left:max(16px, env(safe-area-inset-left));
+    padding-right:max(16px, env(safe-area-inset-right));
+    padding-bottom:max(16px, env(safe-area-inset-bottom));
+  }
+  .hidden{display:none !important;}
+  button{
+    font-family:inherit; cursor:pointer; background:linear-gradient(180deg,var(--panel2),var(--panel));
+    color:var(--text); border:1px solid var(--line); border-radius:6px; padding:11px 14px;
+    font-size:14px; transition:.15s; min-height:44px; touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent; user-select:none;
+  }
+  button:active:not(:disabled){border-color:var(--purple2); box-shadow:0 0 10px rgba(168,85,230,.45); color:#fff;}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+  button.danger:active:not(:disabled){border-color:var(--blood2); box-shadow:0 0 10px rgba(232,40,63,.45);}
+  button.gold:active:not(:disabled){border-color:var(--gold2); box-shadow:0 0 10px rgba(240,207,95,.45);}
+  @media (hover:hover) and (pointer:fine){
+    button:hover:not(:disabled){border-color:var(--purple2); box-shadow:0 0 10px rgba(168,85,230,.45); color:#fff;}
+    button.danger:hover:not(:disabled){border-color:var(--blood2); box-shadow:0 0 10px rgba(232,40,63,.45);}
+    button.gold:hover:not(:disabled){border-color:var(--gold2); box-shadow:0 0 10px rgba(240,207,95,.45);}
+  }
+  input[type=text]{
+    font-family:inherit; background:var(--panel); border:1px solid var(--line); color:var(--text);
+    padding:11px 12px; border-radius:6px; font-size:16px; min-height:44px;
+  }
+
+  /* ---- Title screen ---- */
+  #titleScreen{min-height:90vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+  #titleScreen h1{
+    font-size:64px; letter-spacing:14px; margin:0; color:var(--blood2);
+    text-shadow:0 0 18px rgba(232,40,63,.6), 0 0 40px rgba(139,47,201,.4);
+    animation:flicker 5s infinite;
+  }
+  @keyframes flicker{
+    0%,19%,21%,23%,55%,57%,100%{opacity:1;}
+    20%,22%,56%{opacity:.75;}
+  }
+  #titleScreen .sub{color:var(--dim); letter-spacing:4px; margin:6px 0 24px; font-size:15px;}
+  #titleScreen .blurb{max-width:520px; color:var(--dim); font-size:14px; line-height:1.6; margin-bottom:22px;}
+  #diffPicker{display:flex; gap:8px; margin-bottom:16px;}
+  #diffPicker button.active{border-color:var(--gold2); color:#fff; box-shadow:0 0 8px rgba(240,207,95,.4);}
+  #titleButtons{display:flex; flex-direction:column; gap:12px; align-items:center;}
+  #titleButtons button{width:220px; padding:12px; font-size:15px;}
+  #hallOfFame{margin-top:26px; max-width:440px; width:100%;}
+  .hofRow{display:flex; justify-content:space-between; font-size:12px; color:var(--dim); padding:4px 0; border-bottom:1px dotted #2a1a3a;}
+
+  /* ---- Header ---- */
+  #statBar{
+    display:flex; flex-wrap:wrap; gap:14px; align-items:center; background:var(--panel);
+    border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:12px;
+  }
+  #statBar .name{font-size:20px; letter-spacing:2px; color:var(--gold2); margin-right:auto;}
+  .statItem{font-size:13px; color:var(--dim); display:flex; align-items:center; gap:6px;}
+  .barOuter{width:110px; height:12px; background:#000; border:1px solid var(--line); border-radius:4px; overflow:hidden;}
+  .barInner{height:100%; transition:width .3s;}
+  .hpBar{background:linear-gradient(90deg,var(--blood),var(--blood2));}
+  .hpBar.low{background:linear-gradient(90deg,#5a0d0d,#ff2b2b); animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.55;}}
+  .xpBar{background:linear-gradient(90deg,#6a4a10,var(--gold2));}
+  .apDots span{color:var(--line); font-size:16px;}
+  .apDots span.full{color:var(--purple2); text-shadow:0 0 6px var(--purple2);}
+  #abandonLink{font-size:11px; color:var(--dim); text-decoration:underline; cursor:pointer; margin-left:8px;}
+  .headerLink{font-size:11px; color:var(--dim); text-decoration:underline; cursor:pointer; margin-left:8px;}
+  #saveIoRow{display:flex; gap:10px; margin-bottom:14px;}
+  #saveIoRow button{padding:7px 12px; font-size:12px;}
+
+  /* ---- Layout ---- */
+  #mainLayout{display:grid; grid-template-columns:170px 1fr 230px; gap:12px;}
+  @media (max-width:880px){
+    #mainLayout{grid-template-columns:1fr;}
+    #locNav{order:1;}
+    #content{order:0;}
+    #sidePanel{order:2;}
+  }
+  #locNav{display:flex; flex-direction:column; gap:8px;}
+  #locNav button{text-align:left;}
+  @media (max-width:880px){
+    #locNav{
+      flex-direction:row; flex-wrap:nowrap; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      padding-bottom:4px; scrollbar-width:thin;
+    }
+    #locNav button{text-align:center; white-space:nowrap; flex:0 0 auto;}
+  }
+  #locNav button.active{border-color:var(--purple2); background:linear-gradient(180deg,#33195a,var(--panel2)); color:#fff;}
+  #content{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px;
+    min-height:360px;
+  }
+  #content h2{margin-top:0; color:var(--gold2); letter-spacing:1px; font-size:20px;}
+  #content .flavor{color:var(--dim); font-size:14px; line-height:1.6; margin-bottom:16px;}
+  .actionGrid{display:flex; flex-wrap:wrap; gap:10px;}
+  #sidePanel{display:flex; flex-direction:column; gap:12px;}
+  .sideBox{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px;}
+  .sideBox h3{margin:0 0 8px; font-size:13px; letter-spacing:1px; color:var(--purple2); text-transform:uppercase;}
+  .scoobyRow{display:flex; justify-content:space-between; font-size:13px; padding:3px 0; color:var(--dim);}
+  .scoobyRow.on{color:var(--text);}
+  .scoobyRow .dot{color:var(--gold2);}
+  .invRow{display:flex; justify-content:space-between; font-size:13px; padding:2px 0;}
+
+  /* ---- Log ---- */
+  #logPanel{
+    margin-top:12px; background:#0a0510; border:1px solid var(--line); border-radius:10px;
+    padding:10px 14px; max-height:150px; overflow-y:auto; font-family:'Courier New',monospace; font-size:12.5px;
+  }
+  #logPanel div{padding:2px 0; color:var(--dim); border-bottom:1px dotted #2a1a3a;}
+  #logPanel div:first-child{color:var(--gold2);}
+
+  /* ---- Shop ---- */
+  .shopItem{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:8px;
+  }
+  .shopItem .info b{color:var(--text);} .shopItem .info div{font-size:12px; color:var(--dim);}
+
+  /* ---- Combat ---- */
+  .combatWrap{display:flex; flex-direction:column; gap:14px;}
+  .vsRow{display:flex; justify-content:space-between; gap:20px;}
+  .fighter{flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px; position:relative; overflow:visible;}
+  .fighter h3{margin:0 0 8px; font-size:16px; color:var(--gold2);}
+  .fighter .barOuter{width:100%; height:14px;}
+  .combatBtns{display:flex; flex-wrap:wrap; gap:8px;}
+  .combatBtns button{flex:1 1 130px;}
+  .dmgPop{position:absolute; top:8px; left:50%; font-weight:bold; font-size:20px; pointer-events:none; animation:dmgFloat .9s ease-out forwards; text-shadow:0 0 6px rgba(0,0,0,.8);}
+  .dmgPop.dmg{color:var(--blood2);}
+  .dmgPop.heal{color:#6ee7b7;}
+  @keyframes dmgFloat{0%{opacity:1; transform:translate(-50%,0);} 100%{opacity:0; transform:translate(-50%,-40px);}}
+  .shake{animation:shakeAnim .4s;}
+  @keyframes shakeAnim{0%,100%{transform:translateX(0);} 20%{transform:translateX(-6px);} 40%{transform:translateX(6px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);}}
+
+  /* ---- End overlay ---- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(4,1,8,.88); display:flex; align-items:center; justify-content:center; z-index:50;
+    padding:16px; overflow-y:auto;
+  }
+  .endCard{
+    max-width:520px; width:100%; background:var(--panel); border:1px solid var(--purple2); border-radius:12px; padding:32px;
+    text-align:center; box-shadow:0 0 40px rgba(139,47,201,.5); margin:auto;
+  }
+  .endCard h2{font-size:28px; letter-spacing:2px; margin-top:0;}
+  .endCard p{color:var(--dim); line-height:1.6;}
+
+  @media (max-width:480px){
+    #titleScreen h1{font-size:44px; letter-spacing:8px;}
+    #app{padding:10px; padding-left:max(10px, env(safe-area-inset-left)); padding-right:max(10px, env(safe-area-inset-right));}
+    .statItem{font-size:12px;}
+    .barOuter{width:80px;}
+    .vsRow{gap:10px;}
+    .fighter{padding:10px;}
+    .combatBtns button{flex:1 1 100%;}
+    #titleButtons button{width:100%;}
+    .endCard{padding:20px;}
+    .shopItem{flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="titleScreen">
+    <h1>SLAYER</h1>
+    <div class="sub">S U N N Y D A L E &nbsp; N I G H T S</div>
+    <div class="blurb">Into every generation a Slayer is born. Patrol the cemeteries, train with your Watcher, rally the Scooby Gang, and stop what's coming before Sunnydale pays the price.</div>
+    <div id="diffPicker"></div>
+    <div id="titleButtons">
+      <input type="text" id="nameInput" placeholder="Your name, Slayer (default: Buffy)" maxlength="20">
+      <button class="gold" onclick="startNewGame()">New Game</button>
+      <button id="continueBtn" onclick="continueGame()">Continue</button>
+    </div>
+    <div id="saveIoRow">
+      <button id="exportBtn" onclick="exportSave()">Export Save</button>
+      <button onclick="triggerImport()">Import Save</button>
+    </div>
+    <input type="file" id="importFileInput" accept=".json,application/json" class="hidden" onchange="importSaveFile(event)">
+    <div id="hallOfFame"></div>
+  </div>
+
+  <div id="gameScreen" class="hidden">
+    <div id="statBar"></div>
+    <div id="mainLayout">
+      <nav id="locNav"></nav>
+      <main id="content"></main>
+      <aside id="sidePanel"></aside>
+    </div>
+    <div id="logPanel"></div>
+  </div>
+
+  <div id="endOverlay" class="hidden overlay">
+    <div class="endCard" id="endCard"></div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ============================== DATA ==============================
+
+const DIFFICULTIES = {
+  easy:   {label:'Easy',   enemyMult:0.85, startMoney:25, startStakes:10},
+  normal: {label:'Normal', enemyMult:1.0,  startMoney:15, startStakes:8},
+  hard:   {label:'Hard',   enemyMult:1.25, startMoney:10, startStakes:6},
+};
+
+const LOCATIONS = {
+  library:   {name:"Sunnydale High Library", desc:"Dusty stacks, older-than-old tomes, and Giles hovering with a raised eyebrow. The best place to train and dig up lore on what's crawling around town."},
+  bronze:    {name:"The Bronze", desc:"Sunnydale's one and only nightclub. Loud band, cheap drinks, and — if you know where to look — the rest of the Scooby Gang."},
+  mall:      {name:"Sunnydale Mall", desc:"Stakes, holy water, and the occasional bargain on stylish stakeout wear. A Slayer's got to shop somewhere."},
+  cemetery:  {name:"Restfield Cemetery", desc:"Row after row of freshly (and not-so-freshly) dug graves. Prime real estate for the recently risen. This is where the real work happens."},
+  home:      {name:"Summers Residence", desc:"Home. Mom's up watching television, the porch light's on, and your bed has never looked better. Rest up before tomorrow night."},
+  magicbox:  {name:"The Magic Box", desc:"A cramped occult shop stuffed with candles, crystals, and books nobody but Giles could love. Deeper lore and rarer gear than the mall could ever offer.", locked:true, unlockFlag:'magicboxUnlocked'},
+  sewers:    {name:"Sunnydale Sewers", desc:"A dank maze of tunnels running under the whole town. Whatever doesn't want to be found up top ends up down here.", locked:true, unlockFlag:'sewersUnlocked'},
+  hellmouth: {name:"The Hellmouth", desc:"A crack in the earth beneath the school that leads somewhere no one should go. Something ancient is stirring down there.", locked:true, unlockFlag:'hellmouthUnlocked'},
+  mansion:   {name:"The Old Mansion", desc:"An abandoned mansion on Crawford Street, its windows boarded, its halls gone cold. Something familiar and terrible is waiting inside.", locked:true, unlockFlag:'mansionUnlocked'},
+  factory:   {name:"The Old Factory", desc:"A rusted-out factory by the rail yard, draped in dust sheets and candlelight. Spike always did have a flair for the dramatic.", locked:true, unlockFlag:'factoryUnlocked'},
+};
+
+function E(id,name,hp,atkMin,atkMax,xp,mMin,mMax,opts){
+  return Object.assign({id,name,hp,maxHp:hp,atkMin,atkMax,xp,mMin,mMax,vamp:true},opts||{});
+}
+const ENEMIES = [
+  E('fledgling','Fledgling Vampire',18,3,6,10,2,6,{tier:1}),
+  E('newvamp','Newly Risen Vampire',22,4,8,13,3,7,{tier:1}),
+  E('thug','Vampire Thug',28,5,9,16,4,9,{tier:1}),
+  E('minion','Order Minion',38,6,11,24,6,12,{tier:2,minDay:8}),
+  E('demon','Bezoar Demon',34,5,10,22,5,10,{tier:2,minDay:10,vamp:false}),
+  E('polgara','Polgara Demon',50,8,13,32,8,16,{tier:3,minDay:18,vamp:false}),
+  E('ordervamp','Order Elite Vampire',55,9,15,38,9,18,{tier:4,minDay:16}),
+  E('sewerdemon','Sewer-Dweller Demon',60,10,16,40,10,20,{tier:4,minDay:22,vamp:false}),
+];
+const SPIKE    = E('spike','Spike',72,9,15,60,0,0,{unique:true});
+const ANOINTED = E('anointed','The Anointed One',45,7,12,45,0,0,{unique:true});
+const DRUSILLA = E('drusilla','Drusilla',85,11,18,70,0,0,{unique:true});
+const ASSASSIN = E('assassin','Order Assassin',30,6,11,20,4,9,{unique:true});
+const MASTER   = E('master','The Master',175,12,20,500,0,0,{unique:true});
+const ANGELUS  = E('angelus','Angelus',220,15,25,1000,0,0,{unique:true});
+const REUNITED = E('reunited','Spike & Drusilla',210,14,24,1000,0,0,{unique:true});
+
+const STORY_BEATS = [
+  {day:1,  id:'intro',    text:"Giles: \"Buffy, you carry a great responsibility now — Sunnydale sits atop a Hellmouth. Patrol the cemeteries by night, and do try to keep up with your reading.\""},
+  {day:3,  id:'howls',    text:"Strange howls echo from Restfield Cemetery after dark. Something new is prowling Sunnydale."},
+  {day:8,  id:'order',    text:"Giles: \"I've found reference to something called 'The Order' — vampires organized under a mysterious Anointed One. Be careful out there.\""},
+  {day:10, id:'demons',   text:"Not everything that goes bump in the night is a vampire. The Hellmouth draws all manner of demons to Sunnydale."},
+  {day:12, id:'anointed', text:"Whispers speak of a child-like figure commanding The Order from the shadows — they call him the Anointed One.", effect:G=>{G.flags.anointedIncoming=true;}},
+  {day:14, id:'spike',    text:"A cocky, bleach-blond vampire has rolled into town in a beat-up DeSoto. Locals are already whispering the name 'Spike.' He's looking for a reputation — and you're the obvious target.", effect:G=>{G.flags.spikeIncoming=true;}},
+  {day:17, id:'three',    text:"Giles finds an old prophecy fragment: the Order has sent three assassins to end the Slayer before she grows any stronger. They won't come one at a time.", effect:G=>{G.flags.threeIncoming=true;}},
+  {day:20, id:'stirring', text:"Giles goes pale flipping through an old text. \"It speaks of a Master vampire, trapped beneath Sunnydale. The signs... they suggest he's close to breaking free.\"", effect:G=>{G.flags.masterStirring=true;}},
+  {dayOffset:2,  season:2, id:'s2_quiet',  text:"The Hellmouth is sealed again, but something else has crept into town in the confusion. The Bronze is buzzing about a dark-haired woman who talks to the dolls in a shop window like they're listening back."},
+  {dayOffset:6,  season:2, id:'s2_dru',    text:"Giles: \"Her name is Drusilla. Older than Spike, and by all accounts, far more dangerous. She's not here by accident.\"", effect:G=>{G.flags.drusillaIncoming=true;}},
+  {dayOffset:10, season:2, id:'s2_climax', text:"Whatever's coming, it's coming soon. Giles urges you to finish your research and be ready.", effect:G=>{G.flags.season2ClimaxReady=true;}},
+];
+
+const SHOP_ITEMS = [
+  {id:'stake5',   name:'Bundle of Stakes ×5',  cost:10, desc:'Sharpened, whittled, ready to dust.', effect:G=>{G.stakes+=5;}},
+  {id:'holy1',    name:'Vial of Holy Water',   cost:15, desc:'Blessed at the local church. Vamps hate this.', effect:G=>{G.holyWater+=1;}},
+  {id:'cross1',   name:'Silver Cross',         cost:12, desc:'Wards off one attack in a pinch.', effect:G=>{G.crosses+=1;}},
+  {id:'firstaid', name:'First Aid Kit',        cost:8,  desc:'Patches you up for 25 HP.', effect:G=>{G.health=Math.min(G.maxHealth,G.health+25);}},
+];
+const SHOP_ITEMS2 = [
+  {id:'mrpointy',    name:'Mr. Pointy (Enchanted Stake)', cost:60, once:true, desc:'A perfectly balanced, faintly blessed stake. Permanently +5 Strength.', effect:G=>{G.strength+=5;}},
+  {id:'armor',       name:'Reinforced Leather Jacket',    cost:45, once:true, desc:'Permanently reduces all damage taken by 10%.', effect:G=>{G.armor=clamp((G.armor||0)+0.1,0,0.5);}},
+  {id:'crossbow',    name:'Crossbow',                     cost:35, once:true, desc:'Unlocks the Crossbow attack in combat. Needs bolts to fire — buy those separately.', effect:G=>{G.hasCrossbow=true;}},
+  {id:'bolts3',      name:'Quiver of Bolts ×3',           cost:15, desc:'Ammunition for the crossbow. Doesn\'t come with one.', effect:G=>{G.bolts=(G.bolts||0)+3;}},
+  {id:'vigorpotion', name:'Potion of Fortitude',          cost:20, desc:'+30% damage on your next 3 attacks.', effect:G=>{G.fortitudeCharges=(G.fortitudeCharges||0)+3;}},
+];
+
+const ACHIEVEMENTS = [
+  {id:'first_blood',    name:'First Blood',       desc:'Win your first fight.',                        check:G=>G.stats.kills>=1},
+  {id:'grave_shift',    name:'Grave Shift',       desc:'Dust 10 vampires and demons.',                  check:G=>G.stats.kills>=10},
+  {id:'veteran',        name:'Veteran Slayer',    desc:'Dust 25 vampires and demons.',                  check:G=>G.stats.kills>=25},
+  {id:'full_gang',      name:'Scooby Squad',      desc:'Recruit Willow, Xander, Cordelia, and Angel.',  check:G=>G.scoobies.willow&&G.scoobies.xander&&G.scoobies.cordelia&&G.scoobies.angel},
+  {id:'spike_dusted',   name:'Big Bad Blond',     desc:'Defeat Spike.',                                 check:G=>!!G.flags.spikeDefeated},
+  {id:'anointed_gone',  name:'No More Prophecy',  desc:'Defeat the Anointed One.',                      check:G=>!!G.flags.anointedDefeated},
+  {id:'three_crowd',    name:"Three's a Crowd",   desc:'Survive an ambush by three Order assassins at once.', check:G=>!!G.flags.threeDefeated},
+  {id:'harvest_undone',  name:'The Harvest Undone',desc:'Defeat The Master.',                           check:G=>G.season>=2},
+  {id:'close_call',     name:'Nine Lives',        desc:'Survive a fight with under 10 HP remaining.',   check:G=>!!G.stats.closeCall},
+  {id:'high_roller',    name:'High Roller',       desc:'Carry $150 or more.',                           check:G=>G.money>=150},
+  {id:'well_equipped',  name:'Well Equipped',     desc:'Own Mr. Pointy, armor, and a crossbow.',        check:G=>!!G.flags.bought_mrpointy && !!G.flags.bought_armor && !!G.flags.bought_crossbow},
+  {id:'tight_knit',     name:'Tight-Knit',        desc:'Get any Scooby\'s bond to 100.',                 check:G=>Object.values(G.bonds||{}).some(v=>v>=100)},
+  {id:'drama_queen',    name:'Group Drama',       desc:'Navigate at least 3 Scooby Gang conflicts.',    check:G=>Object.keys(G.flags).filter(k=>k.indexOf('sevent_')===0).length>=3},
+  {id:'chosen_one',     name:'The Chosen One',    desc:'Win the game.',                                 check:G=>!!G.win},
+];
+
+const SCOOBY_HANGOUT_FLAVOR = {
+  willow: [
+    "Willow shows you a new spell she's nervous to try. You're delighted; she's terrified. Very on brand.",
+    "You and Willow talk research strategy over frozen yogurt. It's a surprisingly good system.",
+    "Willow rants about a computer science professor for ten straight minutes. You nod supportively.",
+    "\"I found something in the network logs,\" Willow says, like that's a sentence that makes sense to you. You trust her completely anyway.",
+  ],
+  xander: [
+    "Xander does a full stand-up routine about his own many humiliations. It's better than it sounds.",
+    "You and Xander split a large order of fries and talk about anything except vampires for once.",
+    "Xander tries to teach you a card game with rules he's clearly making up as he goes.",
+    "\"You know I've got your back, right?\" Xander says, and for once, isn't joking.",
+  ],
+  cordelia: [
+    "Cordelia gives you a brutally honest assessment of your patrol wardrobe. You take some of it to heart.",
+    "Cordelia complains about the Cordettes for twenty minutes, then admits she doesn't even like them that much.",
+    "You catch a rare, unguarded moment where Cordelia actually asks if you're doing okay. You almost don't recognize her being sincere.",
+    "\"Obviously I don't care,\" Cordelia says, in a tone that means she cares a great deal.",
+  ],
+  oz: [
+    "Oz says about four words the entire hangout. Somehow it's still a good conversation.",
+    "You watch Dingoes Ate My Baby rehearse. Oz plays like the rest of the world isn't on fire, which helps.",
+    "\"Full moon's coming up,\" Oz mentions, casually, like he's talking about the weather. He kind of is.",
+    "Oz offers you half his sandwich without being asked. It's oddly one of the nicer things anyone's done for you this week.",
+  ],
+  angel: [
+    "You and Angel talk on a rooftop until the sky starts going gray. Neither of you mentions the time.",
+    "Angel tells you a story from decades ago like it happened last week. It's disorienting how old he actually is.",
+    "\"Be careful out there,\" Angel says, and it lands heavier than it should, coming from him.",
+    "You catch Angel watching you with an expression he clearly didn't mean for you to see.",
+  ],
+};
+
+const SCOOBY_EVENTS = [
+  {
+    id:'willow_cordelia', title:'Words at the Bronze',
+    requires:G=>G.scoobies.willow && G.scoobies.cordelia,
+    text:"Cordelia loudly critiques Willow's sweater in front of half the club. Willow's gone quiet. Everyone's looking at you.",
+    choices:[
+      {id:'defend_willow', label:'Defend Willow', effect:G=>{ G.bonds.willow=clamp(G.bonds.willow+15,0,100); G.bonds.cordelia=clamp(G.bonds.cordelia-10,0,100); return "Willow shoots you a grateful look. Cordelia rolls her eyes so hard you worry about her retinas."; }},
+      {id:'peacemake', label:'Smooth things over', effect:G=>{ G.bonds.willow=clamp(G.bonds.willow+5,0,100); G.bonds.cordelia=clamp(G.bonds.cordelia+5,0,100); return "You crack a joke that gets both of them laughing. Crisis diffused, mostly."; }},
+      {id:'side_cordelia', label:'Laugh along with Cordelia', effect:G=>{ G.bonds.cordelia=clamp(G.bonds.cordelia+15,0,100); G.bonds.willow=clamp(G.bonds.willow-10,0,100); return "Cordelia looks smug. Willow leaves early. You feel a little sick about it."; }},
+    ]
+  },
+  {
+    id:'xander_angel', title:'Not Brooding, Just Thinking',
+    requires:G=>G.scoobies.xander && G.scoobies.angel,
+    text:"Xander: \"Am I the only one who thinks the mysterious stranger thing is, like, a personality replacement for an actual personality?\"",
+    choices:[
+      {id:'defend_angel', label:'Defend Angel', effect:G=>{ G.bonds.angel=clamp(G.bonds.angel+10,0,100); G.bonds.xander=clamp(G.bonds.xander-8,0,100); return "Xander throws up his hands. \"Fine, whatever, whatever you say.\" Angel says nothing, but something in his eyes softens."; }},
+      {id:'reassure_xander', label:'Reassure Xander', effect:G=>{ G.bonds.xander=clamp(G.bonds.xander+12,0,100); return "Xander relaxes. \"Right. Yeah. Just checking you hadn't lost your mind.\""; }},
+      {id:'tell_both', label:'Tell them both to grow up', effect:G=>{ G.bonds.xander=clamp(G.bonds.xander-3,0,100); G.bonds.angel=clamp(G.bonds.angel-3,0,100); G.charm+=2; return "Nobody argues with you when you use That Voice. Your charm's getting a reputation."; }},
+    ]
+  },
+  {
+    id:'oz_xander', title:'Creative Differences',
+    requires:G=>G.scoobies.oz && G.scoobies.xander,
+    text:"Xander wants Dingoes Ate My Baby to cover something with 'more hooks.' Oz just says, \"No.\" It's a whole thing now, apparently.",
+    choices:[
+      {id:'side_oz', label:'Side with Oz', effect:G=>{ G.bonds.oz=clamp(G.bonds.oz+10,0,100); G.bonds.xander=clamp(G.bonds.xander-5,0,100); return "Oz nods once. That's basically a standing ovation, for Oz."; }},
+      {id:'side_xander', label:'Side with Xander', effect:G=>{ G.bonds.xander=clamp(G.bonds.xander+10,0,100); G.bonds.oz=clamp(G.bonds.oz-5,0,100); return "Xander looks vindicated. Oz just shrugs and tunes his guitar."; }},
+      {id:'compromise', label:'Suggest a compromise', effect:G=>{ G.bonds.oz=clamp(G.bonds.oz+4,0,100); G.bonds.xander=clamp(G.bonds.xander+4,0,100); return "Somehow 'more hooks, still no' satisfies exactly nobody, but everyone stops arguing."; }},
+    ]
+  },
+  {
+    id:'cordelia_xander', title:'Definitely Not A Thing',
+    requires:G=>G.scoobies.cordelia && G.scoobies.xander,
+    text:"You catch Cordelia and Xander mid-argument that ends abruptly the second they notice you. Neither will make eye contact. Something is extremely Not Normal here.",
+    choices:[
+      {id:'tease', label:'Tease them about it', effect:G=>{ G.bonds.cordelia=clamp(G.bonds.cordelia+5,0,100); G.bonds.xander=clamp(G.bonds.xander+5,0,100); return "They both deny everything so fast and so loud that it confirms everything."; }},
+      {id:'ignore', label:"Ignore it — not your business", effect:G=>{ return "You let it go. Some mysteries aren't yours to solve."; }},
+      {id:'ask_direct', label:"Ask what's going on, directly", effect:G=>{
+          if(G.charm>=15){ G.bonds.cordelia=clamp(G.bonds.cordelia+8,0,100); G.bonds.xander=clamp(G.bonds.xander+8,0,100); return "Surprisingly, they actually tell you. It's complicated. It's going to stay complicated."; }
+          return "You get twin death glares and no answers. Fair enough.";
+      }},
+    ]
+  },
+  {
+    id:'willow_oz', title:'Quiet Corner',
+    requires:G=>G.scoobies.willow && G.scoobies.oz,
+    text:"Willow and Oz are talking quietly in a corner booth, close together, not really noticing anyone else in the room.",
+    choices:[
+      {id:'leave_them', label:'Leave them be', effect:G=>{ G.bonds.willow=clamp(G.bonds.willow+8,0,100); G.bonds.oz=clamp(G.bonds.oz+8,0,100); return "You give them their space. Willow catches your eye later with a small, happy smile."; }},
+      {id:'interrupt', label:'Go say hi anyway', effect:G=>{ G.bonds.willow=clamp(G.bonds.willow-3,0,100); return "Willow jumps about a foot. Oz just says, \"Hey.\" You... probably should have knocked, metaphorically."; }},
+    ]
+  },
+];
+
+const GILES_EVENTS = [
+  {
+    id:'giles_council', title:'Council Business',
+    requires:G=>G.day>=6,
+    text:"Giles sets down a letter with the Watchers' Council seal, jaw tight. \"They want tighter reporting. Standard training regimens, standard patrol logs. As if you were standard.\"",
+    choices:[
+      {id:'defy', label:'Tell him to ignore the Council', effect:G=>{
+        G.flags.gilesRebel = true; G.bonds.giles = clamp(G.bonds.giles+12,0,100); G.charm += 1;
+        return "Giles almost smiles. \"Good. I was rather hoping you'd say that.\" The letter goes in the bin.";
+      }},
+      {id:'comply', label:'Tell him to play it safe and comply', effect:G=>{
+        G.flags.gilesByBook = true; G.bonds.giles = clamp(G.bonds.giles+4,0,100); G.research += 2;
+        return "Giles nods, relieved, and starts drawing up a formal training schedule. It's dry as dust, but thorough — you learn a few things from it.";
+      }},
+    ]
+  },
+  {
+    id:'giles_ripper', title:'Ripper',
+    requires:G=>G.day>=14 && G.research>=15,
+    text:"Giles pours two cups of tea, hands you one without asking, and doesn't say anything for a long moment. \"There was a time,\" he finally says, \"before all this, when I was... a rather different person. Younger. Angrier. They called me Ripper, if you can believe it.\"",
+    choices:[
+      {id:'listen', label:'Just listen', effect:G=>{
+        G.bonds.giles = clamp(G.bonds.giles+15,0,100);
+        return "You don't push. Giles talks longer than he meant to, and looks lighter for it by the end.";
+      }},
+      {id:'press', label:'Press him for the whole story', effect:G=>{
+        G.bonds.giles = clamp(G.bonds.giles-6,0,100); G.research += 3;
+        return "Giles goes quiet, then changes the subject by handing you an obscure text you've never seen — clearly a deflection. You learn a great deal about medieval demonology and nothing at all about Ripper.";
+      }},
+    ]
+  },
+  {
+    id:'giles_doubt', title:"A Watcher's Doubt",
+    requires:G=>G.day>=20 && (G.stats.closeCall || G.health<G.maxHealth*0.3),
+    text:"Giles finds you after a rough night and just stands there a moment. \"Sometimes I wonder if I've any right, sending a girl your age out to do this. If anything happened to you—\" He stops himself.",
+    choices:[
+      {id:'reassure', label:'Tell him you trust him completely', effect:G=>{
+        G.bonds.giles = clamp(G.bonds.giles+15,0,100); G.maxHealth += 5; G.health = Math.min(G.maxHealth, G.health+5);
+        return "Something settles in Giles's shoulders. \"Right then,\" he says, voice a little thick. \"Let's make sure that trust is well placed.\" He's more careful with you after that, in ways you don't always notice.";
+      }},
+      {id:'harsh', label:"Tell him he needs to train you harder, not doubt himself", effect:G=>{
+        G.bonds.giles = clamp(G.bonds.giles-10,0,100); G.strength += 3;
+        return "Giles flinches like you'd struck him, then nods once, sharply. The next weeks of training are brutal. You get stronger. It costs something else.";
+      }},
+    ]
+  },
+];
+
+const JOYCE_EVENTS = [
+  {
+    id:'joyce_worry', title:'Late Nights',
+    requires:G=>G.day>=5,
+    text:"Mom catches sight of a bruise on your collarbone before you can cover it. \"Buffy. What is going on with you lately? The late nights, the... this.\" She gestures at the bruise. \"I want an answer.\"",
+    choices:[
+      {id:'deflect', label:'Brush it off — self-defense class got rough', effect:G=>{
+        G.flags.joyceSuspicious = true; G.bonds.joyce = clamp(G.bonds.joyce+3,0,100);
+        return "Mom doesn't look convinced, but she lets it go — for now. You can tell this isn't over.";
+      }},
+      {id:'honest_lite', label:"Admit you're dealing with 'a lot' right now, without details", effect:G=>{
+        G.bonds.joyce = clamp(G.bonds.joyce+10,0,100);
+        return "It's not the whole truth, but it's more than you usually give her. She squeezes your hand and doesn't push further.";
+      }},
+      {id:'snap', label:'Snap at her to just trust you', effect:G=>{
+        G.flags.joyceSuspicious = true; G.bonds.joyce = clamp(G.bonds.joyce-10,0,100);
+        return "Her face falls. She says \"okay\" very quietly and leaves the room. That one's going to sit with you for a while.";
+      }},
+    ]
+  },
+  {
+    id:'joyce_reveal', title:"What Aren't You Telling Me",
+    requires:G=>G.day>=24 && !G.flags.joyceKnows && !G.flags.joyceInDenial,
+    text:"You come home at 3 a.m. to find your mother sitting at the kitchen table wide awake, a broken stake you left on your nightstand sitting in front of her like evidence. \"I think,\" she says, very carefully, \"it's time you told me the truth.\"",
+    choices:[
+      {id:'truth', label:"Tell her everything — you're the Slayer", effect:G=>{
+        G.flags.joyceKnows = true; G.bonds.joyce = clamp(G.bonds.joyce+20,0,100);
+        return "She doesn't scream, doesn't laugh it off. She just goes very pale, and very quiet, and then — impossibly — asks if you're hungry. It's not everything. But it's something, and it's real.";
+      }},
+      {id:'deny', label:'Deny it — claim the stake is for a school project', effect:G=>{
+        G.flags.joyceInDenial = true; G.bonds.joyce = clamp(G.bonds.joyce-20,0,100);
+        return "She stares at you for a long moment, then nods slowly, like she's decided not to believe herself either. Something closes between you that night, quietly, and doesn't reopen.";
+      }},
+    ]
+  },
+];
+
+const SNYDER_EVENTS = [
+  {
+    id:'snyder_hallway', title:'Principal Snyder',
+    requires:G=>G.day>=2,
+    text:"Principal Snyder materializes in the stacks like he's been waiting for a reason to loom. \"Summers. You do know the library is for studying, not whatever it is you and your... friends do in here.\"",
+    choices:[
+      {id:'sass', label:'Sass him right back', effect:G=>{
+        G.charm += 1; G.flags.snyderGrudge = clamp((G.flags.snyderGrudge||0)+1,0,99);
+        return "Snyder's face does something complicated and unpleasant. \"Watch it, Summers,\" he says, and stalks off. You feel great about it anyway.";
+      }},
+      {id:'polite', label:'Play it polite and boring', effect:G=>{
+        G.research += 1;
+        return "You out-bore him with a monotone recap of your 'research project.' Snyder loses interest almost immediately and wanders off to menace someone else.";
+      }},
+    ]
+  },
+  {
+    id:'snyder_detention', title:'Detention Threat',
+    requires:G=>G.day>=10 && (G.flags.snyderGrudge||0)>=1,
+    text:"Snyder slaps a pink detention slip on the table in front of you. \"Tardiness. Loitering. General... you-ness. I'm watching you, Summers.\"",
+    choices:[
+      {id:'accept', label:'Take the detention, keep your head down', effect:G=>{
+        G.ap = Math.max(0, G.ap-1); G.flags.snyderGrudge = clamp((G.flags.snyderGrudge||0)-1,0,99);
+        return "You sit through detention doing actual homework, for once. It costs you tonight's energy, but Snyder backs off, slightly.";
+      }},
+      {id:'refuse', label:'Tell him you have better things to do', effect:G=>{
+        G.charm += 2; G.flags.snyderGrudge = clamp((G.flags.snyderGrudge||0)+2,0,99);
+        return "\"Better things,\" Snyder repeats, like it physically pains him. \"There is nothing more important than this institution, Summers.\" You beg to differ, loudly.";
+      }},
+    ]
+  },
+  {
+    id:'snyder_showdown', title:'Expulsion Threat',
+    requires:G=>G.day>=18 && (G.flags.snyderGrudge||0)>=3 && !G.flags.snyderExpelled && !G.flags.snyderBacked,
+    text:"Snyder calls you into his office, expulsion paperwork already half-filled-out on the desk. \"I don't know what you and your little club get up to, Summers, but Sunnydale High does not need... whatever this is.\"",
+    choices:[
+      {id:'giles_backup', label:'Have Giles vouch for you', effect:G=>{
+        if(G.scoobies.willow || G.research>=15){
+          G.flags.snyderBacked = true; G.bonds.giles = clamp((G.bonds.giles!=null?G.bonds.giles:50)+10,0,100);
+          return "Giles, looking deeply uncomfortable in a tie, talks Snyder down with a mix of bureaucratic jargon and pure nerve. You're off the hook. This time.";
+        }
+        G.flags.snyderExpelled = true;
+        return "Giles tries his best, but without more to back him up, it doesn't land. The expulsion papers stay on the desk, ominously unsigned but not un-signed either.";
+      }},
+      {id:'defiant', label:'Tell him to go ahead and expel you', effect:G=>{
+        G.flags.snyderExpelled = true; G.charm += 3;
+        return "Snyder blinks, clearly hoping you'd beg. You don't. He doesn't actually sign anything — mostly because expelling the one person keeping Sunnydale's body count down would raise questions he doesn't want asked — but he'll remember this.";
+      }},
+    ]
+  },
+];
+
+const MAYOR_EVENTS = [
+  {
+    id:'mayor_ribbon', title:'A Word From The Mayor',
+    requires:G=>G.day>=8,
+    text:"Mayor Wilkins finds you at a town event, all bright teeth and a firm handshake. \"Buffy Summers! I make it my business to know the... more active students in this town. Sunnydale runs smoother than people realize. I'd like it to stay that way.\"",
+    choices:[
+      {id:'cooperate', label:'Play along and be diplomatic', effect:G=>{
+        G.money += 20; G.flags.mayorFavor = clamp((G.flags.mayorFavor||0)+1,0,99);
+        return "The Mayor beams and presses a business card and, oddly, a $20 bill into your hand. \"For books,\" he says. \"Or whatever you kids need these days.\" It feels like the start of a favor you'll owe back.";
+      }},
+      {id:'suspicious', label:'Ask him directly what he knows about the Hellmouth', effect:G=>{
+        G.research += 2; G.flags.mayorSuspicious = true;
+        return "His smile doesn't waver, but something behind his eyes goes very still. \"That's quite an imagination you've got.\" He changes the subject smoothly, but you've clearly hit a nerve — and learned something for the trouble.";
+      }},
+    ]
+  },
+  {
+    id:'mayor_warning', title:'A Friendly Warning',
+    requires:G=>G.day>=16 && !!G.flags.mayorSuspicious,
+    text:"A single white lily arrives at the Summers house with no card. Later, the Mayor catches you alone outside the Magic Box. \"Curiosity's a fine quality, Ms. Summers. Just be sure it doesn't get you hurt before I need it to.\" He's still smiling. It's worse that way.",
+    choices:[
+      {id:'stand_ground', label:"Tell him you're not scared of him", effect:G=>{
+        G.charm += 2; G.flags.mayorFavor = clamp((G.flags.mayorFavor||0)-2,0,99);
+        return "\"Good,\" he says, entirely too pleased. \"Fear makes people sloppy. Wouldn't want that.\" He tips an imaginary hat and strolls off whistling.";
+      }},
+      {id:'back_off', label:'Back off — for now', effect:G=>{
+        G.flags.mayorFavor = clamp((G.flags.mayorFavor||0)+2,0,99); G.money += 15;
+        return "You let it go. An envelope of cash shows up at the Magic Box the next day, no note needed. You don't love what that probably means about you.";
+      }},
+    ]
+  },
+];
+
+// Two-stage "meanwhile..." scenes told from another Scooby's POV. Stage 1's
+// choice picks bold/careful, which stage 2's text and payout both key off.
+const SIDE_QUESTS = [
+  {
+    id:'willow_quest1', title:"Meanwhile: Willow's Locator Spell",
+    requires:G=>G.scoobies.willow && bondOf('willow')>=65 && G.day>=9,
+    text:"While you're out, Willow calls, breathless. \"I found a locator spell that could pinpoint where all this nastiness is coming from, but the incantation's advanced — like, 'could blow up my laptop' advanced. Should I try it?\" You're not there for this part. This one's Willow's.",
+    choices:[
+      {id:'go_for_it', label:'Tell her to go for it', effect:G=>{
+        G.flags.willowQuestBold = true; G.choiceEvent = 'willow_quest2';
+        return "\"Okay. Okay, doing it,\" Willow says, and you hear candles being lit over the phone.";
+      }},
+      {id:'be_careful', label:'Tell her to take it slow and careful', effect:G=>{
+        G.flags.willowQuestCareful = true; G.choiceEvent = 'willow_quest2';
+        return "\"Slow. Right. I can do slow,\" Willow says, sounding anything but reassured.";
+      }},
+    ]
+  },
+  {
+    id:'willow_quest2', title:"Meanwhile: Willow's Locator Spell",
+    requires:G=>!!G.flags.quest_willow_quest1,
+    text:G=>G.flags.willowQuestBold
+      ? "Your phone buzzes at 2 a.m.: \"IT WORKED. Also I might have blacked out for like ten minutes. Also there's a symbol on my wall now. Anyway — big nest of activity out by the old rail yard.\""
+      : "Your phone buzzes, calmer this time: \"Okay, it worked, slow like you said. Took forever. But there's definitely a hub of activity out by the old rail yard.\"",
+    choices:[
+      {id:'giles_route', label:'Have her bring the reading to Giles', effect:G=>{
+        const bold = !!G.flags.willowQuestBold;
+        G.research += bold?4:2; G.bonds.willow = clamp(G.bonds.willow+10,0,100);
+        return "Giles cross-references it against three other texts and comes away looking rattled in a very useful way.";
+      }},
+      {id:'strike_route', label:'Strike the rail yard tonight, no time to waste', effect:G=>{
+        const bold = !!G.flags.willowQuestBold;
+        G.flags.tipOff = true; G.money += bold?15:8; G.bonds.willow = clamp(G.bonds.willow+6,0,100);
+        if(bold) G.health = Math.max(1, G.health-8);
+        return bold
+          ? "You move fast on the lead and it pays off, but chasing it half-prepped costs you some bruises you'll feel tomorrow."
+          : "You scout the rail yard carefully off Willow's intel. Clean, quiet, useful.";
+      }},
+    ]
+  },
+  {
+    id:'xander_quest1', title:"Meanwhile: Xander's Stakeout",
+    requires:G=>G.scoobies.xander && bondOf('xander')>=65 && G.day>=9,
+    text:"Xander calls, trying too hard to sound casual. \"So there's this warehouse everyone's been avoiding, and I figure — hey, why not me? I've got a crowbar, a flashlight, and questionable life insurance.\" You're not there for this one. This is Xander's night.",
+    choices:[
+      {id:'let_him', label:'Let him do his own thing', effect:G=>{
+        G.flags.xanderQuestBold = true; G.choiceEvent = 'xander_quest2';
+        return "\"Great! Great, cool, I'm not scared even a little,\" Xander says, in the voice of a man who is scared quite a lot.";
+      }},
+      {id:'insist_backup', label:'Insist he waits for backup', effect:G=>{
+        G.flags.xanderQuestCareful = true; G.choiceEvent = 'xander_quest2';
+        return "\"Fine, fine, backup, very sensible,\" Xander grumbles, sounding relieved you said it so he didn't have to admit he wanted to hear it.";
+      }},
+    ]
+  },
+  {
+    id:'xander_quest2', title:"Meanwhile: Xander's Stakeout",
+    requires:G=>!!G.flags.quest_xander_quest1,
+    text:G=>G.flags.xanderQuestBold
+      ? "Xander calls back forty minutes later, out of breath. \"Okay so, good news, found the vamp nest. Bad news, they found me first. Great news, I'm hiding in a vending machine room and I brought snacks.\""
+      : "You and Xander stake out the warehouse together. He's actually pretty good at spotting patterns — turns out four years of horror movies taught him something useful.",
+    choices:[
+      {id:'go_help', label:'Drop everything and go help him', effect:G=>{
+        const bold = !!G.flags.xanderQuestBold;
+        G.stakes = Math.max(0, G.stakes-1); G.xp += 10; G.bonds.xander = clamp(G.bonds.xander+15,0,100);
+        if(bold) G.health = Math.max(1, G.health-10);
+        checkLevelUp();
+        return bold
+          ? "You bust in, stake the pair cornering him, and haul Xander out through the vending machine room. He owes you a soda. Several, actually."
+          : "The two of you clean up a small, easy nest together, no drama, in and out.";
+      }},
+      {id:'trust_him', label:'Trust him to handle it himself', effect:G=>{
+        const bold = !!G.flags.xanderQuestBold;
+        if(bold){
+          if(Math.random()<0.5){
+            G.money += 20; G.xp += 8; G.bonds.xander = clamp(G.bonds.xander+10,0,100); checkLevelUp();
+            return "Somehow — SOMEHOW — Xander improvises his way out with a fire extinguisher and pure spite, and even grabs some loot on the way out.";
+          }
+          G.scoobyMorale = clamp(G.scoobyMorale-8,0,100); G.health = Math.max(1, G.health-15);
+          return "Xander makes it out, but banged up and rattled, and you spend the rest of the night feeling sick about not being there.";
+        }
+        G.bonds.xander = clamp(G.bonds.xander+10,0,100);
+        return "You finish the patrol together and call it an early, uneventful night. Xander seems almost disappointed nothing tried to eat him.";
+      }},
+    ]
+  },
+  {
+    id:'cordelia_quest1', title:"Meanwhile: Cordelia's Detour",
+    requires:G=>G.scoobies.cordelia && bondOf('cordelia')>=65 && G.day>=9,
+    text:"Cordelia calls, uncharacteristically rattled. \"Okay, don't freak out, but I might have followed a weird guy from the mall to see where he was going, and now I'm at this creepy warehouse thing, and this is not the shopping trip I signed up for.\"",
+    choices:[
+      {id:'tell_leave', label:'Tell her to get out immediately', effect:G=>{
+        G.flags.cordeliaQuestCareful = true; G.choiceEvent = 'cordelia_quest2';
+        return "\"Leaving! Very much leaving!\" she says, already halfway out the door in her head.";
+      }},
+      {id:'tell_look', label:'Tell her to look around carefully first — you need intel', effect:G=>{
+        G.flags.cordeliaQuestBold = true; G.choiceEvent = 'cordelia_quest2';
+        return "\"You want me to what? Fine. FINE. For the Scoobies,\" she mutters, and you hear her creeping further in.";
+      }},
+    ]
+  },
+  {
+    id:'cordelia_quest2', title:"Meanwhile: Cordelia's Detour",
+    requires:G=>!!G.flags.quest_cordelia_quest1,
+    text:G=>G.flags.cordeliaQuestBold
+      ? "Cordelia's voice drops to a whisper: \"Okay, there's definitely a vampire-nest situation happening in here, and I see a calendar with a date circled, and I really don't want to be a hero right now.\""
+      : "Cordelia makes it out fine, a little shaken, complaining the whole way about her shoes.",
+    choices:[
+      {id:'get_calendar', label:'Tell her to grab the calendar and go', effect:G=>{
+        const bold = !!G.flags.cordeliaQuestBold;
+        if(bold){
+          G.flags.tipOff = true; G.research += 2; G.bonds.cordelia = clamp(G.bonds.cordelia+12,0,100);
+          if(Math.random()<0.4){ G.health = Math.max(1, G.health-6); return "She grabs it, but knocks over a candle on the way out and has to sprint. Worth it — that calendar's a real lead."; }
+          return "Smooth exit, calendar in hand. Cordelia is, against all odds, kind of a natural at this.";
+        }
+        G.bonds.cordelia = clamp(G.bonds.cordelia+8,0,100); G.money += 5;
+        return "There's nothing left to grab — she's already home. She does mail you a scented candle later. Unclear why.";
+      }},
+      {id:'just_leave', label:'Tell her forget it, just get out safe', effect:G=>{
+        const bold = !!G.flags.cordeliaQuestBold;
+        G.bonds.cordelia = clamp(G.bonds.cordelia+(bold?15:10),0,100);
+        return "\"Thank you,\" Cordelia says, with more feeling than she usually allows herself. \"I was really hoping you'd say that.\"";
+      }},
+    ]
+  },
+  {
+    id:'oz_quest1', title:"Meanwhile: Oz's Lead",
+    requires:G=>G.scoobies.oz && bondOf('oz')>=65 && G.day>=11,
+    text:"Oz leaves a voicemail, which is unusual enough on its own. \"Hey. So, dead pets, weird pattern, might be a den somewhere near the quarry. Gonna go look. Just — thought you should know. In case.\"",
+    choices:[
+      {id:'go_together', label:'Head out to meet him there', effect:G=>{
+        G.flags.ozQuestBold = true; G.choiceEvent = 'oz_quest2';
+        return "\"Cool. Bring stakes,\" Oz says, and hangs up before you can answer, which you've learned means yes-that-was-a-real-invitation.";
+      }},
+      {id:'let_scout', label:"Tell him to just scout it, don't engage", effect:G=>{
+        G.flags.ozQuestCareful = true; G.choiceEvent = 'oz_quest2';
+        return "\"Scout only. Got it,\" Oz says, sounding like he was already planning that anyway.";
+      }},
+    ]
+  },
+  {
+    id:'oz_quest2', title:"Meanwhile: Oz's Lead",
+    requires:G=>!!G.flags.quest_oz_quest1,
+    text:G=>G.flags.ozQuestBold
+      ? "You and Oz find the den together — a small nest of newly-turned vamps holed up near the quarry, more than either of you expected."
+      : "Oz calls back, low-key as ever. \"Found it. Bigger than I thought. Didn't push my luck.\"",
+    choices:[
+      {id:'clear_it', label:'Clear the den out tonight', effect:G=>{
+        const bold = !!G.flags.ozQuestBold;
+        G.xp += bold?15:10; G.money += bold?20:12; G.stats.kills += 1; G.bonds.oz = clamp(G.bonds.oz+(bold?15:10),0,100);
+        G.health = Math.max(1, G.health-(bold?12:6));
+        checkLevelUp();
+        return bold
+          ? "The two of you clear it out together, quick and efficient. Oz doesn't say much afterward. He rarely does. But he stays a little closer the rest of the walk home."
+          : "You head out on his tip and mop up what's left before it can grow into a real problem.";
+      }},
+      {id:'report_giles', label:'Have him report back to Giles, handle it properly', effect:G=>{
+        G.research += 3; G.bonds.oz = clamp(G.bonds.oz+8,0,100);
+        return "Oz gives Giles the rundown in about six words. Giles, remarkably, understands all of them and starts planning a proper sweep.";
+      }},
+    ]
+  },
+  {
+    id:'angel_quest1', title:"Meanwhile: Angel's Past",
+    requires:G=>G.scoobies.angel && bondOf('angel')>=65 && G.day>=13 && G.angelMood==='normal',
+    text:"Angel doesn't call — he just isn't around for two nights, and on the third you find him standing outside a boarded-up house that used to belong to someone he apparently knew a very long time ago. He doesn't explain. He doesn't have to, really.",
+    choices:[
+      {id:'go_with_him', label:'Go in with him', effect:G=>{
+        G.flags.angelQuestBold = true; G.choiceEvent = 'angel_quest2';
+        return "He doesn't say thank you. He just nods, once, and pushes the door open.";
+      }},
+      {id:'give_space', label:'Tell him to take the time he needs, alone', effect:G=>{
+        G.flags.angelQuestCareful = true; G.choiceEvent = 'angel_quest2';
+        return "He looks almost relieved, and almost sorry, in the same breath. \"I won't be long,\" he says. You're not sure you believe him.";
+      }},
+    ]
+  },
+  {
+    id:'angel_quest2', title:"Meanwhile: Angel's Past",
+    requires:G=>!!G.flags.quest_angel_quest1,
+    text:G=>G.flags.angelQuestBold
+      ? "Inside, you find decades of Angel's past waiting for him in the dust — old letters, a portrait, a version of him that existed before you were born. He goes somewhere far away behind his eyes, right in front of you."
+      : "Angel comes back near dawn, quieter than usual, carrying nothing but clearly having left something behind in that house.",
+    choices:[
+      {id:'anchor_him', label:'Stay close and anchor him to the present', effect:G=>{
+        G.bonds.angel = clamp(G.bonds.angel+20,0,100);
+        return "You stay, and talk, and remind him — gently, stubbornly — which century he's actually standing in. It works. He comes back to himself, and doesn't let go of your hand for a while.";
+      }},
+      {id:'let_him_be', label:'Give him room to process it his own way', effect:G=>{
+        G.bonds.angel = clamp(G.bonds.angel+5,0,100);
+        G.angelBroodCount = (G.angelBroodCount||0)+1;
+        if(G.angelBroodCount>=3){ riseAngelus(); return "You give him space. Too much of it, maybe — whatever surfaced in that house didn't stay contained."; }
+        G.angelMood = 'brooding'; G.angelBroodUntil = G.day+5;
+        return "You let him carry it alone. Something shifts behind his eyes, distant and dark. He won't be much help for a while.";
+      }},
+    ]
+  },
+];
+
+const EVENT_SOURCES = [
+  {events:SCOOBY_EVENTS, flagPrefix:'sevent_'},
+  {events:GILES_EVENTS, flagPrefix:'gevent_'},
+  {events:JOYCE_EVENTS, flagPrefix:'jevent_'},
+  {events:SNYDER_EVENTS, flagPrefix:'snevent_'},
+  {events:MAYOR_EVENTS, flagPrefix:'mevent_'},
+  {events:SIDE_QUESTS, flagPrefix:'quest_'},
+];
+function findEventSource(id){
+  for(const src of EVENT_SOURCES){
+    const ev = src.events.find(e=>e.id===id);
+    if(ev) return {ev, flagPrefix:src.flagPrefix};
+  }
+  return null;
+}
+
+const RESEARCH_FLAVOR = [
+  "You cross-reference three different demonology texts until the words blur together.",
+  "Giles points you to a chapter on vampire clan hierarchies. Riveting stuff, honestly.",
+  "You find a marginal note in Watcher's shorthand — someone else fought this before.",
+  "A musty tome yields a name you half-recognize from last week's patrol.",
+  "You catalogue a new demon species by its dental records. The glamour never ends.",
+];
+const HANGOUT_FLAVOR = [
+  "The band's too loud to talk over, so you mostly just vibe with the gang.",
+  "Xander tells a story that's definitely 40% exaggerated. It still helps.",
+  "You trade patrol horror stories over sodas at a sticky booth.",
+  "Willow shows you something interesting she found online. You nod like you understand it.",
+  "Cordelia critiques your patrol outfit. She's not wrong about the boots.",
+];
+const GILES_FLAVOR = [
+  "Giles adjusts his glasses. \"There's always more to learn, Buffy.\"",
+  "Giles hands you a heavier book than strictly necessary. \"For strength of arm and mind.\"",
+  "Giles mutters something in Latin, then translates: \"Basically, don't die.\"",
+  "Giles: \"Your form's improving. Slowly. Very slowly.\"",
+  "Giles polishes his glasses for the eleventh time this conversation and still hasn't said what's actually on his mind.",
+  "Giles: \"I've catalogued seventeen ways to remove a vampire's head. None of them are dignified. Do keep that in mind.\"",
+  "Giles: \"You know, in my day, Watchers were feared and respected.\" \"Your day was, like, last week, Giles.\" \"...Quite.\"",
+  "Giles slides a cup of tea across the table without looking up from his book. It's the closest thing to affection he shows before noon.",
+  "Giles: \"I do wish, occasionally, that the fate of the world rested on someone who enjoyed reading footnotes.\"",
+  "Giles clears his throat meaningfully at a very inappropriate demon pun. You make it anyway.",
+  "Giles: \"The Council sends its regards.\" He says it the way most people say 'there's a spider in your shoe.'",
+  "Giles absently corrects your Latin pronunciation mid-sentence, without breaking eye contact. It's a little unsettling how good he is at that.",
+];
+const GILES_FLAVOR_REBEL = [
+  "Giles: \"The Council can file their reports. I'll continue training you the way I see fit.\"",
+  "Giles has stopped pretending he still answers to anyone but his own judgment. It suits him.",
+  "Giles slips you a technique that's definitely not Council-sanctioned. \"Don't tell anyone I taught you that.\"",
+];
+const GILES_FLAVOR_BYBOOK = [
+  "Giles runs through the Council's approved drills with renewed, almost stubborn precision.",
+  "Giles: \"Discipline, Buffy. The Council's methods exist for a reason, whatever you think of them.\"",
+  "Giles has taken to documenting your training in meticulous detail. For the Council's records, he says.",
+];
+const JOYCE_FLAVOR = [
+  "Mom: \"Just promise me you're not out doing anything dangerous.\" You let the silence answer for you.",
+  "Mom leaves a plate in the microwave with a sticky note: 'Eat something. Love, Mom.'",
+  "You and your mom watch bad television for twenty minutes and don't talk about anything real. It helps anyway.",
+  "Mom: \"I don't know what you kids get up to at night, but try to get some sleep, alright?\"",
+  "Mom: \"I saw the strangest thing at the gallery today. Nothing compared to what you probably saw tonight, I'm guessing.\"",
+  "Mom hands you a fresh box of Band-Aids without comment. You've gone through three boxes this month.",
+  "Mom: \"You know you can talk to me. About anything. Whenever you're ready.\" She means it more than you can tell her.",
+  "You catch your mom staring at an old photo of you as a kid, the kind of look that means she's worried and trying not to show it.",
+  "Mom: \"Principal Snyder called again. I told him you were dealing with 'personal matters.' He did not seem satisfied.\"",
+  "Mom leaves the porch light on later than usual, like she's been waiting up without admitting it.",
+  "Mom: \"I signed you up for self-defense classes at the community center. You're welcome.\" You don't have the heart to tell her you're way past that curriculum.",
+  "You help your mom hang a new piece at the gallery. For twenty minutes, your biggest problem is whether it's crooked.",
+];
+const JOYCE_FLAVOR_KNOWS = [
+  "Mom: \"Just... come home in one piece. That's all I ask anymore.\" She still worries. She just doesn't pretend not to.",
+  "Mom checks the bruise on your arm without asking, just gently, like it's become normal now.",
+  "Mom: \"I still don't love this. I want you to know that. But I love you, so.\" She leaves it there.",
+  "Mom has a first aid kit waiting by the door now. She never mentions when she restocks it.",
+];
+const JOYCE_FLAVOR_DENIAL = [
+  "Mom asks about your day. You give the same vague answer as always. The conversation ends there, like it always does now.",
+  "There's a careful, practiced distance in how your mom talks to you lately. You both seem to have agreed not to name it.",
+  "Mom: \"Everything alright?\" \"Fine, Mom.\" Neither of you believes it, and neither of you pushes.",
+];
+const QUIP_LINES = [
+  "\"Have you tried mouthwash? Just a thought.\"",
+  "\"Nice coat. Did it come with the personality-vacuum?\"",
+  "\"I'd love to stay and chat, but you're kind of on fire. Metaphorically. For now.\"",
+  "\"Big, brooding, and bitey. Very original.\"",
+  "\"You know, for undead, you really need a hobby.\"",
+  "\"Has anyone ever told you that you have a bit of an anger problem? Also a face problem.\"",
+  "\"Ooh, scary hissing. Very intimidating. Nine out of ten. Docked a point for the breath.\"",
+  "\"You know, most guys buy a girl dinner first.\"",
+  "\"I'm sorry, was that supposed to be scary? I've seen scarier things in my gym locker.\"",
+  "\"Wow. And here I thought fashion died with the Renaissance. Guess it just moved into a crypt.\"",
+  "\"Do you have a name, or should I just go with 'Excessive Overbite'?\"",
+  "\"Look, I'd love to give this my full attention, but I've got homework and a mother who thinks I'm at the library.\"",
+  "\"Cute growl. Did you practice that in a mirror, or do you just come by it naturally?\"",
+  "\"You're new, right? Because the returning ones usually know better by now.\"",
+  "\"I've dated worse. That's not a compliment, by the way.\"",
+  "\"Are we doing the 'monologue before you die' thing? Because I have a curfew.\"",
+  "\"You smell like a Renaissance Fair that lost a fight with a sewer.\"",
+  "\"Pretty sure Hot Topic called — they want their whole aesthetic back.\"",
+  "\"This is usually the part where you say something ominous. Take your time, really.\"",
+  "\"Not gonna lie, the whole 'creature of the night' thing was cooler before I met, like, twelve of you.\"",
+];
+const VAMP_QUIP_REACTIONS = [
+  "It snarls, baring fangs, clearly not appreciating the material.",
+  "\"Keep talking,\" it hisses. \"I like my meals with a side of sass.\"",
+  "It laughs — a dry, ugly sound — and lunges harder.",
+  "Its face ripples into full vamp-mode, unimpressed by your material.",
+  "\"You talk too much,\" it growls, and means it as a threat, not a review.",
+];
+const DEMON_QUIP_REACTIONS = [
+  "It tilts its head, clearly not parsing sarcasm as a language.",
+  "It doesn't laugh. It doesn't do anything but come at you harder.",
+  "If it understood the joke, it doesn't show it — whatever passes for its face doesn't change.",
+  "It lets out a low, wet noise that might be a growl or might be indigestion.",
+  "Whatever passes for a brain in there does not register 'wit.'",
+];
+const UNIQUE_QUIP_REACTIONS = {
+  spike: [
+    "Spike grins, all teeth. \"Love a girl with a mouth on her. Shame I'm gonna have to shut it.\"",
+    "\"Cute,\" Spike drawls, unbothered. \"You'll be less funny with your throat torn out.\"",
+    "Spike actually laughs — a real one — before his face goes hard again. \"Almost liked that one, Slayer.\"",
+  ],
+  anointed: [
+    "The Anointed One's childlike face doesn't so much as flicker. \"Words won't save you.\"",
+    "It just stares at you, ancient and patient in a child's body. Somehow that's worse than a comeback.",
+  ],
+  drusilla: [
+    "Drusilla giggles, delighted, like you've told her a lovely secret. \"Oh, she's a feisty one. Can we keep her, Spike?\"",
+    "\"The stars told me you'd say something like that,\" Drusilla sing-songs, unbothered and unhinged.",
+  ],
+  master: [
+    "The Master's laugh echoes off ancient stone, low and endless. \"Such spirit. It will make breaking you so much sweeter.\"",
+    "\"Mortal wit,\" The Master intones, contemptuous. \"How quaint.\"",
+  ],
+  angelus: [
+    "Angelus's smile is Angel's smile, which makes it so much worse. \"Still cracking jokes? Adorable. I remember when that used to work on me.\"",
+    "\"You used to save that mouth for better things,\" Angelus says, savoring how it lands.",
+  ],
+  reunited: [
+    "Spike smirks. Drusilla giggles. Somehow the two of them finding you funny is more unsettling than either one alone.",
+  ],
+};
+const VICTORY_FLAVOR = ["It crumbles to dust and drifts away on the wind.","One less thing lurking in Restfield tonight.","It shrieks, then it isn't there anymore."];
+
+// ============================== STATE ==============================
+
+const SAVE_KEY = 'slayerSave_v1';
+const HOF_KEY = 'slayerHallOfFame_v1';
+let G = null;
+let selectedDifficulty = 'normal';
+
+function newGame(name, difficulty, opts){
+  opts = opts || {};
+  const diffKey = DIFFICULTIES[difficulty] ? difficulty : 'normal';
+  const diff = DIFFICULTIES[diffKey];
+  G = {
+    name: name || 'Buffy',
+    difficulty: diffKey,
+    ngPlus: !!opts.ngPlus,
+    day:1, ap:4, apMax:4,
+    health:100, maxHealth:100,
+    strength:6 + (opts.ngPlus ? Math.round(opts.bonusLevel*0.5) : 0),
+    research:0, charm:5,
+    money: diff.startMoney + (opts.ngPlus ? 50 : 0),
+    stakes: diff.startStakes, holyWater:2, crosses:1, bolts:0,
+    armor:0, hasCrossbow:false, fortitudeCharges:0,
+    xp:0, level:1, xpToNext:40,
+    scoobyMorale:30,
+    scoobies:{willow:false,xander:false,cordelia:false,angel:false,oz:false},
+    bonds:{},
+    angelMood:'normal', angelBroodUntil:0, angelBroodCount:0,
+    season:1, masterDefeatDay:null,
+    flags:{},
+    location:'library',
+    combat:null,
+    choiceEvent:null,
+    log:[],
+    stats:{kills:0, closeCall:false},
+    achievements:{},
+    gameOver:false, win:false,
+  };
+  if(opts.ngPlus){
+    G.maxHealth += opts.bonusLevel*4;
+    G.health = G.maxHealth;
+  }
+  checkStoryBeats();
+  save();
+  showGameScreen();
+  render();
+}
+
+function save(){ if(G) localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }
+function tryLoad(){
+  const raw = localStorage.getItem(SAVE_KEY);
+  if(!raw) return false;
+  try{ G = normalizeSave(JSON.parse(raw)); return true; }catch(e){ return false; }
+}
+
+function validateSave(obj){
+  return !!obj && typeof obj==='object'
+    && typeof obj.day==='number' && typeof obj.health==='number'
+    && !!obj.scoobies && !!obj.flags && Array.isArray(obj.log);
+}
+
+function normalizeSave(g){
+  if(g.bonds==null) g.bonds = {};
+  if(g.choiceEvent===undefined) g.choiceEvent = null;
+  if(g.bolts==null) g.bolts = 0;
+  if(g.armor==null) g.armor = 0;
+  if(g.hasCrossbow==null) g.hasCrossbow = false;
+  if(g.fortitudeCharges==null) g.fortitudeCharges = 0;
+  if(g.scoobies.oz===undefined) g.scoobies.oz = false;
+  if(g.stats==null) g.stats = {kills:0, closeCall:false};
+  if(g.achievements==null) g.achievements = {};
+  if(g.season==null) g.season = 1;
+  if(g.masterDefeatDay===undefined) g.masterDefeatDay = null;
+  if(g.angelBroodCount==null) g.angelBroodCount = 0;
+  return g;
+}
+
+function exportSave(){
+  let data;
+  if(G){
+    data = JSON.stringify(G, null, 2);
+  } else {
+    data = localStorage.getItem(SAVE_KEY);
+    if(!data){ alert("No save to export."); return; }
+  }
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const nameForFile = ((G && G.name) || 'slayer').replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  const daySuffix = G ? `_day${G.day}` : '';
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `slayer-save-${nameForFile}${daySuffix}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function triggerImport(){
+  document.getElementById('importFileInput').click();
+}
+
+function importSaveFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    event.target.value = '';
+    let parsed;
+    try{ parsed = JSON.parse(e.target.result); }
+    catch(err){ alert("Couldn't import that file — it isn't valid JSON."); return; }
+    if(!validateSave(parsed)){ alert("Couldn't import that file — it doesn't look like a Slayer save."); return; }
+    if(!confirm(G ? "Replace your current game with this imported save?" : "Load this save? Any existing save will be overwritten.")) return;
+    G = normalizeSave(parsed);
+    save();
+    showGameScreen();
+    render();
+  };
+  reader.onerror = ()=>{ event.target.value=''; alert("Couldn't read that file."); };
+  reader.readAsText(file);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+
+function logMsg(text){
+  G.log.unshift(text);
+  if(G.log.length>60) G.log.length = 60;
+}
+
+// ============================== BOOT ==============================
+
+function showGameScreen(){
+  document.getElementById('titleScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+}
+function showTitleScreen(){
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('titleScreen').classList.remove('hidden');
+  renderDiffPicker();
+  renderHallOfFame();
+  refreshTitleButtons();
+}
+function refreshTitleButtons(){
+  const hasSave = !!localStorage.getItem(SAVE_KEY);
+  document.getElementById('continueBtn').disabled = !hasSave;
+  document.getElementById('exportBtn').disabled = !hasSave;
+}
+
+function pickDifficulty(key){ selectedDifficulty = key; renderDiffPicker(); }
+function renderDiffPicker(){
+  const el = document.getElementById('diffPicker');
+  if(!el) return;
+  el.innerHTML = Object.keys(DIFFICULTIES).map(k=>{
+    const d = DIFFICULTIES[k];
+    return `<button class="${selectedDifficulty===k?'active':''}" onclick="pickDifficulty('${k}')">${d.label}</button>`;
+  }).join('');
+}
+
+function recordHallOfFame(win){
+  let hof = [];
+  try{ hof = JSON.parse(localStorage.getItem(HOF_KEY)) || []; }catch(e){ hof = []; }
+  hof.unshift({name:G.name, day:G.day, level:G.level, win:!!win, ngPlus:!!G.ngPlus});
+  if(hof.length>10) hof.length = 10;
+  localStorage.setItem(HOF_KEY, JSON.stringify(hof));
+}
+function renderHallOfFame(){
+  const el = document.getElementById('hallOfFame');
+  if(!el) return;
+  let hof = [];
+  try{ hof = JSON.parse(localStorage.getItem(HOF_KEY)) || []; }catch(e){ hof = []; }
+  if(!hof.length){ el.innerHTML = ''; return; }
+  el.innerHTML = '<h3 style="color:var(--purple2);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px">Hall of Fame</h3>' +
+    hof.map(r=>`<div class="hofRow"><span>${escapeHtml(r.name)}${r.ngPlus?' (NG+)':''}</span><span>${r.win?'Victorious':'Fell'} — Day ${r.day}, Lv.${r.level}</span></div>`).join('');
+}
+
+function startNewGame(){
+  if(localStorage.getItem(SAVE_KEY)){
+    if(!confirm("This will overwrite your existing save. Continue?")) return;
+  }
+  const name = document.getElementById('nameInput').value.trim();
+  newGame(name, selectedDifficulty);
+}
+function continueGame(){
+  if(tryLoad()){ showGameScreen(); render(); }
+  else alert("No saved game found.");
+}
+function abandonGame(){
+  if(!confirm("Abandon this Slayer's story and return to the title screen? Your save will be erased.")) return;
+  localStorage.removeItem(SAVE_KEY);
+  G = null;
+  showTitleScreen();
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  refreshTitleButtons();
+  renderDiffPicker();
+  renderHallOfFame();
+});
+
+// ============================== STORY / RECRUITS ==============================
+
+function checkStoryBeats(){
+  for(const beat of STORY_BEATS){
+    if(beat.season && G.season<beat.season) continue;
+    const dayReq = beat.dayOffset!=null ? (G.masterDefeatDay==null ? Infinity : G.masterDefeatDay+beat.dayOffset) : beat.day;
+    if(G.day>=dayReq && !G.flags['beat_'+beat.id]){
+      G.flags['beat_'+beat.id] = true;
+      logMsg(beat.text);
+      if(beat.effect) beat.effect(G);
+    }
+  }
+  checkUnlocks();
+}
+
+function checkUnlocks(){
+  if(G.flags.masterStirring && G.research>=20 && !G.flags.hellmouthUnlocked){
+    G.flags.hellmouthUnlocked = true;
+    logMsg("The entrance to the Hellmouth beneath the school library has been located. When you're ready, it's time to end this.");
+  }
+  if(G.flags.beat_order && !G.flags.sewersUnlocked){
+    G.flags.sewersUnlocked = true;
+    logMsg("Following whispered rumors, you find a way down into the sewers beneath Sunnydale. Something's living down there.");
+  }
+  if(G.research>=15 && !G.flags.magicboxUnlocked){
+    G.flags.magicboxUnlocked = true;
+    logMsg("A cryptic classifieds ad leads you to a new occult shop just off Main Street — The Magic Box.");
+  }
+  if(G.season>=2 && G.flags.season2ClimaxReady && G.research>=35){
+    if(G.angelMood==='angelus' && !G.flags.mansionUnlocked){
+      G.flags.mansionUnlocked = true;
+      logMsg("You've traced Angelus back to an old mansion on the edge of town. This ends tonight.");
+    } else if(G.angelMood!=='angelus' && !G.flags.factoryUnlocked){
+      G.flags.factoryUnlocked = true;
+      logMsg("You've found Spike and Drusilla's hideout — an abandoned factory by the old rail yard. This ends tonight.");
+    }
+  }
+}
+
+function checkRecruits(source){
+  if(!G.scoobies.willow && G.research>=10 && G.day>=4){
+    G.scoobies.willow = true;
+    G.bonds.willow = 50;
+    logMsg("Willow: \"I've been cross-referencing the lore books — I think I can help you research this stuff way faster. Team-up?\" Willow joins the Scooby Gang!");
+  }
+  if(!G.scoobies.xander && G.charm>=8 && G.day>=3){
+    G.scoobies.xander = true;
+    G.bonds.xander = 50;
+    logMsg("Xander: \"Hey, misery loves company, and I make a mean thermos of coffee for stakeouts. I'm in.\" Xander joins the Scooby Gang!");
+  }
+  if(!G.scoobies.cordelia && source==='mall' && G.charm>=12){
+    G.scoobies.cordelia = true;
+    G.bonds.cordelia = 50;
+    logMsg("Cordelia: \"Okay, I don't do vampires, but I do know where everything's on sale. Consider me your fashion — I mean, intelligence — consultant.\" Cordelia joins the Scooby Gang!");
+  }
+  if(!G.scoobies.oz && source==='bronze' && G.charm>=15 && G.day>=10){
+    G.scoobies.oz = true;
+    G.bonds.oz = 50;
+    logMsg("Oz: \"Hey.\" That's pretty much it, but he starts showing up when it counts. Oz joins the Scooby Gang!");
+  }
+}
+
+function bondOf(key){
+  return G.bonds[key]!=null ? G.bonds[key] : 50;
+}
+
+function cordeliaDiscount(){
+  return G.scoobies.cordelia ? clamp(0.05 + bondOf('cordelia')/1000, 0.05, 0.2) : 0;
+}
+
+// ============================== ACTIONS ==============================
+
+function spendAP(n){
+  if(G.ap<n){ logMsg("You're out of energy for tonight. Head home and rest."); render(); return false; }
+  G.ap -= n;
+  return true;
+}
+
+function goLocation(id){
+  const loc = LOCATIONS[id];
+  if(loc.locked && !G.flags[loc.unlockFlag]) return;
+  G.location = id;
+  render();
+}
+
+function actionTrain(){
+  if(!spendAP(1)) return;
+  G.strength += 1;
+  let bonus = "";
+  if(Math.random()<0.2){ G.strength += 1; bonus = " A breakthrough — that's extra strength banked."; }
+  logMsg("You run drills until your arms shake. Strength increased." + bonus);
+  maybeTriggerEvent(SNYDER_EVENTS, 'snevent_', 0.15);
+  save(); render();
+}
+
+function actionSpar(){
+  if(!spendAP(2)) return;
+  G.strength += 2;
+  let bonus = "";
+  if(Math.random()<0.25){ G.strength += 1; bonus = " Giles: \"There. Now you're getting somewhere.\""; }
+  logMsg("Giles runs you through a brutal sparring session, correcting your stance more times than you can count." + bonus);
+  maybeTriggerEvent(SNYDER_EVENTS, 'snevent_', 0.15);
+  save(); render();
+}
+
+function actionResearch(){
+  if(!spendAP(1)) return;
+  let gain = 1 + (G.scoobies.willow ? 1 : 0);
+  G.research += gain;
+  logMsg(RESEARCH_FLAVOR[randInt(0,RESEARCH_FLAVOR.length-1)] + (G.scoobies.willow ? " Willow's help makes quick work of it." : ""));
+  checkRecruits('library');
+  checkUnlocks();
+  maybeTriggerEvent(SNYDER_EVENTS, 'snevent_', 0.15);
+  save(); render();
+}
+
+function actionResearchDeep(){
+  if(!spendAP(1)) return;
+  let gain = 2 + (G.scoobies.willow ? 1 : 0);
+  G.research += gain;
+  logMsg("Deep in The Magic Box's back room, you find a text that actually makes sense of the chaos." + (G.scoobies.willow ? " Willow spots a cross-reference you would've missed." : ""));
+  checkRecruits('magicbox');
+  checkUnlocks();
+  save(); render();
+}
+
+function actionGiles(){
+  if(G.flags.gilesToday===G.day){
+    logMsg("Giles is buried in his books for now. Come back tomorrow night.");
+    render(); return;
+  }
+  G.flags.gilesToday = G.day;
+  if(maybeTriggerEvent(GILES_EVENTS, 'gevent_', 0.4)){ checkUnlocks(); save(); render(); return; }
+  G.research += 1;
+  const gilesPool = GILES_FLAVOR.concat(G.flags.gilesRebel ? GILES_FLAVOR_REBEL : (G.flags.gilesByBook ? GILES_FLAVOR_BYBOOK : []));
+  logMsg(gilesPool[randInt(0,gilesPool.length-1)]);
+  checkUnlocks();
+  save(); render();
+}
+
+function actionJoyce(){
+  if(G.flags.joyceToday===G.day){
+    logMsg("Mom's already turned in for the night.");
+    render(); return;
+  }
+  G.flags.joyceToday = G.day;
+  if(maybeTriggerEvent(JOYCE_EVENTS, 'jevent_', 0.4)){ save(); render(); return; }
+  const healAmt = G.flags.joyceKnows ? 8 : (G.flags.joyceInDenial ? 3 : 5);
+  G.health = Math.min(G.maxHealth, G.health+healAmt);
+  const joycePool = JOYCE_FLAVOR.concat(G.flags.joyceKnows ? JOYCE_FLAVOR_KNOWS : (G.flags.joyceInDenial ? JOYCE_FLAVOR_DENIAL : []));
+  logMsg(joycePool[randInt(0,joycePool.length-1)]);
+  save(); render();
+}
+
+function actionHangout(){
+  if(!spendAP(1)) return;
+  G.charm += 1;
+  let moraleGain = 5 + ((G.scoobies.xander?2:0) + (G.scoobies.cordelia?2:0));
+  G.scoobyMorale = clamp(G.scoobyMorale + moraleGain, 0, 100);
+  logMsg(HANGOUT_FLAVOR[randInt(0,HANGOUT_FLAVOR.length-1)]);
+  if(G.scoobies.angel && G.angelMood==='normal' && Math.random()<0.08){
+    G.angelBroodCount += 1;
+    if(G.angelBroodCount>=3){
+      riseAngelus();
+    } else {
+      G.angelMood = 'brooding';
+      G.angelBroodUntil = G.day + 5;
+      logMsg("Something shifts behind Angel's eyes — distant, dark. Whatever just happened, he's not himself. He won't be much help for a while.");
+    }
+  }
+  checkRecruits('bronze');
+  if(!maybeTriggerEvent(SCOOBY_EVENTS, 'sevent_', 0.35)) maybeTriggerEvent(SIDE_QUESTS, 'quest_', 0.25);
+  save(); render();
+}
+
+function actionHangoutWith(key){
+  if(!spendAP(1)) return;
+  G.charm += 1;
+  G.bonds[key] = clamp((G.bonds[key]!=null?G.bonds[key]:50) + 10, 0, 100);
+  logMsg(SCOOBY_HANGOUT_FLAVOR[key][randInt(0,SCOOBY_HANGOUT_FLAVOR[key].length-1)]);
+  if(key==='angel' && G.angelMood==='normal' && Math.random()<0.12){
+    G.angelBroodCount += 1;
+    if(G.angelBroodCount>=3){
+      riseAngelus();
+    } else {
+      G.angelMood = 'brooding';
+      G.angelBroodUntil = G.day + 5;
+      logMsg("Something shifts behind Angel's eyes — distant, dark. Whatever just happened, he's not himself. He won't be much help for a while.");
+    }
+  }
+  maybeTriggerEvent(SCOOBY_EVENTS, 'sevent_', 0.35);
+  save(); render();
+}
+
+function maybeTriggerEvent(events, flagPrefix, chance){
+  const eligible = events.filter(ev => !G.flags[flagPrefix+ev.id] && ev.requires(G));
+  if(!eligible.length) return false;
+  if(Math.random()<chance){
+    G.choiceEvent = eligible[randInt(0,eligible.length-1)].id;
+    return true;
+  }
+  return false;
+}
+
+function resolveChoiceEvent(evId, choiceId){
+  const src = findEventSource(evId);
+  if(!src){ G.choiceEvent = null; render(); return; }
+  const ev = src.ev;
+  const choice = ev.choices.find(c=>c.id===choiceId);
+  if(!choice) return;
+  ['willow','xander','cordelia','oz','angel','giles','joyce'].forEach(k=>{ if(G.bonds[k]==null) G.bonds[k] = 50; });
+  const result = choice.effect(G);
+  G.flags[src.flagPrefix+ev.id] = true;
+  if(G.choiceEvent===evId) G.choiceEvent = null; // unless effect() chained to a follow-up stage
+  if(result) logMsg(result);
+  save(); render();
+}
+
+function riseAngelus(){
+  G.scoobies.angel = false;
+  G.angelMood = 'angelus';
+  logMsg("Something in Angel's eyes goes cold and final. Whatever soul was in there — it's gone. This isn't Angel anymore.");
+}
+
+function actionRumor(){
+  if(!spendAP(1)) return;
+  G.flags.tipOff = true;
+  logMsg("A regular at the bar mentions a fresh grave out at Restfield that hasn't stopped moving. Good tip for tonight's patrol — expect better loot.");
+  maybeTriggerEvent(MAYOR_EVENTS, 'mevent_', 0.3);
+  save(); render();
+}
+
+function buyItem(id){
+  const item = SHOP_ITEMS.find(i=>i.id===id);
+  let cost = Math.ceil(item.cost*(1-cordeliaDiscount()));
+  if(G.money<cost){ logMsg("Not enough cash for that, even at Cordelia's discount."); render(); return; }
+  G.money -= cost;
+  item.effect(G);
+  logMsg(`You buy ${item.name} for $${cost}.`);
+  checkRecruits('mall');
+  save(); render();
+}
+
+function buyItem2(id){
+  const item = SHOP_ITEMS2.find(i=>i.id===id);
+  if(item.once && G.flags['bought_'+id]) return;
+  let cost = Math.ceil(item.cost*(1-cordeliaDiscount()));
+  if(G.money<cost){ logMsg("Not enough cash for that."); render(); return; }
+  G.money -= cost;
+  item.effect(G);
+  if(item.once) G.flags['bought_'+id] = true;
+  logMsg(`You buy ${item.name} for $${cost}.`);
+  save(); render();
+}
+
+function actionRest(){
+  const healed = Math.max(20, Math.round(G.maxHealth*0.3));
+  G.health = Math.min(G.maxHealth, G.health + healed);
+  G.scoobyMorale = clamp(G.scoobyMorale - 3, 0, 100);
+  G.day += 1;
+  G.ap = G.apMax;
+  if(G.angelMood==='brooding' && G.day>=G.angelBroodUntil){
+    G.angelMood = 'normal';
+    logMsg("Angel seems like himself again — whatever shadow passed over him has lifted.");
+  }
+  logMsg(`Dawn breaks over Sunnydale. Day ${G.day} begins. You feel rested (+${healed} HP).`);
+  checkStoryBeats();
+  save(); render();
+}
+
+// ============================== COMBAT ==============================
+
+function spawnEnemyInstance(base){
+  const dayBonusHp = Math.floor(G.day/5)*3;
+  const dayBonusAtk = Math.floor(G.day/6);
+  const diff = DIFFICULTIES[G.difficulty] || DIFFICULTIES.normal;
+  const mult = diff.enemyMult * (G.ngPlus ? 1.15 : 1);
+  const hp = Math.round((base.hp+dayBonusHp)*mult);
+  const atkMin = Math.round((base.atkMin+dayBonusAtk)*mult);
+  const atkMax = Math.round((base.atkMax+dayBonusAtk)*mult);
+  return Object.assign({}, base, {hp, maxHp:hp, atkMin, atkMax});
+}
+
+function pickScriptedUnique(){
+  if(G.flags.spikeIncoming){ G.flags.spikeIncoming=false; return SPIKE; }
+  if(G.flags.anointedIncoming){ G.flags.anointedIncoming=false; return ANOINTED; }
+  if(G.flags.drusillaIncoming){ G.flags.drusillaIncoming=false; return DRUSILLA; }
+  return null;
+}
+
+function rollPatrolEvent(){
+  const r = Math.random();
+  if(r<0.10) return 'money';
+  if(r<0.16) return 'item';
+  if(r<0.22) return 'civilian';
+  if(r<0.26) return 'quiet';
+  return 'fight';
+}
+
+function resolvePatrolEvent(kind){
+  if(kind==='money'){
+    const amt = randInt(5,15);
+    G.money += amt;
+    logMsg(`You find $${amt} dropped near an overturned headstone. Score.`);
+  } else if(kind==='item'){
+    const pick = randInt(0,2);
+    if(pick===0){ G.stakes+=2; logMsg("You find a stash of sharpened stakes left behind by... someone. You're not going to ask."); }
+    else if(pick===1){ G.holyWater+=1; logMsg("A dropped vial of holy water, unbroken. Lucky."); }
+    else { G.crosses+=1; logMsg("A silver cross, half-buried in the dirt. Yours now."); }
+  } else if(kind==='civilian'){
+    G.scoobyMorale = clamp(G.scoobyMorale+8,0,100);
+    G.xp += 5;
+    logMsg("You spot a lost tourist about to wander into a nest and steer them back to well-lit streets. Small victories.");
+    checkLevelUp();
+  } else if(kind==='quiet'){
+    logMsg("A quiet night. Not everything in a cemetery wants to kill you. Mostly.");
+  }
+  save(); render();
+}
+
+function newCombat(enemy, extra){
+  return Object.assign({enemy, usedWillow:false, usedXander:false, usedAngel:false, usedOz:false, round:1, tipOff:false, lootMult:1, isFinal:false}, extra||{});
+}
+
+function checkWaveEncounter(){
+  if(G.flags.threeIncoming){
+    G.flags.threeIncoming = false;
+    startWaveEncounter([ASSASSIN, ASSASSIN, ASSASSIN]);
+    save(); render();
+    return true;
+  }
+  return false;
+}
+
+function startWaveEncounter(bases){
+  const instances = bases.map(b=>spawnEnemyInstance(b));
+  const first = instances.shift();
+  G.combat = newCombat(first, {waveQueue:instances, waveTotal:bases.length, waveIndex:1});
+  logMsg("Three shapes drop from the shadows, surrounding you. The Order sent its assassins after all — and they came together.");
+}
+
+function actionPatrol(){
+  if(!spendAP(1)) return;
+
+  if(checkWaveEncounter()) return;
+
+  if(!G.scoobies.angel && G.angelMood!=='angelus' && G.day>=6 && G.charm>=10 && Math.random()<0.25){
+    G.scoobies.angel = true;
+    G.bonds.angel = 50;
+    logMsg("A mysterious stranger in a long coat pulls a vampire off you before it can land the killing blow. \"You fight well,\" he says, vanishing into the fog before you can ask his name. You'll come to know him as Angel.");
+    save(); render();
+    return;
+  }
+
+  let base = pickScriptedUnique();
+  if(!base){
+    const roll = rollPatrolEvent();
+    if(roll!=='fight'){ resolvePatrolEvent(roll); return; }
+    const pool = ENEMIES.filter(e => (!e.minDay || G.day>=e.minDay) && e.tier<=3);
+    base = pool[randInt(0,pool.length-1)];
+  }
+  const enemy = spawnEnemyInstance(base);
+  G.combat = newCombat(enemy, {tipOff:!!G.flags.tipOff});
+  G.flags.tipOff = false;
+  logMsg(`Patrol: you round a mausoleum and come face to face with ${enemy.name}.`);
+  save(); render();
+}
+
+function actionPatrolSewers(){
+  if(!spendAP(1)) return;
+  if(checkWaveEncounter()) return;
+  let base = pickScriptedUnique();
+  if(!base){
+    const roll = rollPatrolEvent();
+    if(roll!=='fight'){ resolvePatrolEvent(roll); return; }
+    const pool = ENEMIES.filter(e => (!e.minDay || G.day>=e.minDay) && e.tier>=2);
+    base = pool.length ? pool[randInt(0,pool.length-1)] : ENEMIES[0];
+  }
+  const enemy = spawnEnemyInstance(base);
+  G.combat = newCombat(enemy, {tipOff:!!G.flags.tipOff, lootMult:1.3});
+  G.flags.tipOff = false;
+  logMsg(`You wade deeper into the tunnels and come face to face with ${enemy.name}.`);
+  save(); render();
+}
+
+function actionDescend(){
+  if(G.season>=2){ logMsg("The Hellmouth has gone quiet. Whatever's coming next, it's not from down there."); render(); return; }
+  if(!confirm("This is it — the final battle against The Master. Make sure you're prepared. Descend into the Hellmouth?")) return;
+  const enemy = spawnEnemyInstance(MASTER);
+  G.combat = newCombat(enemy, {isFinal:true});
+  logMsg("You descend into the dark beneath Sunnydale High. At the bottom, chained in ancient stone, The Master opens his eyes.");
+  save(); render();
+}
+
+function actionFinalBattle(locId){
+  const label = locId==='mansion' ? 'Angelus' : 'Spike and Drusilla';
+  if(!confirm(`This is it — the final battle against ${label}. Make sure you're prepared. Proceed?`)) return;
+  const base = locId==='mansion' ? ANGELUS : REUNITED;
+  const enemy = spawnEnemyInstance(base);
+  G.combat = newCombat(enemy, {isFinal:true});
+  logMsg(locId==='mansion'
+    ? "You step through the mansion's rotting front door. Angelus is waiting, exactly as cruel as the stories promised."
+    : "The factory is lit by dozens of candles. Spike and Drusilla are waiting for you, arm in arm.");
+  save(); render();
+}
+
+function moraleReduction(){ return clamp(G.scoobyMorale/500, 0, 0.2); }
+
+function enemyAttack(mitigation){
+  const c = G.combat;
+  if(!c) return 0;
+  const enraged = c.enemy.hp <= c.enemy.maxHp*0.3;
+  let dmg = randInt(c.enemy.atkMin, c.enemy.atkMax);
+  if(enraged) dmg = Math.round(dmg*1.35);
+  dmg = Math.round(dmg * (1-mitigation) * (1-moraleReduction()) * (1-(G.armor||0)));
+  dmg = Math.max(0,dmg);
+  G.health = clamp(G.health - dmg, 0, G.maxHealth);
+  logMsg(`${c.enemy.name}${enraged?' (enraged, fighting harder as it goes down)':''} strikes for ${dmg} damage.`);
+  c.round += 1;
+  if(G.health>0 && G.health<10) G.stats.closeCall = true;
+  if(G.health<=0){ endCombatDefeat(); return dmg; }
+  return dmg;
+}
+
+function checkLevelUp(){
+  let leveled = false;
+  while(G.xp>=G.xpToNext){
+    G.xp -= G.xpToNext;
+    G.level += 1;
+    G.maxHealth += 8;
+    G.health = Math.min(G.maxHealth, G.health+8);
+    G.strength += 1;
+    G.xpToNext = G.level*40;
+    leveled = true;
+  }
+  if(leveled) logMsg(`You feel it in your bones — Slayer strength grows. You reached level ${G.level}!`);
+}
+
+function popFighter(index, amount, cls){
+  const fighters = document.querySelectorAll('#content .fighter');
+  const el = fighters[index];
+  if(!el || !amount) return;
+  const span = document.createElement('div');
+  span.className = 'dmgPop ' + (cls||'dmg');
+  span.textContent = (cls==='heal'?'+':'-') + amount;
+  el.appendChild(span);
+  setTimeout(()=>{ if(span.parentNode) span.parentNode.removeChild(span); }, 900);
+  if(cls!=='heal'){
+    el.classList.add('shake');
+    setTimeout(()=>el.classList.remove('shake'), 400);
+  }
+}
+
+function checkAchievements(){
+  for(const a of ACHIEVEMENTS){
+    if(!G.achievements[a.id] && a.check(G)){
+      G.achievements[a.id] = true;
+      logMsg(`<span style="color:var(--gold2)">★ Achievement Unlocked: ${a.name}</span> — ${a.desc}`);
+    }
+  }
+}
+
+function endCombatVictory(){
+  const c = G.combat;
+  const enemy = c.enemy;
+
+  if(enemy.id==='master'){
+    G.money += 100;
+    G.xp += enemy.xp;
+    G.season = 2;
+    G.masterDefeatDay = G.day;
+    logMsg("Dust settles where an ancient evil stood a moment before. The Hellmouth falls silent... but something tells you this isn't over.");
+    checkLevelUp();
+    G.combat = null;
+    checkStoryBeats();
+    checkUnlocks();
+    save(); render();
+    return;
+  }
+  if(enemy.id==='angelus' || enemy.id==='reunited'){
+    G.win = true;
+    G.combat = null;
+    save();
+    recordHallOfFame(true);
+    showEnd(true, enemy.id);
+    return;
+  }
+
+  const moneyMul = (c.tipOff?1.5:1) * (c.lootMult||1);
+  const money = Math.round(randInt(enemy.mMin,enemy.mMax)*moneyMul);
+  G.money += money;
+  G.xp += enemy.xp;
+  G.stats.kills += 1;
+  logMsg(`${VICTORY_FLAVOR[randInt(0,VICTORY_FLAVOR.length-1)]} You gain ${enemy.xp} XP and find $${money}.`);
+  if(Math.random()<0.2){ G.stakes += 1; logMsg("You retrieve your stake from the dust."); }
+  if(enemy.id==='spike'){ G.flags.spikeDefeated=true; logMsg("Spike snarls and flees Sunnydale, nursing his wounded pride. You won't see him again for a good while."); }
+  if(enemy.id==='anointed'){ G.flags.anointedDefeated=true; logMsg("The Anointed One shatters like porcelain, a child's face frozen in surprise. The Order scatters without their prophesied leader."); }
+  if(enemy.id==='drusilla'){ G.flags.drusillaDefeated=true; logMsg("Drusilla laughs even as she crumbles. \"You'll dance with the devil yet, Slayer.\" And then she's gone."); }
+  checkLevelUp();
+
+  if(c.waveQueue && c.waveQueue.length){
+    c.enemy = c.waveQueue.shift();
+    c.waveIndex = (c.waveIndex||1) + 1;
+    logMsg(`One assassin falls, but the others close in. Assassin ${c.waveIndex} of ${c.waveTotal}.`);
+    checkUnlocks();
+    save(); render();
+    return;
+  }
+  if(c.waveTotal){
+    G.flags.threeDefeated = true;
+    logMsg("The last assassin crumbles. The Order's hit squad is gone — nobody sends three after the Slayer and lives to report back.");
+  }
+
+  G.combat = null;
+  checkUnlocks();
+  save(); render();
+}
+
+function endCombatDefeat(){
+  G.combat = null;
+  G.gameOver = true;
+  save();
+  recordHallOfFame(false);
+  showEnd(false);
+}
+
+function combatStake(){
+  const c = G.combat; if(!c) return;
+  let dmg;
+  if(G.stakes>0){
+    G.stakes -= 1;
+    dmg = G.strength + randInt(2,7);
+    if(G.fortitudeCharges>0){ dmg = Math.round(dmg*1.3); G.fortitudeCharges--; }
+    logMsg(`You drive a stake home for ${dmg} damage.`);
+  } else {
+    dmg = Math.max(1,Math.round(G.strength/2));
+    logMsg(`Out of stakes — you throw a punch instead for ${dmg} damage.`);
+  }
+  c.enemy.hp = clamp(c.enemy.hp - dmg, 0, c.enemy.maxHp);
+  if(c.enemy.hp<=0){ endCombatVictory(); return; }
+  const dmgTaken = enemyAttack(0);
+  render(); save();
+  popFighter(1, dmg, 'dmg');
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+
+function combatQuip(){
+  const c = G.combat; if(!c) return;
+  const debuff = clamp((10+G.charm*2)/100, 0.1, 0.6);
+  logMsg(`You quip: ${QUIP_LINES[randInt(0,QUIP_LINES.length-1)]}`);
+  const reactions = UNIQUE_QUIP_REACTIONS[c.enemy.id] || (c.enemy.vamp ? VAMP_QUIP_REACTIONS : DEMON_QUIP_REACTIONS);
+  logMsg(reactions[randInt(0,reactions.length-1)]);
+  const dmgTaken = enemyAttack(debuff);
+  render(); save();
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+
+function combatHolyWater(){
+  const c = G.combat; if(!c || G.holyWater<=0) return;
+  G.holyWater -= 1;
+  let dmg;
+  if(c.enemy.vamp){
+    dmg = Math.round(G.strength*1.5) + 10;
+    logMsg(`Holy water sears ${c.enemy.name} for ${dmg} damage — it shrieks in agony.`);
+  } else {
+    dmg = Math.round(G.strength/2);
+    logMsg(`Holy water splashes over ${c.enemy.name}. It barely notices, dealing only ${dmg} damage.`);
+  }
+  c.enemy.hp = clamp(c.enemy.hp - dmg, 0, c.enemy.maxHp);
+  if(c.enemy.hp<=0){ endCombatVictory(); return; }
+  const dmgTaken = enemyAttack(0);
+  render(); save();
+  popFighter(1, dmg, 'dmg');
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+
+function combatCross(){
+  const c = G.combat; if(!c || G.crosses<=0) return;
+  G.crosses -= 1;
+  logMsg("You brandish a silver cross. It recoils, attack blocked entirely.");
+  enemyAttack(1);
+  render(); save();
+}
+
+function combatDodge(){
+  const c = G.combat; if(!c) return;
+  let dmg = 0;
+  if(G.research>=15 && Math.random()<0.3){
+    dmg = Math.round(G.strength/2);
+    c.enemy.hp = clamp(c.enemy.hp - dmg, 0, c.enemy.maxHp);
+  }
+  logMsg("You weave out of the way, reflexes honed by training." + (dmg>0 ? ` Reading up on its kind pays off — you counter for ${dmg} damage.` : ""));
+  if(c.enemy.hp<=0){ endCombatVictory(); return; }
+  const dmgTaken = enemyAttack(0.6);
+  render(); save();
+  if(dmg>0) popFighter(1, dmg, 'dmg');
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+
+function combatCrossbow(){
+  const c = G.combat; if(!c || !G.hasCrossbow || G.bolts<=0) return;
+  G.bolts -= 1;
+  let dmg = Math.round(G.strength*1.3) + 12;
+  if(G.fortitudeCharges>0){ dmg = Math.round(dmg*1.3); G.fortitudeCharges--; }
+  c.enemy.hp = clamp(c.enemy.hp - dmg, 0, c.enemy.maxHp);
+  logMsg(`You fire the crossbow — a bolt slams into ${c.enemy.name} for ${dmg} damage.`);
+  if(c.enemy.hp<=0){ endCombatVictory(); return; }
+  const dmgTaken = enemyAttack(0);
+  render(); save();
+  popFighter(1, dmg, 'dmg');
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+
+function combatFlee(){
+  const c = G.combat; if(!c) return;
+  if(c.isFinal){ logMsg("There's no running from this one."); render(); return; }
+  const chance = clamp(50 + (G.strength - 10), 10, 90);
+  if(randInt(1,100)<=chance){
+    logMsg("You slip away into the shadows before it can react.");
+    G.combat = null;
+    save(); render();
+  } else {
+    logMsg("You try to flee, but it's faster than you thought.");
+    const dmgTaken = enemyAttack(0);
+    render(); save();
+    if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+  }
+}
+
+function combatCallWillow(){
+  const c = G.combat; if(!c || !G.scoobies.willow || c.usedWillow) return;
+  c.usedWillow = true;
+  const dmg = 8 + Math.round(G.research*1.2) + Math.round(bondOf('willow')/10);
+  c.enemy.hp = clamp(c.enemy.hp - dmg, 0, c.enemy.maxHp);
+  logMsg(`Willow chants under her breath and a burst of force slams into ${c.enemy.name} for ${dmg} damage.`);
+  if(c.enemy.hp<=0){ endCombatVictory(); return; }
+  const dmgTaken = enemyAttack(0);
+  render(); save();
+  popFighter(1, dmg, 'dmg');
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+function combatCallXander(){
+  const c = G.combat; if(!c || !G.scoobies.xander || c.usedXander) return;
+  c.usedXander = true;
+  const healAmt = 15 + Math.round(bondOf('xander')/10);
+  G.health = Math.min(G.maxHealth, G.health+healAmt);
+  logMsg(`Xander covers your back and shoves a granola bar at you between swings. You recover ${healAmt} HP.`);
+  const dmgTaken = enemyAttack(0);
+  render(); save();
+  popFighter(0, healAmt, 'heal');
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+function combatCallAngel(){
+  const c = G.combat; if(!c || !G.scoobies.angel || c.usedAngel || G.angelMood==='brooding') return;
+  c.usedAngel = true;
+  const dmg = 15 + Math.floor(G.day/2) + Math.round(bondOf('angel')/10);
+  c.enemy.hp = clamp(c.enemy.hp - dmg, 0, c.enemy.maxHp);
+  logMsg(`Angel appears from the shadows and lands a brutal blow for ${dmg} damage before melting back into the dark.`);
+  if(c.enemy.hp<=0){ endCombatVictory(); return; }
+  const dmgTaken = enemyAttack(0);
+  render(); save();
+  popFighter(1, dmg, 'dmg');
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+function combatCallOz(){
+  const c = G.combat; if(!c || !G.scoobies.oz || c.usedOz) return;
+  c.usedOz = true;
+  const fullMoon = (G.day % 7)===0;
+  let dmg;
+  if(fullMoon){
+    dmg = 25 + Math.floor(G.day/2) + Math.round(bondOf('oz')/10);
+    logMsg(`It's a full moon — Oz isn't quite Oz right now. Something feral crashes into ${c.enemy.name} for ${dmg} damage.`);
+  } else {
+    dmg = 10 + Math.round(bondOf('oz')/20);
+    logMsg("Oz shows up, guitar case in hand, and calmly helps you land a solid hit.");
+  }
+  c.enemy.hp = clamp(c.enemy.hp - dmg, 0, c.enemy.maxHp);
+  if(c.enemy.hp<=0){ endCombatVictory(); return; }
+  const dmgTaken = enemyAttack(0);
+  render(); save();
+  popFighter(1, dmg, 'dmg');
+  if(dmgTaken>0) popFighter(0, dmgTaken, 'dmg');
+}
+
+// ============================== ENDINGS ==============================
+
+function showEnd(win, bossId){
+  const card = document.getElementById('endCard');
+  if(win){
+    let title, body;
+    if(bossId==='angelus'){
+      title = "ANGELUS FALLS";
+      body = `The demon wearing Angel's face is gone. Somewhere, underneath all that, you have to believe there was a man worth grieving for. Sunnydale is safe — for now, and at a cost only you will carry, ${escapeHtml(G.name)}.`;
+    } else {
+      title = "SPIKE &amp; DRUSILLA, UNDONE";
+      body = `Sunnydale's newest power couple didn't even last a season. Dust settles over the factory floor, and for once, the night is quiet. Nicely done, ${escapeHtml(G.name)}.`;
+    }
+    card.innerHTML = `
+      <h2 style="color:var(--gold2)">${title}</h2>
+      <p>${body}</p>
+      <p>Final stats — Day ${G.day} · Level ${G.level} · Strength ${G.strength} · Research ${G.research}</p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+        <button class="gold" onclick="restartToTitle()">Play Again</button>
+        <button onclick="newGamePlus()">New Game+</button>
+      </div>
+    `;
+  } else {
+    card.innerHTML = `
+      <h2 style="color:var(--blood2)">DUST TO DUST</h2>
+      <p>The fangs find their mark. Your vision fades to black in a cemetery that will forget your name by morning...</p>
+      <p>Fortunately, Slayers have a habit of coming back. Reached Day ${G.day} · Level ${G.level}.</p>
+      <button class="danger" onclick="restartToTitle()">Try Again</button>
+    `;
+  }
+  document.getElementById('endOverlay').classList.remove('hidden');
+}
+function restartToTitle(){
+  document.getElementById('endOverlay').classList.add('hidden');
+  localStorage.removeItem(SAVE_KEY);
+  G = null;
+  showTitleScreen();
+}
+function newGamePlus(){
+  document.getElementById('endOverlay').classList.add('hidden');
+  const name = G.name;
+  const bonusLevel = G.level;
+  localStorage.removeItem(SAVE_KEY);
+  G = null;
+  newGame(name, 'normal', {ngPlus:true, bonusLevel});
+}
+
+// ============================== RENDER ==============================
+
+function render(){
+  if(!G) return;
+  checkAchievements();
+  renderHeader();
+  renderNav();
+  renderContent();
+  renderSide();
+  renderLog();
+}
+
+function renderHeader(){
+  const hpPct = clamp(100*G.health/G.maxHealth,0,100);
+  const xpPct = clamp(100*G.xp/G.xpToNext,0,100);
+  let dots = "";
+  for(let i=0;i<G.apMax;i++) dots += `<span class="${i<G.ap?'full':''}">${'♦'}</span>`;
+  document.getElementById('statBar').innerHTML = `
+    <div class="name">${escapeHtml(G.name)} <span style="font-size:12px;color:var(--dim)">Lv.${G.level}</span></div>
+    <div class="statItem">Day ${G.day}</div>
+    <div class="statItem">HP <div class="barOuter"><div class="barInner hpBar ${hpPct<30?'low':''}" style="width:${hpPct}%"></div></div></div>
+    <div class="statItem">XP <div class="barOuter"><div class="barInner xpBar" style="width:${xpPct}%"></div></div></div>
+    <div class="statItem apDots">${dots}</div>
+    <div class="statItem">$${G.money}</div>
+    <span class="headerLink" onclick="exportSave()">export save</span>
+    <span class="headerLink" onclick="triggerImport()">import save</span>
+    <span id="abandonLink" onclick="abandonGame()">abandon</span>
+  `;
+}
+
+function renderNav(){
+  let html = "";
+  for(const id in LOCATIONS){
+    const loc = LOCATIONS[id];
+    if(loc.locked && !G.flags[loc.unlockFlag]) continue;
+    html += `<button class="${G.location===id?'active':''}" onclick="goLocation('${id}')">${loc.name}</button>`;
+  }
+  document.getElementById('locNav').innerHTML = html;
+}
+
+function renderContent(){
+  const el = document.getElementById('content');
+  if(G.combat){ el.innerHTML = renderCombatHtml(); return; }
+  if(G.choiceEvent){ el.innerHTML = renderChoiceEventHtml(); return; }
+
+  const loc = LOCATIONS[G.location];
+  let actions = "";
+  switch(G.location){
+    case 'library':
+      actions = `
+        <div class="actionGrid">
+          <button onclick="actionTrain()" ${G.ap<1?'disabled':''}>Train (1 AP) — +Strength</button>
+          <button onclick="actionSpar()" ${G.ap<2?'disabled':''}>Spar with Giles (2 AP) — ++Strength</button>
+          <button onclick="actionResearch()" ${G.ap<1?'disabled':''}>Research (1 AP) — +Research</button>
+          <button onclick="actionGiles()">Talk to Giles (free, once/day)</button>
+        </div>`;
+      break;
+    case 'bronze':{
+      const scoobyBtn = (key,label) => G.scoobies[key]
+        ? `<button onclick="actionHangoutWith('${key}')" ${G.ap<1?'disabled':''}>One-on-One with ${label} (1 AP)</button>` : '';
+      actions = `
+        <div class="actionGrid">
+          <button onclick="actionHangout()" ${G.ap<1?'disabled':''}>Hang Out with the Gang (1 AP) — +Charm, +Morale</button>
+          ${scoobyBtn('willow','Willow')}
+          ${scoobyBtn('xander','Xander')}
+          ${scoobyBtn('cordelia','Cordelia')}
+          ${scoobyBtn('oz','Oz')}
+          ${scoobyBtn('angel','Angel')}
+          <button onclick="actionRumor()" ${G.ap<1?'disabled':''}>Ask Around (1 AP) — better loot tonight</button>
+        </div>`;
+      break;
+    }
+    case 'mall':
+      actions = `<div>${SHOP_ITEMS.map(i=>{
+        let cost = Math.ceil(i.cost*(1-cordeliaDiscount()));
+        return `<div class="shopItem"><div class="info"><b>${i.name}</b><div>${i.desc}</div></div><button onclick="buyItem('${i.id}')" ${G.money<cost?'disabled':''}>Buy ($${cost})</button></div>`;
+      }).join('')}</div>`;
+      break;
+    case 'magicbox':
+      actions = `
+        <div class="actionGrid">
+          <button onclick="actionResearchDeep()" ${G.ap<1?'disabled':''}>Study Rare Texts (1 AP) — +2 Research</button>
+        </div>
+        <div style="margin-top:14px">${SHOP_ITEMS2.map(i=>{
+          const owned = i.once && G.flags['bought_'+i.id];
+          let cost = Math.ceil(i.cost*(1-cordeliaDiscount()));
+          return `<div class="shopItem"><div class="info"><b>${i.name}</b><div>${i.desc}</div></div><button onclick="buyItem2('${i.id}')" ${owned||G.money<cost?'disabled':''}>${owned?'Owned':'Buy ($'+cost+')'}</button></div>`;
+        }).join('')}</div>`;
+      break;
+    case 'cemetery':
+      actions = `<div class="actionGrid"><button onclick="actionPatrol()" ${G.ap<1?'disabled':''}>Patrol (1 AP)</button></div>`;
+      break;
+    case 'sewers':
+      actions = `<div class="actionGrid"><button onclick="actionPatrolSewers()" ${G.ap<1?'disabled':''}>Search the Tunnels (1 AP)</button></div>`;
+      break;
+    case 'home':{
+      const joyceHeal = G.flags.joyceKnows ? 8 : (G.flags.joyceInDenial ? 3 : 5);
+      actions = `
+        <div class="actionGrid">
+          <button onclick="actionJoyce()">Talk to Mom (free, once/day) — +${joyceHeal} HP</button>
+          <button class="gold" onclick="actionRest()">Sleep &amp; End the Day</button>
+        </div>`;
+      break;
+    }
+    case 'hellmouth':
+      actions = G.season>=2
+        ? `<div class="flavor">The crack in the earth has gone still and silent. For now.</div>`
+        : `<div class="actionGrid"><button class="danger" onclick="actionDescend()">Descend and Face The Master</button></div>`;
+      break;
+    case 'mansion':
+      actions = `<div class="actionGrid"><button class="danger" onclick="actionFinalBattle('mansion')">Confront Angelus</button></div>`;
+      break;
+    case 'factory':
+      actions = `<div class="actionGrid"><button class="danger" onclick="actionFinalBattle('factory')">Confront Spike &amp; Drusilla</button></div>`;
+      break;
+  }
+  el.innerHTML = `<h2>${loc.name}</h2><div class="flavor">${loc.desc}</div>${actions}`;
+}
+
+function renderChoiceEventHtml(){
+  const src = findEventSource(G.choiceEvent);
+  if(!src){ G.choiceEvent = null; return ''; }
+  const ev = src.ev;
+  const text = typeof ev.text==='function' ? ev.text(G) : ev.text;
+  return `
+    <h2>${ev.title}</h2>
+    <div class="flavor">${text}</div>
+    <div class="actionGrid">
+      ${ev.choices.map(c=>`<button onclick="resolveChoiceEvent('${ev.id}','${c.id}')">${c.label}</button>`).join('')}
+    </div>
+  `;
+}
+
+function renderCombatHtml(){
+  const c = G.combat;
+  const e = c.enemy;
+  const hpPct = clamp(100*G.health/G.maxHealth,0,100);
+  const ehpPct = clamp(100*e.hp/e.maxHp,0,100);
+  const canWillow = G.scoobies.willow && !c.usedWillow;
+  const canXander = G.scoobies.xander && !c.usedXander;
+  const canAngel = G.scoobies.angel && !c.usedAngel && G.angelMood!=='brooding';
+  const canOz = G.scoobies.oz && !c.usedOz;
+  return `
+    <h2>Combat: ${e.name}${c.waveTotal?` (${c.waveIndex} of ${c.waveTotal})`:''}</h2>
+    <div class="combatWrap">
+      <div class="vsRow">
+        <div class="fighter">
+          <h3>${escapeHtml(G.name)}</h3>
+          <div class="barOuter"><div class="barInner hpBar ${hpPct<30?'low':''}" style="width:${hpPct}%"></div></div>
+          <div style="font-size:12px;color:var(--dim);margin-top:4px">${G.health} / ${G.maxHealth} HP</div>
+        </div>
+        <div class="fighter">
+          <h3>${e.name}</h3>
+          <div class="barOuter"><div class="barInner hpBar" style="width:${ehpPct}%"></div></div>
+          <div style="font-size:12px;color:var(--dim);margin-top:4px">${e.hp} / ${e.maxHp} HP</div>
+        </div>
+      </div>
+      <div class="combatBtns">
+        <button onclick="combatStake()">Stake (${G.stakes} left)</button>
+        <button onclick="combatQuip()">Quip</button>
+        <button onclick="combatDodge()">Dodge</button>
+        <button onclick="combatHolyWater()" ${G.holyWater<=0?'disabled':''}>Holy Water (${G.holyWater})</button>
+        <button onclick="combatCross()" ${G.crosses<=0?'disabled':''}>Cross (${G.crosses})</button>
+        ${G.hasCrossbow?`<button onclick="combatCrossbow()" ${G.bolts<=0?'disabled':''}>Crossbow (${G.bolts})</button>`:''}
+        ${canWillow?'<button onclick="combatCallWillow()">Call Willow</button>':''}
+        ${canXander?'<button onclick="combatCallXander()">Call Xander</button>':''}
+        ${canAngel?'<button onclick="combatCallAngel()">Call Angel</button>':''}
+        ${canOz?'<button onclick="combatCallOz()">Call Oz</button>':''}
+        <button class="danger" onclick="combatFlee()" ${c.isFinal?'disabled':''}>Flee</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderSide(){
+  const s = G.scoobies;
+  const scoobyRow = (key, label, on) => {
+    if(!on) return `<div class="scoobyRow"><span>${label}</span><span class="dot">○</span></div>`;
+    const bond = G.bonds[key]!=null ? G.bonds[key] : 50;
+    return `<div class="scoobyRow on"><span>${label}</span><span class="dot" title="Bond: ${bond}/100">${bond}</span></div>`;
+  };
+  const unlockedCount = Object.keys(G.achievements).length;
+  const angelLabel = s.angel ? (G.angelMood==='brooding'?'Angel (brooding)':'Angel') : (G.angelMood==='angelus'?'Angel (lost)':'Angel');
+  document.getElementById('sidePanel').innerHTML = `
+    <div class="sideBox">
+      <h3>Scooby Gang</h3>
+      ${scoobyRow('giles', 'Giles (Watcher)', true)}
+      ${scoobyRow('willow', 'Willow', s.willow)}
+      ${scoobyRow('xander', 'Xander', s.xander)}
+      ${scoobyRow('cordelia', 'Cordelia', s.cordelia)}
+      ${scoobyRow('oz', 'Oz', s.oz)}
+      ${scoobyRow('angel', angelLabel, s.angel)}
+      <div style="font-size:12px;color:var(--dim);margin-top:8px">Morale: ${G.scoobyMorale}/100 &middot; numbers show individual bond</div>
+    </div>
+    <div class="sideBox">
+      <h3>Inventory</h3>
+      <div class="invRow"><span>Stakes</span><span>${G.stakes}</span></div>
+      <div class="invRow"><span>Holy Water</span><span>${G.holyWater}</span></div>
+      <div class="invRow"><span>Crosses</span><span>${G.crosses}</span></div>
+      ${G.hasCrossbow?`<div class="invRow"><span>Crossbow Bolts</span><span>${G.bolts}</span></div>`:''}
+      ${G.armor>0?`<div class="invRow"><span>Armor</span><span>-${Math.round(G.armor*100)}% dmg</span></div>`:''}
+      ${G.fortitudeCharges>0?`<div class="invRow"><span>Fortitude</span><span>${G.fortitudeCharges} left</span></div>`:''}
+    </div>
+    <div class="sideBox">
+      <h3>Slayer Stats</h3>
+      <div class="invRow"><span>Strength</span><span>${G.strength}</span></div>
+      <div class="invRow"><span>Research</span><span>${G.research}</span></div>
+      <div class="invRow"><span>Charm</span><span>${G.charm}</span></div>
+    </div>
+    <div class="sideBox">
+      <h3>Achievements (${unlockedCount}/${ACHIEVEMENTS.length})</h3>
+      ${ACHIEVEMENTS.map(a=>`<div class="scoobyRow ${G.achievements[a.id]?'on':''}" title="${escapeHtml(a.desc)}"><span>${a.name}</span><span class="dot">${G.achievements[a.id]?'★':'○'}</span></div>`).join('')}
+    </div>
+  `;
+}
+
+function renderLog(){
+  document.getElementById('logPanel').innerHTML = G.log.map(l=>`<div>${l}</div>`).join('');
+}
+</script>
+</body>
+</html>
