@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Captain's Innings — County Cricket Manager</title>
+<style>
+:root{
+  --bg:#0d1410; --panel:#132018; --panel2:#182619; --line:#25392a; --ink:#e8f3ea; --ink-dim:#9db3a4;
+  --accent:#3ea54b; --accent2:#e0c14b; --bad:#c8503a; --good:#3ea54b; --warn:#e0c14b;
+  --pitch:#1b3a22;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;overflow-x:hidden;}
+a{color:inherit;}
+button{font-family:inherit;cursor:pointer;}
+.hidden{display:none!important;}
+
+/* ---------- Setup screen ---------- */
+#setupScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center, #16261a 0%, #0a0f0b 100%);}
+.setupBox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:30px 36px;max-width:640px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+.setupBox h1{margin:0 0 4px;font-size:26px;color:var(--accent2);letter-spacing:.5px;}
+.setupBox .sub{color:var(--ink-dim);margin-bottom:20px;font-size:13px;}
+.setupBox label{display:block;margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-dim);}
+.setupBox input[type=text]{width:100%;padding:9px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-size:14px;}
+.clubGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;}
+@media (max-width:520px){ .clubGrid{grid-template-columns:repeat(2,1fr);} }
+.clubTile{border:1px solid var(--line);background:var(--panel2);border-radius:6px;padding:10px 6px;text-align:center;font-size:12px;font-weight:600;}
+.clubTile.sel{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2) inset;}
+.diffRow{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.diffBtn{flex:1;border:1px solid var(--line);background:var(--panel2);border-radius:6px;padding:8px;text-align:center;font-size:12px;}
+.diffBtn.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;color:var(--accent2);}
+#setupScreen .go{margin-top:22px;width:100%;padding:12px;background:var(--accent);border:none;border-radius:6px;color:#06210b;font-weight:700;font-size:15px;}
+#setupScreen .go:disabled{background:#2a3b2d;color:#5a6b5d;}
+#continueRow{margin-top:14px;text-align:center;}
+#continueRow button{background:none;border:1px solid var(--line);color:var(--ink-dim);padding:8px 14px;border-radius:6px;font-size:12px;}
+
+/* ---------- Main shell ---------- */
+#gameShell{display:none;min-height:100vh;flex-direction:column;}
+#topbar{display:flex;align-items:center;gap:18px;padding:9px 16px;background:linear-gradient(180deg,#16261a,#101c14);border-bottom:1px solid var(--line);flex-wrap:wrap;}
+#topbar .club{font-weight:700;color:var(--accent2);font-size:15px;}
+#topbar .stat{font-size:12px;color:var(--ink-dim);}
+#topbar .stat b{color:var(--ink);}
+#topbar .spacer{flex:1;}
+#topbar button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:6px 10px;border-radius:5px;font-size:12px;}
+
+#tabs{display:flex;gap:2px;background:#0e1811;padding:0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--line);}
+.tabBtn{padding:10px 14px;background:none;border:none;color:var(--ink-dim);font-size:13px;border-bottom:2px solid transparent;white-space:nowrap;}
+.tabBtn.active{color:var(--accent2);border-bottom:2px solid var(--accent2);}
+.tabBtn .badge{display:inline-block;background:var(--bad);color:#fff;border-radius:8px;padding:0 5px;font-size:10px;margin-left:5px;}
+
+#main{flex:1;display:flex;gap:0;overflow:hidden;}
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;}
+#newsPanel{width:260px;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px;flex-shrink:0;}
+#newsPanel h3{margin:4px 0 8px;font-size:12px;text-transform:uppercase;color:var(--ink-dim);letter-spacing:.5px;}
+.newsItem{border-bottom:1px solid var(--line);padding:7px 0;font-size:12px;}
+.newsItem .d{color:var(--ink-dim);font-size:10px;}
+@media (max-width:820px){
+  #main{flex-direction:column;overflow:visible;}
+  #content{overflow-y:visible;}
+  #newsPanel{width:auto;max-height:220px;border-left:none;border-top:1px solid var(--line);}
+}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--accent2);}
+.card h3{margin:0 0 8px;font-size:13px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.4px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media (max-width:900px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{padding:5px 7px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;}
+th{color:var(--ink-dim);font-weight:600;text-transform:uppercase;font-size:10.5px;cursor:pointer;}
+tr.me{background:rgba(62,165,75,.10);}
+tr:hover td{background:rgba(255,255,255,.02);}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10.5px;font-weight:700;}
+.tag.BAT{background:#2b3f6b;color:#bcd0ff;}
+.tag.BOWL{background:#5c2b2b;color:#ffc9c0;}
+.tag.AR{background:#4b3f16;color:#ffe9a8;}
+.tag.WK{background:#1f4d3d;color:#a8ffe0;}
+.bar{background:#0e1811;border:1px solid var(--line);border-radius:4px;height:8px;overflow:hidden;width:70px;display:inline-block;vertical-align:middle;}
+.bar i{display:block;height:100%;background:var(--accent);}
+.bar.warn i{background:var(--warn);}
+.bar.bad i{background:var(--bad);}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;border:1px solid var(--line);}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:6px 11px;border-radius:5px;font-size:12px;}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#06210b;font-weight:700;}
+.btn.bad{background:var(--bad);border-color:var(--bad);color:#fff;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.rowflex{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+select,input[type=range]{background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:5px 7px;border-radius:5px;font-size:12.5px;}
+.small{font-size:11px;color:var(--ink-dim);}
+.divider{height:1px;background:var(--line);margin:10px 0;}
+.scoreboard{font-family:'Courier New',monospace;background:#0a1a0f;border:1px solid var(--line);border-radius:6px;padding:14px;}
+.scoreLine{font-size:22px;font-weight:700;color:var(--accent2);}
+.commLog{max-height:260px;overflow-y:auto;font-size:12px;line-height:1.6;background:#0a1a0f;border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin-top:8px;}
+.commLog .ball-w{color:var(--bad);font-weight:700;}
+.commLog .ball-4{color:var(--accent2);}
+.commLog .ball-6{color:#ff8fd0;font-weight:700;}
+.modalBg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50;}
+.modalBox{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;max-width:520px;width:90%;max-height:85vh;overflow-y:auto;}
+.tabsRow{display:flex;gap:4px;margin-bottom:10px;}
+.tabsRow button{padding:5px 10px;font-size:11px;border-radius:5px 5px 0 0;background:var(--panel2);border:1px solid var(--line);border-bottom:none;color:var(--ink-dim);}
+.tabsRow button.active{color:var(--accent2);background:var(--panel);}
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-thumb{background:#25392a;border-radius:5px;}
+
+/* ---------- Mobile ---------- */
+@media (max-width:600px){
+  #topbar{gap:10px;padding:8px 10px;}
+  #topbar .stat{font-size:11px;}
+  .tabBtn{padding:11px 12px;font-size:12.5px;}
+  .btn, button, select, input[type=text], input[type=number]{font-size:13px;padding:8px 10px;}
+  .card{padding:12px;}
+  .setupBox{padding:22px 18px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SETUP SCREEN ============ -->
+<div id="setupScreen">
+  <div class="setupBox">
+    <h1>The Captain's Innings</h1>
+    <div class="sub">A county cricket management simulation</div>
+    <div id="setupError" class="small" style="color:var(--bad);"></div>
+    <label>Manager name</label>
+    <input type="text" id="mgrName" maxlength="24" placeholder="e.g. A. Reid">
+    <label>Choose your county</label>
+    <div class="clubGrid" id="clubGrid"></div>
+    <label>Board expectation level</label>
+    <div class="diffRow" id="diffRow">
+      <div class="diffBtn" data-d="relaxed">Relaxed</div>
+      <div class="diffBtn" data-d="ambitious">Ambitious</div>
+      <div class="diffBtn" data-d="ruthless">Ruthless</div>
+    </div>
+    <button class="go" id="startBtn" disabled>Begin Season</button>
+    <div id="continueRow" class="hidden"><button id="continueBtn">Continue saved career</button> <button id="wipeBtn">Delete save</button></div>
+  </div>
+</div>
+
+<!-- ============ MAIN SHELL ============ -->
+<div id="gameShell">
+  <div id="topbar">
+    <div class="club" id="tbClub">Club</div>
+    <div class="stat">📅 <b id="tbDate">-</b></div>
+    <div class="stat">💰 <b id="tbBudget">-</b></div>
+    <div class="stat">🏆 <b id="tbComp">-</b></div>
+    <div class="stat" id="tbToday">-</div>
+    <div class="stat">🪑 Job security: <b id="tbJob">-</b></div>
+    <div class="spacer"></div>
+    <button id="saveBtn">Save</button>
+    <button id="advanceBtn">Advance ▶</button>
+  </div>
+  <div id="tabs"></div>
+  <div id="main">
+    <div id="content"></div>
+    <div id="newsPanel"><h3>News &amp; Inbox</h3><div id="newsList"></div></div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* =========================================================================
+   CONFIG — tunable constants
+   ========================================================================= */
+const CONFIG = {
+  SQUAD_CAP: 22,
+  START_BUDGET: { relaxed: 900000, ambitious: 650000, ruthless: 500000 },
+  RETIRE_AGE_BASE: 36,           // + random spread, batters live longer than fast bowlers
+  YOUTH_ENTRY_AGE: [17,19],
+  FORM_DRIFT: 6,                 // max weekly random walk on form
+  FATIGUE_PER_MATCH: { CC:26, T20:10, ODC:16 },
+  FATIGUE_RECOVERY_PER_WEEK: 18,
+  INJURY_BASE_CHANCE: 0.035,     // per match appearance, modulated by fitness/fatigue
+  MORALE_DECAY_BENCHED: 3,
+  MORALE_GAIN_WIN: 6,
+  MORALE_LOSS_LOSS: 5,
+  WAGE_DIVISOR: 55,              // overall/WAGE_DIVISOR *1000 = weekly wage baseline
+  SIGNING_FEE_MULT: 24,          // weeks of wages, roughly
+  CALLUP_WINDOWS: [6,14,22],     // matchday indices when international call-ups are rolled
+  SEASON_MATCHDAYS: 34,
+  PITCHES: ['Green seamer','Dry turner','Flat road','Grassy bouncer','Dusty low-bouncer'],
+  WEATHERS: ['Sunny','Overcast','Drizzle','Hot & humid','Windy'],
+  TEST_TOTAL_OVERS_BASE: 336,   // ~4 days shared overs budget for a County Championship match
+  TEST_INNINGS_OVER_CAP: 130,   // no single first-class innings simulates beyond this many overs
+  WEATHER_OVERS_DELTA: { 'Sunny':0, 'Overcast':-6, 'Drizzle':-40, 'Hot & humid':-4, 'Windy':-8 },
+  FOLLOW_ON_MARGIN: 150,        // real County Championship follow-on threshold
+  DECLARE_DEFAULT: 300,
+  BALL_ANIM_SPEEDS: { slow:550, normal:260, fast:70 },
+  TRAINING_RATES: { skill:0.55, field:0.35, fitness:0.6, balancedSkill:0.18, balancedField:0.12, balancedFitness:0.15, restFatigueBonus:10, restMoraleBonus:1.5 },
+  TRAINING_FOCUSES: ['batting','bowling','fielding','fitness','balanced','rest'],
+  TRAIN_MULT_MATCHDAY: 0.35,   // players who actually played today train at a reduced rate
+  TRAIN_MULT_RESTDAY: 1.25,    // everyone else gets a full (boosted) day of dedicated training/rest
+};
+
+const COMPS = {
+  CC:  { name:'County Championship', short:'CC',  format:'TEST' },
+  T20: { name:'T20 Blast',           short:'T20', format:'T20'  },
+  ODC: { name:'One-Day Cup',         short:'ODC', format:'ODI'  },
+};
+
+/* =========================================================================
+   PLAYER FACTORY & NAME POOLS (for procedurally generated youth prospects)
+   ========================================================================= */
+let _pid = 1;
+function P(name, age, role, hand, style, bat, bwl, keep, field, fit, nation, club, overseas){
+  return {
+    id: 'p'+(_pid++), name, age, role, hand, style,
+    bat, bwl, keep, field,
+    fitness: fit, fatigue: 0, injuredWeeks: 0,
+    form: 50 + Math.round((Math.random()*20)-10),
+    morale: 65 + Math.round(Math.random()*15),
+    nation, club, overseas: !!overseas,
+    contractYears: 1 + Math.floor(Math.random()*3),
+    wage: Math.round(((bat*0.5+bwl*0.5+keep*0.2+field*0.15)/CONFIG.WAGE_DIVISOR)*1000/10)*10 + 300,
+    matches:0, runs:0, wkts:0, careerRuns:0, careerWkts:0, potm:0,
+    retired:false, listed:false, trainingFocus:'balanced',
+  };
+}
+
+const YOUTH_FIRST = ['Jack','Oliver','George','Harry','Charlie','Freddie','Alfie','Archie','Leo','Noah','Thomas','Josh','James','Ben','Sam','Will','Ethan','Ryan','Callum','Lewis','Aaron','Dylan','Rhys','Owen','Kai','Reece','Josh','Toby','Finn','Max'];
+const YOUTH_LAST = ['Hartshorn','Nicklin','Overend','Sharrocks','Pemberton','Wraith','Coultas','Renwick','Hebden','Kilgour','Aspden','Tremlett Jr','Woolmer','Brind','Sutcliffe','Faulds','Grimshaw','Danby','Elphick','Cadwallader','Ridgeway','Marchant','Stanniforth','Boothroyd','Callender','Fothergill','Standage','Wrigglesworth','Cheswright','Handforth'];
+function youthName(){ return YOUTH_FIRST[Math.floor(Math.random()*YOUTH_FIRST.length)]+' '+YOUTH_LAST[Math.floor(Math.random()*YOUTH_LAST.length)]; }
+
+function makeYouthProspect(club, nation){
+  const age = CONFIG.YOUTH_ENTRY_AGE[0] + Math.floor(Math.random()*(CONFIG.YOUTH_ENTRY_AGE[1]-CONFIG.YOUTH_ENTRY_AGE[0]+1));
+  const roles = ['BAT','BAT','BOWL','BOWL','AR','WK'];
+  const role = roles[Math.floor(Math.random()*roles.length)];
+  const hand = Math.random()<0.72 ? 'R':'L';
+  const styles = { BAT:['-'], WK:['-'], BOWL:['RM','RFM','RF','OB','LB','SLA','LM','LF'], AR:['RM','OB','LB','SLA'] };
+  const style = styles[role][Math.floor(Math.random()*styles[role].length)];
+  const base = 30 + Math.floor(Math.random()*22);
+  let bat=8, bwl=8, keep=0;
+  if(role==='BAT'){ bat = base+10; }
+  else if(role==='BOWL'){ bwl = base+10; bat = 10+Math.floor(Math.random()*15); }
+  else if(role==='AR'){ bat = base; bwl = base-4; }
+  else if(role==='WK'){ bat = base+4; keep = base+14; }
+  const field = 40+Math.floor(Math.random()*30);
+  const fit = 78+Math.floor(Math.random()*18);
+  const p = P(youthName(), age, role, hand, style, bat, bwl, keep, field, fit, nation, club, false);
+  p.potential = 55 + Math.floor(Math.random()*40); // ceiling for growth
+  p.wage = 300;
+  p.contractYears = 2;
+  return p;
+}
+
+/* =========================================================================
+   REAL PLAYER DATA — 8 English first-class counties
+   ========================================================================= */
+const COUNTIES = [
+{ id:'YOR', name:'Yorkshire',      ground:'Headingley',        color:'#04338c', div:1, players:[
+  P('Jonny Bairstow',36,'WK','R','-',78,15,76,62,68,'ENG','YOR'),
+  P('Joe Root',35,'BAT','R','OB',96,38,0,78,84,'ENG','YOR'),
+  P('Harry Brook',27,'BAT','R','OB',90,22,0,74,90,'ENG','YOR'),
+  P('Adam Lyth',38,'BAT','L','RM',66,12,0,64,60,'ENG','YOR'),
+  P('Finlay Bean',23,'BAT','L','-',64,8,0,60,85,'ENG','YOR'),
+  P('Harry Duke',24,'WK','R','-',58,0,76,68,88,'ENG','YOR'),
+  P('William Luxton',22,'BAT','R','-',54,10,0,55,86,'ENG','YOR'),
+  P('Jafer Chohan',25,'BOWL','R','LB',28,66,0,55,80,'ENG','YOR'),
+  P('Dom Bess',28,'BOWL','R','OB',34,70,0,52,78,'ENG','YOR'),
+  P('Ben Coad',33,'BOWL','R','RM',24,74,0,55,74,'ENG','YOR'),
+  P('Matthew Fisher',28,'BOWL','R','RFM',30,77,0,58,66,'ENG','YOR'),
+  P('Jordan Thompson',31,'AR','R','RM',58,64,0,62,82,'ENG','YOR'),
+  P('George Hill',24,'AR','R','OB',60,56,0,64,85,'ENG','YOR'),
+  P('Dan Fallows',22,'BOWL','L','LM',22,58,0,50,84,'ENG','YOR'),
+]},
+{ id:'SUR', name:'Surrey',         ground:'The Kia Oval',      color:'#002a5c', div:1, players:[
+  P('Rory Burns',35,'BAT','L','-',74,8,0,66,66,'ENG','SUR'),
+  P('Dom Sibley',30,'BAT','R','-',68,10,0,62,74,'ENG','SUR'),
+  P('Ollie Pope',28,'BAT','R','-',86,15,0,76,86,'ENG','SUR'),
+  P('Dan Lawrence',28,'BAT','R','LB',78,42,0,72,84,'ENG','SUR'),
+  P('Ben Foakes',33,'WK','R','-',74,0,86,72,72,'ENG','SUR'),
+  P('Jamie Smith',25,'WK','R','-',84,0,72,74,90,'ENG','SUR'),
+  P('Will Jacks',27,'AR','R','OB',76,58,0,72,85,'ENG','SUR'),
+  P('Sam Curran',27,'AR','L','LM',72,74,0,70,80,'ENG','SUR'),
+  P('Tom Curran',31,'BOWL','R','RM',44,72,0,60,78,'ENG','SUR'),
+  P('Gus Atkinson',27,'BOWL','R','RF',38,82,0,62,82,'ENG','SUR'),
+  P('Kemar Roach',37,'BOWL','R','RF',20,72,0,52,58,'WI','SUR',true),
+  P('Dan Moriarty',24,'BOWL','L','SLA',26,64,0,54,82,'ENG','SUR'),
+  P('Jason Roy',35,'BAT','R','-',72,5,0,68,70,'ENG','SUR'),
+  P('Ollie Sykes',23,'BOWL','R','RFM',24,58,0,52,84,'ENG','SUR'),
+]},
+{ id:'WAR', name:'Warwickshire',   ground:'Edgbaston',         color:'#6f1d3d', div:1, players:[
+  P('Ed Barnard',29,'AR','R','RM',64,66,0,66,84,'ENG','WAR'),
+  P('Sam Hain',30,'BAT','R','-',76,8,0,68,78,'ENG','WAR'),
+  P('Alex Davies',30,'WK','L','-',72,0,74,66,76,'ENG','WAR'),
+  P('Rob Yates',26,'BAT','L','OB',68,20,0,62,84,'ENG','WAR'),
+  P('Jacob Bethell',22,'AR','L','SLA',80,45,0,70,90,'ENG','WAR'),
+  P('Chris Woakes',37,'AR','R','RM',58,76,0,64,64,'ENG','WAR'),
+  P('Kai Smith',24,'BAT','R','-',56,8,0,58,86,'ENG','WAR'),
+  P('Craig Miles',33,'BOWL','R','RM',26,72,0,55,74,'ENG','WAR'),
+  P('Oliver Hannon-Dalby',36,'BOWL','R','RM',18,70,0,50,60,'ENG','WAR'),
+  P('Richard Gleeson',38,'BOWL','R','RF',16,68,0,48,56,'ENG','WAR'),
+  P('George Garton',28,'BOWL','L','LF',28,66,0,54,76,'ENG','WAR'),
+  P('Jake Lintott',32,'BOWL','L','SLA',20,64,0,50,74,'ENG','WAR'),
+  P('Michael Booth',28,'BOWL','R','RM',24,62,0,52,80,'ENG','WAR'),
+  P('Theo Wylie',20,'BAT','R','-',48,6,0,52,88,'ENG','WAR'),
+]},
+{ id:'SOM', name:'Somerset',       ground:'The Cooper Associates County Ground', color:'#d2001c', div:1, players:[
+  P('Tom Abell',31,'BAT','R','RM',74,30,0,68,80,'ENG','SOM'),
+  P('James Rew',22,'WK','L','-',78,0,72,66,88,'ENG','SOM'),
+  P('Tom Kohler-Cadmore',32,'BAT','R','-',76,5,0,66,76,'ENG','SOM'),
+  P('Will Smeed',24,'BAT','R','-',72,10,0,64,86,'ENG','SOM'),
+  P('Tom Banton',27,'WK','R','-',74,0,60,64,82,'ENG','SOM'),
+  P('Tom Lammonby',26,'AR','L','LM',68,50,0,64,82,'ENG','SOM'),
+  P('Lewis Gregory',32,'AR','R','RM',62,70,0,68,78,'ENG','SOM'),
+  P('Jack Leach',34,'BOWL','L','SLA',30,76,0,52,72,'ENG','SOM'),
+  P('Craig Overton',32,'AR','R','RM',54,68,0,60,76,'ENG','SOM'),
+  P('Josh Davey',35,'BOWL','R','RM',32,66,0,55,72,'ENG','SOM'),
+  P('Migael Pretorius',26,'BOWL','R','RF',26,64,0,54,80,'RSA','SOM',true),
+  P('Riley Meredith',29,'BOWL','R','RF',18,68,0,50,74,'AUS','SOM',true),
+  P('Lewis Goldsworthy',23,'AR','L','OB',58,54,0,60,84,'ENG','SOM'),
+  P('Jaden Rew',19,'BAT','L','-',44,6,0,50,86,'ENG','SOM'),
+]},
+{ id:'ESS', name:'Essex',          ground:'Chelmsford',        color:'#002d5c', div:1, players:[
+  P('Tom Westley',33,'BAT','R','OB',74,25,0,66,74,'ENG','ESS'),
+  P('Dean Elgar',39,'BAT','L','-',72,8,0,66,58,'RSA','ESS',true),
+  P('Michael Pepper',25,'WK','R','-',72,0,70,66,86,'ENG','ESS'),
+  P('Feroze Khushi',25,'BAT','R','-',62,8,0,58,84,'ENG','ESS'),
+  P('Matt Critchley',29,'AR','R','LB',68,58,0,66,82,'ENG','ESS'),
+  P('Wiaan Mulder',27,'AR','R','RM',70,66,0,68,86,'RSA','ESS',true),
+  P('Luc Benkenstein',24,'AR','R','OB',60,50,0,60,85,'ENG','ESS'),
+  P('Simon Harmer',37,'BOWL','R','OB',32,80,0,55,70,'RSA','ESS',true),
+  P('Sam Cook',28,'BOWL','R','RM',22,78,0,55,80,'ENG','ESS'),
+  P('Jamie Porter',32,'BOWL','R','RM',20,74,0,52,76,'ENG','ESS'),
+  P('Aron Nijjar',29,'BOWL','L','SLA',26,62,0,54,78,'ENG','ESS'),
+  P('Robin Das',22,'WK','R','-',52,0,58,55,85,'ENG','ESS'),
+  P('Noah Thain',21,'BOWL','R','RFM',22,56,0,50,86,'ENG','ESS'),
+]},
+{ id:'NOT', name:'Nottinghamshire',ground:'Trent Bridge',      color:'#f7a800', div:1, players:[
+  P('Haseeb Hameed',29,'BAT','R','-',70,5,0,64,78,'ENG','NOT'),
+  P('Ben Duckett',31,'WK','L','-',88,5,55,70,82,'ENG','NOT'),
+  P('Joe Clarke',29,'WK','R','-',74,0,62,66,80,'ENG','NOT'),
+  P('Jack Haynes',25,'BAT','R','-',66,8,0,60,84,'ENG','NOT'),
+  P('Freddie McCann',20,'BAT','R','-',50,6,0,52,86,'ENG','NOT'),
+  P('Ben Slater',34,'BAT','L','-',60,4,0,58,72,'ENG','NOT'),
+  P('Kyle Verreynne',29,'WK','R','-',72,0,70,64,80,'RSA','NOT',true),
+  P('Olly Stone',31,'BOWL','R','RF',22,76,0,54,62,'ENG','NOT'),
+  P('Josh Tongue',28,'BOWL','R','RF',26,78,0,55,74,'ENG','NOT'),
+  P('Liam Patterson-White',25,'BOWL','L','SLA',28,68,0,55,84,'ENG','NOT'),
+  P('Mohammad Ali',24,'BOWL','R','RF',20,64,0,50,80,'PAK','NOT',true),
+  P('Fergus O’Neill',24,'BOWL','R','RM',24,60,0,52,82,'ENG','NOT'),
+  P('Dan Sams',32,'AR','L','LM',58,60,0,60,76,'AUS','NOT',true),
+]},
+{ id:'LAN', name:'Lancashire',     ground:'Old Trafford',      color:'#cf0a2c', div:2, players:[
+  P('Keaton Jennings',33,'BAT','L','-',72,6,0,64,76,'ENG','LAN'),
+  P('George Bell',23,'BAT','R','-',60,8,0,58,86,'ENG','LAN'),
+  P('Josh Bohannon',27,'AR','R','OB',72,42,0,66,84,'ENG','LAN'),
+  P('Marcus Harris',33,'BAT','L','-',70,4,0,62,72,'AUS','LAN',true),
+  P('Matty Hurst',25,'WK','R','-',58,0,64,60,84,'ENG','LAN'),
+  P('Michael Jones',27,'BAT','R','-',62,6,0,58,80,'ENG','LAN'),
+  P('Jordan Clark',33,'AR','R','RM',60,66,0,64,78,'ENG','LAN'),
+  P('Paul Coughlin',31,'AR','R','RM',54,62,0,60,78,'ENG','LAN'),
+  P('Ajeet Singh Dale',26,'BOWL','R','RFM',26,66,0,54,82,'ENG','LAN'),
+  P('Tom Bailey',34,'BOWL','R','RM',20,72,0,52,68,'ENG','LAN'),
+  P('Tom Hartley',25,'BOWL','L','SLA',28,70,0,55,82,'ENG','LAN'),
+  P('Joe Moores',17,'WK','R','-',40,0,58,50,90,'ENG','LAN'),
+  P('George Lavelle',26,'WK','R','-',48,0,60,54,80,'ENG','LAN'),
+  P('Luke Wood',31,'BOWL','L','LM',24,68,0,52,76,'ENG','LAN'),
+]},
+{ id:'MID', name:'Middlesex',      ground:"Lord's",            color:'#003087', div:2, players:[
+  P('Leus du Plooy',29,'AR','L','OB',74,44,0,68,82,'RSA','MID',true),
+  P('Joshua De Caires',22,'BAT','R','OB',64,30,0,62,86,'ENG','MID'),
+  P('Joe Cracknell',23,'WK','R','-',60,0,66,58,86,'ENG','MID'),
+  P('Ben Geddes',26,'BAT','R','-',62,6,0,60,82,'ENG','MID'),
+  P('Caleb Falconer',21,'BAT','L','-',52,8,0,54,86,'ENG','MID'),
+  P('Max Holden',27,'BAT','L','-',66,8,0,60,80,'ENG','MID'),
+  P('Sam Robson',36,'BAT','R','-',68,4,0,62,66,'ENG','MID'),
+  P('Toby Roland-Jones',37,'BOWL','R','RFM',22,70,0,52,60,'ENG','MID'),
+  P('Tom Helm',31,'BOWL','R','RFM',24,68,0,54,72,'ENG','MID'),
+  P('Blake Cullen',23,'BOWL','R','RFM',22,64,0,52,82,'ENG','MID'),
+  P('Ryan Higgins',31,'AR','R','RM',60,62,0,62,78,'ENG','MID'),
+  P('Eathan Bosch',26,'BOWL','R','RF',20,66,0,52,80,'RSA','MID',true),
+  P('Matt Boyle',28,'BAT','R','-',60,5,0,58,80,'AUS','MID',true),
+  P('Martin Andersson',25,'AR','R','RM',56,58,0,58,82,'ENG','MID'),
+]},
+];
+
+/* =========================================================================
+   REAL PLAYER DATA — international-only pool (club:'INTL')
+   Not attached to a manageable county; shown in the National Teams viewer
+   and used to fill out call-up squads for nations alongside the county
+   players above who share that nation.
+   ========================================================================= */
+const INTL_ONLY = [
+  // England
+  P('Ben Stokes',34,'AR','L','RFM',84,72,0,74,68,'ENG','INTL'),
+  P('Jofra Archer',30,'BOWL','R','RF',30,86,0,58,54,'ENG','INTL'),
+  P('Zak Crawley',27,'BAT','R','-',78,5,0,66,82,'ENG','INTL'),
+  P('Ollie Robinson',31,'BOWL','R','RM',34,78,0,58,66,'ENG','INTL'),
+  P('Brydon Carse',30,'AR','R','RF',58,76,0,62,76,'ENG','INTL'),
+  P('Mark Wood',35,'BOWL','R','RF',22,80,0,54,56,'ENG','INTL'),
+  P('Jamie Overton',31,'AR','R','RF',56,70,0,62,74,'ENG','INTL'),
+  P('Shoaib Bashir',22,'BOWL','R','OB',26,68,0,52,84,'ENG','INTL'),
+  // Australia
+  P('Pat Cummins',33,'BOWL','R','RF',26,90,0,60,78,'AUS','INTL'),
+  P('Steve Smith',37,'BAT','R','LB',92,20,0,72,64,'AUS','INTL'),
+  P('Travis Head',32,'BAT','L','OB',86,15,0,70,82,'AUS','INTL'),
+  P('Mitchell Starc',36,'BOWL','L','LF',28,88,0,58,64,'AUS','INTL'),
+  P('Josh Hazlewood',35,'BOWL','R','RM',20,86,0,55,62,'AUS','INTL'),
+  P('Alex Carey',34,'WK','L','-',72,0,78,66,74,'AUS','INTL'),
+  P('Nathan Lyon',38,'BOWL','R','OB',26,84,0,52,60,'AUS','INTL'),
+  P('Cameron Green',27,'AR','R','RFM',78,64,0,72,78,'AUS','INTL'),
+  P('Scott Boland',37,'BOWL','R','RM',18,78,0,50,58,'AUS','INTL'),
+  P('Josh Inglis',31,'WK','R','-',74,0,68,66,78,'AUS','INTL'),
+  P('Marnus Labuschagne',31,'BAT','R','LB',84,30,0,70,80,'AUS','INTL'),
+  P('Beau Webster',32,'AR','R','RM',66,58,0,64,76,'AUS','INTL'),
+  P('Jake Weatherald',31,'BAT','L','-',68,5,0,60,80,'AUS','INTL'),
+  // India
+  P('Shubman Gill',26,'BAT','R','-',90,5,0,74,86,'IND','INTL'),
+  P('KL Rahul',33,'WK','R','-',86,0,68,72,78,'IND','INTL'),
+  P('Yashasvi Jaiswal',24,'BAT','L','-',88,8,0,70,88,'IND','INTL'),
+  P('Rishabh Pant',28,'WK','L','-',88,0,74,72,80,'IND','INTL'),
+  P('Ravindra Jadeja',37,'AR','L','SLA',74,80,0,74,72,'IND','INTL'),
+  P('Jasprit Bumrah',32,'BOWL','R','RF',20,96,0,56,66,'IND','INTL'),
+  P('Mohammed Siraj',32,'BOWL','R','RFM',24,82,0,54,76,'IND','INTL'),
+  P('Kuldeep Yadav',31,'BOWL','L','LB',28,82,0,56,78,'IND','INTL'),
+  P('Virat Kohli',37,'BAT','R','-',90,10,0,80,70,'IND','INTL'),
+  P('Rohit Sharma',39,'BAT','R','-',84,5,0,70,58,'IND','INTL'),
+  P('Ravichandran Ashwin',39,'BOWL','R','OB',40,84,0,58,62,'IND','INTL'),
+  P('Washington Sundar',26,'AR','L','OB',66,66,0,64,82,'IND','INTL'),
+  // Pakistan
+  P('Babar Azam',31,'BAT','R','-',90,5,0,74,80,'PAK','INTL'),
+  P('Mohammad Rizwan',33,'WK','R','-',82,0,72,68,76,'PAK','INTL'),
+  P('Shaheen Shah Afridi',26,'BOWL','L','LF',26,88,0,56,80,'PAK','INTL'),
+  P('Shan Masood',36,'BAT','L','-',72,4,0,64,72,'PAK','INTL'),
+  P('Saud Shakeel',29,'BAT','L','-',76,4,0,64,80,'PAK','INTL'),
+  P('Naseem Shah',23,'BOWL','R','RF',22,80,0,54,82,'PAK','INTL'),
+  P('Abdullah Shafique',25,'BAT','R','-',72,4,0,62,84,'PAK','INTL'),
+  P('Saim Ayub',23,'BAT','L','-',74,10,0,64,86,'PAK','INTL'),
+  P('Sajid Khan',32,'BOWL','R','OB',32,78,0,54,74,'PAK','INTL'),
+  // South Africa
+  P('Kagiso Rabada',30,'BOWL','R','RF',24,90,0,58,78,'RSA','INTL'),
+  P('Temba Bavuma',35,'BAT','R','-',72,5,0,64,68,'RSA','INTL'),
+  P('Aiden Markram',31,'BAT','R','OB',80,30,0,70,82,'RSA','INTL'),
+  P('Marco Jansen',26,'AR','L','LFM',68,76,0,66,84,'RSA','INTL'),
+  P('Keshav Maharaj',36,'BOWL','L','SLA',30,80,0,54,68,'RSA','INTL'),
+  P('Ryan Rickelton',29,'WK','L','-',76,0,66,66,82,'RSA','INTL'),
+  P('Tony de Zorzi',27,'BAT','L','-',74,6,0,62,84,'RSA','INTL'),
+  P('Lungi Ngidi',29,'BOWL','R','RFM',20,76,0,54,74,'RSA','INTL'),
+  // New Zealand
+  P('Kane Williamson',35,'BAT','R','OB',90,15,0,74,70,'NZ','INTL'),
+  P('Tom Latham',33,'WK','L','-',78,0,66,68,76,'NZ','INTL'),
+  P('Devon Conway',34,'BAT','L','-',82,4,0,66,74,'NZ','INTL'),
+  P('Matt Henry',34,'BOWL','R','RM',22,80,0,54,70,'NZ','INTL'),
+  P('Mitchell Santner',33,'AR','L','SLA',60,74,0,64,78,'NZ','INTL'),
+  P('Glenn Phillips',29,'BAT','R','OB',78,40,0,74,86,'NZ','INTL'),
+  P('Rachin Ravindra',25,'AR','L','SLA',80,50,0,68,88,'NZ','INTL'),
+  P('Kyle Jamieson',31,'BOWL','R','RM',26,78,0,54,72,'NZ','INTL'),
+  P('Will Young',32,'BAT','L','-',70,4,0,60,76,'NZ','INTL'),
+  P('Daryl Mitchell',34,'AR','R','RM',76,55,0,66,76,'NZ','INTL'),
+  // West Indies
+  P('Roston Chase',34,'AR','R','OB',72,58,0,64,76,'WI','INTL'),
+  P('Shamar Joseph',26,'BOWL','R','RF',20,84,0,54,80,'WI','INTL'),
+  P('Alzarri Joseph',29,'BOWL','R','RF',22,78,0,54,74,'WI','INTL'),
+  P('Joshua Da Silva',27,'WK','R','-',64,0,68,60,80,'WI','INTL'),
+  P('Kraigg Brathwaite',32,'BAT','R','-',68,4,0,60,74,'WI','INTL'),
+  P('Jason Holder',34,'AR','R','RM',62,70,0,64,72,'WI','INTL'),
+  P('Kavem Hodge',29,'BAT','R','OB',62,20,0,58,80,'WI','INTL'),
+  // Sri Lanka
+  P('Dimuth Karunaratne',37,'BAT','L','-',70,4,0,62,64,'SL','INTL'),
+  P('Angelo Mathews',38,'AR','R','RM',72,58,0,66,62,'SL','INTL'),
+  P('Kusal Mendis',30,'WK','R','-',78,0,66,64,78,'SL','INTL'),
+  P('Dhananjaya de Silva',33,'AR','R','OB',74,54,0,64,78,'SL','INTL'),
+  P('Kamindu Mendis',26,'AR','L','SLA',72,48,0,64,84,'SL','INTL'),
+  P('Prabath Jayasuriya',34,'BOWL','L','SLA',26,78,0,52,72,'SL','INTL'),
+  P('Asitha Fernando',28,'BOWL','R','RFM',20,74,0,52,78,'SL','INTL'),
+  P('Dinesh Chandimal',35,'WK','R','-',70,0,60,60,64,'SL','INTL'),
+  P('Pathum Nissanka',27,'BAT','R','-',76,4,0,62,80,'SL','INTL'),
+];
+
+const ALL_PLAYERS = COUNTIES.flatMap(c=>c.players).concat(INTL_ONLY);
+const NATIONS = ['ENG','AUS','IND','PAK','RSA','NZ','WI','SL'];
+const NATION_NAMES = { ENG:'England', AUS:'Australia', IND:'India', PAK:'Pakistan', RSA:'South Africa', NZ:'New Zealand', WI:'West Indies', SL:'Sri Lanka' };
+
+function playerById(id){ return ALL_PLAYERS.find(p=>p.id===id); }
+function countyById(id){ return G.counties.find(c=>c.id===id); }
+function squadOf(clubId){ return ALL_PLAYERS.filter(p=>p.club===clubId && !p.retired); }
+function overall(p){ return Math.round(p.bat*0.34 + p.bwl*0.34 + p.keep*0.12 + p.field*0.12 + p.fitness*0.08); }
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+const SAVE_KEY = 'cricketCaptainSave';
+let G = null;
+
+function newGame(clubId, managerName, difficulty){
+  G = {
+    manager: managerName || 'Manager',
+    myClub: clubId,
+    difficulty,
+    budget: CONFIG.START_BUDGET[difficulty],
+    season: 1,
+    matchday: 0,
+    jobSecurity: 60,
+    todayStatus: null,
+    counties: JSON.parse(JSON.stringify(COUNTIES.map(c=>({id:c.id,name:c.name,ground:c.ground,color:c.color,div:c.div})))),
+    news: [],
+    tables: {},         // comp -> [{team,pl,w,l,d,pts,nrr}]
+    fixtures: [],        // {md, comp, home, away, played, result}
+    knockouts: {},        // comp -> bracket state
+    tactics: { batApproach:'balanced', bowlPlan:'balanced', declareAt: CONFIG.DECLARE_DEFAULT, enforceFollowOn:'auto' },
+    settings: { ballByBall: false },
+    liveMatch: null,
+    lineup: { xi: [], order: [] },
+    objectives: null,
+    records: { runs:{}, wkts:{} },
+    ui: { tab:'dashboard' },
+    callupWindowsDone: [],
+    seasonSummary: null,
+    gameOver: false,
+  };
+  ALL_PLAYERS.forEach(p=>{
+    p.form = 50+Math.round(Math.random()*20-10);
+    p.morale = 65+Math.round(Math.random()*15);
+    p.fatigue = 0; p.injuredWeeks = 0; p.retired = false; p.listed=false;
+    p.matches=0; p.runs=0; p.wkts=0; p.potm=0;
+  });
+  setObjectives();
+  generateFixtures();
+  autoPickLineup();
+  addNews('Welcome', `You have been appointed manager of ${countyName(clubId)}. The board expects: ${G.objectives.text}`);
+  save();
+}
+
+function countyName(id){ const c=COUNTIES.find(c=>c.id===id); return c? c.name : id; }
+
+function setObjectives(){
+  const strength = avgSquadRating(G.myClub);
+  const rank = [...COUNTIES].sort((a,b)=>avgSquadRating(b.id)-avgSquadRating(a.id)).findIndex(c=>c.id===G.myClub)+1;
+  let text;
+  if(rank<=2) text = 'Win the County Championship and reach a knockout final in white-ball cricket.';
+  else if(rank<=5) text = 'Finish in the top half of the Championship and reach a T20 Blast/One-Day Cup knockout stage.';
+  else text = 'Avoid finishing bottom of the Championship and remain competitive in white-ball cricket.';
+  G.objectives = { rankAtStart:rank, text, met:null };
+}
+
+function avgSquadRating(clubId){
+  const sq = ALL_PLAYERS.filter(p=>p.club===clubId && !p.retired);
+  if(!sq.length) return 50;
+  return sq.reduce((s,p)=>s+overall(p),0)/sq.length;
+}
+
+function addNews(title, body){
+  G.news.unshift({ title, body, season:G.season, md:G.matchday, id:Date.now()+Math.random() });
+  if(G.news.length>60) G.news.length=60;
+}
+
+/* ---------- save / load ---------- */
+function save(){
+  try{
+    const data = {
+      G, players: ALL_PLAYERS.map(p=>({...p})),
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  }catch(e){ console.warn('save failed', e); }
+}
+function trySave(){ save(); flashSaved(); }
+function flashSaved(){
+  const b=document.getElementById('saveBtn'); if(!b) return;
+  const old=b.textContent; b.textContent='Saved ✓'; setTimeout(()=>b.textContent=old,900);
+}
+function tryLoad(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    G = data.G;
+    G.settings = G.settings || { ballByBall:false };
+    G.tactics.enforceFollowOn = G.tactics.enforceFollowOn || 'auto';
+    G.tactics.declareAt = G.tactics.declareAt || CONFIG.DECLARE_DEFAULT;
+    G.liveMatch = null;
+    data.players.forEach(sp=>{
+      const p = ALL_PLAYERS.find(x=>x.id===sp.id);
+      if(p) Object.assign(p, sp);
+    });
+    // any players saved that no longer match an id (retired->replaced) get appended
+    data.players.forEach(sp=>{
+      if(!ALL_PLAYERS.find(x=>x.id===sp.id)) ALL_PLAYERS.push(sp);
+    });
+    return true;
+  }catch(e){ console.warn('load failed', e); return false; }
+}
+function wipeSave(){ localStorage.removeItem(SAVE_KEY); }
+
+/* =========================================================================
+   FIXTURES / SEASON STRUCTURE
+   ========================================================================= */
+function roundRobinPairs(teams){
+  // returns array of rounds, each round an array of [home,away]
+  const list = teams.slice();
+  if(list.length%2===1) list.push(null);
+  const n = list.length, rounds=[];
+  for(let r=0;r<n-1;r++){
+    const round=[];
+    for(let i=0;i<n/2;i++){
+      const a=list[i], b=list[n-1-i];
+      if(a&&b) round.push(r%2===0?[a,b]:[b,a]);
+    }
+    rounds.push(round);
+    list.splice(1,0,list.pop());
+  }
+  return rounds;
+}
+
+function generateFixtures(){
+  const teams = COUNTIES.map(c=>c.id);
+  G.fixtures = [];
+  G.tables = { CC: initTable(teams), T20: initTable(teams), ODC: initTable(teams) };
+  G.knockouts = { T20:{stage:'group'}, ODC:{stage:'group'} };
+
+  // County Championship: double round robin (home & away), spread across matchdays
+  let md = 1;
+  const ccRounds = roundRobinPairs(teams);
+  const fullCC = ccRounds.concat(ccRounds.map(r=>r.map(([h,a])=>[a,h])));
+  fullCC.forEach(round=>{
+    round.forEach(([h,a])=>{ G.fixtures.push({ md, comp:'CC', home:h, away:a, played:false }); });
+    md += 2; // multi-day match occupies 2 matchdays worth of time
+  });
+
+  // T20 Blast: single round robin group stage, one round every other day (own rest day between
+  // rounds, and never on the same day as an ODC round — see below), then knockout added later.
+  md = 2;
+  roundRobinPairs(teams).forEach(round=>{
+    round.forEach(([h,a])=>{ G.fixtures.push({ md, comp:'T20', home:h, away:a, played:false }); });
+    md += 2;
+  });
+
+  // One-Day Cup: single round robin group stage, same every-other-day spacing on the opposite
+  // parity to T20 so the two white-ball competitions never collide, leaving the back half of the
+  // season (once both group stages and knockouts are done) as genuine rest/training-only days.
+  md = 3;
+  roundRobinPairs(teams).forEach(round=>{
+    round.forEach(([h,a])=>{ G.fixtures.push({ md, comp:'ODC', home:h, away:a, played:false }); });
+    md += 2;
+  });
+
+  G.fixtures.sort((a,b)=>a.md-b.md);
+}
+
+function initTable(teams){
+  return teams.map(t=>({ team:t, pl:0, w:0, l:0, d:0, pts:0, bat_bp:0, bowl_bp:0 }));
+}
+
+/* =========================================================================
+   MATCH ENGINE
+   ========================================================================= */
+function pitchFor(comp){ return CONFIG.PITCHES[Math.floor(Math.random()*CONFIG.PITCHES.length)]; }
+function weatherFor(){ return CONFIG.WEATHERS[Math.floor(Math.random()*CONFIG.WEATHERS.length)]; }
+
+function effBat(p, pitch, tactic){
+  let e = p.bat * (0.72 + 0.28*(p.form/100)) * (1 - p.fatigue/260) * (0.85+0.3*(p.morale/100));
+  if(pitch==='Green seamer' || pitch==='Grassy bouncer') e *= 0.9;
+  if(pitch==='Flat road') e *= 1.12;
+  if(pitch==='Dry turner' || pitch==='Dusty low-bouncer') e *= 0.95;
+  if(tactic==='aggressive') e *= 1.08;
+  if(tactic==='defensive') e *= 0.92;
+  return Math.max(5,e);
+}
+function effBwl(p, pitch, tactic){
+  let e = p.bwl * (0.72 + 0.28*(p.form/100)) * (1 - p.fatigue/260) * (0.85+0.3*(p.morale/100));
+  const seamer = ['RF','RFM','RM','LF','LM','LFM'].includes(p.style);
+  const spinner = ['OB','LB','SLA'].includes(p.style);
+  if((pitch==='Green seamer'||pitch==='Grassy bouncer') && seamer) e *= 1.18;
+  if((pitch==='Dry turner'||pitch==='Dusty low-bouncer') && spinner) e *= 1.2;
+  if(pitch==='Flat road') e *= 0.92;
+  if(tactic==='attack') e *= 1.1;
+  if(tactic==='contain') e *= 0.94;
+  return Math.max(5,e);
+}
+
+// simulate one delivery; returns {runs, wicket, extra}
+function simBall(batEff, bwlEff, pressure){
+  const skillGap = (batEff - bwlEff) / 100; // -1..1 roughly
+  const wicketChance = clamp(0.052 - skillGap*0.035, 0.012, 0.11);
+  const r = Math.random();
+  if(r < wicketChance) return { runs:0, wicket:true };
+  const boundaryChance = clamp(0.14 + skillGap*0.10, 0.04, 0.32);
+  const sixChance = clamp(0.035 + skillGap*0.05, 0.005, 0.12);
+  const dotChance = clamp(0.38 - skillGap*0.12, 0.18, 0.55);
+  const rr = Math.random();
+  if(rr < sixChance) return { runs:6, wicket:false };
+  if(rr < sixChance+boundaryChance) return { runs:4, wicket:false };
+  if(rr < sixChance+boundaryChance+dotChance) return { runs:0, wicket:false };
+  const singles = Math.random();
+  if(singles<0.72) return { runs:1, wicket:false };
+  if(singles<0.94) return { runs:2, wicket:false };
+  return { runs:3, wicket:false };
+}
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+
+function pickBowlers(attackList){
+  return attackList.filter(p=>p.bwl>=40).length ? attackList.filter(p=>p.bwl>=15) : attackList;
+}
+
+// Simulate one innings. battingOrder: array of player objs (in order). bowlingAttack: array of player objs.
+// maxOvers: overs available to this innings (a shared time budget for Tests, or the format limit for limited-overs).
+// opts: { teamLabel, inn: '1st innings'/'2nd innings' label, target: chase target (innings ends the instant it's
+//         reached), declareCheck(runs,wkts,oversBowled)=>bool checked after each completed over }.
+// Every single delivery is pushed to `log` as a {t:'ball',...} record (used for both the quick recap and the
+// ball-by-ball live viewer), interleaved with {t:'info'} milestone entries pushed by the calling code.
+function simInnings(battingOrder, bowlingAttack, pitch, batTactic, bwlTactic, maxOvers, overLimitPerBowler, log, opts){
+  opts = opts || {};
+  const teamLabel = opts.teamLabel || '';
+  const inningsLabel = opts.inn || '';
+  const target = opts.target;
+  const declareCheck = opts.declareCheck;
+  let runs=0, wkts=0, ballsFaced=0;
+  const stats = battingOrder.map(p=>({p, runs:0, balls:0, out:false}));
+  const bowlerStats = bowlingAttack.map(p=>({p, overs:0, balls:0, runs:0, wkts:0}));
+  // maxWkts = last-wicket-standing threshold; if fewer than 11 are available, the innings
+  // ends one wicket earlier so we never run out of batters to bring to the crease.
+  const maxWkts = Math.min(10, Math.max(0, stats.length-1));
+  let strikerIdx=0, nonStrikerIdx = stats.length>1?1:0, nextIn=2;
+  let overCount=0;
+  let declared=false, chased=false, timeUp=false;
+  const oversTotal = maxOvers || 90; // cap innings simulation for perf
+  outer:
+  while(wkts < maxWkts && overCount < oversTotal && stats.length>0){
+    // choose bowler: rotate through those under their over limit, weighted by bwl rating
+    let candidates = bowlerStats.filter(bs => !overLimitPerBowler || bs.overs < overLimitPerBowler);
+    if(!candidates.length){ timeUp = true; break; }
+    candidates.sort((a,b)=> effBwl(b.p,pitch,bwlTactic) - effBwl(a.p,pitch,bwlTactic));
+    const bs = candidates[Math.floor(Math.random()*Math.min(3,candidates.length))];
+    for(let ball=0; ball<6; ball++){
+      if(wkts>=maxWkts) break;
+      const striker = stats[strikerIdx];
+      const batEff = effBat(striker.p, pitch, batTactic);
+      const bwlEff = effBwl(bs.p, pitch, bwlTactic);
+      const res = simBall(batEff, bwlEff);
+      ballsFaced++;
+      bs.balls++;
+      striker.balls++;
+      const overLabel = overCount+'.'+(ball+1);
+      if(res.wicket){
+        striker.out = true;
+        wkts++; bs.wkts++;
+        if(log) log.push({t:'ball', team:teamLabel, inn:inningsLabel, batter:striker.p.name, bowler:bs.p.name, runs:0, wicket:true, over:overLabel, cumRuns:runs, cumWkts:wkts, target:target!=null?target:null});
+        if(wkts>=maxWkts || nextIn>=stats.length) break;
+        strikerIdx = nextIn;
+        nextIn++;
+      } else {
+        runs += res.runs; bs.runs += res.runs; striker.runs += res.runs;
+        if(log) log.push({t:'ball', team:teamLabel, inn:inningsLabel, batter:striker.p.name, bowler:bs.p.name, runs:res.runs, wicket:false, over:overLabel, cumRuns:runs, cumWkts:wkts, target:target!=null?target:null});
+        if(res.runs%2===1){ const tmp=strikerIdx; strikerIdx=nonStrikerIdx; nonStrikerIdx=tmp; }
+        if(target!=null && runs>=target){ chased=true; break outer; }
+      }
+    }
+    // strike rotates at the end of each completed over
+    { const tmp=strikerIdx; strikerIdx=nonStrikerIdx; nonStrikerIdx=tmp; }
+    bs.overs++;
+    overCount++;
+    if(declareCheck && declareCheck(runs, wkts, overCount)){ declared = true; break; }
+  }
+  if(!chased && !declared && overCount>=oversTotal && wkts<maxWkts) timeUp = true;
+  return { runs, wkts, overs: overCount + (ballsFaced%6)/10, ballsFaced, batStats:stats, bowlStats:bowlerStats, declared, chased, timeUp };
+}
+
+function chooseXI(clubId){
+  const sq = squadOf(clubId).filter(p=>p.injuredWeeks<=0 && !p.awayOnDuty);
+  return sq.sort((a,b)=>overall(b)-overall(a)).slice(0,11);
+}
+function battingOrderFor(xi){
+  return xi.slice().sort((a,b)=> (b.bat*1.0 - (b.role==='BOWL'?15:0)) - (a.bat*1.0 - (a.role==='BOWL'?15:0)) );
+}
+function bowlingAttackFor(xi){
+  return xi.filter(p=>p.bwl>=15).sort((a,b)=>b.bwl-a.bwl);
+}
+// Respects the manager's manually-set batting order (G.lineup.order) for the player's own club,
+// falling back to the auto-sorted order if no valid manual order matches the given XI.
+function orderForClub(id, xi){
+  if(id===G.myClub && G.lineup.order.length===11){
+    const ids = new Set(xi.map(p=>p.id));
+    const manual = G.lineup.order.map(playerById).filter(p=>p && ids.has(p.id));
+    if(manual.length===xi.length) return manual;
+  }
+  return battingOrderFor(xi);
+}
+
+/* ---------- County Championship: full two-innings first-class match ----------
+   Uses a shared overs budget (~4 days, trimmed by weather) so the match can end in a draw.
+   Supports the follow-on (enforced/declined per tactics, or an AI heuristic) and declarations
+   (driven by G.tactics.declareAt), matching real first-class match structure. */
+function simTestMatch(fx, homeXI, awayXI, pitch, weather, log){
+  const home = fx.home, away = fx.away;
+  const tossWinner = Math.random()<0.5? home : away;
+  const A = tossWinner, B = A===home?away:home; // A bats first
+
+  const xiFor = id=> id===home?homeXI:awayXI;
+  const orderFor = id=> orderForClub(id, xiFor(id));
+  const attackFor = id=> bowlingAttackFor(xiFor(id));
+  const batTacticFor = id=> id===G.myClub? G.tactics.batApproach : 'balanced';
+  const bwlTacticFor = id=> id===G.myClub? G.tactics.bowlPlan : 'balanced';
+  const declareAtFor = id=> id===G.myClub? G.tactics.declareAt : CONFIG.DECLARE_DEFAULT;
+  const followOnPolicyFor = id=> id===G.myClub? G.tactics.enforceFollowOn : 'auto';
+  const maxWktsFor = id=> Math.min(10, orderFor(id).length-1);
+
+  log.push({t:'info', text:`Toss: ${countyName(tossWinner)} won the toss and chose to bat.`});
+  log.push({t:'info', text:`Pitch: ${pitch}. Weather: ${weather}.`});
+
+  let poolBalls = (CONFIG.TEST_TOTAL_OVERS_BASE + (CONFIG.WEATHER_OVERS_DELTA[weather]||0)) * 6;
+  const innCap = ()=> Math.max(6, Math.min(CONFIG.TEST_INNINGS_OVER_CAP, Math.floor(poolBalls/6)));
+  const spend = inn=>{ poolBalls = Math.max(0, poolBalls - inn.ballsFaced); };
+
+  const result = { home, away, pitch, weather, innings:[] };
+  const bail = ()=>{
+    result.winner=null; result.draw=true; result.tie=false;
+    result.marginText = 'Match drawn — time ran out.';
+    log.push({t:'info', text:result.marginText});
+    return result;
+  };
+  const finishFromChase = (chaser, defender, inn, target)=>{
+    const maxW = maxWktsFor(chaser);
+    if(inn.chased){
+      const wktsLeft = Math.max(1, maxW - inn.wkts);
+      result.winner = chaser; result.draw=false; result.tie=false;
+      result.marginText = `${countyName(chaser)} won by ${wktsLeft} wicket${wktsLeft===1?'':'s'}`;
+    } else if(inn.wkts>=maxW && inn.runs===target-1){
+      result.winner=null; result.draw=false; result.tie=true; result.marginText='Match tied!';
+    } else if(inn.wkts>=maxW){
+      const margin = target-1-inn.runs;
+      result.winner = defender; result.draw=false; result.tie=false;
+      result.marginText = `${countyName(defender)} won by ${margin} run${margin===1?'':'s'}`;
+    } else {
+      result.winner=null; result.draw=true; result.tie=false;
+      result.marginText = 'Match drawn — overs ran out.';
+    }
+  };
+
+  const inn1A = simInnings(orderFor(A), attackFor(B), pitch, batTacticFor(A), bwlTacticFor(B), innCap(), 40, log, {teamLabel:countyName(A), inn:'1st innings'});
+  spend(inn1A);
+  log.push({t:'info', inningsEnd:true, text:`${countyName(A)} 1st innings: ${inn1A.runs}/${inn1A.wkts} (${inn1A.overs.toFixed(1)} ov)`});
+  result.innings.push({team:A, num:1, ...inn1A});
+  if(poolBalls<=0) return bail();
+
+  const inn1B = simInnings(orderFor(B), attackFor(A), pitch, batTacticFor(B), bwlTacticFor(A), innCap(), 40, log, {teamLabel:countyName(B), inn:'1st innings'});
+  spend(inn1B);
+  log.push({t:'info', inningsEnd:true, text:`${countyName(B)} 1st innings: ${inn1B.runs}/${inn1B.wkts} (${inn1B.overs.toFixed(1)} ov)`});
+  result.innings.push({team:B, num:1, ...inn1B});
+  if(poolBalls<=0) return bail();
+
+  const lead1 = inn1A.runs - inn1B.runs;
+  let followOnEnforced = false;
+  if(lead1 >= CONFIG.FOLLOW_ON_MARGIN){
+    const policy = followOnPolicyFor(A);
+    if(policy==='enforce') followOnEnforced = true;
+    else if(policy==='decline') followOnEnforced = false;
+    else {
+      const attack = attackFor(A);
+      const avgFatigue = attack.reduce((s,p)=>s+p.fatigue,0)/Math.max(1,attack.length);
+      followOnEnforced = avgFatigue < 68 && Math.random()<0.75;
+    }
+  }
+
+  if(followOnEnforced){
+    log.push({t:'info', text:`${countyName(A)} enforce the follow-on — ${countyName(B)} bat again straight away.`});
+    const inn2B = simInnings(orderFor(B), attackFor(A), pitch, batTacticFor(B), bwlTacticFor(A), innCap(), 40, log, {teamLabel:countyName(B), inn:'2nd innings'});
+    spend(inn2B);
+    log.push({t:'info', inningsEnd:true, text:`${countyName(B)} 2nd innings: ${inn2B.runs}/${inn2B.wkts} (${inn2B.overs.toFixed(1)} ov)`});
+    result.innings.push({team:B, num:2, ...inn2B});
+    if(poolBalls<=0 && inn2B.wkts<maxWktsFor(B)) return bail();
+    const combinedB = inn1B.runs + inn2B.runs;
+    if(combinedB < inn1A.runs){
+      const margin = inn1A.runs - combinedB;
+      result.winner = A; result.draw=false; result.tie=false;
+      result.marginText = `${countyName(A)} won by an innings and ${margin} run${margin===1?'':'s'}`;
+    } else {
+      const target = combinedB - inn1A.runs + 1;
+      log.push({t:'info', text:`${countyName(A)} need ${target} run${target===1?'':'s'} to win.`});
+      const inn2A = simInnings(orderFor(A), attackFor(B), pitch, batTacticFor(A), bwlTacticFor(B), innCap(), 40, log, {teamLabel:countyName(A), inn:'2nd innings', target});
+      spend(inn2A);
+      log.push({t:'info', inningsEnd:true, text:`${countyName(A)} 2nd innings: ${inn2A.runs}/${inn2A.wkts} (${inn2A.overs.toFixed(1)} ov)`});
+      result.innings.push({team:A, num:2, ...inn2A});
+      finishFromChase(A, B, inn2A, target);
+    }
+  } else {
+    const declareAt = declareAtFor(A);
+    const inn2A = simInnings(orderFor(A), attackFor(B), pitch, batTacticFor(A), bwlTacticFor(B), innCap(), 40, log, {
+      teamLabel:countyName(A), inn:'2nd innings',
+      declareCheck: (runs,wkts,oversBowled)=>{
+        if(wkts>=9) return true;
+        const lead = lead1 + runs;
+        if(lead>=declareAt && (poolBalls - oversBowled*6) < 210) return true;
+        return false;
+      }
+    });
+    spend(inn2A);
+    log.push({t:'info', inningsEnd:true, text:`${countyName(A)} 2nd innings: ${inn2A.runs}/${inn2A.wkts} (${inn2A.overs.toFixed(1)} ov)${inn2A.declared?' — declared':''}`});
+    result.innings.push({team:A, num:2, ...inn2A});
+    if(poolBalls<=0) return bail();
+    const target = inn1A.runs + inn2A.runs - inn1B.runs + 1;
+    log.push({t:'info', text:`${countyName(B)} need ${target} run${target===1?'':'s'} to win.`});
+    const inn2B = simInnings(orderFor(B), attackFor(A), pitch, batTacticFor(B), bwlTacticFor(A), innCap(), 40, log, {teamLabel:countyName(B), inn:'2nd innings', target});
+    spend(inn2B);
+    log.push({t:'info', inningsEnd:true, text:`${countyName(B)} 2nd innings: ${inn2B.runs}/${inn2B.wkts} (${inn2B.overs.toFixed(1)} ov)`});
+    result.innings.push({team:B, num:2, ...inn2B});
+    finishFromChase(B, A, inn2B, target);
+  }
+  return result;
+}
+
+function simulateMatch(fx){
+  const homeIsMe = fx.home===G.myClub, awayIsMe = fx.away===G.myClub;
+  const homeXI = homeIsMe && G.lineup.xi.length===11 ? G.lineup.xi.map(playerById) : chooseXI(fx.home);
+  const awayXI = awayIsMe && G.lineup.xi.length===11 ? G.lineup.xi.map(playerById) : chooseXI(fx.away);
+  const pitch = pitchFor(fx.comp), weather = weatherFor();
+  const log = [];
+  let result;
+
+  if(fx.comp==='CC'){
+    result = simTestMatch(fx, homeXI, awayXI, pitch, weather, log);
+    result.comp = fx.comp;
+    applyCCPoints(fx.home, fx.away, result);
+  } else {
+    const tossWinner = Math.random()<0.5? fx.home : fx.away;
+    const battingFirst = tossWinner;
+    log.push({t:'info', text:`Toss: ${countyName(tossWinner)} won the toss and chose to bat.`});
+    log.push({t:'info', text:`Pitch: ${pitch}. Weather: ${weather}.`});
+    const myBatTactic = homeIsMe||awayIsMe ? G.tactics.batApproach : 'balanced';
+    const myBwlTactic = homeIsMe||awayIsMe ? G.tactics.bowlPlan : 'balanced';
+    const xiFor = clubId=> clubId===fx.home? homeXI : awayXI;
+    const orderFor = clubId=> orderForClub(clubId, xiFor(clubId));
+    const attackFor = clubId=> bowlingAttackFor(xiFor(clubId));
+    const batTacticFor = clubId=> clubId===G.myClub? myBatTactic : 'balanced';
+    const bwlTacticFor = clubId=> clubId===G.myClub? myBwlTactic : 'balanced';
+
+    const maxOvers = fx.comp==='T20' ? 20 : 50;
+    const overLimit = fx.comp==='T20' ? 4 : 10;
+    const first = battingFirst, second = first===fx.home?fx.away:fx.home;
+    const inn1 = simInnings(orderFor(first), attackFor(first), pitch, batTacticFor(first), bwlTacticFor(first), maxOvers, overLimit, log, {teamLabel:countyName(first), inn:'1st innings'});
+    log.push({t:'info', inningsEnd:true, text:`${countyName(first)}: ${inn1.runs}/${inn1.wkts} (${inn1.overs.toFixed(1)} ov)`});
+    const target = inn1.runs+1;
+    log.push({t:'info', text:`${countyName(second)} need ${target} to win.`});
+    const inn2 = simInnings(orderFor(second), attackFor(second), pitch, batTacticFor(second), bwlTacticFor(second), maxOvers, overLimit, log, {teamLabel:countyName(second), inn:'2nd innings', target});
+    log.push({t:'info', inningsEnd:true, text:`${countyName(second)}: ${inn2.runs}/${inn2.wkts} (${inn2.overs.toFixed(1)} ov)`});
+    result = { comp:fx.comp, home:fx.home, away:fx.away, pitch, weather, innings:[{team:first,num:1,...inn1},{team:second,num:1,...inn2}] };
+    const maxW = Math.min(10, orderFor(second).length-1);
+    if(inn2.chased){
+      const wktsLeft = Math.max(1, maxW - inn2.wkts);
+      result.winner = second; result.tie=false; result.draw=false;
+      result.marginText = `${countyName(second)} won by ${wktsLeft} wicket${wktsLeft===1?'':'s'}`;
+    } else if(inn2.runs===inn1.runs){
+      result.winner=null; result.tie=true; result.draw=false; result.marginText='Match tied!';
+    } else {
+      result.winner = first; result.tie=false; result.draw=false;
+      const margin = inn1.runs-inn2.runs;
+      result.marginText = `${countyName(first)} won by ${margin} run${margin===1?'':'s'}`;
+    }
+    applyLimitedOversPoints(fx.comp, fx.home, fx.away, result.winner, result.tie);
+  }
+
+  applyMatchEffects(result);
+  recordStats(result);
+  return { result, log, pitch, weather };
+}
+
+function applyCCPoints(home, away, result){
+  const t = G.tables.CC;
+  const rowHome = t.find(r=>r.team===home), rowAway = t.find(r=>r.team===away);
+  rowHome.pl++; rowAway.pl++;
+  const inn1Home = result.innings.find(i=>i.team===home && i.num===1);
+  const inn1Away = result.innings.find(i=>i.team===away && i.num===1);
+  const battingBonus = inn=> inn ? Math.min(5, Math.floor(inn.runs/70)) : 0;
+  const bowlingBonus = inn=> inn ? Math.min(3, Math.floor(inn.wkts/3)) : 0;
+  rowHome.bat_bp += battingBonus(inn1Home); rowHome.bowl_bp += bowlingBonus(inn1Away);
+  rowAway.bat_bp += battingBonus(inn1Away); rowAway.bowl_bp += bowlingBonus(inn1Home);
+  rowHome.pts += battingBonus(inn1Home)+bowlingBonus(inn1Away);
+  rowAway.pts += battingBonus(inn1Away)+bowlingBonus(inn1Home);
+  if(result.draw){ rowHome.d++; rowAway.d++; rowHome.pts+=5; rowAway.pts+=5; }
+  else if(result.tie){ rowHome.pts+=8; rowAway.pts+=8; }
+  else {
+    const winner = result.winner, loser = winner===home?away:home;
+    const wRow = winner===home?rowHome:rowAway, lRow = loser===home?rowHome:rowAway;
+    wRow.w++; wRow.pts+=14; lRow.l++;
+  }
+}
+function applyLimitedOversPoints(comp, home, away, winner, tie){
+  const t = G.tables[comp];
+  const rowHome=t.find(r=>r.team===home), rowAway=t.find(r=>r.team===away);
+  rowHome.pl++; rowAway.pl++;
+  if(tie || !winner){ rowHome.d++; rowAway.d++; rowHome.pts+=1; rowAway.pts+=1; return; }
+  const loser = winner===home?away:home;
+  const wRow = winner===home?rowHome:rowAway, lRow=loser===home?rowHome:rowAway;
+  wRow.w++; wRow.pts+=2; lRow.l++;
+}
+
+function applyMatchEffects(result){
+  const teams = [result.home, result.away];
+  teams.forEach(clubId=>{
+    const xi = (result.innings.find(i=>i.team===clubId)||{batStats:[]});
+  });
+  result.innings.forEach(inn=>{
+    inn.batStats.forEach(bs=>{
+      bs.p.fatigue = clamp(bs.p.fatigue + CONFIG.FATIGUE_PER_MATCH[result.comp]/2, 0, 100);
+    });
+    inn.bowlStats.forEach(bs=>{
+      bs.p.fatigue = clamp(bs.p.fatigue + CONFIG.FATIGUE_PER_MATCH[result.comp]/2 + bs.overs*0.6, 0, 100);
+    });
+  });
+  const won = result.winner;
+  [result.home, result.away].forEach(clubId=>{
+    const sq = squadOf(clubId);
+    const delta = won===clubId ? CONFIG.MORALE_GAIN_WIN : (won===null? 0 : -CONFIG.MORALE_LOSS_LOSS);
+    sq.forEach(p=>{ p.morale = clamp(p.morale+delta+Math.round(Math.random()*6-3),0,100); });
+  });
+  // injuries
+  result.innings.forEach(inn=>{
+    inn.batStats.concat(inn.bowlStats.map(b=>({p:b.p}))).forEach(({p})=>{
+      const chance = CONFIG.INJURY_BASE_CHANCE * (1 + p.fatigue/100) * (1 - p.fitness/200);
+      if(Math.random()<chance){
+        p.injuredWeeks = 1+Math.floor(Math.random()*4);
+        if(p.club===G.myClub || (result.home===G.myClub||result.away===G.myClub)){
+          addNews('Injury', `${p.name} has picked up an injury and will be out for ${p.injuredWeeks} week(s).`);
+        }
+      }
+    });
+  });
+}
+
+function recordStats(result){
+  result.innings.forEach(inn=>{
+    inn.batStats.forEach(bs=>{
+      bs.p.matches++; bs.p.runs += bs.runs; bs.p.careerRuns += bs.runs;
+      G.records.runs[bs.p.id] = (G.records.runs[bs.p.id]||0) + bs.runs;
+    });
+    inn.bowlStats.forEach(bs=>{
+      bs.p.wkts += bs.wkts; bs.p.careerWkts += bs.wkts;
+      G.records.wkts[bs.p.id] = (G.records.wkts[bs.p.id]||0) + bs.wkts;
+    });
+  });
+  // player of the match: best combined performance
+  let best=null, bestScore=-1;
+  result.innings.forEach(inn=>{
+    inn.batStats.forEach(bs=>{ const sc=bs.runs; if(sc>bestScore){bestScore=sc; best=bs.p;} });
+    inn.bowlStats.forEach(bs=>{ const sc=bs.wkts*28; if(sc>bestScore){bestScore=sc; best=bs.p;} });
+  });
+  if(best){ best.potm++; result.potm = best.name; }
+}
+
+/* =========================================================================
+   SEASON PROGRESSION — advance()
+   ========================================================================= */
+// Which of my players were actually out in the middle for today's fixture (batted or bowled),
+// so training day can tell "played today" (reduced training) from "rested" (full training) per player.
+function playersInvolvedForClub(result, clubId){
+  const ids = new Set();
+  result.innings.forEach(inn=>{
+    if(inn.team===clubId) inn.batStats.forEach(bs=>ids.add(bs.p.id));
+    else inn.bowlStats.forEach(bs=>ids.add(bs.p.id));
+  });
+  return ids;
+}
+
+function advance(){
+  if(G.gameOver) return;
+  stopLiveTicker();
+  G.matchday++;
+  const todays = G.fixtures.filter(f=>f.md===G.matchday && !f.played);
+  let myResult = null;
+  todays.forEach(fx=>{
+    const sim = simulateMatch(fx);
+    fx.played = true; fx.result = sim.result; fx.log = sim.log;
+    if(fx.home===G.myClub || fx.away===G.myClub) myResult = fx;
+  });
+  let playedTodayIds = new Set();
+  if(myResult){
+    const r = myResult.result;
+    const oppId = myResult.home===G.myClub?myResult.away:myResult.home;
+    addNews(`${COMPS[myResult.comp].name} result`, `${r.marginText || (r.draw?'Match drawn.':'—')} (vs ${countyName(oppId)}) POTM: ${r.potm||'-'}`);
+    if(G.settings.ballByBall){
+      G.liveMatch = { md: myResult.md, comp: myResult.comp, home: myResult.home, away: myResult.away, idx:0, playing:true, speed:(G.liveMatch&&G.liveMatch.speed)||'normal' };
+    } else {
+      G.liveMatch = null;
+    }
+    playedTodayIds = playersInvolvedForClub(r, G.myClub);
+  } else {
+    G.liveMatch = null;
+  }
+  G.todayStatus = myResult ? 'match' : 'rest';
+  weeklyTick(playedTodayIds);
+  checkCallups();
+  checkKnockoutAdvance();
+  autoPickLineup();
+  if(G.matchday>=CONFIG.SEASON_MATCHDAYS){
+    endSeason();
+  }
+  save();
+}
+
+function weeklyTick(playedTodayIds){
+  playedTodayIds = playedTodayIds || new Set();
+  ALL_PLAYERS.forEach(p=>{
+    if(p.retired) return;
+    p.fatigue = clamp(p.fatigue - CONFIG.FATIGUE_RECOVERY_PER_WEEK, 0, 100);
+    p.form = clamp(p.form + Math.round(Math.random()*CONFIG.FORM_DRIFT*2 - CONFIG.FORM_DRIFT), 5, 99);
+    if(p.injuredWeeks>0) p.injuredWeeks--;
+    if(p.awayOnDuty && p.awayUntil<=G.matchday) p.awayOnDuty=false;
+    // individual training plan for my squad — each player trains their own chosen focus.
+    // Anyone who actually played today trains at a reduced rate; everyone else gets a full
+    // dedicated training/rest day, which is the whole point of the rest days between fixtures.
+    if(p.club===G.myClub){
+      const focus = p.trainingFocus || 'balanced';
+      const ageFactor = Math.max(0, 1 - p.age/60);
+      const mult = playedTodayIds.has(p.id) ? CONFIG.TRAIN_MULT_MATCHDAY : CONFIG.TRAIN_MULT_RESTDAY;
+      const battCap = p.age<27 ? 98 : 92, bwlCap = p.age<27 ? 98 : 92;
+      const r = CONFIG.TRAINING_RATES;
+      if(focus==='batting') p.bat = clamp(p.bat + r.skill*ageFactor*mult, 0, battCap);
+      else if(focus==='bowling') p.bwl = clamp(p.bwl + r.skill*ageFactor*mult, 0, bwlCap);
+      else if(focus==='fielding') p.field = clamp(p.field + r.field*ageFactor*mult, 0, 96);
+      else if(focus==='fitness') p.fitness = clamp(p.fitness + r.fitness*ageFactor*mult, 0, 99);
+      else if(focus==='rest'){ p.fatigue = clamp(p.fatigue - r.restFatigueBonus*mult, 0, 100); p.morale = clamp(p.morale + r.restMoraleBonus*mult, 0, 100); }
+      else { // balanced — a little of everything
+        p.bat = clamp(p.bat + r.balancedSkill*ageFactor*mult, 0, battCap);
+        p.bwl = clamp(p.bwl + r.balancedSkill*ageFactor*mult, 0, bwlCap);
+        p.field = clamp(p.field + r.balancedField*ageFactor*mult, 0, 96);
+        p.fitness = clamp(p.fitness + r.balancedFitness*ageFactor*mult, 0, 99);
+      }
+      if(p.morale<40) p.morale = clamp(p.morale+2,0,100);
+    }
+  });
+  // finances
+  const gate = 12000 + Math.round(avgSquadRating(G.myClub)*300);
+  const wages = squadOf(G.myClub).reduce((s,p)=>s+p.wage,0);
+  G.budget += gate - wages;
+}
+
+function checkCallups(){
+  if(!CONFIG.CALLUP_WINDOWS.includes(G.matchday) || G.callupWindowsDone.includes(G.matchday)) return;
+  G.callupWindowsDone.push(G.matchday);
+  NATIONS.forEach(nation=>{
+    const pool = ALL_PLAYERS.filter(p=>p.nation===nation && !p.retired && p.club!=='INTL' && p.injuredWeeks<=0)
+      .sort((a,b)=>overall(b)-overall(a)).slice(0,3);
+    pool.forEach(p=>{
+      p.awayOnDuty = true;
+      p.awayUntil = G.matchday+2;
+      if(p.club===G.myClub){
+        addNews('International call-up', `${p.name} has been called up by ${NATION_NAMES[nation]} and will be unavailable for ~2 matchdays.`);
+      }
+    });
+  });
+}
+
+function checkKnockoutAdvance(){
+  ['T20','ODC'].forEach(comp=>{
+    const fixturesLeft = G.fixtures.some(f=>f.comp===comp && !f.played);
+    if(!fixturesLeft && G.knockouts[comp].stage==='group'){
+      const table = [...G.tables[comp]].sort((a,b)=>b.pts-a.pts);
+      const top4 = table.slice(0,4).map(r=>r.team);
+      G.knockouts[comp] = { stage:'semis', top4, results:[] };
+      const semiMd = G.matchday+1;
+      G.fixtures.push({ md:semiMd, comp, home:top4[0], away:top4[3], played:false, knockout:'semi1' });
+      G.fixtures.push({ md:semiMd, comp, home:top4[1], away:top4[2], played:false, knockout:'semi2' });
+      addNews(`${COMPS[comp].name} knockouts`, `Semi-finalists: ${top4.map(countyName).join(', ')}.`);
+    } else if(G.knockouts[comp].stage==='semis'){
+      const semis = G.fixtures.filter(f=>f.comp===comp && f.knockout && f.knockout.startsWith('semi') && f.played);
+      if(semis.length===2 && !G.knockouts[comp].finalSet){
+        const finalists = semis.map(f=>f.result.winner || f.home);
+        G.knockouts[comp].finalSet = true;
+        G.fixtures.push({ md:G.matchday+1, comp, home:finalists[0], away:finalists[1], played:false, knockout:'final' });
+        addNews(`${COMPS[comp].name} final`, `Final: ${finalists.map(countyName).join(' vs ')}.`);
+        G.knockouts[comp].stage='final';
+      }
+    } else if(G.knockouts[comp].stage==='final'){
+      const final = G.fixtures.find(f=>f.comp===comp && f.knockout==='final' && f.played);
+      if(final && !G.knockouts[comp].champion){
+        G.knockouts[comp].champion = final.result.winner || final.home;
+        addNews(`${COMPS[comp].name} champions`, `${countyName(G.knockouts[comp].champion)} win the ${COMPS[comp].name}!`);
+      }
+    }
+  });
+}
+
+// Keeps G.lineup valid: drops any picked player who's no longer available (injured, on
+// international duty, retired, sold) and tops back up to 11 with the best-rated replacements,
+// preserving the rest of a manually-built XI/batting order untouched. Called after every
+// matchday so a manager's selection survives from one match to the next unless something changes.
+function autoPickLineup(){
+  const avail = squadOf(G.myClub).filter(p=>p.injuredWeeks<=0 && !p.awayOnDuty);
+  const availIds = new Set(avail.map(p=>p.id));
+  const before = G.lineup.xi.slice();
+  G.lineup.xi = Array.from(new Set(G.lineup.xi.filter(id=>availIds.has(id))));
+  G.lineup.order = G.lineup.order.filter(id=>availIds.has(id) && G.lineup.xi.includes(id));
+
+  const already = new Set(G.lineup.xi);
+  const fillers = avail.filter(p=>!already.has(p.id)).sort((a,b)=>overall(b)-overall(a));
+  while(G.lineup.xi.length<11 && fillers.length){ G.lineup.xi.push(fillers.shift().id); }
+  G.lineup.xi = G.lineup.xi.slice(0,11);
+
+  const orderSet = new Set(G.lineup.order);
+  const missing = G.lineup.xi.filter(id=>!orderSet.has(id)).map(playerById).filter(Boolean);
+  G.lineup.order = G.lineup.order.concat(battingOrderFor(missing).map(p=>p.id));
+
+  const droppedOut = before.filter(id=>!availIds.has(id)).map(playerById).filter(Boolean);
+  if(droppedOut.length){
+    addNews('Team news', `Unavailable for the next match: ${droppedOut.map(p=>p.name).join(', ')}. Replacements have been drafted into the XI automatically — check Team Selection on the Squad tab.`);
+  }
+}
+
+function endSeason(){
+  // ageing, retirement, prospects
+  ALL_PLAYERS.forEach(p=>{
+    if(p.retired) return;
+    p.age++;
+    const retireAge = CONFIG.RETIRE_AGE_BASE + (p.role==='BOWL'?-2:p.role==='BAT'?4:0) + Math.round(Math.random()*4-2);
+    if(p.age>=retireAge && Math.random()<0.5+ (p.age-retireAge)*0.12){
+      p.retired = true;
+      if(p.club===G.myClub) addNews('Retirement', `${p.name} has announced retirement from professional cricket.`);
+      if(p.club!=='INTL'){
+        const replacement = makeYouthProspect(p.club, p.nation==='ENG'?'ENG':p.nation);
+        ALL_PLAYERS.push(replacement);
+        if(p.club===G.myClub) addNews('Academy graduate', `${replacement.name} (age ${replacement.age}) has been promoted from the academy to replace ${p.name}.`);
+      }
+    } else if(p.age<24){
+      const growth = (p.potential? (p.potential-overall(p))/40 : 0.6);
+      p.bat = clamp(p.bat + Math.max(0,growth*2), 0, 96);
+      p.bwl = clamp(p.bwl + Math.max(0,growth*2), 0, 96);
+    } else if(p.age>32){
+      p.bat = clamp(p.bat - (p.age-32)*0.6, 5, 99);
+      p.bwl = clamp(p.bwl - (p.age-32)*0.6, 5, 99);
+      p.fitness = clamp(p.fitness - 1, 20, 99);
+    }
+  });
+  // board review
+  const table = [...G.tables.CC].sort((a,b)=>b.pts-a.pts);
+  const myRank = table.findIndex(r=>r.team===G.myClub)+1;
+  const half = Math.ceil(COUNTIES.length/2);
+  let verdict, jobDelta;
+  if(myRank<=2){ verdict='The board is delighted with a excellent Championship campaign.'; jobDelta=+20; }
+  else if(myRank<=half){ verdict='The board is satisfied with a solid season.'; jobDelta=+8; }
+  else if(myRank<COUNTIES.length){ verdict='The board is disappointed with this season’s Championship finish.'; jobDelta=-15; }
+  else { verdict='The board is furious after finishing bottom of the Championship.'; jobDelta=-30; }
+  G.jobSecurity = clamp(G.jobSecurity+jobDelta, 0, 100);
+  addNews('End of season review', `Final Championship position: ${myRank}/${COUNTIES.length}. ${verdict}`);
+  if(G.jobSecurity<=0){
+    G.gameOver = true;
+    addNews('The Sack', `The board has terminated your contract as manager of ${countyName(G.myClub)}. Your journey ends after ${G.season} season(s).`);
+  }
+  G.seasonSummary = { rank:myRank, verdict };
+  G.season++;
+  G.matchday = 0;
+  G.callupWindowsDone = [];
+  G.lineup = { xi:[], order:[] };
+  setObjectives();
+  generateFixtures();
+  autoPickLineup();
+}
+
+/* =========================================================================
+   TRANSFERS
+   ========================================================================= */
+function transferListPlayer(pid, listed){ const p=playerById(pid); if(p) p.listed=listed; }
+function signPlayer(pid){
+  const p = playerById(pid);
+  if(!p || p.club===G.myClub) return false;
+  if(squadOf(G.myClub).length>=CONFIG.SQUAD_CAP) { addNews('Transfer failed','Squad is at capacity.'); return false; }
+  const fee = Math.round(overall(p)*350 * (p.age<27?1.3:0.7));
+  if(fee>G.budget){ addNews('Transfer failed', `Cannot afford the fee for ${p.name} (£${fee.toLocaleString()}).`); return false; }
+  G.budget -= fee;
+  const oldClub = p.club;
+  p.club = G.myClub; p.listed=false; p.contractYears=3;
+  addNews('New signing', `${p.name} has joined from ${countyName(oldClub)} for £${fee.toLocaleString()}.`);
+  save();
+  return true;
+}
+function releasePlayer(pid){
+  const p = playerById(pid);
+  if(!p || p.club!==G.myClub) return;
+  p.club = 'FREE'; p.retired=false;
+  addNews('Released', `${p.name} has been released from the squad.`);
+  save();
+}
+function renewContract(pid){
+  const p = playerById(pid);
+  if(!p || p.club!==G.myClub) return;
+  const cost = p.wage*8;
+  if(cost>G.budget){ addNews('Contract talks failed', `Not enough budget to renew ${p.name}.`); return; }
+  G.budget -= cost;
+  p.contractYears = 3;
+  p.wage = Math.round(p.wage*1.1);
+  p.morale = clamp(p.morale+8,0,100);
+  addNews('Contract renewed', `${p.name} has signed a new 3-year contract.`);
+  save();
+}
+
+/* =========================================================================
+   UI RENDERING
+   ========================================================================= */
+const TABS = [
+  ['dashboard','Dashboard'], ['squad','Squad'], ['fixtures','Fixtures & Tables'],
+  ['match','Match Centre'], ['transfers','Transfers'], ['training','Training'],
+  ['finances','Finances'], ['board','Board'], ['records','Records'],
+];
+
+function esc(s){ return String(s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function barHtml(val, cls){ return `<span class="bar ${cls||''}"><i style="width:${clamp(val,0,100)}%"></i></span>`; }
+
+function render(){
+  if(!G) return;
+  document.getElementById('tbClub').textContent = countyName(G.myClub)+' — '+G.manager;
+  document.getElementById('tbDate').textContent = `Season ${G.season}, Matchday ${G.matchday}/${CONFIG.SEASON_MATCHDAYS}`;
+  document.getElementById('tbBudget').textContent = '£'+Math.round(G.budget).toLocaleString();
+  const liveComps = Object.keys(COMPS).filter(c=>G.fixtures.some(f=>f.comp===c && !f.played));
+  document.getElementById('tbComp').textContent = liveComps.map(c=>COMPS[c].short).join(' / ') || 'Season complete';
+  document.getElementById('tbToday').textContent = G.matchday===0 ? '' : (G.todayStatus==='match' ? '⚔ Matchday' : '🛌 Rest & training day');
+  document.getElementById('tbJob').textContent = G.jobSecurity+'%';
+
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = TABS.map(([id,label])=>`<button class="tabBtn ${G.ui.tab===id?'active':''}" data-tab="${id}">${label}</button>`).join('');
+  tabsEl.querySelectorAll('button').forEach(b=>b.onclick=()=>{ G.ui.tab=b.dataset.tab; render(); });
+
+  const content = document.getElementById('content');
+  const renderers = {
+    dashboard: renderDashboard, squad: renderSquad, fixtures: renderFixtures,
+    match: ()=> G.liveMatch ? renderLiveMatch() : renderMatchCentre(),
+    transfers: renderTransfers, training: renderTraining,
+    finances: renderFinances, board: renderBoard, records: renderRecords,
+  };
+  content.innerHTML = (renderers[G.ui.tab]||renderDashboard)();
+  wireContentEvents();
+  renderNews();
+
+  document.getElementById('advanceBtn').disabled = !!G.gameOver;
+}
+
+function renderNews(){
+  const el = document.getElementById('newsList');
+  el.innerHTML = G.news.slice(0,40).map(n=>`<div class="newsItem"><div class="d">S${n.season} · MD${n.md}</div><b>${esc(n.title)}</b><div>${esc(n.body)}</div></div>`).join('') || '<div class="small">No news yet.</div>';
+}
+
+function renderDashboard(){
+  const nextFx = G.fixtures.find(f=>f.md===G.matchday+1 && (f.home===G.myClub||f.away===G.myClub));
+  const myTableRow = G.tables.CC.find(r=>r.team===G.myClub);
+  const rankCC = [...G.tables.CC].sort((a,b)=>b.pts-a.pts).findIndex(r=>r.team===G.myClub)+1;
+  const todayHtml = G.matchday===0 ? ''
+    : (G.todayStatus==='match'
+        ? `<div class="card">⚔ <b>Matchday</b><div class="small">Players involved in today's fixture trained at a reduced rate this week; everyone else got a full training/rest day.</div></div>`
+        : `<div class="card">🛌 <b>Rest &amp; training day</b><div class="small">No fixture today — the whole squad gets a full (boosted) day of training or rest, per each player's plan on the Training tab.</div></div>`);
+  return `
+  ${todayHtml}
+  <div class="grid3">
+    <div class="card"><h3>Next fixture</h3>
+      ${nextFx ? `<div>${countyName(nextFx.home)} vs ${countyName(nextFx.away)}</div><div class="small">${COMPS[nextFx.comp].name} · Matchday ${nextFx.md}</div>` : '<div class="small">No fixture scheduled for next matchday.</div>'}
+    </div>
+    <div class="card"><h3>Championship position</h3><div class="scoreLine">${rankCC || '-'} / ${COUNTIES.length}</div>
+      <div class="small">Pts ${myTableRow?myTableRow.pts:0} · W${myTableRow?myTableRow.w:0} D${myTableRow?myTableRow.d:0} L${myTableRow?myTableRow.l:0}</div></div>
+    <div class="card"><h3>Board objective</h3><div class="small">${esc(G.objectives.text)}</div>
+      <div class="small" style="margin-top:6px;">Job security: ${barHtml(G.jobSecurity, G.jobSecurity<35?'bad':(G.jobSecurity<65?'warn':''))} ${G.jobSecurity}%</div></div>
+  </div>
+  <div class="card"><h3>Squad snapshot</h3>${squadTableHtml(squadOf(G.myClub).slice(0,8), false)}</div>
+  <div class="card"><h3>Recent results</h3>${recentResultsHtml()}</div>
+  `;
+}
+
+function recentResultsHtml(){
+  const mine = G.fixtures.filter(f=>f.played && (f.home===G.myClub||f.away===G.myClub)).slice(-6).reverse();
+  if(!mine.length) return '<div class="small">No matches played yet.</div>';
+  return '<table><tr><th>MD</th><th>Comp</th><th>Fixture</th><th>Result</th></tr>' + mine.map(f=>{
+    const r = f.result;
+    let resTxt = r.draw? 'Draw' : (r.winner? `${countyName(r.winner)} won` : 'Tie');
+    return `<tr><td>${f.md}</td><td>${f.comp}</td><td>${countyName(f.home)} v ${countyName(f.away)}</td><td>${resTxt}</td></tr>`;
+  }).join('') + '</table>';
+}
+
+function squadTableHtml(list, withActions){
+  return `<table><tr><th>Name</th><th>Role</th><th>Age</th><th>Bat</th><th>Bowl</th><th>Fit</th><th>Form</th><th>Morale</th>${withActions?'<th></th>':''}</tr>` +
+    list.map(p=>`<tr>
+      <td>${esc(p.name)}${p.overseas?' 🌍':''}${p.awayOnDuty?' <span class="pill">on intl duty</span>':''}${p.injuredWeeks>0?' <span class="pill" style="border-color:var(--bad);color:var(--bad);">injured '+p.injuredWeeks+'w</span>':''}</td>
+      <td><span class="tag ${p.role}">${p.role}</span></td>
+      <td>${p.age}</td>
+      <td>${p.bat}</td><td>${p.bwl}</td>
+      <td>${barHtml(p.fitness-p.fatigue, (p.fitness-p.fatigue)<40?'bad':'')}</td>
+      <td>${barHtml(p.form, p.form<40?'bad':(p.form>65?'':'warn'))}</td>
+      <td>${barHtml(p.morale, p.morale<35?'bad':'')}</td>
+      ${withActions?`<td><button class="btn small" data-act="renew" data-id="${p.id}">Renew</button> <button class="btn bad small" data-act="release" data-id="${p.id}">Release</button></td>`:''}
+    </tr>`).join('') + '</table>';
+}
+
+function xiSelectionTableHtml(){
+  const sq = squadOf(G.myClub).sort((a,b)=>overall(b)-overall(a));
+  const xiSet = new Set(G.lineup.xi);
+  return `<table><tr><th></th><th>Name</th><th>Role</th><th>Bat</th><th>Bowl</th><th>Status</th></tr>` +
+    sq.map(p=>{
+      const unavailable = p.injuredWeeks>0 || p.awayOnDuty;
+      const checked = xiSet.has(p.id);
+      const disabled = unavailable || (!checked && G.lineup.xi.length>=11);
+      let status = 'Available';
+      if(p.injuredWeeks>0) status = `Injured (${p.injuredWeeks}w)`;
+      else if(p.awayOnDuty) status = 'On international duty';
+      return `<tr>
+        <td><input type="checkbox" data-act="toggleXI" data-id="${p.id}" ${checked?'checked':''} ${disabled?'disabled':''}></td>
+        <td>${esc(p.name)}${p.overseas?' 🌍':''}</td>
+        <td><span class="tag ${p.role}">${p.role}</span></td>
+        <td>${p.bat}</td><td>${p.bwl}</td>
+        <td class="small" style="${unavailable?'color:var(--bad);':''}">${status}</td>
+      </tr>`;
+    }).join('') + '</table>';
+}
+function battingOrderHtml(){
+  const order = G.lineup.order.map(playerById).filter(Boolean);
+  return `<table><tr><th>#</th><th>Name</th><th>Role</th><th>Bat</th><th></th></tr>` +
+    order.map((p,i)=>`<tr>
+      <td>${i+1}</td><td>${esc(p.name)}</td><td><span class="tag ${p.role}">${p.role}</span></td><td>${p.bat}</td>
+      <td>
+        <button class="btn small" data-act="moveUp" data-id="${p.id}" ${i===0?'disabled':''}>▲</button>
+        <button class="btn small" data-act="moveDown" data-id="${p.id}" ${i===order.length-1?'disabled':''}>▼</button>
+      </td>
+    </tr>`).join('') + '</table>';
+}
+
+function renderSquad(){
+  const sq = squadOf(G.myClub).sort((a,b)=>overall(b)-overall(a));
+  return `<div class="card"><h2>${countyName(G.myClub)} — Squad (${sq.length}/${CONFIG.SQUAD_CAP})</h2>${squadTableHtml(sq, true)}</div>
+  <div class="card"><h2>Team selection <span class="small">(${G.lineup.xi.length}/11 selected)</span></h2>
+  <div class="small">Pick your starting XI for the next matchday your club plays. Injured or internationally-capped players can't be selected; unpick a player to free a slot.</div>
+  <div style="margin-top:8px;">${xiSelectionTableHtml()}</div>
+  <button class="btn" id="resetLineupBtn" style="margin-top:8px;">Reset to auto-select</button>
+  </div>
+  <div class="card"><h2>Batting order</h2>
+  <div class="small">Reorder your batting line-up for the next match.</div>
+  <div style="margin-top:8px;">${battingOrderHtml()}</div>
+  </div>`;
+}
+
+function tableHtml(comp){
+  const rows = [...G.tables[comp]].sort((a,b)=>b.pts-a.pts);
+  return `<table><tr><th>#</th><th>Team</th><th>Pl</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>` +
+    rows.map((r,i)=>`<tr class="${r.team===G.myClub?'me':''}"><td>${i+1}</td><td>${countyName(r.team)}</td><td>${r.pl}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td><b>${r.pts}</b></td></tr>`).join('') + '</table>';
+}
+
+function renderFixtures(){
+  const upcoming = G.fixtures.filter(f=>!f.played).slice(0,14);
+  return `<div class="grid3">
+    <div class="card"><h3>County Championship</h3>${tableHtml('CC')}</div>
+    <div class="card"><h3>T20 Blast</h3>${tableHtml('T20')}${G.knockouts.T20.champion?`<div class="small">🏆 Champions: ${countyName(G.knockouts.T20.champion)}</div>`:''}</div>
+    <div class="card"><h3>One-Day Cup</h3>${tableHtml('ODC')}${G.knockouts.ODC.champion?`<div class="small">🏆 Champions: ${countyName(G.knockouts.ODC.champion)}</div>`:''}</div>
+  </div>
+  <div class="card"><h3>Upcoming fixtures</h3><table><tr><th>MD</th><th>Comp</th><th>Home</th><th>Away</th></tr>
+  ${upcoming.map(f=>`<tr class="${(f.home===G.myClub||f.away===G.myClub)?'me':''}"><td>${f.md}</td><td>${f.comp}</td><td>${countyName(f.home)}</td><td>${countyName(f.away)}</td></tr>`).join('')}
+  </table></div>`;
+}
+
+function renderMatchCentre(){
+  const lastMine = G.fixtures.filter(f=>f.played && (f.home===G.myClub||f.away===G.myClub)).slice(-1)[0];
+  return `<div class="card"><h2>Tactics</h2>
+    <div class="rowflex"><label>Batting approach:
+      <select id="batApproach">
+        <option value="defensive" ${G.tactics.batApproach==='defensive'?'selected':''}>Defensive</option>
+        <option value="balanced" ${G.tactics.batApproach==='balanced'?'selected':''}>Balanced</option>
+        <option value="aggressive" ${G.tactics.batApproach==='aggressive'?'selected':''}>Aggressive</option>
+      </select></label>
+      <label>Bowling plan:
+      <select id="bwlPlan">
+        <option value="contain" ${G.tactics.bowlPlan==='contain'?'selected':''}>Contain</option>
+        <option value="balanced" ${G.tactics.bowlPlan==='balanced'?'selected':''}>Balanced</option>
+        <option value="attack" ${G.tactics.bowlPlan==='attack'?'selected':''}>Attack</option>
+      </select></label>
+    </div>
+    <div class="small" style="margin-top:8px;">Aggressive batting scores faster but loses wickets more often; attacking bowling takes more wickets but leaks more runs. These apply automatically whenever your club plays.</div>
+    <div class="divider"></div>
+    <div class="rowflex">
+      <label>Follow-on (County Championship):
+        <select id="enforceFollowOn">
+          <option value="auto" ${G.tactics.enforceFollowOn==='auto'?'selected':''}>Auto (captain's choice)</option>
+          <option value="enforce" ${G.tactics.enforceFollowOn==='enforce'?'selected':''}>Always enforce</option>
+          <option value="decline" ${G.tactics.enforceFollowOn==='decline'?'selected':''}>Always decline</option>
+        </select>
+      </label>
+      <label>Declare at lead of:
+        <input type="number" id="declareAt" min="80" max="600" step="10" value="${G.tactics.declareAt}" style="width:70px;">
+      </label>
+    </div>
+    <div class="small" style="margin-top:6px;">Applies when your side is 150+ runs ahead after first innings (follow-on) or batting to set a target in your 2nd innings (declaration).</div>
+    <div class="divider"></div>
+    <div class="rowflex"><label><input type="checkbox" id="ballByBallToggle" ${G.settings.ballByBall?'checked':''}> Ball-by-ball highlights — watch your matches unfold live instead of an instant result</label></div>
+  </div>
+  <div class="card"><h2>Last match</h2>
+  ${lastMine ? matchReportHtml(lastMine) : '<div class="small">No matches played yet — click Advance on the top bar to simulate the next matchday.</div>'}
+  </div>`;
+}
+
+function ordinal(n){ return n===1?'1st':n===2?'2nd':n===3?'3rd':n+'th'; }
+function ballText(e){
+  if(e.wicket) return `${e.over} ${e.team}: OUT! ${e.bowler} removes ${e.batter}. ${e.cumRuns}/${e.cumWkts}`;
+  if(e.runs===6) return `${e.over} ${e.team}: SIX! ${e.batter} off ${e.bowler}.`;
+  if(e.runs===4) return `${e.over} ${e.team}: FOUR! ${e.batter} off ${e.bowler}.`;
+  if(e.runs===0) return `${e.over} ${e.team}: ${e.bowler} to ${e.batter}, no run.`;
+  return `${e.over} ${e.team}: ${e.batter} takes ${e.runs} off ${e.bowler}.`;
+}
+function ballLogLineHtml(l){
+  if(l.t==='info') return `<div>${esc(l.text)}</div>`;
+  const cls = l.wicket?'ball-w':(l.runs===6?'ball-6':(l.runs===4?'ball-4':''));
+  return `<div class="${cls}">${esc(ballText(l))}</div>`;
+}
+
+function matchReportHtml(fx){
+  const r = fx.result;
+  let html = `<div class="scoreboard"><div class="scoreLine">${countyName(fx.home)} vs ${countyName(fx.away)}</div>
+  <div class="small">${COMPS[fx.comp].name} · Pitch: ${r.pitch} · Weather: ${r.weather}</div>`;
+  r.innings.forEach(inn=>{
+    const label = fx.comp==='CC' ? ` (${ordinal(inn.num)} innings${inn.declared?', declared':''})` : '';
+    html += `<div style="margin-top:8px;"><b>${countyName(inn.team)}: ${inn.runs}/${inn.wkts}</b> <span class="small">(${inn.overs.toFixed(1)} ov)${label}</span></div>`;
+    const top = [...inn.batStats].sort((a,b)=>b.runs-a.runs).slice(0,4);
+    html += '<div class="small">' + top.map(b=>`${esc(b.p.name)} ${b.runs}${b.out?'':'*'}(${b.balls})`).join(' · ') + '</div>';
+    const topB = [...inn.bowlStats].sort((a,b)=>b.wkts-a.wkts || a.runs-b.runs).slice(0,3);
+    html += '<div class="small">' + topB.map(b=>`${esc(b.p.name)} ${b.wkts}/${b.runs} (${b.overs} ov)`).join(' · ') + '</div>';
+  });
+  html += `<div style="margin-top:8px;">Result: <b>${esc(r.marginText || (r.draw?'Match drawn':'—'))}</b> · POTM: ${esc(r.potm||'-')}</div></div>`;
+  const highlights = (fx.log||[]).filter(l=>l.t==='info' || l.wicket || l.runs===4 || l.runs===6).slice(-50).reverse();
+  html += `<div class="commLog">${highlights.map(ballLogLineHtml).join('')}</div>`;
+  return html;
+}
+
+/* ---------- Ball-by-ball live playback ---------- */
+let _liveTimer = null;
+function findLiveFixture(){
+  if(!G.liveMatch) return null;
+  return G.fixtures.find(f=>f.md===G.liveMatch.md && f.comp===G.liveMatch.comp && f.home===G.liveMatch.home && f.away===G.liveMatch.away);
+}
+function stopLiveTicker(){ if(_liveTimer){ clearInterval(_liveTimer); _liveTimer=null; } }
+function startLiveTicker(){
+  stopLiveTicker();
+  if(!G.liveMatch) return;
+  _liveTimer = setInterval(()=>{
+    if(!G.liveMatch){ stopLiveTicker(); return; }
+    const fx = findLiveFixture();
+    if(!fx || !fx.log){ stopLiveTicker(); return; }
+    if(!G.liveMatch.playing) return;
+    G.liveMatch.idx = Math.min(fx.log.length, G.liveMatch.idx+1);
+    if(G.liveMatch.idx>=fx.log.length){ G.liveMatch.playing=false; stopLiveTicker(); }
+    if(G.ui.tab==='match') render();
+  }, CONFIG.BALL_ANIM_SPEEDS[G.liveMatch.speed] || 260);
+}
+// Reconstructs a proper live scoreboard at a given point in the ball-by-ball log: which innings have
+// already concluded (from the finalized result.innings), plus the in-progress innings' running score,
+// both not-out batters (striker flagged) and the current bowler's figures — derived purely from the
+// per-delivery log entries revealed so far, without waiting for simInnings' final per-player totals.
+function computeLiveState(fx, idx){
+  const log = fx.log;
+  const visible = log.slice(0, idx);
+  let concludedCount = 0;
+  visible.forEach(l=>{ if(l.t==='info' && l.inningsEnd) concludedCount++; });
+  const concludedInnings = fx.result.innings.slice(0, concludedCount);
+
+  let segStart = 0;
+  for(let i=visible.length-1;i>=0;i--){ if(visible[i].t==='info' && visible[i].inningsEnd){ segStart=i+1; break; } }
+  const segBalls = visible.slice(segStart).filter(l=>l.t==='ball');
+  if(!segBalls.length) return { concludedInnings, current:null };
+
+  const last = segBalls[segBalls.length-1];
+  const batOrder = [], batTally = {}, bwlTally = {};
+  segBalls.forEach(b=>{
+    if(!batTally[b.batter]){ batTally[b.batter]={runs:0,balls:0,out:false}; batOrder.push(b.batter); }
+    batTally[b.batter].balls++;
+    if(b.wicket) batTally[b.batter].out = true; else batTally[b.batter].runs += b.runs;
+    if(!bwlTally[b.bowler]) bwlTally[b.bowler]={balls:0,runs:0,wkts:0};
+    bwlTally[b.bowler].balls++;
+    if(b.wicket) bwlTally[b.bowler].wkts++; else bwlTally[b.bowler].runs += b.runs;
+  });
+  const onStrike = last.wicket ? null : last.batter;
+  const notOut = batOrder.filter(n=>!batTally[n].out);
+  const pair = notOut.slice(-2).map(n=>({ name:n, runs:batTally[n].runs, balls:batTally[n].balls, striker:n===onStrike }));
+  pair.sort((a,b)=> (b.striker?1:0)-(a.striker?1:0));
+  const bwl = bwlTally[last.bowler] || {balls:0,runs:0,wkts:0};
+  const bowlerOvers = Math.floor(bwl.balls/6)+'.'+(bwl.balls%6);
+  const runRate = segBalls.length>0 ? (last.cumRuns/(segBalls.length/6)) : 0;
+
+  return {
+    concludedInnings,
+    current: {
+      team:last.team, inn:last.inn, cumRuns:last.cumRuns, cumWkts:last.cumWkts, over:last.over, target:last.target,
+      pair, bowler:{ name:last.bowler, overs:bowlerOvers, runs:bwl.runs, wkts:bwl.wkts }, runRate,
+    },
+  };
+}
+
+function renderLiveMatch(){
+  const fx = findLiveFixture();
+  if(!fx || !fx.log){ G.liveMatch=null; return renderMatchCentre(); }
+  const idx = Math.min(G.liveMatch.idx, fx.log.length);
+  const visible = fx.log.slice(0, idx);
+  const state = computeLiveState(fx, idx);
+  const done = idx>=fx.log.length;
+
+  let scoreHtml = '<div class="small">Play is about to begin…</div>';
+  const prevHtml = state.concludedInnings.length
+    ? `<div class="small">${state.concludedInnings.map(inn=>`${countyName(inn.team)} ${inn.runs}/${inn.wkts} (${inn.overs.toFixed(1)} ov)`).join(' &nbsp;|&nbsp; ')}</div><div class="divider"></div>`
+    : '';
+  if(state.current){
+    const c = state.current;
+    const chaseNote = c.target!=null ? ` · need ${Math.max(0,c.target-c.cumRuns)} more to win` : '';
+    const battersHtml = c.pair.length ? c.pair.map(b=>`${esc(b.name)}${b.striker?'*':''} ${b.runs}(${b.balls})`).join(' &nbsp;·&nbsp; ') : 'Yet to bat';
+    scoreHtml = `
+      <div class="scoreLine">${esc(c.team)} ${c.cumRuns}/${c.cumWkts} <span class="small" style="font-weight:400;">(${c.over} ov · RR ${c.runRate.toFixed(2)})</span></div>
+      <div class="small">${esc(c.inn||'')}${chaseNote}</div>
+      <div class="divider"></div>
+      <div class="small">🏏 ${battersHtml}</div>
+      <div class="small">⚾ ${esc(c.bowler.name)} — ${c.bowler.overs}-${c.bowler.runs}-${c.bowler.wkts}</div>`;
+  }
+  const feed = visible.slice(-80).reverse().map(ballLogLineHtml).join('');
+  return `<div class="card"><h2>${countyName(fx.home)} vs ${countyName(fx.away)} — Live</h2>
+    <div class="small">${COMPS[fx.comp].name} · Pitch: ${esc(fx.result.pitch)} · Weather: ${esc(fx.result.weather)}</div>
+    <div class="scoreboard" style="margin-top:8px;">${prevHtml}${scoreHtml}</div>
+    <div class="rowflex" style="margin-top:10px;">
+      ${done?'':`<button class="btn primary" id="livePlayPause">${G.liveMatch.playing?'⏸ Pause':'▶ Play'}</button>`}
+      <select id="liveSpeed">
+        <option value="slow" ${G.liveMatch.speed==='slow'?'selected':''}>Slow</option>
+        <option value="normal" ${G.liveMatch.speed==='normal'?'selected':''}>Normal</option>
+        <option value="fast" ${G.liveMatch.speed==='fast'?'selected':''}>Fast</option>
+      </select>
+      ${done?'':`<button class="btn" id="liveSkipWicket">Skip to next wicket</button>
+      <button class="btn" id="liveSkipInnings">Skip innings</button>
+      <button class="btn" id="liveSkipEnd">Skip to result</button>`}
+    </div>
+    <div class="commLog" id="liveFeed">${feed}</div>
+    ${done? `<div class="divider"></div>${matchReportHtml(fx)}` : ''}
+  </div>`;
+}
+
+function renderTransfers(){
+  const mySq = squadOf(G.myClub);
+  const others = ALL_PLAYERS.filter(p=>p.club!==G.myClub && p.club!=='INTL' && p.club!=='FREE' && !p.retired)
+    .sort((a,b)=>overall(b)-overall(a)).slice(0,60);
+  return `<div class="card"><h2>Transfer market</h2><div class="small">Sign players from other counties. Fee scales with quality and age.</div>
+  <table><tr><th>Name</th><th>Club</th><th>Role</th><th>Age</th><th>Ovr</th><th>Fee</th><th></th></tr>
+  ${others.map(p=>{
+    const fee = Math.round(overall(p)*350 * (p.age<27?1.3:0.7));
+    return `<tr><td>${esc(p.name)}${p.overseas?' 🌍':''}</td><td>${countyName(p.club)}</td><td><span class="tag ${p.role}">${p.role}</span></td><td>${p.age}</td><td>${overall(p)}</td><td>£${fee.toLocaleString()}</td>
+    <td><button class="btn primary small" data-act="sign" data-id="${p.id}">Sign</button></td></tr>`;
+  }).join('')}
+  </table></div>
+  <div class="card"><h2>Your squad — contracts</h2>${squadTableHtml(mySq,true)}</div>`;
+}
+
+const TRAINING_FOCUS_LABELS = { batting:'Batting skills', bowling:'Bowling skills', fielding:'Fielding skills', fitness:'Fitness', balanced:'Balanced', rest:'Rest' };
+function renderTraining(){
+  const sq = squadOf(G.myClub).sort((a,b)=>overall(b)-overall(a));
+  const optionsHtml = selected => CONFIG.TRAINING_FOCUSES.map(v=>`<option value="${v}" ${selected===v?'selected':''}>${TRAINING_FOCUS_LABELS[v]}</option>`).join('');
+  return `<div class="card"><h2>Training plans</h2>
+  <div class="small">Set an individual weekly training focus per player — skill training (batting/bowling/fielding) and fitness training both fade in effect with age; Rest speeds up fatigue recovery and lifts morale instead of building any rating.</div>
+  <div class="rowflex" style="margin-top:10px;">
+    <label>Set whole squad to:
+      <select id="bulkTrainingSelect">${optionsHtml('balanced')}</select>
+    </label>
+    <button class="btn" id="bulkTrainingBtn">Apply to all</button>
+  </div>
+  <table style="margin-top:10px;"><tr><th>Name</th><th>Role</th><th>Age</th><th>Bat</th><th>Bowl</th><th>Field</th><th>Fit</th><th>Training plan</th></tr>
+  ${sq.map(p=>`<tr>
+    <td>${esc(p.name)}</td><td><span class="tag ${p.role}">${p.role}</span></td><td>${p.age}</td>
+    <td>${p.bat}</td><td>${p.bwl}</td><td>${p.field}</td><td>${p.fitness}</td>
+    <td><select data-act="trainFocus" data-id="${p.id}">${optionsHtml(p.trainingFocus||'balanced')}</select></td>
+  </tr>`).join('')}
+  </table></div>`;
+}
+
+function renderFinances(){
+  const wages = squadOf(G.myClub).reduce((s,p)=>s+p.wage,0);
+  const gate = 12000 + Math.round(avgSquadRating(G.myClub)*300);
+  return `<div class="card"><h2>Club finances</h2>
+  <div class="grid3">
+    <div><div class="small">Budget</div><div class="scoreLine">£${Math.round(G.budget).toLocaleString()}</div></div>
+    <div><div class="small">Weekly wage bill</div><div class="scoreLine" style="color:var(--bad);">£${wages.toLocaleString()}</div></div>
+    <div><div class="small">Weekly matchday income (est.)</div><div class="scoreLine" style="color:var(--good);">£${gate.toLocaleString()}</div></div>
+  </div>
+  <div class="divider"></div>
+  <table><tr><th>Player</th><th>Wage/wk</th><th>Contract (yrs)</th></tr>
+  ${squadOf(G.myClub).sort((a,b)=>b.wage-a.wage).map(p=>`<tr><td>${esc(p.name)}</td><td>£${p.wage.toLocaleString()}</td><td>${p.contractYears}</td></tr>`).join('')}
+  </table></div>`;
+}
+
+function renderBoard(){
+  return `<div class="card"><h2>Board room</h2>
+  <div class="small">Season ${G.season} objective:</div><div style="margin:6px 0;">${esc(G.objectives.text)}</div>
+  <div class="small">Job security</div>${barHtml(G.jobSecurity, G.jobSecurity<35?'bad':(G.jobSecurity<65?'warn':''))} ${G.jobSecurity}%
+  ${G.seasonSummary? `<div class="divider"></div><div class="small">Last season review:</div><div>${esc(G.seasonSummary.verdict)} (finished ${G.seasonSummary.rank}/${COUNTIES.length})</div>`:''}
+  ${G.gameOver? `<div class="divider"></div><div style="color:var(--bad);font-weight:700;">You have been dismissed. Start a new career from the setup screen.</div><button class="btn bad" id="newCareerBtn">New career</button>`:''}
+  </div>
+  <div class="card"><h2>Danger zone</h2>
+  <div class="small">Permanently deletes your saved career from this browser (localStorage) and reloads to the setup screen. This cannot be undone.</div>
+  <button class="btn bad" id="clearSaveBtn" style="margin-top:10px;">Clear all saved data</button>
+  </div>`;
+}
+
+function renderRecords(){
+  const runsTop = Object.entries(G.records.runs).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const wktsTop = Object.entries(G.records.wkts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  return `<div class="grid2">
+    <div class="card"><h3>Top run scorers (this career)</h3><table><tr><th>Player</th><th>Runs</th></tr>
+    ${runsTop.map(([id,r])=>{const p=playerById(id); return `<tr><td>${p?esc(p.name):id}</td><td>${r}</td></tr>`;}).join('')}
+    </table></div>
+    <div class="card"><h3>Top wicket takers (this career)</h3><table><tr><th>Player</th><th>Wkts</th></tr>
+    ${wktsTop.map(([id,w])=>{const p=playerById(id); return `<tr><td>${p?esc(p.name):id}</td><td>${w}</td></tr>`;}).join('')}
+    </table></div>
+  </div>
+  <div class="card"><h3>National team viewer</h3>
+  <div class="tabsRow">${NATIONS.map(n=>`<button data-nation="${n}" class="${n===(G._natSel||'ENG')?'active':''}">${NATION_NAMES[n]}</button>`).join('')}</div>
+  <div id="natSquad">${squadTableHtml(nationSquad(G._natSel||'ENG'), false)}</div>
+  </div>`;
+}
+function nationSquad(nation){
+  return ALL_PLAYERS.filter(p=>p.nation===nation && !p.retired).sort((a,b)=>overall(b)-overall(a)).slice(0,16);
+}
+
+/* =========================================================================
+   EVENT WIRING
+   ========================================================================= */
+function wireContentEvents(){
+  document.querySelectorAll('[data-act="sign"]').forEach(b=>b.onclick=()=>{ signPlayer(b.dataset.id); render(); });
+  document.querySelectorAll('[data-act="release"]').forEach(b=>b.onclick=()=>{ releasePlayer(b.dataset.id); render(); });
+  document.querySelectorAll('[data-act="renew"]').forEach(b=>b.onclick=()=>{ renewContract(b.dataset.id); render(); });
+  document.querySelectorAll('[data-act="toggleXI"]').forEach(cb=>cb.onchange=()=>{
+    const id = cb.dataset.id;
+    if(cb.checked){
+      if(G.lineup.xi.length<11 && !G.lineup.xi.includes(id)){ G.lineup.xi.push(id); G.lineup.order.push(id); }
+    } else {
+      G.lineup.xi = G.lineup.xi.filter(x=>x!==id);
+      G.lineup.order = G.lineup.order.filter(x=>x!==id);
+    }
+    save(); render();
+  });
+  document.querySelectorAll('[data-act="moveUp"]').forEach(b=>b.onclick=()=>{
+    const i = G.lineup.order.indexOf(b.dataset.id);
+    if(i>0){ [G.lineup.order[i-1],G.lineup.order[i]] = [G.lineup.order[i],G.lineup.order[i-1]]; save(); render(); }
+  });
+  document.querySelectorAll('[data-act="moveDown"]').forEach(b=>b.onclick=()=>{
+    const i = G.lineup.order.indexOf(b.dataset.id);
+    if(i>-1 && i<G.lineup.order.length-1){ [G.lineup.order[i+1],G.lineup.order[i]] = [G.lineup.order[i],G.lineup.order[i+1]]; save(); render(); }
+  });
+  const resetLineupBtn = document.getElementById('resetLineupBtn');
+  if(resetLineupBtn) resetLineupBtn.onclick = ()=>{ G.lineup.xi=[]; G.lineup.order=[]; autoPickLineup(); save(); render(); };
+
+  const batApproach = document.getElementById('batApproach');
+  if(batApproach) batApproach.onchange = e=>{ G.tactics.batApproach = e.target.value; save(); };
+  const bwlPlan = document.getElementById('bwlPlan');
+  if(bwlPlan) bwlPlan.onchange = e=>{ G.tactics.bowlPlan = e.target.value; save(); };
+  const enforceFollowOn = document.getElementById('enforceFollowOn');
+  if(enforceFollowOn) enforceFollowOn.onchange = e=>{ G.tactics.enforceFollowOn = e.target.value; save(); };
+  const declareAt = document.getElementById('declareAt');
+  if(declareAt) declareAt.onchange = e=>{ G.tactics.declareAt = clamp(+e.target.value||CONFIG.DECLARE_DEFAULT, 80, 600); save(); };
+  const ballByBallToggle = document.getElementById('ballByBallToggle');
+  if(ballByBallToggle) ballByBallToggle.onchange = e=>{ G.settings.ballByBall = e.target.checked; save(); };
+
+  const livePlayPause = document.getElementById('livePlayPause');
+  if(livePlayPause) livePlayPause.onclick = ()=>{ G.liveMatch.playing = !G.liveMatch.playing; if(G.liveMatch.playing) startLiveTicker(); render(); };
+  const liveSpeed = document.getElementById('liveSpeed');
+  if(liveSpeed) liveSpeed.onchange = e=>{ G.liveMatch.speed = e.target.value; if(G.liveMatch.playing) startLiveTicker(); };
+  const liveSkipWicket = document.getElementById('liveSkipWicket');
+  if(liveSkipWicket) liveSkipWicket.onclick = ()=>{
+    const fx = findLiveFixture(); if(!fx) return;
+    const j = fx.log.findIndex((l,i)=> i>G.liveMatch.idx && l.wicket);
+    G.liveMatch.idx = j===-1 ? fx.log.length : j+1;
+    if(G.liveMatch.idx>=fx.log.length){ G.liveMatch.playing=false; stopLiveTicker(); }
+    render();
+  };
+  const liveSkipInnings = document.getElementById('liveSkipInnings');
+  if(liveSkipInnings) liveSkipInnings.onclick = ()=>{
+    const fx = findLiveFixture(); if(!fx) return;
+    const j = fx.log.findIndex((l,i)=> i>G.liveMatch.idx && l.inningsEnd);
+    G.liveMatch.idx = j===-1 ? fx.log.length : j+1;
+    if(G.liveMatch.idx>=fx.log.length){ G.liveMatch.playing=false; stopLiveTicker(); }
+    render();
+  };
+  const liveSkipEnd = document.getElementById('liveSkipEnd');
+  if(liveSkipEnd) liveSkipEnd.onclick = ()=>{
+    const fx = findLiveFixture(); if(!fx) return;
+    G.liveMatch.idx = fx.log.length; G.liveMatch.playing=false; stopLiveTicker(); render();
+  };
+
+  document.querySelectorAll('[data-act="trainFocus"]').forEach(sel=>sel.onchange=()=>{
+    const p = playerById(sel.dataset.id);
+    if(p){ p.trainingFocus = sel.value; save(); }
+  });
+  const bulkTrainingBtn = document.getElementById('bulkTrainingBtn');
+  if(bulkTrainingBtn) bulkTrainingBtn.onclick = ()=>{
+    const val = document.getElementById('bulkTrainingSelect').value;
+    squadOf(G.myClub).forEach(p=>{ p.trainingFocus = val; });
+    save(); render();
+  };
+
+  document.querySelectorAll('[data-nation]').forEach(b=>b.onclick=()=>{ G._natSel=b.dataset.nation; render(); });
+
+  const newCareerBtn = document.getElementById('newCareerBtn');
+  if(newCareerBtn) newCareerBtn.onclick = ()=>{ wipeSave(); location.reload(); };
+  const clearSaveBtn = document.getElementById('clearSaveBtn');
+  if(clearSaveBtn) clearSaveBtn.onclick = ()=>{
+    if(confirm('Delete your saved career? This cannot be undone.')){ wipeSave(); location.reload(); }
+  };
+}
+
+/* =========================================================================
+   SETUP SCREEN WIRING
+   ========================================================================= */
+function buildSetupScreen(){
+  const grid = document.getElementById('clubGrid');
+  grid.innerHTML = COUNTIES.map(c=>`<div class="clubTile" data-club="${c.id}" style="border-top:3px solid ${c.color};">${c.name}</div>`).join('');
+  let selClub=null, selDiff=null;
+  grid.querySelectorAll('.clubTile').forEach(t=>t.onclick=()=>{
+    grid.querySelectorAll('.clubTile').forEach(x=>x.classList.remove('sel'));
+    t.classList.add('sel'); selClub=t.dataset.club; checkReady();
+  });
+  document.getElementById('diffRow').querySelectorAll('.diffBtn').forEach(d=>d.onclick=()=>{
+    document.querySelectorAll('.diffBtn').forEach(x=>x.classList.remove('sel'));
+    d.classList.add('sel'); selDiff=d.dataset.d; checkReady();
+  });
+  function checkReady(){
+    document.getElementById('startBtn').disabled = !(selClub && selDiff);
+  }
+  document.getElementById('startBtn').onclick = ()=>{
+    const name = document.getElementById('mgrName').value.trim() || 'Manager';
+    newGame(selClub, name, selDiff);
+    showGameShell();
+  };
+  if(tryLoad()){
+    document.getElementById('continueRow').classList.remove('hidden');
+  }
+  document.getElementById('continueBtn').onclick = ()=>{
+    if(tryLoad()) showGameShell();
+  };
+  document.getElementById('wipeBtn').onclick = ()=>{
+    wipeSave(); document.getElementById('continueRow').classList.add('hidden');
+  };
+}
+
+function showGameShell(){
+  document.getElementById('setupScreen').style.display='none';
+  document.getElementById('gameShell').style.display='flex';
+  render();
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+function init(){
+  buildSetupScreen();
+  document.getElementById('advanceBtn').onclick = ()=>{
+    advance();
+    if(G.liveMatch){ G.ui.tab='match'; startLiveTicker(); }
+    render();
+  };
+  document.getElementById('saveBtn').onclick = trySave;
+}
+init();
+</script>
+</body>
+</html>
