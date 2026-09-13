@@ -43,7 +43,8 @@ input[type=text],input[type=number],select,textarea{
 .setup-sub{text-align:center; color:var(--muted); margin-bottom:24px; font-style:italic;}
 .field{margin-bottom:16px;}
 .field label{display:block; margin-bottom:6px; color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:0.05em;}
-.tier-options,.lean-options{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+.tier-options{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+.lean-options{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px;}
 .trait-options{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .opt-card{border:1px solid var(--border); border-radius:8px; padding:12px; text-align:center; background:#12151c; cursor:pointer;}
 .opt-card.selected{border-color:var(--gold); background:#241f10;}
@@ -269,6 +270,27 @@ const POLICY_AREAS = [
   {key:'defence',      name:'Defence',            lo:'Reduced Spending',    hi:'Increased Spending'},
 ];
 
+// Graduated flavour labels for how extreme a policy position reads, from radical-left
+// through centrist to radical-right. Both far ends are written to read as equally
+// dramatic/alarming — this is meant as satirical political-drama flavour (this game
+// has no real parties or politicians), not commentary favouring either direction.
+const POLICY_INTENSITY = {
+  economy:     [[-100,-70,'Total Command Economy'],[-70,-30,'Heavy Nationalisation'],[-30,30,'Mixed Economy'],[30,70,'Deep Deregulation'],[70,100,'Total Free-Market Zealotry']],
+  immigration: [[-100,-70,'Fully Open Borders'],[-70,-30,'Very Liberal'],[-30,30,'Managed Migration'],[30,70,'Strict Controls'],[70,100,'Closed Borders & Mass Deportations']],
+  health:      [[-100,-70,'Fully Nationalised, Free at Point of Use'],[-70,-30,'Mostly Public'],[-30,30,'Mixed Public/Private'],[30,70,'Mostly Private'],[70,100,'Fully Privatised']],
+  environment: [[-100,-70,'Radical Green Transition'],[-70,-30,'Strong Climate Action'],[-30,30,'Balanced Approach'],[30,70,'Growth-First'],[70,100,'Growth Above All, Climate Scepticism']],
+  education:   [[-100,-70,'Fully Comprehensive, No Selection'],[-70,-30,'Comprehensive'],[-30,30,'Mixed Model'],[30,70,'Selective (Academies)'],[70,100,'Fully Selective (Grammar/Academy)']],
+  crime:       [[-100,-70,'Revolutionary Tribunals — Political Prisoners of the Old Order'],[-70,-30,'Restorative Justice Focus'],[-30,30,'Balanced Justice System'],[30,70,'Zero-Tolerance Policing'],[70,100,'Authoritarian Crackdown — Political Dissidents Jailed']],
+  housing:     [[-100,-70,'Mass Council House-Building'],[-70,-30,"Strong Renters' Rights"],[-30,30,'Mixed Housing Policy'],[30,70,'Homeowner Incentives'],[70,100,'Full Deregulation, Homeowner-Only Incentives']],
+  defence:     [[-100,-70,"People's Militia — Army Purged & Politicised"],[-70,-30,'Minimal Defence Spending'],[-30,30,'Balanced Defence'],[30,70,'Major Rearmament'],[70,100,'Martial Law — Troops Deployed on the Streets']],
+};
+function policyIntensityLabel(key, value){
+  const bands = POLICY_INTENSITY[key];
+  if(!bands) return '';
+  const band = bands.find(b=>value>=b[0] && value<=b[1]) || bands[bands.length-1];
+  return band[2];
+}
+
 function zeroPolicyVec(v){ const o={}; POLICY_AREAS.forEach(p=>o[p.key]=v); return o; }
 
 // Demographic groups. ideal = preferred policy position per axis. weight = how much they care (sums to 1).
@@ -300,9 +322,11 @@ const DEMOGRAPHICS = [
 ];
 
 const LEAN_PRESETS = {
-  left:   {economy:-55,immigration:-35,health:-65,environment:-35,education:-35,crime:-35,housing:-50,defence:-30, label:'Progressive Left', desc:'Redistribution, public services, open society.'},
-  centre: {economy:0,immigration:0,health:0,environment:0,education:0,crime:0,housing:0,defence:0, label:'Centrist', desc:'Pragmatic, triangulating, few fixed dogmas.'},
-  right:  {economy:55,immigration:45,health:35,environment:35,education:35,crime:45,housing:35,defence:40, label:'Conservative Right', desc:'Free markets, tradition, strong borders.'},
+  farleft: {economy:-85,immigration:-70,health:-90,environment:-70,education:-70,crime:-80,housing:-85,defence:-70, label:'Radical Left', desc:'Revolutionary and uncompromising. A narrow but fervent base — everyone else recoils.'},
+  left:    {economy:-55,immigration:-35,health:-65,environment:-35,education:-35,crime:-35,housing:-50,defence:-30, label:'Progressive Left', desc:'Redistribution, public services, open society.'},
+  centre:  {economy:0,immigration:0,health:0,environment:0,education:0,crime:0,housing:0,defence:0, label:'Centrist', desc:'Pragmatic, triangulating, few fixed dogmas.'},
+  right:   {economy:55,immigration:45,health:35,environment:35,education:35,crime:45,housing:35,defence:40, label:'Conservative Right', desc:'Free markets, tradition, strong borders.'},
+  farright:{economy:80,immigration:85,health:70,environment:70,education:70,crime:90,housing:70,defence:90, label:'Radical Right', desc:'Authoritarian and nationalist. A narrow but fervent base — everyone else recoils.'},
 };
 
 const TIER_PRESETS = {
@@ -444,6 +468,8 @@ function newGame(leaderName, partyName, lean, tier, trait){
   };
   delete you.stance.label; delete you.stance.desc;
   const founding = {...you.stance}; // the platform the party was founded on — conference motions pull back toward this
+  const demoIdeals = {};
+  DEMOGRAPHICS.forEach(d=>{ demoIdeals[d.key] = {...d.ideal}; }); // per-game "current public mood", can drift over time
 
   const mps = [];
   const shuffledSeats = [...SEAT_NAMES].sort(()=>Math.random()-0.5);
@@ -475,6 +501,7 @@ function newGame(leaderName, partyName, lean, tier, trait){
     lastLocalElectionsWeek:0,
     lastStaffRefreshWeek:0,
     seatMarginality:{},
+    demoIdeals,
     you,
     rivals,
     demoSupport: {},
@@ -529,6 +556,10 @@ function migrateSave(){
   if(G.lastLocalElectionsWeek===undefined) G.lastLocalElectionsWeek = G.week;
   if(G.lastStaffRefreshWeek===undefined) G.lastStaffRefreshWeek = G.week;
   if(!G.seatMarginality) G.seatMarginality = {};
+  if(!G.demoIdeals){
+    G.demoIdeals = {};
+    DEMOGRAPHICS.forEach(d=>{ G.demoIdeals[d.key] = {...d.ideal}; });
+  }
   G.staff.forEach(s=>{ if(s.morale===undefined) s.morale = 70; if(!s.personality) s.personality = randomPersonality(); });
   G.mps.forEach(m=>{ if(!m.personality) m.personality = randomPersonality(); });
   G.staffMarket.forEach(c=>{ if(!c.personality) c.personality = randomPersonality(); });
@@ -544,12 +575,31 @@ function resetGame(){
 // CORE CALCULATIONS
 // ---------------------------------------------------------------------
 function affinity(stanceVec, demo){
+  const ideal = (G.demoIdeals && G.demoIdeals[demo.key]) || demo.ideal;
   let dist=0;
   POLICY_AREAS.forEach(p=>{
-    const d = Math.abs((stanceVec[p.key]||0) - demo.ideal[p.key]);
+    const d = Math.abs((stanceVec[p.key]||0) - ideal[p.key]);
     dist += d * (demo.weight[p.key]||0);
   });
   return clamp(100 - dist/2, 1, 100);
+}
+
+// Public mood isn't fixed: each demographic's "ideal" position on each axis is a live
+// per-game copy (G.demoIdeals) that can drift and occasionally swing hard, so the same
+// policy platform doesn't play equally well forever.
+function driftPublicMood(){
+  DEMOGRAPHICS.forEach(demo=>{
+    if(Math.random() > 0.12) return;
+    const area = choice(POLICY_AREAS);
+    const ideal = G.demoIdeals[demo.key];
+    const volatile_ = Math.random() < 0.15;
+    const step = volatile_ ? rand(-25,25) : rand(-6,6);
+    ideal[area.key] = clamp(ideal[area.key]+step, -100, 100);
+    if(volatile_ && Math.abs(step)>12){
+      const dir = step>0 ? 'harder-line' : 'more liberal';
+      log(`[Public Mood] ${demo.name} swing sharply toward a ${dir} position on ${area.name}.`, 'lognew');
+    }
+  });
 }
 
 function calcPolls(){
@@ -898,12 +948,13 @@ function fireMP(mpId){
   const mp = G.mps.find(m=>m.id===mpId);
   if(!mp) return;
   if(!confirm(`Expel ${mp.name} from the party? This triggers a by-election in ${mp.seat} and will damage unity.`)) return;
+  // The seat stays counted as yours (G.seats unchanged) until the by-election actually
+  // decides it, exactly like a spontaneous vacancy — only resolveByElection() adjusts
+  // G.seats, so it isn't double-counted here and then left un-restored if you hold it.
   G.mps = G.mps.filter(m=>m.id!==mpId);
-  G.seats -= 1;
   G.unity = clamp(G.unity-8,0,100);
   log(`${mp.name} has been expelled from the party. A by-election looms in ${mp.seat}.`, 'lognew');
   startByElection(mp.seat, 'you');
-  syncMpRosterToSeats();
   save(); render();
 }
 
@@ -1372,6 +1423,13 @@ function randomNationalEvent(){
     {text:'A viral clip of ordinary voters venting frustration at all the main parties spreads online.', oth:2.5},
     {text:'A landmark infrastructure project is announced by the Government.', gov:1.5},
     {text:'Local news reports on the same failing services in every region.', gov:-1.5, oth:1},
+    {text:'A wave of public disorder hardens attitudes on law and order across the country.', mood:[['working','crime',12],['pensioners','crime',15],['suburban','crime',10]]},
+    {text:'A high-profile miscarriage of justice fuels calls for a radical rethink of policing.', mood:[['youth','crime',-15],['urban','crime',-10]]},
+    {text:'A wave of small-boat crossings dominates the headlines for days.', mood:[['working','immigration',12],['rural','immigration',15],['pensioners','immigration',10]]},
+    {text:'A viral story about a family torn apart by immigration enforcement shifts sympathy.', mood:[['urban','immigration',-14],['youth','immigration',-12]]},
+    {text:'A cost-of-living squeeze pushes younger voters sharply toward radical economic change.', mood:[['youth','economy',-15],['working','economy',-8]]},
+    {text:'A business confidence survey pushes commentators to demand deep deregulation.', mood:[['business','economy',14]]},
+    {text:'Extreme weather dominates the news for a fortnight, hardening climate attitudes.', mood:[['youth','environment',-15],['urban','environment',-10]]},
   ];
   if(G.trust>=68 && G.momentum>0){
     events.push({text:`A major newspaper endorses ${G.partyName} in its editorial.`, you:2.5});
@@ -1389,6 +1447,12 @@ function randomNationalEvent(){
       addMomentum(mapped, ev[id]);
     }
   });
+  if(ev.mood){
+    ev.mood.forEach(([demoKey, axisKey, delta])=>{
+      const ideal = G.demoIdeals[demoKey];
+      if(ideal) ideal[axisKey] = clamp(ideal[axisKey]+delta, -100, 100);
+    });
+  }
   log(`[National News] ${ev.text}`);
 }
 
@@ -1828,14 +1892,18 @@ function resolveByElection(){
 
   if(be.holder!==winner){
     if(be.holder==='you') G.seats -=1; else { const r=G.rivals.find(r=>r.id===be.holder); if(r) r.seats-=1; }
-    if(winner==='you'){ G.seats+=1;
-      G.mps.push({id:uid(), name:be.candidateName||randomName(), seat:be.seat, loyalty:randi(50,85), competence:randi(35,80), ambition:randi(20,80), personality:randomPersonality(), role:'Backbencher', portfolio:null});
-    } else { const r=G.rivals.find(r=>r.id===winner); if(r) r.seats+=1; }
-    syncMpRosterToSeats();
+    if(winner==='you'){ G.seats+=1; } else { const r=G.rivals.find(r=>r.id===winner); if(r) r.seats+=1; }
     adjustSeatMarginality(be.seat, randi(15,35) - getSeatMarginality(be.seat)); // freshly flipped, not yet entrenched
   } else {
     adjustSeatMarginality(be.seat, 4); // successfully defended — grows a little safer
   }
+  // Whether the seat changed hands or was successfully held, if you won it and the
+  // roster is a seat short (e.g. the previous MP was expelled before this by-election),
+  // the winning candidate becomes the new sitting MP.
+  if(winner==='you' && G.mps.length<G.seats){
+    G.mps.push({id:uid(), name:be.candidateName||randomName(), seat:be.seat, loyalty:randi(50,85), competence:randi(35,80), ambition:randi(20,80), personality:randomPersonality(), role:'Backbencher', portfolio:null});
+  }
+  syncMpRosterToSeats(); // safety net either way
   const seatsAfter = G.seats;
 
   const won = winner==='you';
@@ -1947,7 +2015,11 @@ function callSnapElection(){
 
 function beginCampaignPhase(){
   G.campaign = {weeksLeft:CAMPAIGN_PHASE_LEN, manifestoLocked:false, debateDone:false, finalPushDone:false};
+  // A pending by-election is moot once a General Election is called — but if it was
+  // still unresolved, the roster may be a seat short (e.g. an expelled MP's seat).
+  // Reconcile immediately rather than leaving that visible for the whole campaign.
   G.byElection = null;
+  syncMpRosterToSeats();
   log('=== THE GENERAL ELECTION CAMPAIGN BEGINS ===', 'lognew');
   save();
 }
@@ -2156,6 +2228,7 @@ function advanceWeek(){
   else { tickByElection(); }
 
   if(!G.campaign) driftRivals();
+  if(!G.campaign) driftPublicMood();
   if(G.governing && !G.campaign) runDepartments();
   checkStaffMorale();
   updateInnerCircleRelations();
@@ -2561,10 +2634,13 @@ function renderPolicies(){
   let html = `<div class="card"><h3>Party Platform</h3><p class="small">Sliding a policy far from its current setting requires an Action Point to announce, and large U-turns cost Party Unity. Small nudges (under 3 points) are free.</p>`;
   POLICY_AREAS.forEach(p=>{
     const v = G.you.stance[p.key];
+    const intensity = policyIntensityLabel(p.key, v);
+    const extreme = Math.abs(v)>=70;
     html += `<div class="slider-row">
       <div class="sl-head"><span>${p.name}</span><b>${v>0?'+':''}${v}</b></div>
       <input type="range" min="-100" max="100" value="${v}" data-policy="${p.key}" class="policySlider">
       <div class="sl-labels"><span>${p.lo}</span><span>${p.hi}</span></div>
+      <div class="small" style="margin-top:2px; ${extreme?'color:var(--red);font-weight:bold;':''}">${intensity}</div>
     </div>`;
   });
   html += `</div>`;
