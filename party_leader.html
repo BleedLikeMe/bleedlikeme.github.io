@@ -1,0 +1,2858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Leader — Party Political Simulator</title>
+<style>
+:root{
+  --bg:#0e1116; --panel:#161a22; --panel2:#1d2230; --border:#2a3040;
+  --text:#e8eaf0; --muted:#8b93a7; --gold:#d4af37; --red:#c0392b; --green:#2ecc71;
+  --blue:#3498db; --purple:#9b59b6; --you:#d4af37;
+  --gov:#3498db; --opp:#c0392b; --oth:#7f8c8d;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:'Georgia',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh;
+}
+h1,h2,h3,h4{font-family:'Georgia',serif; margin:0 0 8px 0;}
+button{
+  font-family:inherit; cursor:pointer; background:var(--panel2); color:var(--text);
+  border:1px solid var(--border); border-radius:6px; padding:8px 14px; font-size:14px;
+}
+button:hover:not(:disabled){background:#262c3d; border-color:var(--gold);}
+button:disabled{opacity:0.4; cursor:not-allowed;}
+button.primary{background:var(--gold); color:#1a1a1a; border-color:var(--gold); font-weight:bold;}
+button.primary:hover:not(:disabled){background:#e6c34f;}
+button.danger{border-color:var(--red);}
+button.danger:hover:not(:disabled){background:#3a1f1f;}
+input[type=text],input[type=number],select,textarea{
+  font-family:inherit; background:#0b0d12; color:var(--text); border:1px solid var(--border);
+  border-radius:6px; padding:8px 10px; font-size:14px; width:100%;
+}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:#2a3040;border-radius:6px;}
+
+/* ===== Setup screen ===== */
+#setupScreen{
+  max-width:640px; margin:40px auto; padding:0 20px 60px;
+}
+.setup-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:28px; margin-bottom:16px;}
+.setup-title{text-align:center; margin-bottom:4px;}
+.setup-sub{text-align:center; color:var(--muted); margin-bottom:24px; font-style:italic;}
+.field{margin-bottom:16px;}
+.field label{display:block; margin-bottom:6px; color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:0.05em;}
+.tier-options,.lean-options{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+.trait-options{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.opt-card{border:1px solid var(--border); border-radius:8px; padding:12px; text-align:center; background:#12151c; cursor:pointer;}
+.opt-card.selected{border-color:var(--gold); background:#241f10;}
+.opt-card h4{font-size:14px; margin-bottom:4px;}
+.opt-card p{font-size:12px; color:var(--muted); margin:0;}
+
+/* ===== Game shell ===== */
+#gameScreen{display:none; min-height:100vh; flex-direction:column;}
+#topbar{
+  display:flex; align-items:center; gap:18px; background:var(--panel); border-bottom:2px solid var(--gold);
+  padding:10px 18px; flex-wrap:wrap; position:sticky; top:0; z-index:20;
+}
+#topbar .tb-item{font-size:13px; color:var(--muted); white-space:nowrap;}
+#topbar .tb-item b{color:var(--text); font-size:15px;}
+#topbar .tb-party{font-family:Georgia,serif; font-size:18px; font-weight:bold; color:var(--gold); margin-right:auto;}
+#apDots{display:flex; gap:4px;}
+.apdot{width:12px;height:12px;border-radius:50%; background:#333; border:1px solid var(--border);}
+.apdot.filled{background:var(--gold);}
+
+#mainWrap{display:flex; flex:1; min-height:0;}
+#nav{
+  width:180px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--border);
+  padding:12px 0; display:flex; flex-direction:column; gap:2px;
+}
+#nav button{
+  background:none; border:none; border-radius:0; text-align:left; padding:12px 18px;
+  border-left:3px solid transparent; color:var(--muted); font-size:14px;
+}
+#nav button.active{color:var(--gold); border-left-color:var(--gold); background:var(--panel2);}
+#nav button:hover:not(.active){background:var(--panel2); color:var(--text);}
+
+#content{flex:1; padding:20px 24px; overflow-y:auto; min-width:0;}
+#logbar{
+  background:#0b0d12; border-top:1px solid var(--border); padding:8px 18px; font-size:12.5px;
+  color:var(--muted); max-height:90px; overflow-y:auto;
+}
+#logbar div{margin-bottom:2px;}
+#logbar .lognew{color:var(--text);}
+
+.card{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:16px;}
+.card h3{border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:14px; color:var(--gold); font-size:16px;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+@media (max-width:900px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+.statrow{display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px dashed #232838; font-size:14px;}
+.statrow:last-child{border-bottom:none;}
+.statrow .lbl{color:var(--muted);}
+.bar-outer{background:#0b0d12; border:1px solid var(--border); border-radius:5px; height:16px; overflow:hidden; flex:1; margin:0 10px;}
+.bar-inner{height:100%; transition:width 0.4s;}
+.pollbar-row{display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13px;}
+.pollbar-row .pname{width:130px; flex-shrink:0;}
+.pollbar-row .pval{width:48px; text-align:right; flex-shrink:0;}
+
+.seatmosaic{display:grid; grid-template-columns:repeat(26,1fr); gap:2px; margin:10px 0;}
+.seatmosaic div{aspect-ratio:1; border-radius:2px;}
+
+.ukmapwrap{overflow-x:auto; margin:10px 0;}
+.ukmap{display:grid; grid-template-columns:repeat(10,1fr); grid-auto-rows:40px; gap:5px; min-width:480px;}
+.ukregion{background:#12151c; border:1px solid var(--border); border-radius:6px; padding:4px 6px; display:flex; flex-direction:column; justify-content:center; gap:3px; overflow:hidden;}
+.ukregion-label{font-size:10px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.ukregion-bar{display:flex; height:9px; border-radius:4px; overflow:hidden; background:#0b0d12;}
+.ukregion-bar span{height:100%;}
+
+.actiongrid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+@media (max-width:700px){
+  .actiongrid{grid-template-columns:1fr;}
+  .tier-options,.lean-options,.trait-options{grid-template-columns:1fr;}
+  #mainWrap{flex-direction:column;}
+  #nav{
+    width:100%; flex-direction:row; flex-wrap:wrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    border-right:none; border-bottom:1px solid var(--border); padding:4px 2px;
+  }
+  #nav button{border-left:none; border-bottom:3px solid transparent; padding:10px 12px; white-space:nowrap;}
+  #nav button.active{border-left-color:transparent; border-bottom-color:var(--gold);}
+  #content{padding:14px 16px;}
+  #topbar{gap:10px; padding:8px 12px;}
+  .pollbar-row .pname{width:96px;}
+}
+.action-btn{
+  text-align:left; padding:14px; display:flex; flex-direction:column; gap:4px; border-radius:8px;
+}
+.action-btn .atitle{font-weight:bold; font-size:14px;}
+.action-btn .adesc{font-size:12px; color:var(--muted); font-weight:normal;}
+
+.slider-row{margin-bottom:18px;}
+.slider-row .sl-head{display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;}
+.slider-row input[type=range]{width:100%;}
+.sl-labels{display:flex; justify-content:space-between; font-size:11px; color:var(--muted);}
+
+.tblwrap{overflow-x:auto;}
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th,td{padding:8px 6px; text-align:left; border-bottom:1px solid #232838; white-space:nowrap;}
+th{color:var(--muted); font-weight:normal; font-size:12px; text-transform:uppercase;}
+tr:hover td{background:#1a1e29;}
+.tag{display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; border:1px solid var(--border);}
+.tag.good{color:var(--green); border-color:var(--green);}
+.tag.bad{color:var(--red); border-color:var(--red);}
+.tag.warn{color:var(--gold); border-color:var(--gold);}
+
+/* Modal overlay */
+#overlay{
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:100;
+  align-items:center; justify-content:center; padding:20px;
+}
+#overlay.show{display:flex;}
+.modal{
+  background:var(--panel); border:1px solid var(--gold); border-radius:12px; padding:24px;
+  max-width:560px; width:100%; max-height:86vh; overflow-y:auto;
+}
+.modal h2{color:var(--gold); margin-bottom:10px;}
+.modal .mbody{margin-bottom:18px; line-height:1.5; font-size:14.5px;}
+.modal .mchoices{display:flex; flex-direction:column; gap:8px;}
+.modal .mchoices button{text-align:left; padding:12px 14px;}
+.modal .mchoices button .mc-t{font-weight:bold; display:block;}
+.modal .mchoices button .mc-d{font-size:12px; color:var(--muted); font-weight:normal;}
+
+.small{font-size:12px; color:var(--muted);}
+#content a, .modal a{color:var(--gold); cursor:pointer; text-decoration:none;}
+#content a:hover, .modal a:hover{text-decoration:underline;}
+.right{text-align:right;}
+.center{text-align:center;}
+hr.sep{border:none; border-top:1px solid var(--border); margin:14px 0;}
+.flex{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.spacer{flex:1;}
+</style>
+</head>
+<body>
+
+<!-- ============ SETUP SCREEN ============ -->
+<div id="setupScreen">
+  <div class="setup-card">
+    <h1 class="setup-title">THE LEADER</h1>
+    <p class="setup-sub">Found a political party. Fight your way to Government.</p>
+    <form id="setupForm">
+      <div class="field">
+        <label>Your Name (Party Leader)</label>
+        <input type="text" id="inLeaderName" maxlength="30" placeholder="e.g. Morgan Reid" required>
+      </div>
+      <div class="field">
+        <label>Party Name</label>
+        <input type="text" id="inPartyName" maxlength="34" placeholder="e.g. The Forward Party" required>
+      </div>
+      <div class="field">
+        <label>Political Leaning</label>
+        <div class="lean-options" id="leanOptions"></div>
+      </div>
+      <div class="field">
+        <label>Starting Position</label>
+        <div class="tier-options" id="tierOptions"></div>
+      </div>
+      <div class="field">
+        <label>Leader Trait</label>
+        <div class="trait-options" id="traitOptions"></div>
+      </div>
+      <button type="submit" class="primary" style="width:100%; padding:12px; margin-top:8px;">Found Your Party</button>
+    </form>
+  </div>
+  <div class="small center" id="continueRow" style="display:none;">
+    <button id="btnContinue">Continue Saved Game</button>
+  </div>
+</div>
+
+<!-- ============ GAME SHELL ============ -->
+<div id="gameScreen">
+  <div id="topbar">
+    <div class="tb-party" id="tbParty">—</div>
+    <div class="tb-item">Week <b id="tbWeek">1</b></div>
+    <div class="tb-item">Funds <b id="tbFunds">£0</b></div>
+    <div class="tb-item">Seats <b id="tbSeats">0</b>/650</div>
+    <div class="tb-item">Poll <b id="tbPoll">0%</b></div>
+    <div class="tb-item">Unity <b id="tbUnity">0%</b></div>
+    <div class="tb-item">Trust <b id="tbTrust">0%</b></div>
+    <div class="tb-item">AP <span id="apDots" class="apdot-wrap flex"></span></div>
+    <button id="btnMenu" title="Save / Reset">☰</button>
+  </div>
+  <div id="mainWrap">
+    <div id="nav">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="policies">Policies</button>
+      <button data-tab="party">Party &amp; MPs</button>
+      <button data-tab="staff">Staff</button>
+      <button data-tab="campaign">Campaign</button>
+      <button data-tab="media">Media &amp; News</button>
+      <button data-tab="finances">Finances</button>
+    </div>
+    <div id="content"></div>
+  </div>
+  <div id="logbar"></div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div id="overlay"><div class="modal" id="modalBox"></div></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   THE LEADER — political party management simulator
+   Single-file, self-contained. All state lives in G. Persisted to
+   localStorage under 'theLeaderSave'.
+===================================================================== */
+
+// ---------------------------------------------------------------------
+// CONSTANTS & DATA
+// ---------------------------------------------------------------------
+const TOTAL_SEATS = 650;
+const MAJORITY = 326;
+const TERM_LENGTH = 208;      // weeks in a full parliamentary term (~4 years)
+const MIN_SNAP_WEEK = 52;     // earliest week a snap election may be called
+const AP_PER_WEEK = 3;
+const CAMPAIGN_PHASE_LEN = 4; // weeks of official campaign before an election resolves
+const CONFERENCE_INTERVAL = 52;
+
+// Policy axes: value -100 (left/liberal/permissive) .. +100 (right/conservative/strict)
+const POLICY_AREAS = [
+  {key:'economy',     name:'Economy & Tax',      lo:'High Tax, High Spend', hi:'Low Tax, Free Market'},
+  {key:'immigration',  name:'Immigration',        lo:'Open Borders',         hi:'Strict Controls'},
+  {key:'health',       name:'Health & NHS',       lo:'Fully Public',         hi:'Private Involvement'},
+  {key:'environment',  name:'Environment',        lo:'Green Transition',     hi:'Growth First'},
+  {key:'education',    name:'Education',          lo:'Comprehensive',       hi:'Selective/Academies'},
+  {key:'crime',        name:'Crime & Justice',    lo:'Rehabilitation',      hi:'Tough Sentencing'},
+  {key:'housing',      name:'Housing',            lo:"Renters' Rights",     hi:'Homeowner Incentives'},
+  {key:'defence',      name:'Defence',            lo:'Reduced Spending',    hi:'Increased Spending'},
+];
+
+function zeroPolicyVec(v){ const o={}; POLICY_AREAS.forEach(p=>o[p.key]=v); return o; }
+
+// Demographic groups. ideal = preferred policy position per axis. weight = how much they care (sums to 1).
+const DEMOGRAPHICS = [
+  {key:'working', name:'Working Class', size:20,
+    ideal:{economy:-40,immigration:20,health:-60,environment:0,education:-20,crime:20,housing:-50,defence:0},
+    weight:{economy:0.20,immigration:0.14,health:0.18,environment:0.06,education:0.10,crime:0.08,housing:0.16,defence:0.08}},
+  {key:'middle', name:'Middle Class', size:18,
+    ideal:{economy:10,immigration:10,health:-10,environment:10,education:10,crime:10,housing:10,defence:10},
+    weight:{economy:0.16,immigration:0.10,health:0.14,environment:0.12,education:0.16,crime:0.10,housing:0.14,defence:0.08}},
+  {key:'business', name:'Business Owners', size:9,
+    ideal:{economy:70,immigration:0,health:40,environment:30,education:20,crime:20,housing:40,defence:20},
+    weight:{economy:0.30,immigration:0.08,health:0.08,environment:0.08,education:0.10,crime:0.10,housing:0.16,defence:0.10}},
+  {key:'youth', name:'Youth Voters', size:13,
+    ideal:{economy:-30,immigration:-40,health:-50,environment:-70,education:-30,crime:-30,housing:-60,defence:-40},
+    weight:{economy:0.14,immigration:0.10,health:0.14,environment:0.24,education:0.12,crime:0.04,housing:0.16,defence:0.06}},
+  {key:'pensioners', name:'Pensioners', size:14,
+    ideal:{economy:20,immigration:40,health:-40,environment:20,education:0,crime:50,housing:20,defence:40},
+    weight:{economy:0.16,immigration:0.16,health:0.22,environment:0.04,education:0.04,crime:0.16,housing:0.10,defence:0.12}},
+  {key:'rural', name:'Rural Communities', size:7,
+    ideal:{economy:30,immigration:30,health:0,environment:10,education:0,crime:30,housing:10,defence:30},
+    weight:{economy:0.18,immigration:0.16,health:0.10,environment:0.10,education:0.08,crime:0.16,housing:0.10,defence:0.12}},
+  {key:'urban', name:'Urban Professionals', size:11,
+    ideal:{economy:20,immigration:-30,health:-20,environment:-40,education:20,crime:-10,housing:-20,defence:-10},
+    weight:{economy:0.18,immigration:0.10,health:0.12,environment:0.18,education:0.16,crime:0.08,housing:0.12,defence:0.06}},
+  {key:'suburban', name:'Suburban Families', size:8,
+    ideal:{economy:20,immigration:20,health:-10,environment:10,education:30,crime:20,housing:30,defence:10},
+    weight:{economy:0.16,immigration:0.12,health:0.14,environment:0.10,education:0.20,crime:0.10,housing:0.12,defence:0.06}},
+];
+
+const LEAN_PRESETS = {
+  left:   {economy:-55,immigration:-35,health:-65,environment:-35,education:-35,crime:-35,housing:-50,defence:-30, label:'Progressive Left', desc:'Redistribution, public services, open society.'},
+  centre: {economy:0,immigration:0,health:0,environment:0,education:0,crime:0,housing:0,defence:0, label:'Centrist', desc:'Pragmatic, triangulating, few fixed dogmas.'},
+  right:  {economy:55,immigration:45,health:35,environment:35,education:35,crime:45,housing:35,defence:40, label:'Conservative Right', desc:'Free markets, tradition, strong borders.'},
+};
+
+const TIER_PRESETS = {
+  fringe:  {seats:3,   funds:18000,  members:1800,  label:'Fringe Movement', desc:'A handful of seats. Everything to prove.'},
+  rising:  {seats:28,  funds:90000,  members:22000, label:'Rising Challenger', desc:'A real bench of MPs and growing momentum.'},
+  official:{seats:185, funds:400000, members:120000, label:'Official Opposition', desc:'You already shadow the Government. Power is close.'},
+};
+
+const LEADER_TRAITS = {
+  orator:    {label:'The Orator', desc:'Gifted at speeches, interviews, debates and PMQs.'},
+  organiser: {label:'The Organiser', desc:'Builds party unity fast; smoother policy U-turns.'},
+  fixer:     {label:'The Fixer', desc:'A natural at raising money, declared or otherwise.'},
+  ideologue: {label:'The Ideologue', desc:'Conviction cuts both ways — bigger swings, for better or worse.'},
+};
+
+// MPs and staff each get one of these. Only people who actually work closely together —
+// Cabinet/Shadow Cabinet MPs and hired staff — have their personalities interact; see
+// personChemistry(). Backbenchers still carry a personality (for flavour, and because
+// ambition/maverick-style traits feed rebellion odds) but aren't part of that inner circle.
+const PERSONALITIES = [
+  {key:'loyalist',  label:'Loyalist',  desc:'Steady and dutiful — values team cohesion above all.'},
+  {key:'maverick',  label:'Maverick',  desc:'Independent-minded and unpredictable — no fan of being told what to do.'},
+  {key:'networker', label:'Networker', desc:'Sociable and diplomatic — smooths over friction between others.'},
+  {key:'workhorse', label:'Workhorse', desc:'Heads-down and reliable — largely indifferent to office politics.'},
+  {key:'egotist',   label:'Egotist',   desc:'Ambitious and self-promoting — wants the credit, resents sharing it.'},
+  {key:'cynic',     label:'Cynic',     desc:'Jaded and quick to grumble, but rarely rebels alone.'},
+];
+function randomPersonality(){ return choice(PERSONALITIES).key; }
+function personalityLabel(key){
+  const p = PERSONALITIES.find(p=>p.key===key);
+  return p ? `<span title="${p.desc}">${p.label}</span>` : '—';
+}
+
+// Symmetric compatibility between two personality types, roughly -2 (clash) to +2 (synergy).
+// Looked up either order; unlisted pairs default to neutral (0).
+const PERSONALITY_COMPAT = {
+  'loyalist|loyalist':1, 'loyalist|maverick':-1, 'loyalist|networker':1, 'loyalist|workhorse':1, 'loyalist|egotist':-1, 'loyalist|cynic':-1,
+  'maverick|maverick':-1, 'maverick|networker':0, 'maverick|workhorse':0, 'maverick|egotist':-1, 'maverick|cynic':0,
+  'networker|networker':1, 'networker|workhorse':1, 'networker|egotist':0, 'networker|cynic':-1,
+  'workhorse|workhorse':1, 'workhorse|egotist':-1, 'workhorse|cynic':0,
+  'egotist|egotist':-2, 'egotist|cynic':0,
+  'cynic|cynic':-1,
+};
+function personalityCompat(a,b){
+  if(!a || !b) return 0;
+  if(PERSONALITY_COMPAT[a+'|'+b]!==undefined) return PERSONALITY_COMPAT[a+'|'+b];
+  if(PERSONALITY_COMPAT[b+'|'+a]!==undefined) return PERSONALITY_COMPAT[b+'|'+a];
+  return 0;
+}
+
+const RIVAL_TEMPLATES = [
+  {id:'gov', name:'The Unity Party', colour:'var(--gov)', governing:true,
+    stance:{economy:35,immigration:20,health:25,environment:10,education:15,crime:25,housing:20,defence:25}},
+  {id:'opp', name:'New Horizon', colour:'var(--opp)', governing:false,
+    stance:{economy:-30,immigration:-20,health:-45,environment:-20,education:-20,crime:-15,housing:-30,defence:-15}},
+  {id:'oth', name:'Common Cause & Others', colour:'var(--oth)', governing:false,
+    stance:{economy:5,immigration:60,health:0,environment:-10,education:0,crime:30,housing:10,defence:20}},
+];
+
+// A stylised schematic map of the UK's nations/regions, laid out roughly in their real
+// compass positions (grid line-ranges, not true geographic boundaries — this game's seats
+// are fictional). `demoMix` gives each region's rough demographic flavour, reusing the
+// same DEMOGRAPHICS used for national polling, so regional colouring is derived from the
+// live simulation rather than hard-coded per-party results.
+const REGIONS = [
+  {key:'scot',  name:'Scotland',              demoMix:{rural:0.55, working:0.45}, grid:{col:'5 / 9',  row:'1 / 3'}},
+  {key:'ni',    name:'Northern Ireland',       demoMix:{rural:0.6,  working:0.4},  grid:{col:'1 / 4',  row:'2 / 4'}},
+  {key:'ne',    name:'North East',             demoMix:{working:0.65, middle:0.35}, grid:{col:'7 / 10', row:'3 / 5'}},
+  {key:'nw',    name:'North West',             demoMix:{working:0.55, urban:0.45}, grid:{col:'4 / 7',  row:'4 / 6'}},
+  {key:'yorks', name:'Yorkshire & the Humber', demoMix:{working:0.6, middle:0.4},  grid:{col:'7 / 10', row:'5 / 7'}},
+  {key:'wal',   name:'Wales',                  demoMix:{rural:0.6,  working:0.4},  grid:{col:'1 / 4',  row:'6 / 9'}},
+  {key:'emid',  name:'East Midlands',          demoMix:{middle:0.5, rural:0.5},   grid:{col:'7 / 10', row:'7 / 9'}},
+  {key:'wmid',  name:'West Midlands',          demoMix:{working:0.5, suburban:0.5}, grid:{col:'4 / 7', row:'7 / 9'}},
+  {key:'east',  name:'East of England',        demoMix:{suburban:0.55, rural:0.45}, grid:{col:'7 / 11', row:'9 / 11'}},
+  {key:'lon',   name:'London',                 demoMix:{urban:0.55, business:0.45}, grid:{col:'6 / 9', row:'11 / 13'}},
+  {key:'se',    name:'South East',             demoMix:{suburban:0.5, business:0.5}, grid:{col:'4 / 11', row:'13 / 15'}},
+  {key:'sw',    name:'South West',             demoMix:{rural:0.55, pensioners:0.45}, grid:{col:'1 / 6', row:'11 / 15'}},
+];
+
+const FIRST_NAMES = ['Alex','Jordan','Sam','Morgan','Casey','Riley','Taylor','Charlie','Jamie','Reese','Frankie','Robin','Drew','Harper','Emerson','Quinn','Rowan','Skyler','Devon','Blair','Marlowe','Sasha','Arden','Finley'];
+const LAST_NAMES = ['Whitfield','Okonkwo','Blackwood','Sinclair','Marchetti','Fairweather','Holloway','Nakamura','Petrenko','Calloway','Ashworth','Delacroix','Brennan','Voss','Kowalski','Devereux','Ellingham','Osei','Farrow','Lindqvist','Radcliffe','Mbeki','Castellano','Winterbourne'];
+const SEAT_NAMES = ['North Ashford','Kirkbridge','Fenwick East','Sandymoor','Rotherbeck','Greyholm West','Castlemere','Uppingdale','Broxwood','Merrivale South','Ellesford','Drumlin Heath','Barrowfield','Thornhollow','Millbrook Central','Hartsdown','Cliftonmoor','Pendleworth','Ravensburn North','Okewood','Stonegate','Vale of Esk','Highmoor East','Bellcaster','Wrenfield','Ashdown Cross','Marlowick','Greybourne','Copperfield South','Larkspur'];
+
+const DONOR_TYPES = ['a steel magnate','an offshore hedge fund manager','a construction conglomerate','a tabloid newspaper owner','a pharmaceutical executive','a union federation','an arms manufacturer','a tech billionaire','a property developer','a foreign shipping tycoon'];
+const STAFF_ROLES = [
+  {key:'fundraiser', name:'Fundraiser', desc:'Increases income from fundraising dinners and donations.'},
+  {key:'pollster', name:'Pollster', desc:'Sharper polling data and demographic insight.'},
+  {key:'spin', name:'Spin Doctor', desc:'Softens the fallout from scandals and gaffes.'},
+  {key:'campaign', name:'Campaign Manager', desc:'Boosts effectiveness of by-election campaigning.'},
+  {key:'press', name:'Press Secretary', desc:'Improves outcomes of media interviews.'},
+];
+const SHADOW_PORTFOLIOS = POLICY_AREAS.map(p=>p.name).concat(['Party Chair','Chief Whip']);
+
+// ---------------------------------------------------------------------
+// UTILITIES
+// ---------------------------------------------------------------------
+function rand(min,max){ return Math.random()*(max-min)+min; }
+function randi(min,max){ return Math.floor(rand(min,max+1)); }
+function choice(arr){ return arr[randi(0,arr.length-1)]; }
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+function fmtMoney(n){ return '£'+Math.round(n).toLocaleString(); }
+function fmtPct(n){ return (Math.round(n*10)/10)+'%'; }
+function fmtSigned(n){ const r=Math.round(n*10)/10; return (r>=0?'+':'')+r; }
+function randomName(){ return choice(FIRST_NAMES)+' '+choice(LAST_NAMES); }
+function uid(){ return 'id'+Math.random().toString(36).slice(2,10); }
+function seatNameForIndex(i, shuffledSeats){
+  const cycle = Math.floor(i/shuffledSeats.length);
+  const base = shuffledSeats[i%shuffledSeats.length];
+  return cycle===0 ? base : `${base} ${cycle+1}`;
+}
+
+function log(msg, cls){
+  G.newsFeed.unshift({week:G.week, msg, cls:cls||''});
+  if(G.newsFeed.length>200) G.newsFeed.length=200;
+}
+
+// ---------------------------------------------------------------------
+// STATE
+// ---------------------------------------------------------------------
+let G = null;
+const SAVE_KEY = 'theLeaderSave';
+
+function newGame(leaderName, partyName, lean, tier, trait){
+  const leanData = LEAN_PRESETS[lean];
+  const tierData = TIER_PRESETS[tier];
+  const remaining = TOTAL_SEATS - tierData.seats;
+  const govSeats = Math.round(remaining*0.52);
+  const oppSeats = Math.round(remaining*0.36);
+  const othSeats = remaining - govSeats - oppSeats;
+
+  const rivals = RIVAL_TEMPLATES.map(r=>({...r, stance:{...r.stance}, momentum:0}));
+  rivals[0].seats = govSeats;
+  rivals[1].seats = oppSeats;
+  rivals[2].seats = othSeats;
+
+  const you = {
+    id:'you', name:partyName,
+    stance:{...zeroPolicyVec(0), ...leanData}
+  };
+  delete you.stance.label; delete you.stance.desc;
+  const founding = {...you.stance}; // the platform the party was founded on — conference motions pull back toward this
+
+  const mps = [];
+  const shuffledSeats = [...SEAT_NAMES].sort(()=>Math.random()-0.5);
+  for(let i=0;i<tierData.seats;i++){
+    mps.push({
+      id:uid(), name:randomName(), seat: seatNameForIndex(i, shuffledSeats),
+      loyalty:randi(45,90), competence:randi(30,90), ambition:randi(20,90), personality:randomPersonality(),
+      role:'Backbencher', portfolio:null,
+    });
+  }
+
+  G = {
+    version:2,
+    leaderName, partyName, lean, tier, leaderTrait: trait,
+    week:1, termWeek:1, termNumber:1, termLength:TERM_LENGTH,
+    lastConferenceWeek:0,
+    funds: tierData.funds, members: tierData.members,
+    unity: 65, trust: 55, approval: 50, momentum:0,
+    ap: AP_PER_WEEK,
+    seats: tierData.seats,
+    governing:false,
+    minorityGovt:false,
+    departments:null,
+    founding,
+    manifesto:null,
+    manifestoBroken:[],
+    lastBudgetWeek:0,
+    lastNoConfidenceWeek:0,
+    lastLocalElectionsWeek:0,
+    lastStaffRefreshWeek:0,
+    seatMarginality:{},
+    you,
+    rivals,
+    demoSupport: {},
+    polls: {you:0, gov:0, opp:0, oth:0},
+    pollHistory: [],
+    mps,
+    staff: [],
+    staffMarket: [],
+    hiddenFavours: [],
+    lowUnityStreak:0,
+    byElection: null,
+    campaign: null,
+    electionHistory: [],
+    achievements: [],
+    newsFeed: [],
+    gameOver:false, gameOverReason:'',
+    won:false,
+    pendingEvent:null,
+  };
+  refreshStaffMarket();
+  calcPolls();
+  G.pollHistory.push({week:G.week, you:G.polls.you, gov:G.polls.gov, opp:G.polls.opp, oth:G.polls.oth});
+  log(`${partyName} is founded, with ${leaderName} as Leader and ${tierData.seats} MP(s) in Parliament.`, 'lognew');
+  save();
+}
+
+function trySave(){ try{ save(); }catch(e){ console.error(e); } }
+function save(){ localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }
+function tryLoad(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    G = JSON.parse(raw);
+    migrateSave();
+    return true;
+  }catch(e){ return false; }
+}
+function migrateSave(){
+  // fills in fields introduced after a save was created, so older saves keep working
+  if(!G.pollHistory) G.pollHistory = [{week:G.week, you:G.polls.you, gov:G.polls.gov, opp:G.polls.opp, oth:G.polls.oth}];
+  if(G.minorityGovt===undefined) G.minorityGovt = false;
+  if(G.departments===undefined) G.departments = null;
+  if(G.governing && !G.departments){
+    G.departments = {};
+    POLICY_AREAS.forEach(p=>{ G.departments[p.key] = {performance:55}; });
+  }
+  if(!G.founding) G.founding = {...G.you.stance};
+  if(G.manifesto===undefined) G.manifesto = null;
+  if(!G.manifestoBroken) G.manifestoBroken = [];
+  if(G.lastBudgetWeek===undefined) G.lastBudgetWeek = G.week;
+  if(G.lastNoConfidenceWeek===undefined) G.lastNoConfidenceWeek = G.week;
+  if(G.lastLocalElectionsWeek===undefined) G.lastLocalElectionsWeek = G.week;
+  if(G.lastStaffRefreshWeek===undefined) G.lastStaffRefreshWeek = G.week;
+  if(!G.seatMarginality) G.seatMarginality = {};
+  G.staff.forEach(s=>{ if(s.morale===undefined) s.morale = 70; if(!s.personality) s.personality = randomPersonality(); });
+  G.mps.forEach(m=>{ if(!m.personality) m.personality = randomPersonality(); });
+  G.staffMarket.forEach(c=>{ if(!c.personality) c.personality = randomPersonality(); });
+  G.rivals.forEach(r=>{ if(r.momentum===undefined) r.momentum = 0; });
+  syncMpRosterToSeats(); // older saves may predate the roster always matching G.seats
+}
+function resetGame(){
+  localStorage.removeItem(SAVE_KEY);
+  location.reload();
+}
+
+// ---------------------------------------------------------------------
+// CORE CALCULATIONS
+// ---------------------------------------------------------------------
+function affinity(stanceVec, demo){
+  let dist=0;
+  POLICY_AREAS.forEach(p=>{
+    const d = Math.abs((stanceVec[p.key]||0) - demo.ideal[p.key]);
+    dist += d * (demo.weight[p.key]||0);
+  });
+  return clamp(100 - dist/2, 1, 100);
+}
+
+function calcPolls(){
+  const parties = [{id:'you',stance:G.you.stance}].concat(G.rivals.map(r=>({id:r.id, stance:r.stance})));
+  let youApprovalMod = (G.approval-50)*0.4 + (G.trust-50)*0.25 + G.momentum;
+  if(G.leaderTrait==='ideologue') youApprovalMod *= 1.25;
+
+  let totals = {you:0, gov:0, opp:0, oth:0};
+  const demoBreak = {};
+  DEMOGRAPHICS.forEach(demo=>{
+    const scores = {};
+    parties.forEach(p=>{
+      let a = affinity(p.stance, demo);
+      if(p.id==='you'){ a = clamp(a + youApprovalMod*0.5, 1, 140); }
+      else { const r=G.rivals.find(r=>r.id===p.id); a = clamp(a + (r.momentum||0)*0.5, 1, 140); }
+      scores[p.id]=Math.pow(a,1.6);
+    });
+    const sum = Object.values(scores).reduce((a,b)=>a+b,0);
+    const shares = {};
+    Object.keys(scores).forEach(k=>shares[k]=scores[k]/sum*100);
+    demoBreak[demo.key] = shares;
+    totals.you += shares.you * demo.size/100;
+    totals.gov += shares.gov * demo.size/100;
+    totals.opp += shares.opp * demo.size/100;
+    totals.oth += shares.oth * demo.size/100;
+  });
+  const grand = totals.you+totals.gov+totals.opp+totals.oth;
+  Object.keys(totals).forEach(k=>totals[k]=totals[k]/grand*100);
+  G.polls = totals;
+  G.demoSupport = demoBreak;
+  G.momentum *= 0.85;
+  G.rivals.forEach(r=>r.momentum = (r.momentum||0)*0.85);
+}
+
+// Largest-remainder allocation: splits `total` whole units across weighted buckets so the
+// integer results always sum to exactly `total`, however uneven the weights are.
+function allocateByWeight(weights, total){
+  const sum = weights.reduce((a,b)=>a+b,0) || 1;
+  const raw = weights.map(w=>w/sum*total);
+  const floors = raw.map(Math.floor);
+  let used = floors.reduce((a,b)=>a+b,0);
+  let remainder = total - used;
+  const order = raw.map((v,i)=>({i,frac:v-floors[i]})).sort((a,b)=>b.frac-a.frac);
+  for(let i=0;i<remainder;i++) floors[order[i].i]++;
+  return floors;
+}
+
+function seatsFromPollShare(shareMap){
+  const keys = Object.keys(shareMap);
+  const weights = keys.map(k=>Math.pow(Math.max(shareMap[k],0.5), 1.35));
+  const alloc = allocateByWeight(weights, TOTAL_SEATS);
+  const out={};
+  keys.forEach((k,i)=>out[k]=alloc[i]);
+  return out;
+}
+
+// Splits each party's TRUE national seat total across the 12 UK regions, weighted by
+// each region's demographic mix (via the live `G.demoSupport` from calcPolls()). Because
+// each party's own total is distributed independently with largest-remainder rounding,
+// the regional totals always sum back to exactly that party's real seat count — this is
+// a stylised regional guide layered on top of the real numbers, not a separate estimate.
+function computeRegionalSeats(){
+  const totals = {
+    you: G.seats,
+    gov: G.rivals.find(r=>r.id==='gov').seats,
+    opp: G.rivals.find(r=>r.id==='opp').seats,
+    oth: G.rivals.find(r=>r.id==='oth').seats,
+  };
+  const out = {};
+  REGIONS.forEach(r=>{ out[r.key] = {you:0, gov:0, opp:0, oth:0}; });
+  ['you','gov','opp','oth'].forEach(pid=>{
+    const total = totals[pid];
+    if(total<=0) return;
+    const weights = REGIONS.map(r=>{
+      let num=0, den=0;
+      Object.entries(r.demoMix).forEach(([dk,w])=>{
+        const shares = G.demoSupport[dk];
+        const share = (shares && shares[pid]!=null) ? shares[pid] : 25;
+        num += share*w; den += w;
+      });
+      return den ? num/den : 1;
+    });
+    const alloc = allocateByWeight(weights, total);
+    REGIONS.forEach((r,i)=>{ out[r.key][pid] = alloc[i]; });
+  });
+  return out;
+}
+
+function staffSkill(roleKey){
+  const s = G.staff.find(s=>s.role===roleKey);
+  return s? effectiveSkill(s) : 0;
+}
+
+// The "inner circle": portfolio-holding MPs and hired staff — the people who actually
+// work closely together day to day. Backbenchers keep a personality (for rebellion odds
+// and flavour) but aren't part of this network; with dozens or hundreds of them, pairwise
+// relationships wouldn't be meaningful or cheap to track.
+function innerCircle(){
+  return G.mps.filter(m=>m.portfolio).concat(G.staff);
+}
+// A person's average compatibility with everyone else in the inner circle, roughly -2..2.
+function personChemistry(person){
+  const circle = innerCircle();
+  if(circle.length<=1) return 0;
+  let total=0, count=0;
+  circle.forEach(other=>{
+    if(other===person) return;
+    total += personalityCompat(person.personality, other.personality);
+    count++;
+  });
+  return count ? total/count : 0;
+}
+function effectiveSkill(s){ return clamp(s.skill + personChemistry(s)*6, 0, 100); }
+function effectiveCompetence(mp){ return clamp(mp.competence + personChemistry(mp)*6, 0, 100); }
+
+// ---------------------------------------------------------------------
+// ACHIEVEMENTS
+// ---------------------------------------------------------------------
+function unlockAchievement(key,label){
+  if(!G.achievements) G.achievements=[];
+  if(!G.achievements.some(a=>a.key===key)){
+    G.achievements.push({key,label,week:G.week});
+    log(`🏆 Achievement unlocked: ${label}`, 'lognew');
+  }
+}
+function checkAchievements(){
+  if(G.seats>=25) unlockAchievement('seats25','Rising Force — 25 seats held');
+  if(G.seats>=100) unlockAchievement('seats100','Major Player — 100 seats held');
+  if(G.seats>=MAJORITY) unlockAchievement('seatsmajority','Path to Power — a Commons majority');
+  if(G.funds>=250000) unlockAchievement('funds250k','War Chest — £250,000 in the bank');
+  if(G.trust>=85) unlockAchievement('trust85','Trusted Voice — 85% public trust');
+  if(G.unity>=95) unlockAchievement('unity95','One Party, United — 95% party unity');
+  if(G.won) unlockAchievement('formedgovt','Number One — formed the Government');
+  if(G.electionHistory.length>=1) unlockAchievement('firstelection','Into the Fray — fought a General Election');
+  if(G.members>=50000) unlockAchievement('members50k','Mass Movement — 50,000 party members');
+}
+
+// ---------------------------------------------------------------------
+// STAFF MARKET
+// ---------------------------------------------------------------------
+function refreshStaffMarket(){
+  G.staffMarket = [];
+  const n = randi(3,5);
+  for(let i=0;i<n;i++){
+    const role = choice(STAFF_ROLES);
+    const skill = randi(35,95);
+    G.staffMarket.push({
+      id:uid(), name:randomName(), role:role.key, roleName:role.name, personality:randomPersonality(),
+      skill, salary: Math.round(400 + skill*12 + rand(-100,100)),
+    });
+  }
+}
+
+function openHireOfferModal(candId){
+  const cand = G.staffMarket.find(c=>c.id===candId);
+  if(!cand) return;
+  G.pendingEvent = {type:'hire-offer', candId, title:`Negotiate with ${cand.name}`,
+    text:`${cand.name} is looking for work as a ${cand.roleName} (skill ${cand.skill}). Their asking salary is ${fmtMoney(cand.salary)}/week. What do you offer?`};
+  showEventModal();
+}
+function proposeHire(candId, tier){
+  const cand = G.staffMarket.find(c=>c.id===candId);
+  G.pendingEvent = null;
+  if(!cand){ closeModal(); render(); return; }
+  const mult = tier==='low' ? 0.8 : tier==='high' ? 1.25 : 1.0;
+  const offeredSalary = Math.round(cand.salary*mult);
+  const signingFee = Math.round(offeredSalary*2);
+  if(G.funds < signingFee){ alertModal('Cannot Afford', `That offer needs a signing fee of ${fmtMoney(signingFee)}.`); render(); return; }
+  let acceptChance = 0.92;
+  if(tier==='low') acceptChance = clamp(0.7 - cand.skill/200, 0.1, 0.75);
+  else if(tier==='high') acceptChance = 0.99;
+  if(Math.random() < acceptChance){
+    G.funds -= signingFee;
+    G.staff.push({id:uid(), name:cand.name, role:cand.role, roleName:cand.roleName, personality:cand.personality, skill:cand.skill, salary:offeredSalary, morale: tier==='high'?85:70});
+    G.staffMarket = G.staffMarket.filter(c=>c.id!==candId);
+    log(`Hired ${cand.name} as ${cand.roleName} at ${fmtMoney(offeredSalary)}/wk (signing fee ${fmtMoney(signingFee)}).`, 'lognew');
+  } else {
+    log(`${cand.name} turns down your offer of ${fmtMoney(offeredSalary)}/wk and stays on the market.`);
+    if(tier==='low' && Math.random()<0.3){
+      G.staffMarket = G.staffMarket.filter(c=>c.id!==candId);
+      log(`${cand.name} is insulted by the lowball offer and withdraws from consideration entirely.`, 'lognew');
+    }
+  }
+  save(); closeModal(); render();
+}
+
+function fireStaff(id){
+  const s = G.staff.find(s=>s.id===id);
+  if(!s) return;
+  G.staff = G.staff.filter(s=>s.id!==id);
+  G.unity = clamp(G.unity-2,0,100);
+  log(`${s.name} (${s.roleName}) has been let go.`, 'lognew');
+  save(); render();
+}
+
+function giveRaise(id){
+  const s = G.staff.find(s=>s.id===id);
+  if(!s) return;
+  s.salary = Math.round(s.salary*1.15);
+  s.morale = clamp((s.morale===undefined?70:s.morale)+20, 0, 100);
+  log(`You give ${s.name} a raise, to ${fmtMoney(s.salary)}/wk. Morale improves.`);
+  save(); render();
+}
+function cutPay(id){
+  const s = G.staff.find(s=>s.id===id);
+  if(!s) return;
+  s.salary = Math.max(200, Math.round(s.salary*0.85));
+  s.morale = clamp((s.morale===undefined?70:s.morale)-25, 0, 100);
+  log(`You cut ${s.name}'s pay to ${fmtMoney(s.salary)}/wk. Morale takes a hit.`, 'lognew');
+  if(s.morale<20 && Math.random()<0.4){
+    G.staff = G.staff.filter(x=>x.id!==id);
+    log(`${s.name} resigns on the spot rather than accept the cut.`, 'lognew');
+  }
+  save(); render();
+}
+
+function pepTalkStaff(id){
+  const s = G.staff.find(s=>s.id===id);
+  if(!s) return;
+  if(!spendAP(1)){ alertModal('No Action Points', 'A pep talk still takes an Action Point.'); return; }
+  const oratorBonus = G.leaderTrait==='orator' ? 8 : 0;
+  const roll = rand(0,100) + oratorBonus;
+  const curMorale = s.morale===undefined ? 70 : s.morale;
+  const headroom = 100-curMorale;
+  let gain, text;
+  if(roll>65){ gain = Math.round(headroom*0.3)+8; text = `${s.name} appreciates the personal encouragement.`; }
+  else if(roll>30){ gain = Math.round(headroom*0.12)+3; text = `A decent chat with ${s.name}.`; }
+  else { gain = -2; text = `The pep talk with ${s.name} falls a bit flat.`; }
+  s.morale = clamp(curMorale+gain, 0, 100);
+  log(`[Pep Talk] ${text} (${fmtSigned(gain)} morale)`);
+  save(); render();
+  openStaffDetailModal(id);
+}
+
+function openStaffDetailModal(id){
+  const s = G.staff.find(s=>s.id===id);
+  if(!s){ closeModal(); return; }
+  const eff = Math.round(effectiveSkill(s));
+  let html = `<h2>${s.name}</h2><div class="mbody">
+    <div class="statrow"><span class="lbl">Role</span><b>${s.roleName}</b></div>
+    <div class="statrow"><span class="lbl">Personality</span><b>${personalityLabel(s.personality)}</b></div>
+    <div class="statrow"><span class="lbl">Skill</span><b>${eff}${eff!==s.skill?` <span class="small">(base ${s.skill})</span>`:''}</b></div>
+    <div class="statrow"><span class="lbl">Salary</span><b>${fmtMoney(s.salary)}/wk</b></div>
+    <div class="statrow"><span class="lbl">Morale</span><b>${moraleTag(s.morale===undefined?70:s.morale)}</b></div>
+  </div>
+  <div class="mchoices">
+    <button onclick="pepTalkStaff('${s.id}')" ${G.ap<1?'disabled':''}><span class="mc-t">Give a Pep Talk (1 AP)</span><span class="mc-d">A personal word of encouragement to lift their morale.</span></button>
+    <button onclick="giveRaise('${s.id}'); openStaffDetailModal('${s.id}');"><span class="mc-t">Give a Raise</span><span class="mc-d">Costs more, but a reliable morale boost.</span></button>
+    <button onclick="cutPay('${s.id}'); openStaffDetailModal('${s.id}');"><span class="mc-t">Cut Pay</span><span class="mc-d">Saves money, risks resignation if morale is already low.</span></button>
+    <button class="danger" onclick="closeModal(); fireStaff('${s.id}');">Fire</button>
+    <button onclick="closeModal()">Close</button>
+  </div>`;
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('overlay').classList.add('show');
+}
+
+// Staff whose pay falls behind what their skill would fetch on the open market slowly
+// lose morale, and can eventually quit; well-paid staff drift toward contentment.
+function checkStaffMorale(){
+  for(let i=G.staff.length-1;i>=0;i--){
+    const s = G.staff[i];
+    if(s.morale===undefined) s.morale = 70;
+    const marketRate = 400 + s.skill*12;
+    const chem = personChemistry(s);
+    const target = clamp(50 + (s.salary-marketRate)/40 + chem*8, 5, 95);
+    s.morale = clamp(s.morale + (target-s.morale)*0.1 + rand(-2,2), 0, 100);
+    if(s.morale<15 && Math.random()<0.15){
+      log(`${s.name} (${s.roleName}) resigns, fed up with being underpaid and undervalued.`, 'lognew');
+      G.staff.splice(i,1);
+      G.unity = clamp(G.unity-2,0,100);
+    }
+  }
+}
+
+// Cabinet/Shadow Cabinet MPs' loyalty drifts with how well their personality meshes with
+// the rest of the inner circle, and the odd flavour line calls out a notable clash or
+// friendship — the same chemistry that quietly shapes morale and effective competence.
+function updateInnerCircleRelations(){
+  const circle = innerCircle();
+  if(circle.length<2) return;
+  G.mps.filter(m=>m.portfolio).forEach(mp=>{
+    const chem = personChemistry(mp);
+    mp.loyalty = clamp(mp.loyalty + chem*1.5 + rand(-1,1), 0, 100);
+  });
+  if(Math.random() < 0.15){
+    const a = choice(circle);
+    const others = circle.filter(p=>p!==a);
+    if(others.length){
+      const b = choice(others);
+      const compat = personalityCompat(a.personality, b.personality);
+      if(compat<=-1) log(`[Team Dynamics] ${a.name} and ${b.name} are clashing behind the scenes — it's affecting the mood in the office.`);
+      else if(compat>=1) log(`[Team Dynamics] ${a.name} and ${b.name} have struck up a strong working relationship.`);
+    }
+  }
+}
+
+// Keeps the candidate market from going stale: a couple of slots turn over periodically
+// instead of the market only refreshing at General Elections.
+function maybeRefreshStaffMarket(){
+  if((G.week - (G.lastStaffRefreshWeek||0)) < 10) return;
+  G.lastStaffRefreshWeek = G.week;
+  const rotateOut = Math.min(2, G.staffMarket.length);
+  for(let i=0;i<rotateOut;i++){
+    if(Math.random()<0.6) G.staffMarket.shift();
+  }
+  let added = false;
+  while(G.staffMarket.length<5){
+    const role = choice(STAFF_ROLES);
+    const skill = randi(35,95);
+    G.staffMarket.push({id:uid(), name:randomName(), role:role.key, roleName:role.name, personality:randomPersonality(), skill, salary:Math.round(400+skill*12+rand(-100,100))});
+    added = true;
+  }
+  if(added) log('New candidates appear on the staff market.');
+}
+
+// ---------------------------------------------------------------------
+// MP / SHADOW CABINET MANAGEMENT
+// ---------------------------------------------------------------------
+function assignPortfolio(mpId, portfolio){
+  const mp = G.mps.find(m=>m.id===mpId);
+  if(!mp) return;
+  const hadPortfolio = !!mp.portfolio;
+  G.mps.forEach(m=>{
+    if(m.id!==mpId && m.portfolio===portfolio){
+      m.portfolio=null; m.role='Backbencher';
+      if(portfolio && m.ambition>65){
+        m.loyalty = clamp(m.loyalty-10,0,100);
+        log(`${m.name} is aggrieved at being replaced as ${portfolio}.`);
+      }
+    }
+  });
+  mp.portfolio = portfolio || null;
+  mp.role = portfolio ? ('Shadow '+portfolio) : 'Backbencher';
+  if(portfolio && !hadPortfolio && mp.ambition>65){
+    mp.loyalty = clamp(mp.loyalty+8,0,100);
+    G.unity = clamp(G.unity+1,0,100);
+    log(`${mp.name}'s ambition is satisfied by the promotion to ${portfolio} — their loyalty grows.`);
+  } else if(!portfolio && hadPortfolio && mp.ambition>65){
+    mp.loyalty = clamp(mp.loyalty-10,0,100);
+    log(`${mp.name} is aggrieved at being demoted from their portfolio.`);
+  }
+  save(); render();
+}
+
+function fireMP(mpId){
+  const mp = G.mps.find(m=>m.id===mpId);
+  if(!mp) return;
+  if(!confirm(`Expel ${mp.name} from the party? This triggers a by-election in ${mp.seat} and will damage unity.`)) return;
+  G.mps = G.mps.filter(m=>m.id!==mpId);
+  G.seats -= 1;
+  G.unity = clamp(G.unity-8,0,100);
+  log(`${mp.name} has been expelled from the party. A by-election looms in ${mp.seat}.`, 'lognew');
+  startByElection(mp.seat, 'you');
+  syncMpRosterToSeats();
+  save(); render();
+}
+
+function meetOneToOne(mpId){
+  const mp = G.mps.find(m=>m.id===mpId);
+  if(!mp) return;
+  if(!spendAP(1)){ alertModal('No Action Points', 'A private conversation still takes an Action Point. You have none left this week.'); return; }
+  const oratorBonus = G.leaderTrait==='orator' ? 10 : 0;
+  const roll = rand(0,100) + oratorBonus;
+  const headroom = 100-mp.loyalty;
+  let gain, text;
+  if(roll>70){ gain = Math.round(headroom*0.35)+5; text = `${mp.name} responds well to the personal attention.`; }
+  else if(roll>30){ gain = Math.round(headroom*0.15)+2; text = `A cordial enough chat with ${mp.name}.`; }
+  else { gain = -3; text = `The conversation with ${mp.name} is awkward and doesn't land well.`; }
+  mp.loyalty = clamp(mp.loyalty+gain,0,100);
+  log(`[1-2-1] ${text} (${fmtSigned(gain)} loyalty)`);
+  save(); render();
+  openMpDetailModal(mpId);
+}
+
+function sendToChiefWhip(mpId){
+  const mp = G.mps.find(m=>m.id===mpId);
+  if(!mp) return;
+  if(!spendAP(1)){ alertModal('No Action Points', 'Getting the whips involved still takes an Action Point.'); return; }
+  const whip = G.mps.find(m=>m.portfolio==='Chief Whip');
+  const whipSkill = whip ? effectiveCompetence(whip) : 25;
+  const personaMod = mp.personality==='maverick' ? -15 : mp.personality==='loyalist' ? 15 : 0;
+  const roll = rand(0,100) + (whipSkill-50)*0.4 + personaMod;
+  const whipName = whip ? whip.name : "the Whips' Office";
+  let gain, text;
+  if(roll>65){ gain = randi(10,20); text = `${whipName} lays down the law — ${mp.name} falls into line.`; }
+  else if(roll>30){ gain = randi(2,8); text = `${whipName} has a firm word with ${mp.name}. Some effect, but they're not fully won over.`; }
+  else { gain = -randi(5,15); text = `${mp.name} resents being hauled in front of the whips and grows more resentful.`; }
+  mp.loyalty = clamp(mp.loyalty+gain,0,100);
+  log(`[Chief Whip] ${text} (${fmtSigned(gain)} loyalty)`, gain<0?'lognew':'');
+  save(); render();
+  openMpDetailModal(mpId);
+}
+
+// A standalone detail view, not a G.pendingEvent modal — closing it doesn't need to
+// resolve anything, so the game isn't paused while it's open (same pattern as
+// alertModal()/openMeetingChooser()).
+function openMpDetailModal(mpId){
+  const mp = G.mps.find(m=>m.id===mpId);
+  if(!mp){ closeModal(); return; }
+  const whip = G.mps.find(m=>m.portfolio==='Chief Whip');
+  const record = (mp.votingRecord||[]).slice(0,12);
+  let html = `<h2>${mp.name}</h2><div class="mbody">
+    <div class="statrow"><span class="lbl">Seat</span><b>${mp.seat}</b></div>
+    <div class="statrow"><span class="lbl">Seat marginality</span><b>${marginalityTag(getSeatMarginality(mp.seat))}</b></div>
+    <div class="statrow"><span class="lbl">Role</span><b>${mp.portfolio || 'Backbencher'}</b></div>
+    <div class="statrow"><span class="lbl">Personality</span><b>${personalityLabel(mp.personality)}</b></div>
+    <div class="statrow"><span class="lbl">Loyalty</span><b>${loyaltyTag(mp.loyalty)}</b></div>
+    <div class="statrow"><span class="lbl">Competence</span><b>${mp.portfolio?Math.round(effectiveCompetence(mp)):mp.competence}</b></div>
+    <div class="statrow"><span class="lbl">Ambition</span><b>${mp.ambition}</b></div>
+    <hr class="sep">
+    <h4 style="margin-bottom:6px;">Voting Record</h4>`;
+  if(record.length===0){
+    html += `<p class="small">No recorded votes yet.</p>`;
+  } else {
+    html += `<div class="tblwrap"><table><tr><th>Week</th><th>Issue</th><th>Vote</th></tr>`;
+    record.forEach(v=>{
+      const tagClass = v.position==='aye' ? 'good' : v.position==='no' ? 'bad' : 'warn';
+      html += `<tr><td>${v.week}</td><td>${v.issue}</td><td><span class="tag ${tagClass}">${v.position.toUpperCase()}</span></td></tr>`;
+    });
+    html += `</table></div>`;
+  }
+  html += `</div><div class="mchoices">
+    <button onclick="meetOneToOne('${mp.id}')" ${G.ap<1?'disabled':''}><span class="mc-t">Arrange a 1-2-1 (1 AP)</span><span class="mc-d">A private conversation to shore up their loyalty.</span></button>
+    <button onclick="sendToChiefWhip('${mp.id}')" ${G.ap<1?'disabled':''}><span class="mc-t">Send to the Chief Whip (1 AP)</span><span class="mc-d">${whip?`Let ${whip.name} lean on them`:'No Chief Whip appointed — a generic ticking-off'}. Riskier, but can hit harder.</span></button>
+    <div class="small" style="margin:10px 0 4px;">Constituency</div>
+    <button onclick="holdSurgery('${mp.id}')" ${G.ap<1?'disabled':''}><span class="mc-t">Hold a Constituency Surgery (1 AP)</span><span class="mc-d">Visit ${mp.seat} in person — helps the seat's marginality and their loyalty.</span></button>
+    <button onclick="fundCasework('${mp.id}')" ${G.funds<4000?'disabled':''}><span class="mc-t">Fund Casework Support — ${fmtMoney(4000)}</span><span class="mc-d">Pay for local caseworker help instead of spending your own time.</span></button>
+    <button class="danger" onclick="closeModal(); fireMP('${mp.id}');">Expel from the Party</button>
+    <button onclick="closeModal()">Close</button>
+  </div>`;
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('overlay').classList.add('show');
+}
+
+// Keeps the individual MP roster (used for Shadow Cabinet/Cabinet assignment) in step
+// with the authoritative `G.seats` count — call after anything that changes G.seats.
+// Adds fresh backbenchers when the party grows (e.g. a General Election landslide);
+// trims backbenchers (lowest competence first, portfolio-holders protected) when it shrinks.
+function syncMpRosterToSeats(){
+  if(G.mps.length < G.seats){
+    const shuffledSeats = [...SEAT_NAMES].sort(()=>Math.random()-0.5);
+    const toAdd = G.seats - G.mps.length;
+    for(let i=0;i<toAdd;i++){
+      G.mps.push({
+        id:uid(), name:randomName(), seat:seatNameForIndex(randi(0,9999), shuffledSeats),
+        loyalty:randi(45,90), competence:randi(30,90), ambition:randi(20,90), personality:randomPersonality(),
+        role:'Backbencher', portfolio:null,
+      });
+    }
+  } else if(G.mps.length > G.seats){
+    const toRemove = G.mps.length - G.seats;
+    const priority = G.mps.slice().sort((a,b)=>{
+      const aHeld = a.portfolio?1:0, bHeld = b.portfolio?1:0;
+      if(aHeld!==bHeld) return aHeld-bHeld; // backbenchers first
+      return a.competence-b.competence; // weakest backbenchers first
+    });
+    const removeIds = new Set(priority.slice(0,toRemove).map(m=>m.id));
+    G.mps = G.mps.filter(m=>!removeIds.has(m.id));
+  }
+}
+
+// ---------------------------------------------------------------------
+// CONSTITUENCIES — marginality belongs to the seat, not whoever currently
+// holds it, so it's tracked by seat name and survives MP turnover (a death,
+// an expulsion, a by-election loss). Its main mechanical payoff is scaling
+// the incumbency-defence bonus in resolveByElection().
+// ---------------------------------------------------------------------
+function getSeatMarginality(seatName){
+  if(G.seatMarginality[seatName]===undefined) G.seatMarginality[seatName] = randi(25,80);
+  return G.seatMarginality[seatName];
+}
+function adjustSeatMarginality(seatName, delta){
+  const cur = getSeatMarginality(seatName);
+  G.seatMarginality[seatName] = clamp(cur+delta, 0, 100);
+}
+function marginalityTag(v){
+  if(v>=65) return `<span class="tag good">Safe (${Math.round(v)})</span>`;
+  if(v>=35) return `<span class="tag warn">Marginal (${Math.round(v)})</span>`;
+  return `<span class="tag bad">Knife-edge (${Math.round(v)})</span>`;
+}
+
+function holdSurgery(mpId){
+  const mp = G.mps.find(m=>m.id===mpId);
+  if(!mp) return;
+  if(!spendAP(1)){ alertModal('No Action Points', 'A constituency visit still takes an Action Point.'); return; }
+  const oratorBonus = G.leaderTrait==='orator' ? 8 : 0;
+  const roll = rand(0,100) + oratorBonus;
+  let marginGain, text;
+  if(roll>65){ marginGain = randi(5,10); text = `The surgery in ${mp.seat} goes brilliantly — a strong turnout and a warm reception.`; }
+  else if(roll>30){ marginGain = randi(2,5); text = `A solid, well-attended surgery in ${mp.seat}.`; }
+  else { marginGain = -1; text = `Turnout in ${mp.seat} is thin and a few awkward complaints dominate.`; }
+  adjustSeatMarginality(mp.seat, marginGain);
+  mp.loyalty = clamp(mp.loyalty+4,0,100);
+  G.momentum += marginGain>5 ? 0.6 : 0.2;
+  log(`[Constituency Surgery] ${text} (seat ${fmtSigned(marginGain)})`);
+  save(); render();
+  openMpDetailModal(mpId);
+}
+
+function fundCasework(mpId){
+  const mp = G.mps.find(m=>m.id===mpId);
+  if(!mp) return;
+  const cost = 4000;
+  if(G.funds<cost){ alertModal('Cannot Afford', `Funding local casework support costs ${fmtMoney(cost)}.`); return; }
+  G.funds -= cost;
+  adjustSeatMarginality(mp.seat, randi(3,7));
+  mp.loyalty = clamp(mp.loyalty+3,0,100);
+  log(`[Casework] You fund extra caseworker support for ${mp.name}'s office in ${mp.seat} (${fmtMoney(cost)}).`);
+  save(); render();
+  openMpDetailModal(mpId);
+}
+
+function maybeTriggerCaseworkCrisis(){
+  if(G.pendingEvent || G.campaign) return;
+  if(G.mps.length===0) return;
+  if(Math.random() > 0.05) return;
+  const mp = choice(G.mps);
+  G.pendingEvent = {type:'casework-crisis', mpId:mp.id, title:'Constituency Casework Crisis',
+    text:`Local media report that ${mp.name}'s constituency office has a mounting backlog of unresolved casework in ${mp.seat}. How do you respond?`};
+  showEventModal();
+}
+function resolveCaseworkCrisis(choice_){
+  const mp = G.mps.find(m=>m.id===G.pendingEvent.mpId);
+  if(!mp){ G.pendingEvent=null; closeModal(); render(); return; }
+  if(choice_==='fund'){
+    const cost = 8000;
+    if(G.funds<cost){ alertModal('Cannot Afford', `Emergency casework funding costs ${fmtMoney(cost)}.`); return; }
+    G.funds -= cost;
+    adjustSeatMarginality(mp.seat, 10);
+    mp.loyalty = clamp(mp.loyalty+5,0,100);
+    log(`[Casework] You fund emergency support for ${mp.name}'s office. The backlog clears and local opinion improves.`, 'lognew');
+  } else if(choice_==='visit'){
+    if(!spendAP(1)){ alertModal('No Action Points','A personal intervention still takes an Action Point.'); return; }
+    adjustSeatMarginality(mp.seat, 6);
+    mp.loyalty = clamp(mp.loyalty+8,0,100);
+    G.momentum += 0.5;
+    log(`[Casework] You personally step in to help clear the backlog in ${mp.seat}. ${mp.name} is grateful, and it plays well locally.`, 'lognew');
+  } else {
+    adjustSeatMarginality(mp.seat, -10);
+    mp.loyalty = clamp(mp.loyalty-5,0,100);
+    G.momentum -= 0.5;
+    log(`[Casework] The backlog goes unresolved. ${mp.name}'s standing in ${mp.seat} takes a hit.`, 'lognew');
+  }
+  G.pendingEvent = null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+// ---------------------------------------------------------------------
+// WEEKLY ACTIONS (consume Action Points)
+// ---------------------------------------------------------------------
+function spendAP(n){
+  if(G.ap < n) return false;
+  G.ap -= n;
+  return true;
+}
+
+function actionPublicMeeting(demoKey){
+  if(!spendAP(1)) return;
+  const demo = DEMOGRAPHICS.find(d=>d.key===demoKey);
+  const oratorBonus = G.leaderTrait==='orator' ? 10 : 0;
+  const roll = rand(0,100) + (G.trust-50)*0.2 + oratorBonus;
+  let outcome;
+  if(roll > 70){
+    outcome = {title:'A Warm Reception', text:`Your town hall in front of ${demo.name.toLowerCase()} goes brilliantly. Applause, good local coverage, and a real sense of connection.`, approval:+3, momentum:+1.2, members:randi(80,220)};
+  } else if(roll > 35){
+    outcome = {title:"A Steady Meeting", text:`The meeting with ${demo.name.toLowerCase()} passes without incident. A few tough questions, mostly fielded well.`, approval:+1, momentum:+0.3};
+  } else if(roll > 12){
+    outcome = {title:'A Tense Crowd', text:`Questions from ${demo.name.toLowerCase()} turn hostile over your record. You survive it, but it wasn't pretty.`, approval:-1, momentum:-0.2};
+  } else {
+    outcome = {title:'A Public Gaffe', text:`You misspeak badly in front of ${demo.name.toLowerCase()}. Clips are already circulating online.`, approval:-4, momentum:-1.5, scandal:true};
+  }
+  G.approval = clamp(G.approval+outcome.approval,0,100);
+  G.momentum += outcome.momentum;
+  log(`[Public Meeting] ${outcome.title}: ${outcome.text}`);
+  if(outcome.members){ G.members += outcome.members; log(`New members sign up following the event (+${outcome.members}).`); }
+  if(outcome.scandal) queueMediaScandal('gaffe', demo.name);
+  calcPolls(); save(); render();
+}
+
+function actionMediaInterview(){
+  if(!spendAP(1)) return;
+  const pressSkill = staffSkill('press');
+  const oratorBonus = G.leaderTrait==='orator' ? 10 : 0;
+  const roll = rand(0,100) + pressSkill*0.25 + (G.trust-50)*0.15 + oratorBonus;
+  let outcome;
+  if(roll>75){ outcome={title:'Commanding Performance', text:'You dominate the interview, landing every point on message.', approval:+4, trust:+2, momentum:+1.5}; }
+  else if(roll>40){ outcome={title:'Solid Outing', text:'A workmanlike interview. Nothing gained, nothing lost.', approval:+1, trust:0, momentum:+0.2}; }
+  else if(roll>15){ outcome={title:'Wobbly Answers', text:'You dodge a key question and it shows. Commentators are unimpressed.', approval:-2, trust:-1, momentum:-0.5}; }
+  else { outcome={title:'Car-Crash Interview', text:'You are caught completely flat-footed on live television.', approval:-5, trust:-3, momentum:-1.8, scandal:true}; }
+  G.approval = clamp(G.approval+outcome.approval,0,100);
+  G.trust = clamp(G.trust+(outcome.trust||0),0,100);
+  G.momentum += outcome.momentum;
+  log(`[Media Interview] ${outcome.title}: ${outcome.text}`);
+  if(outcome.scandal) queueMediaScandal('interview');
+  calcPolls(); save(); render();
+}
+
+function actionFundraising(){
+  if(!spendAP(1)) return;
+  const fundSkill = staffSkill('fundraiser');
+  const base = randi(3000,9000);
+  let gain = Math.round(base * (1 + fundSkill/120) * clamp(0.75 + G.members/40000, 0.75, 1.5));
+  if(G.leaderTrait==='fixer') gain = Math.round(gain*1.25);
+  G.funds += gain;
+  log(`[Fundraising Dinner] Raised ${fmtMoney(gain)} for the party.`);
+  if(Math.random() < 0.45){
+    queueDonationOffer();
+  } else {
+    save(); render();
+  }
+}
+
+function actionPartyManagement(){
+  if(!spendAP(1)) return;
+  let gain = randi(4,9);
+  if(G.leaderTrait==='organiser') gain = Math.round(gain*1.5);
+  G.unity = clamp(G.unity+gain,0,100);
+  log(`[Party Management] You spend time with restless backbenchers. Unity rises by ${gain}.`);
+  calcPolls(); save(); render();
+}
+
+function actionPMQs(){
+  if(!spendAP(1)) return;
+  const oratorBonus = G.leaderTrait==='orator' ? 10 : 0;
+  const roll = rand(0,100) + oratorBonus + (G.trust-50)*0.1;
+  let outcome;
+  if(!G.governing){
+    if(roll>72){ outcome={title:"A Direct Hit at PMQs", text:"Your questions land squarely on the Government's record. The chamber notices.", approval:3, momentum:1.5, govMomentum:-2}; }
+    else if(roll>40){ outcome={title:'A Fair Exchange', text:'A workmanlike session at PMQs, neither side landing a killer blow.', approval:0.5, momentum:0.2, govMomentum:-0.2}; }
+    else if(roll>15){ outcome={title:'Outmanoeuvred', text:'The Prime Minister brushes off your questions with ease.', approval:-2, momentum:-0.5, govMomentum:0.5}; }
+    else { outcome={title:'A Bruising Session', text:'Your own backbenchers wince at how badly that went.', approval:-4, momentum:-1.5, govMomentum:1.5}; }
+  } else {
+    if(roll>72){ outcome={title:'Commanding the Despatch Box', text:'You bat away every question from the Opposition with total command.', approval:3, momentum:1.5}; }
+    else if(roll>40){ outcome={title:'Holding the Line', text:'A competent defence of your record at the despatch box.', approval:0.5, momentum:0.2}; }
+    else if(roll>15){ outcome={title:'On the Back Foot', text:'The Opposition land some real blows on your record today.', approval:-2, momentum:-0.5}; }
+    else { outcome={title:"A Terrible Session", text:"Today's PMQs will lead every bulletin, for all the wrong reasons.", approval:-4, momentum:-1.5}; }
+  }
+  G.approval = clamp(G.approval+outcome.approval,0,100);
+  G.momentum += outcome.momentum;
+  if(outcome.govMomentum){ const r=G.rivals.find(r=>r.id==='gov'); if(r) r.momentum=(r.momentum||0)+outcome.govMomentum; }
+  log(`[PMQs] ${outcome.title}: ${outcome.text}`);
+  calcPolls(); save(); render();
+}
+
+// ---------------------------------------------------------------------
+// POLICY CHANGES
+// ---------------------------------------------------------------------
+function changePolicy(key, newValue){
+  const old = G.you.stance[key];
+  const delta = Math.abs(newValue-old);
+  if(delta < 3){ G.you.stance[key]=newValue; calcPolls(); save(); render(); return; }
+  if(G.ap < 1){ alertModal('No Action Points', 'Announcing a policy shift takes an Action Point. You have none left this week.'); render(); return; }
+  spendAP(1);
+  G.you.stance[key] = newValue;
+  const area = POLICY_AREAS.find(p=>p.key===key);
+  let unityHit = Math.round(delta/8);
+  if(delta>60) unityHit += 5;
+  if(G.leaderTrait==='organiser') unityHit = Math.round(unityHit*0.7);
+  if(G.leaderTrait==='ideologue' && delta>30) unityHit = Math.round(unityHit*1.4);
+  G.unity = clamp(G.unity-unityHit,0,100);
+  log(`[Policy Announcement] You shift party policy on ${area.name} (${fmtSigned(newValue-old)}). Unity ${unityHit>0?'-'+unityHit:'unchanged'}.`, 'lognew');
+  recordPartyVote(`Policy: ${area.name} (${fmtSigned(newValue-old)})`);
+  calcPolls(); save(); render();
+}
+
+// ---------------------------------------------------------------------
+// MP VOTING RECORDS — a lightweight per-MP history, generated whenever the
+// party takes a collective decision (a policy announcement, a rebellion, a
+// conference motion, a Budget). Not a full whipped-division simulation —
+// each MP's position is drawn from their loyalty and personality, the same
+// inputs that already drive rebellions and whipping elsewhere in the game.
+// ---------------------------------------------------------------------
+function mpVotePosition(mp){
+  let ayeChance = 0.5 + (mp.loyalty-50)/150;
+  if(mp.personality==='loyalist') ayeChance += 0.15;
+  if(mp.personality==='maverick') ayeChance -= 0.15;
+  if(mp.personality==='cynic') ayeChance -= 0.05;
+  ayeChance = clamp(ayeChance, 0.05, 0.97);
+  const r = Math.random();
+  if(r < ayeChance) return 'aye';
+  if(r < ayeChance+0.05) return 'abstain';
+  return 'no';
+}
+function recordPartyVote(issue, overrides){
+  G.mps.forEach(mp=>{
+    const position = (overrides && overrides[mp.id]) || mpVotePosition(mp);
+    if(!mp.votingRecord) mp.votingRecord = [];
+    mp.votingRecord.unshift({week:G.week, issue, position});
+    if(mp.votingRecord.length>20) mp.votingRecord.length = 20;
+  });
+}
+
+// ---------------------------------------------------------------------
+// DONATIONS / BRIBES
+// ---------------------------------------------------------------------
+function queueDonationOffer(){
+  const donor = choice(DONOR_TYPES);
+  const area = choice(POLICY_AREAS);
+  const direction = Math.random()<0.5 ? 'hi' : 'lo';
+  let amount = randi(15000,80000) + (G.tier==='official'?40000:0);
+  if(G.leaderTrait==='fixer') amount = Math.round(amount*1.15);
+  const ask = `soften your stance toward "${direction==='hi'?area.hi:area.lo}" on ${area.name}`;
+  G.pendingEvent = {
+    type:'donation', donor, area:area.key, direction, amount,
+    title:'A Quiet Word After Dinner',
+    text:`After the fundraiser, ${donor} pulls you aside. "I'd like to help the party — ${fmtMoney(amount)}, no complications — if you could ${ask}."`,
+  };
+  showEventModal();
+}
+
+function resolveDonation(choice_){
+  const ev = G.pendingEvent;
+  if(choice_==='decline'){
+    G.trust = clamp(G.trust+2,0,100);
+    log(`You decline the offer from ${ev.donor}. Word of your integrity spreads quietly.`);
+  } else if(choice_==='open'){
+    const openAmount = Math.round(ev.amount*0.5);
+    G.funds += openAmount;
+    log(`You accept ${fmtMoney(openAmount)} as a declared, public donation from ${ev.donor}. No favours attached.`);
+  } else if(choice_==='quiet'){
+    G.funds += ev.amount;
+    const area = POLICY_AREAS.find(p=>p.key===ev.area);
+    const nudge = ev.direction==='hi' ? 15 : -15;
+    G.you.stance[ev.area] = clamp(G.you.stance[ev.area]+nudge, -100, 100);
+    G.hiddenFavours.push({donor:ev.donor, amount:ev.amount, area:ev.area, weekTaken:G.week, exposeChance:0.045});
+    log(`You quietly accept ${fmtMoney(ev.amount)} from ${ev.donor} and adjust course on ${area.name}. This won't stay buried forever.`, 'lognew');
+  }
+  G.pendingEvent=null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+function checkFavourExposure(){
+  for(let i=G.hiddenFavours.length-1;i>=0;i--){
+    const f = G.hiddenFavours[i];
+    if(Math.random() < f.exposeChance){
+      G.hiddenFavours.splice(i,1);
+      exposeScandal(f);
+      return;
+    } else {
+      f.exposeChance = Math.min(f.exposeChance*1.15, 0.4);
+    }
+  }
+}
+
+function exposeScandal(f){
+  G.pendingEvent = {
+    type:'exposure', favour:f,
+    title:'SCANDAL: Cash for Favours',
+    text:`An investigative journalist reveals a quiet ${fmtMoney(f.amount)} payment from ${f.donor} back in Week ${f.weekTaken}, and the policy shift that followed. The press wants a response.`,
+  };
+  showEventModal();
+}
+
+function resolveExposure(choice_){
+  const f = G.pendingEvent.favour;
+  if(choice_==='deny'){
+    const roll = Math.random() + (G.trust-50)/200;
+    if(roll>0.55){ G.trust=clamp(G.trust-6,0,100); log('Your denial mostly holds, though doubts linger.'); }
+    else { G.trust=clamp(G.trust-16,0,100); G.approval=clamp(G.approval-8,0,100); log('Your denial collapses under scrutiny. The damage is severe.', 'lognew'); }
+  } else if(choice_==='apologise'){
+    G.trust=clamp(G.trust-8,0,100); G.unity=clamp(G.unity-3,0,100);
+    log('You apologise publicly and repay the donation. Painful, but survivable.', 'lognew');
+    G.funds = Math.max(0, G.funds - Math.round(f.amount*0.4));
+  } else if(choice_==='blame'){
+    G.trust=clamp(G.trust-10,0,100);
+    G.unity=clamp(G.unity-10,0,100);
+    log('You blame a since-departed aide for the arrangement. Trust falls; the party is furious at being thrown under the bus.', 'lognew');
+  }
+  G.momentum -= 2.5;
+  G.pendingEvent=null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+// ---------------------------------------------------------------------
+// MEDIA / SCANDAL EVENTS
+// ---------------------------------------------------------------------
+function queueMediaScandal(kind, extra){
+  const spinSkill = staffSkill('spin');
+  G.pendingEvent = {
+    type:'scandal', kind, extra, spinSkill,
+    title: kind==='gaffe' ? 'Damage Control' : 'Facing the Press',
+    text: kind==='gaffe'
+      ? `Your comments to ${extra} are all over the news. How do you respond?`
+      : `Your interview slip is leading every bulletin tonight. How do you respond?`,
+  };
+  showEventModal();
+}
+
+function resolveScandalResponse(choice_){
+  const ev = G.pendingEvent;
+  const spin = ev.spinSkill||0;
+  let roll = rand(0,100) + spin*0.3;
+  if(choice_==='apologise'){
+    if(roll>50){ G.trust=clamp(G.trust+2,0,100); G.approval=clamp(G.approval-1,0,100); log('A swift apology takes the sting out of the story.'); }
+    else { G.trust=clamp(G.trust-3,0,100); log('The apology reads as weak. The story runs another day.'); }
+  } else if(choice_==='defend'){
+    if(roll>60){ G.approval=clamp(G.approval+2,0,100); log('You stand firm and it plays well with your base.'); }
+    else { G.trust=clamp(G.trust-5,0,100); G.approval=clamp(G.approval-3,0,100); log('Standing firm backfires; you look out of touch.'); }
+  } else if(choice_==='joke'){
+    if(roll>70){ G.approval=clamp(G.approval+3,0,100); log('Self-deprecating humour disarms the story entirely.'); }
+    else { G.trust=clamp(G.trust-4,0,100); log("The joke lands flat and looks like you're not taking it seriously."); }
+  }
+  G.pendingEvent=null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+function addMomentum(id, amt){
+  if(id==='you'){ G.momentum += amt; return; }
+  const r = G.rivals.find(r=>r.id===id);
+  if(r) r.momentum = (r.momentum||0)+amt;
+}
+
+function randomNationalEvent(){
+  const events = [
+    {text:'A surprise interest rate rise squeezes household budgets nationwide.', gov:-2.5},
+    {text:'Official figures show unemployment falling.', gov:2},
+    {text:'A cost-of-living crisis dominates the headlines for a second week running.', gov:-3, opp:1},
+    {text:'A foreign policy crisis rallies some support behind the Government.', gov:3},
+    {text:'Public sector strikes spread across the country.', gov:-2, opp:1},
+    {text:'A viral clip of ordinary voters venting frustration at all the main parties spreads online.', oth:2.5},
+    {text:'A landmark infrastructure project is announced by the Government.', gov:1.5},
+    {text:'Local news reports on the same failing services in every region.', gov:-1.5, oth:1},
+  ];
+  if(G.trust>=68 && G.momentum>0){
+    events.push({text:`A major newspaper endorses ${G.partyName} in its editorial.`, you:2.5});
+  }
+  if(G.governing){
+    events.push({text:'Commentators note real delivery against your manifesto pledges.', you:2});
+    events.push({text:'The Opposition mounts an effective attack over broken promises.', you:-2, opp:1});
+  } else {
+    events.push({text:`${G.partyName}'s performance holding the Government to account wins praise.`, you:1.5});
+  }
+  const ev = choice(events);
+  ['you','gov','opp','oth'].forEach(id=>{
+    if(ev[id]){
+      const mapped = (id==='gov' && G.governing) ? 'you' : id;
+      addMomentum(mapped, ev[id]);
+    }
+  });
+  log(`[National News] ${ev.text}`);
+}
+
+const FOREIGN_CRISES = [
+  'a sudden military escalation between two distant allied nations',
+  'a major cyberattack traced to a hostile foreign state',
+  'a humanitarian crisis following a natural disaster overseas',
+  'a trade dispute threatening a key export industry',
+  'a diplomatic incident involving a detained national abroad',
+];
+
+function maybeTriggerForeignCrisis(){
+  if(G.pendingEvent || G.campaign) return;
+  if(Math.random() > 0.08) return;
+  const crisis = choice(FOREIGN_CRISES);
+  G.pendingEvent = {type:'foreign-crisis', crisis, title:'International Crisis',
+    text:`News breaks of ${crisis}. The world's attention turns to how ${G.governing?'your Government responds':'the Government responds — and what you say about it'}.`};
+  showEventModal();
+}
+function resolveForeignCrisis(choice_){
+  const roll = rand(0,100) + (G.trust-50)*0.2;
+  let res;
+  if(G.governing){
+    if(choice_==='intervene'){
+      res = roll>60
+        ? {title:'Decisive Action', text:'Your intervention is seen as strong, measured leadership on the world stage.', trust:3, approval:3, momentum:2}
+        : {title:'Overreach', text:'Critics say you have overstepped, dragging the country into a situation not its own.', trust:-3, approval:-2, momentum:-1.5};
+    } else if(choice_==='sanction'){
+      res = roll>45
+        ? {title:'A Measured Response', text:'Targeted sanctions are broadly welcomed as a proportionate response.', trust:2, momentum:1}
+        : {title:'Too Little, Too Late', text:'Sanctions are dismissed as a weak, symbolic gesture.', trust:-1, momentum:-0.5};
+    } else {
+      res = {title:'Staying Out Of It', text:'You keep the country out of the crisis entirely. Some call it prudent, others a failure of leadership.', trust:0, approval: roll>50?1:-2, momentum: roll>50?0.5:-1};
+    }
+  } else {
+    if(choice_==='support'){
+      res = roll>50
+        ? {title:'A Statesmanlike Response', text:'Backing the Government in a crisis is seen as responsible and mature.', trust:2, momentum:0.5}
+        : {title:'Overshadowed', text:'Your support for the Government barely registers next to their own response.', trust:0, momentum:0};
+    } else if(choice_==='criticise'){
+      res = roll>55
+        ? {title:'A Sharp Critique', text:"Your criticism of the Government's handling lands well and dominates coverage.", trust:1, momentum:2, govHit:-2}
+        : {title:'Poor Timing', text:'Attacking the Government during a crisis is seen as opportunistic.', trust:-3, momentum:-1};
+    } else {
+      res = {title:'Staying Silent', text:'You decide not to comment. Safe, but forgettable.', trust:0, momentum:0};
+    }
+  }
+  G.trust = clamp(G.trust+(res.trust||0),0,100);
+  G.approval = clamp(G.approval+(res.approval||0),0,100);
+  G.momentum += (res.momentum||0);
+  if(res.govHit){ const r=G.rivals.find(r=>r.id==='gov'); if(r) r.momentum=(r.momentum||0)+res.govHit; }
+  log(`[International Crisis] ${res.title}: ${res.text}`, 'lognew');
+  G.pendingEvent = null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+// ---------------------------------------------------------------------
+// RIVAL POLICY DRIFT — parties are not static; they recalibrate over time
+// ---------------------------------------------------------------------
+function driftRivals(){
+  G.rivals.forEach(r=>{
+    if(Math.random() > 0.35) return;
+    const area = choice(POLICY_AREAS);
+    const key = area.key;
+    // the weighted-average ideal position on this axis across the whole electorate
+    let num=0, den=0;
+    DEMOGRAPHICS.forEach(d=>{ const w=(d.weight[key]||0)*d.size; num += d.ideal[key]*w; den += w; });
+    const target = den ? num/den : 0;
+    const cur = r.stance[key];
+    const step = clamp((target-cur)*0.15, -8, 8) + rand(-3,3);
+    r.stance[key] = clamp(cur+step, -100, 100);
+    if(Math.abs(step) > 4){
+      log(`[Policy Shift] ${r.name} recalibrates its position on ${area.name}.`);
+    }
+  });
+}
+
+// ---------------------------------------------------------------------
+// GOVERNMENT DEPARTMENTS — only active once you form the Government
+// ---------------------------------------------------------------------
+function runDepartments(){
+  if(!G.governing || !G.departments) return;
+  let best=null, worst=null;
+  POLICY_AREAS.forEach(p=>{
+    const dept = G.departments[p.key];
+    const minister = G.mps.find(m=>m.portfolio===p.name);
+    const competence = minister ? effectiveCompetence(minister) : 30; // an unstaffed department drifts to a poor baseline
+    const target = clamp(competence + rand(-5,5), 0, 100);
+    dept.performance = clamp(dept.performance + (target-dept.performance)*0.12, 0, 100);
+    if(!best || dept.performance>G.departments[best].performance) best=p.key;
+    if(!worst || dept.performance<G.departments[worst].performance) worst=p.key;
+  });
+  const deliveryScore = POLICY_AREAS.reduce((a,p)=>a+G.departments[p.key].performance,0)/POLICY_AREAS.length;
+  G.trust = clamp(G.trust + (deliveryScore-55)*0.01, 0, 100);
+  G.approval = clamp(G.approval + (deliveryScore-55)*0.015, 0, 100);
+
+  if(best && G.departments[best].performance>78 && Math.random()<0.10){
+    log(`[Delivery] ${POLICY_AREAS.find(p=>p.key===best).name} is praised as a rare government success story.`, 'lognew');
+    G.momentum += 0.8;
+  }
+  if(worst && G.departments[worst].performance<28 && Math.random()<0.10){
+    log(`[Crisis] ${POLICY_AREAS.find(p=>p.key===worst).name} is under fire after another damaging report.`, 'lognew');
+    G.momentum -= 0.8;
+  }
+  if(deliveryScore>=80) unlockAchievement('delivery80','Well-Oiled Machine — average departmental performance above 80');
+}
+
+// ---------------------------------------------------------------------
+// PARTY MEMBERSHIP — grows or shrinks with how the party is actually doing
+// ---------------------------------------------------------------------
+function updateMembers(){
+  const growth = (G.polls.you-30)/3000 + (G.approval-50)/6000 + G.momentum/2000;
+  G.members = Math.max(300, Math.round(G.members * (1+growth)));
+}
+
+// ---------------------------------------------------------------------
+// MANIFESTO PLEDGES — promises made at the last Manifesto Launch can be broken
+// ---------------------------------------------------------------------
+function checkManifestoBreaches(){
+  if(!G.manifesto) return;
+  for(const p of POLICY_AREAS){
+    if(G.manifestoBroken.includes(p.key)) continue;
+    const diff = Math.abs(G.you.stance[p.key] - G.manifesto[p.key]);
+    if(diff>25 && Math.random()<0.06){
+      G.manifestoBroken.push(p.key);
+      G.pendingEvent = {type:'broken-pledge', area:p.key, title:'Broken Pledge',
+        text:`Journalists notice: your manifesto promised a very different position on ${p.name} to the one you now hold. The story is spreading.`};
+      showEventModal();
+      return;
+    }
+  }
+}
+function resolveBrokenPledge(choice_){
+  const spin = staffSkill('spin');
+  const roll = rand(0,100) + spin*0.3;
+  if(choice_==='apologise'){
+    if(roll>55){ G.trust=clamp(G.trust-4,0,100); log('A contrite apology limits the damage, though voters remember broken promises.'); }
+    else { G.trust=clamp(G.trust-10,0,100); log('The apology rings hollow. Trust takes a real hit.', 'lognew'); }
+  } else if(choice_==='defend'){
+    if(roll>65){ G.trust=clamp(G.trust-3,0,100); G.unity=clamp(G.unity+2,0,100); log('You argue circumstances changed. Your own side accepts it; voters are less convinced.'); }
+    else { G.trust=clamp(G.trust-12,0,100); G.approval=clamp(G.approval-4,0,100); log('Insisting nothing changed only draws more attention to the U-turn.', 'lognew'); }
+  } else {
+    G.trust=clamp(G.trust-2,0,100); G.unity=clamp(G.unity-4,0,100);
+    log('You openly admit you changed your mind. Blunt honesty costs you with the party base, but voters respect it more than spin.');
+  }
+  G.momentum -= 2;
+  G.pendingEvent = null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+// ---------------------------------------------------------------------
+// BUDGET DAY — an annual set-piece, only while you are the Government
+// ---------------------------------------------------------------------
+function triggerBudget(){
+  G.lastBudgetWeek = G.week;
+  G.pendingEvent = {type:'budget', title:'Budget Day',
+    text:`As the Government, you present your Budget to Parliament. Where do you focus this year's spending priority?`};
+  showEventModal();
+}
+function resolveBudget(key){
+  let issue;
+  if(key==='balanced'){
+    G.trust = clamp(G.trust+2,0,100);
+    log('You present a cautious, balanced Budget. Nothing dramatic, but nothing to attack either.', 'lognew');
+    issue = 'Budget: balanced';
+  } else {
+    const area = POLICY_AREAS.find(p=>p.key===key);
+    const dept = G.departments[key];
+    dept.performance = clamp(dept.performance+15,0,100);
+    const dir = (key==='defence') ? 1 : -1; // extra spending reads as more state/public provision, except Defence
+    G.you.stance[key] = clamp(G.you.stance[key] + dir*10, -100, 100);
+    G.unity = clamp(G.unity-4,0,100);
+    G.funds = Math.max(0, G.funds-20000);
+    log(`[Budget Day] You direct extra spending toward ${area.name}. Performance rises, but it's a political choice with a price.`, 'lognew');
+    issue = `Budget: spending boost for ${area.name}`;
+  }
+  recordPartyVote(issue);
+  G.pendingEvent = null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+// ---------------------------------------------------------------------
+// PARTY CONFERENCE
+// ---------------------------------------------------------------------
+function triggerConference(){
+  G.lastConferenceWeek = G.week;
+  G.pendingEvent = {type:'conference', title:'Party Conference',
+    text:`It's time for ${G.partyName}'s annual conference. Your speech will set the tone for the year ahead. What approach do you take?`};
+  showEventModal();
+}
+function resolveConference(tone){
+  const oratorBonus = G.leaderTrait==='orator' ? 12 : 0;
+  const roll = rand(0,100) + oratorBonus + (G.unity-50)*0.15;
+  let res;
+  if(tone==='bold'){
+    if(roll>65){ res={title:'A Rousing Vision', text:'Your bold vision energises members and dominates the news cycle.', momentum:4, unity:6, trust:1}; }
+    else { res={title:'Overreach', text:'The bold vision is mocked as unrealistic by commentators.', momentum:-2, unity:2, trust:-2}; }
+  } else if(tone==='steady'){
+    if(roll>50){ res={title:'Quiet Competence', text:'A reassuring, detailed speech goes down well with the party faithful.', momentum:1.5, unity:5, trust:2}; }
+    else { res={title:'Forgettable', text:'A safe speech that nobody outside the hall will remember.', momentum:0, unity:2, trust:0}; }
+  } else {
+    if(roll>60){ res={title:"A Blistering Attack", text:"Your assault on the Government's record dominates the front pages.", momentum:3, unity:3, trust:-1, govHit:-3}; }
+    else { res={title:'Too Negative', text:'The attack lines feel mean-spirited rather than persuasive.', momentum:-1, unity:0, trust:-2}; }
+  }
+  G.momentum += res.momentum;
+  G.unity = clamp(G.unity+res.unity,0,100);
+  G.trust = clamp(G.trust+(res.trust||0),0,100);
+  if(res.govHit){ const r=G.rivals.find(r=>r.id==='gov'); if(r) r.momentum=(r.momentum||0)+res.govHit; }
+  log(`[Party Conference] ${res.title}: ${res.text}`, 'lognew');
+  G.pendingEvent=null;
+  calcPolls(); save(); closeModal(); render();
+  checkAchievements();
+  triggerConferenceMotion();
+}
+
+// A floor motion: delegates can force a vote pulling policy back toward the
+// platform the party was founded on (`G.founding`), wherever the leadership has
+// drifted furthest from it. Only fires when that drift is actually meaningful.
+function triggerConferenceMotion(){
+  let bestKey=null, bestGap=-1;
+  POLICY_AREAS.forEach(p=>{
+    const gap = Math.abs(G.you.stance[p.key]-G.founding[p.key]);
+    if(gap>bestGap){ bestGap=gap; bestKey=p.key; }
+  });
+  if(bestGap<15){
+    log('[Party Conference] No major floor motions this year — the platform is still broadly in line with where the party began.');
+    return;
+  }
+  const area = POLICY_AREAS.find(p=>p.key===bestKey);
+  const pullsHigh = G.founding[bestKey] > G.you.stance[bestKey];
+  G.pendingEvent = {type:'conference-motion', area:bestKey,
+    title:'Conference Floor Motion',
+    text:`Delegates have tabled a motion on ${area.name}, calling for the party to move back toward "${pullsHigh?area.hi:area.lo}" — closer to where ${G.partyName} first stood. It goes to a card vote on the conference floor.`};
+  showEventModal();
+}
+function resolveConferenceMotion(choiceKey){
+  const ev = G.pendingEvent;
+  const key = ev.area;
+  const area = POLICY_AREAS.find(p=>p.key===key);
+  const gap = G.founding[key]-G.you.stance[key];
+  if(choiceKey==='whip'){
+    const organiserBonus = G.leaderTrait==='organiser' ? 10 : 0;
+    const roll = rand(0,100) + (G.unity-50)*0.4 + organiserBonus;
+    if(roll>50){
+      G.unity = clamp(G.unity-3,0,100);
+      log(`[Conference Motion] You whip hard and the platform holds. Some delegates leave grumbling.`, 'lognew');
+    } else {
+      G.you.stance[key] = clamp(G.you.stance[key] + gap*0.6, -100, 100);
+      G.unity = clamp(G.unity-8,0,100);
+      log(`[Conference Motion] The whipping operation fails — delegates defeat the leadership and ${area.name} policy shifts on the floor.`, 'lognew');
+    }
+  } else if(choiceKey==='accept'){
+    G.you.stance[key] = clamp(G.you.stance[key] + gap*0.7, -100, 100);
+    G.unity = clamp(G.unity+6,0,100);
+    log(`[Conference Motion] You accept the motion. ${area.name} policy shifts to match the mood of the conference floor.`, 'lognew');
+  } else {
+    G.you.stance[key] = clamp(G.you.stance[key] + gap*0.3, -100, 100);
+    G.unity = clamp(G.unity+2,0,100);
+    log(`[Conference Motion] You broker a compromise on ${area.name}, moving some way toward the delegates without a full reversal.`, 'lognew');
+  }
+  recordPartyVote(`Conference motion: ${area.name}`);
+  G.pendingEvent = null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+// ---------------------------------------------------------------------
+// LOCAL ELECTIONS — a lower-stakes mid-term mood check, no seats change hands
+// ---------------------------------------------------------------------
+function triggerLocalElections(){
+  G.lastLocalElectionsWeek = G.week;
+  G.pendingEvent = {type:'local-elections', title:'Local Elections',
+    text:`Council seats are up across the country today — a useful gauge of the national mood ahead of the next General Election. How much do you invest in the campaign?`};
+  showEventModal();
+}
+function resolveLocalElections(choice_){
+  let spend=0, effortMult=1;
+  if(choice_==='push'){ spend=15000; effortMult=1.6; }
+  else if(choice_==='skip'){ effortMult=0.4; }
+  if(spend>0){
+    if(G.funds<spend){ alertModal('Cannot Afford', `A full national push costs ${fmtMoney(spend)}.`); return; }
+    G.funds -= spend;
+  }
+  const perform = rand(-8,8)*effortMult + (G.polls.you-25)*0.1;
+  let text, swing;
+  if(perform>6){ swing=2.5; text=`${G.partyName} has a strong night in the local elections, gaining council seats across the country.`; }
+  else if(perform>-2){ swing=0.5; text=`A steady set of local election results for ${G.partyName} — no major swings either way.`; }
+  else { swing=-2; text=`A disappointing set of local election results for ${G.partyName}.`; }
+  G.momentum += swing;
+  log(`[Local Elections] ${text}`, 'lognew');
+  G.pendingEvent = null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+// ---------------------------------------------------------------------
+// MP REBELLIONS
+// ---------------------------------------------------------------------
+function maybeTriggerRebellion(){
+  if(G.pendingEvent) return;
+  const pool = G.mps.filter(m=>!m.portfolio);
+  if(pool.length===0) return;
+  const chance = G.unity<55 ? 0.14 : 0.04;
+  if(Math.random()>chance) return;
+  // ambitious backbenchers passed over for a portfolio are the likeliest troublemakers —
+  // mavericks are especially prone to it, loyalists especially reluctant
+  const personaMult = m => m.personality==='maverick' ? 1.4 : m.personality==='loyalist' ? 0.6 : 1;
+  const weights = pool.map(m=>Math.max(m.ambition,1)*personaMult(m));
+  const total = weights.reduce((a,b)=>a+b,0);
+  let roll = Math.random()*total;
+  let mp = pool[0];
+  for(let i=0;i<pool.length;i++){ if(roll<weights[i]){ mp=pool[i]; break; } roll-=weights[i]; }
+  G.pendingEvent = {type:'rebellion', mp,
+    title:'A Backbench Rebellion',
+    text:`${mp.name} (${mp.seat}) is threatening to vote against the party line and is rallying others to join. How do you handle it?`};
+  showEventModal();
+}
+function resolveRebellion(choice_){
+  const mp = G.pendingEvent.mp;
+  let instigatorVote = 'no';
+  if(choice_==='whip'){
+    const roll = Math.random() + (mp.loyalty)/200;
+    if(roll>0.6){ G.unity=clamp(G.unity-3,0,100); log(`You whip hard. ${mp.name} falls into line, grumbling.`); instigatorVote='aye'; }
+    else { G.unity=clamp(G.unity-10,0,100); mp.loyalty=clamp(mp.loyalty-20,0,100); log(`${mp.name} defies the whip anyway. The party looks divided.`, 'lognew'); }
+  } else if(choice_==='free'){
+    G.unity=clamp(G.unity+3,0,100); G.momentum-=0.5;
+    log('You allow a free vote. Unity holds, though it looks a little chaotic to outsiders.');
+  } else if(choice_==='concede'){
+    G.unity=clamp(G.unity+6,0,100); mp.loyalty=clamp(mp.loyalty+15,0,100); G.momentum-=1;
+    log(`You concede ground to ${mp.name}. Unity improves, but you look reactive.`);
+    instigatorVote = 'aye';
+  }
+  recordPartyVote(`Backbench motion led by ${mp.name}`, {[mp.id]:instigatorVote});
+  G.pendingEvent=null;
+  calcPolls(); save(); closeModal(); render();
+}
+
+// ---------------------------------------------------------------------
+// BY-ELECTIONS
+// ---------------------------------------------------------------------
+function maybeTriggerByElection(){
+  if(G.byElection) return;
+  if(G.campaign) return;
+  if(G.pendingEvent) return;
+  let chance = 0.05 + (100-G.unity)/100*0.05;
+  if(Math.random() > chance) return;
+  const holders = [{id:'you', seats:G.seats}].concat(G.rivals.map(r=>({id:r.id, seats:r.seats})));
+  const total = holders.reduce((a,h)=>a+h.seats,0);
+  if(total<=0) return;
+  let roll = Math.random()*total;
+  let holder = holders[0].id;
+  for(const h of holders){ if(roll<h.seats){ holder=h.id; break;} roll-=h.seats; }
+  const seatName = choice(SEAT_NAMES)+' '+choice(['North','South','East','West','Central']);
+  startByElection(seatName, holder);
+}
+
+function startByElection(seatName, holderId){
+  if(G.byElection) return;
+  const holderName = holderId==='you' ? G.partyName : (G.rivals.find(r=>r.id===holderId)?.name || 'a minor party');
+  G.byElection = {
+    seat:seatName, holder:holderId, weeksLeft:CAMPAIGN_PHASE_LEN, effort:0, spend:0, candidateQuality:null, candidateName:null,
+  };
+  log(`[By-Election] A vacancy in ${seatName} (previously held by ${holderName}) triggers a by-election.`, 'lognew');
+  G.pendingEvent = {type:'candidate-select', title:'Select Your Candidate',
+    text:`Who will ${G.partyName} field in the ${seatName} by-election?`};
+  showEventModal();
+}
+
+function selectByElectionCandidate(kind){
+  const be = G.byElection;
+  if(!be) return;
+  let quality, note;
+  const name = randomName();
+  if(kind==='local'){ quality=randi(50,68); note='A safe, well-known local figure.'; }
+  else if(kind==='star'){ quality=randi(62,85); note='A promising rising star from outside the area.'; }
+  else { quality=randi(35,92); note='A high-profile celebrity candidate — huge attention, unpredictable results.'; G.momentum += rand(-1,2); }
+  be.candidateQuality = quality; be.candidateName = name;
+  log(`[By-Election: ${be.seat}] ${G.partyName} selects ${name} as candidate. ${note}`);
+  G.pendingEvent=null;
+  save(); closeModal(); render();
+}
+
+function campaignByElection(){
+  if(!G.byElection || G.byElection.candidateQuality==null) return;
+  if(!spendAP(1)){ alertModal('No Action Points','You have no Action Points left to campaign this week.'); return; }
+  const mgrSkill = staffSkill('campaign');
+  const gain = (8 + mgrSkill*0.1 + rand(-2,4)) * clamp(0.8 + G.members/60000, 0.8, 1.3);
+  G.byElection.effort += gain;
+  log(`[By-Election: ${G.byElection.seat}] Your campaign team pushes hard on the ground. Local momentum grows.`);
+  save(); render();
+}
+
+function spendOnByElection(amount){
+  if(!G.byElection || G.byElection.candidateQuality==null) return;
+  if(G.funds < amount) return;
+  G.funds -= amount;
+  G.byElection.spend += amount;
+  G.byElection.effort += amount/1200;
+  log(`[By-Election: ${G.byElection.seat}] You commit ${fmtMoney(amount)} to the local campaign.`);
+  save(); render();
+}
+
+function tickByElection(){
+  if(!G.byElection) return;
+  if(G.byElection.candidateQuality==null) return; // waiting on candidate selection
+  G.byElection.weeksLeft -= 1;
+  if(G.byElection.weeksLeft<=0){
+    resolveByElection();
+  }
+}
+
+// Shared by the actual by-election resolution and (for players who've hired a Pollster)
+// a live win-probability estimate, so the displayed odds are never a separate guess.
+function byElectionScores(be){
+  const scores = {you:G.polls.you, gov:G.polls.gov, opp:G.polls.opp, oth:G.polls.oth};
+  scores.you += be.effort*0.5 + ((be.candidateQuality||50)-50)*0.15;
+  // incumbency defence scales with how safe the seat actually is (worth 6 at a
+  // "neutral" marginality of 50, ranging up toward ~10 for safe seats and down
+  // toward ~0 for a knife-edge one)
+  scores[be.holder] += 6 + (getSeatMarginality(be.seat)-50)/8;
+  const sum = Object.values(scores).reduce((a,b)=>a+Math.max(b,1),0);
+  return {scores, sum};
+}
+function byElectionWinProbability(be){
+  const {scores, sum} = byElectionScores(be);
+  return Math.round(Math.max(scores.you,1)/sum*100);
+}
+
+function resolveByElection(){
+  const be = G.byElection;
+  const {scores, sum} = byElectionScores(be);
+  let roll = Math.random()*sum;
+  let winner='you';
+  for(const k of Object.keys(scores)){ const v=Math.max(scores[k],1); if(roll<v){winner=k;break;} roll-=v; }
+
+  const winnerName = winner==='you'? G.partyName : G.rivals.find(r=>r.id===winner).name;
+  const holderName = be.holder==='you'? G.partyName : (G.rivals.find(r=>r.id===be.holder)?.name||'Others');
+  const seatsBefore = G.seats;
+
+  if(be.holder!==winner){
+    if(be.holder==='you') G.seats -=1; else { const r=G.rivals.find(r=>r.id===be.holder); if(r) r.seats-=1; }
+    if(winner==='you'){ G.seats+=1;
+      G.mps.push({id:uid(), name:be.candidateName||randomName(), seat:be.seat, loyalty:randi(50,85), competence:randi(35,80), ambition:randi(20,80), personality:randomPersonality(), role:'Backbencher', portfolio:null});
+    } else { const r=G.rivals.find(r=>r.id===winner); if(r) r.seats+=1; }
+    syncMpRosterToSeats();
+    adjustSeatMarginality(be.seat, randi(15,35) - getSeatMarginality(be.seat)); // freshly flipped, not yet entrenched
+  } else {
+    adjustSeatMarginality(be.seat, 4); // successfully defended — grows a little safer
+  }
+  const seatsAfter = G.seats;
+
+  const won = winner==='you';
+  const gain = won && be.holder!=='you';
+  const lost = !won && be.holder==='you';
+  if(won){
+    G.momentum += (gain?4:1.5); G.approval=clamp(G.approval+(gain?5:2),0,100);
+    if(gain) unlockAchievement('firstbygain','First Blood — gained a seat at a by-election');
+  } else {
+    G.momentum -= (lost?4:1); G.approval=clamp(G.approval-(lost?4:1),0,100);
+  }
+
+  let title, text;
+  if(gain){
+    title = 'Seat Gained!';
+    text = `${G.partyName} GAINS ${be.seat} from ${holderName}! Your seat total rises from ${seatsBefore} to ${seatsAfter}.`;
+  } else if(won){
+    title = 'Seat Held';
+    text = `${G.partyName} successfully defends ${be.seat}. It was already yours, so your seat total is unchanged at ${seatsAfter}.`;
+  } else if(lost){
+    title = 'Seat Lost';
+    text = `${winnerName} takes ${be.seat} from you. Your seat total falls from ${seatsBefore} to ${seatsAfter}.`;
+  } else {
+    title = 'By-Election Lost';
+    text = `${winnerName} wins ${be.seat} (previously held by ${holderName}). It was never your seat, so your total is unaffected, remaining at ${seatsAfter}.`;
+  }
+
+  log(`[By-Election Result: ${be.seat}] ${winnerName} wins the seat (previously ${holderName}).`, 'lognew');
+  G.byElection = null;
+  calcPolls();
+  G.pendingEvent = {type:'byelection-result', title, text};
+  save();
+  showEventModal();
+}
+
+// ---------------------------------------------------------------------
+// LEADERSHIP CHALLENGE
+// ---------------------------------------------------------------------
+function checkLeadershipChallenge(){
+  if(G.unity < 20) G.lowUnityStreak++; else G.lowUnityStreak = Math.max(0,G.lowUnityStreak-1);
+  const threshold = G.minorityGovt ? 2 : 4;
+  if(G.lowUnityStreak >= threshold){
+    G.lowUnityStreak = 0;
+    triggerLeadershipChallenge();
+  }
+}
+
+function triggerLeadershipChallenge(){
+  const survivalChance = clamp((G.unity + G.approval)/2, 5, 90)/100;
+  const roll = Math.random();
+  if(roll < survivalChance){
+    G.unity = clamp(G.unity+15,0,100);
+    G.pendingEvent = {type:'info', title:'Leadership Challenge Survived',
+      text:`Restless MPs force a confidence vote in your leadership. After a tense meeting, you survive — but you know the peace is fragile.`};
+  } else {
+    G.gameOver = true;
+    G.gameOverReason = `Your own MPs voted no confidence in your leadership after ${G.week} weeks in charge of ${G.partyName}. You have been ousted.`;
+    G.pendingEvent = {type:'gameover', title:'OUSTED', text:G.gameOverReason};
+  }
+  showEventModal();
+  save();
+}
+
+// ---------------------------------------------------------------------
+// MOTION OF NO CONFIDENCE — the mirror-image tool available to an Opposition
+// ---------------------------------------------------------------------
+function canTableNoConfidence(){
+  if(G.governing || G.campaign || G.gameOver) return false;
+  const govRival = G.rivals.find(r=>r.governing);
+  if(!govRival || govRival.seats>=MAJORITY) return false;
+  if((G.week - (G.lastNoConfidenceWeek||0)) < 26) return false;
+  return true;
+}
+function tableNoConfidence(){
+  if(!canTableNoConfidence()) return;
+  if(!spendAP(1)) return;
+  G.lastNoConfidenceWeek = G.week;
+  const govRival = G.rivals.find(r=>r.governing);
+  const shortfall = MAJORITY - govRival.seats;
+  const weaknessBonus = clamp((50-G.polls[govRival.id])*0.4, -10, 20) + clamp(-(govRival.momentum||0), -10, 10);
+  const chance = clamp(0.15 + shortfall*0.01 + weaknessBonus/100, 0.05, 0.75);
+  if(Math.random() < chance){
+    log(`[No Confidence] The Government loses a confidence vote in the Commons! A General Election is triggered immediately.`, 'lognew');
+    G.momentum += 3;
+    beginCampaignPhase();
+  } else {
+    log(`[No Confidence] Your motion of no confidence is defeated. The Government survives — for now.`, 'lognew');
+    G.unity = clamp(G.unity-5,0,100);
+    G.momentum -= 1.5;
+  }
+  calcPolls(); save(); render();
+}
+
+// ---------------------------------------------------------------------
+// GENERAL ELECTION
+// ---------------------------------------------------------------------
+function canCallSnapElection(){
+  return !G.campaign && !G.gameOver && G.termWeek >= MIN_SNAP_WEEK;
+}
+
+function callSnapElection(){
+  if(!canCallSnapElection()) return;
+  if(!confirm('Call a snap General Election now? This begins a 4-week national campaign and cannot be undone.')) return;
+  const gambleRoll = rand(-3,3);
+  G.momentum += gambleRoll;
+  log(`You call a snap General Election, ${G.termLength-G.termWeek} weeks earlier than required.`, 'lognew');
+  beginCampaignPhase();
+}
+
+function beginCampaignPhase(){
+  G.campaign = {weeksLeft:CAMPAIGN_PHASE_LEN, manifestoLocked:false, debateDone:false, finalPushDone:false};
+  G.byElection = null;
+  log('=== THE GENERAL ELECTION CAMPAIGN BEGINS ===', 'lognew');
+  save();
+}
+
+function campaignManifestoLaunch(){
+  if(!G.campaign || G.campaign.manifestoLocked) return;
+  if(!spendAP(1)) return;
+  let bestFit = 0;
+  DEMOGRAPHICS.forEach(d=>{ const a=affinity(G.you.stance,d); if(a>bestFit) bestFit=a; });
+  const boost = clamp((bestFit-50)/10, -2, 4);
+  G.momentum += boost;
+  G.campaign.manifestoLocked = true;
+  G.manifesto = {...G.you.stance};
+  G.manifestoBroken = [];
+  log(`[Manifesto Launch] You unveil your General Election manifesto. Reception: ${boost>=1?'strong':boost>=0?'mixed':'poor'}.`, 'lognew');
+  calcPolls(); save(); render();
+}
+
+function campaignTvDebate(){
+  if(!G.campaign || G.campaign.debateDone) return;
+  if(!spendAP(1)) return;
+  const pressSkill = staffSkill('press');
+  const oratorBonus = G.leaderTrait==='orator' ? 10 : 0;
+  const roll = rand(0,100) + pressSkill*0.2 + (G.trust-50)*0.2 + (G.approval-50)*0.15 + oratorBonus;
+  let swing;
+  if(roll>75){ swing=4.5; log("[TV Leaders' Debate] You land the standout moment of the night. Overnight polls swing your way.", 'lognew'); }
+  else if(roll>45){ swing=1; log("[TV Leaders' Debate] A solid, unspectacular debate performance."); }
+  else if(roll>20){ swing=-1.5; log("[TV Leaders' Debate] You struggle to land a punch. Rivals look sharper."); }
+  else { swing=-4; log("[TV Leaders' Debate] A moment you misspeak becomes the only clip anyone shares.", 'lognew'); }
+  G.momentum += swing;
+  G.campaign.debateDone = true;
+  calcPolls(); save(); render();
+}
+
+function campaignFinalPush(spend){
+  if(!G.campaign || G.campaign.finalPushDone) return;
+  if(G.funds < spend) return;
+  G.funds -= spend;
+  const boost = clamp(spend/15000, 0, 5);
+  G.momentum += boost;
+  G.campaign.finalPushDone = true;
+  log(`[Final Push] You spend ${fmtMoney(spend)} on last-minute advertising and canvassing across the marginals.`, 'lognew');
+  calcPolls(); save(); render();
+}
+
+function tickCampaignPhase(){
+  if(!G.campaign) return;
+  G.campaign.weeksLeft -= 1;
+  if(G.campaign.weeksLeft<=0){
+    runGeneralElection();
+  }
+}
+
+function runGeneralElection(){
+  calcPolls();
+  const seatResult = seatsFromPollShare(G.polls);
+  const results = {
+    you:{name:G.partyName, seats:seatResult.you, poll:G.polls.you},
+    gov:{name:G.rivals.find(r=>r.id==='gov').name, seats:seatResult.gov, poll:G.polls.gov},
+    opp:{name:G.rivals.find(r=>r.id==='opp').name, seats:seatResult.opp, poll:G.polls.opp},
+    oth:{name:G.rivals.find(r=>r.id==='oth').name, seats:seatResult.oth, poll:G.polls.oth},
+  };
+  const ranked = Object.entries(results).sort((a,b)=>b[1].seats-a[1].seats);
+  const [leaderId, leaderRes] = ranked[0];
+
+  if(leaderRes.seats >= MAJORITY){
+    const formsGovt = (leaderId==='you');
+    finishElection(results, ranked, leaderId==='you'?'majority-you':'majority-other', formsGovt, false, null, leaderId, false, false);
+    return;
+  }
+
+  if(leaderId==='you'){
+    // The player's party has the most seats but no majority — they choose how to proceed.
+    const opts = G.rivals.map(r=>{
+      const combined = leaderRes.seats + r.seats;
+      let askKey=null, askAbs=-1;
+      POLICY_AREAS.forEach(p=>{ const d=Math.abs(G.you.stance[p.key]-r.stance[p.key]); if(d>askAbs){askAbs=d; askKey=p.key;} });
+      return {id:r.id, name:r.name, seats:r.seats, combined, viable: combined>=MAJORITY, askKey};
+    });
+    G.pendingEvent = {
+      type:'coalition-talks', results, ranked, opts,
+      title:'Coalition Talks',
+      text:`${G.partyName} wins the most seats (${leaderRes.seats}) but falls short of the ${MAJORITY} needed for a majority. How do you proceed?`,
+    };
+    showEventModal();
+    save();
+    return;
+  }
+
+  // A rival leads and you are not in a position to negotiate — resolve automatically.
+  const [secondId, secondRes] = ranked[1];
+  let outcome, coalition=false, partnerName=null, juniorPartner=false;
+  if(leaderRes.seats + secondRes.seats >= MAJORITY){
+    coalition = true; partnerName = results[secondId].name;
+    outcome = secondId==='you' ? 'coalition-you' : 'coalition-other';
+    juniorPartner = (secondId==='you');
+  } else {
+    outcome = 'hung';
+  }
+  finishElection(results, ranked, outcome, false, coalition, partnerName, leaderId, juniorPartner, false);
+}
+
+function finishElection(results, ranked, outcome, formsGovt, coalition, partnerName, govId, juniorPartner, minorityGovt){
+  G.minorityGovt = !!minorityGovt;
+  G.governing = (govId==='you');
+  G.rivals.forEach(r=>r.governing = (r.id===govId));
+  if(G.governing && !G.departments){
+    G.departments = {};
+    POLICY_AREAS.forEach(p=>{ G.departments[p.key] = {performance:55}; });
+  }
+
+  G.electionHistory.push({term:G.termNumber, results, outcome, week:G.week});
+  G.campaign = null;
+
+  G.seats = results.you.seats;
+  G.rivals.find(r=>r.id==='gov').seats = results.gov.seats;
+  G.rivals.find(r=>r.id==='opp').seats = results.opp.seats;
+  G.rivals.find(r=>r.id==='oth').seats = results.oth.seats;
+  syncMpRosterToSeats();
+
+  G.won = formsGovt;
+  let verdict;
+  if(formsGovt && G.minorityGovt) verdict = `${G.partyName} forms a fragile minority Government, without a formal coalition partner. You are the new Prime Minister — for now.`;
+  else if(formsGovt && !coalition) verdict = `${G.partyName} wins an outright majority! You are the new Prime Minister.`;
+  else if(formsGovt && coalition) verdict = `${G.partyName} leads a coalition with ${partnerName} and forms the Government. You are the new Prime Minister.`;
+  else if(juniorPartner) verdict = `${G.partyName} enters Government as the junior coalition partner to ${results[ranked[0][0]].name}.`;
+  else if(outcome==='hung') verdict = `No party wins a majority. Parliament is hung, and coalition talks leave ${G.partyName} out of Government.`;
+  else verdict = `${ranked[0][1].name} wins the General Election. ${G.partyName} falls short and remains in opposition.`;
+
+  G.pendingEvent = {
+    type:'election-result', results, ranked, outcome, verdict,
+    title: formsGovt ? 'VICTORY — YOU FORM THE GOVERNMENT' : 'ELECTION RESULT',
+    text: verdict,
+  };
+
+  if(results.you.seats===0 && G.tier!=='fringe'){
+    G.gameOverReason = `${G.partyName} is wiped out at the polls, losing every seat. ${G.leaderName} resigns as leader.`;
+  }
+
+  checkAchievements();
+  showEventModal();
+  save();
+}
+
+function resolveCoalitionChoice(choiceId){
+  const ev = G.pendingEvent;
+  const {results, ranked, opts} = ev;
+  if(choiceId==='minority'){
+    G.unity = clamp(G.unity-12,0,100);
+    log(`${G.partyName} chooses to govern alone as a minority Government, without a formal coalition partner.`, 'lognew');
+    G.pendingEvent = null;
+    finishElection(results, ranked, 'minority-you', true, false, null, 'you', false, true);
+    return;
+  }
+  if(choiceId==='decline'){
+    log(`${G.partyName} declines to attempt a Government despite winning the most seats. Talks proceed without you.`, 'lognew');
+    const govId = ranked[1][0];
+    G.pendingEvent = null;
+    finishElection(results, ranked, 'hung', false, false, null, govId, false, false);
+    return;
+  }
+  const opt = opts.find(o=>o.id===choiceId);
+  if(!opt || !opt.viable) return;
+  const area = POLICY_AREAS.find(p=>p.key===opt.askKey);
+  const rival = G.rivals.find(r=>r.id===choiceId);
+  G.you.stance[opt.askKey] = Math.round((G.you.stance[opt.askKey] + rival.stance[opt.askKey])/2);
+  G.unity = clamp(G.unity-10,0,100);
+  log(`${G.partyName} agrees terms with ${rival.name}, conceding ground on ${area.name} in exchange for their support in Government.`, 'lognew');
+  G.pendingEvent = null;
+  finishElection(results, ranked, 'coalition-you', true, true, rival.name, 'you', false, false);
+}
+
+function continueAfterElection(){
+  if(G.pendingEvent && G.pendingEvent.results && G.pendingEvent.results.you.seats===0 && G.tier!=='fringe'){
+    G.gameOver = true;
+    closeModal(); render(); save();
+    return;
+  }
+  G.termNumber += 1;
+  G.termWeek = 1;
+  G.week += 1;
+  G.ap = AP_PER_WEEK;
+  G.momentum = 0;
+  G.pendingEvent = null;
+  refreshStaffMarket();
+  calcPolls();
+  log(`=== A new Parliament begins (Term ${G.termNumber}) ===`, 'lognew');
+  closeModal(); save(); render();
+}
+
+// ---------------------------------------------------------------------
+// WEEK ADVANCE
+// ---------------------------------------------------------------------
+function advanceWeek(){
+  if(G.gameOver) return;
+  if(G.pendingEvent) return;
+
+  const payroll = G.staff.reduce((a,s)=>a+s.salary,0);
+  G.funds -= payroll;
+  if(G.funds < 0){
+    G.unity = clamp(G.unity-5,0,100);
+    log(`Payroll of ${fmtMoney(payroll)} pushes the party into debt. Unity suffers.`, 'lognew');
+  }
+
+  if(G.campaign){ tickCampaignPhase(); }
+  else { tickByElection(); }
+
+  if(!G.campaign) driftRivals();
+  if(G.governing && !G.campaign) runDepartments();
+  checkStaffMorale();
+  updateInnerCircleRelations();
+  if(!G.campaign) maybeRefreshStaffMarket();
+
+  if(Math.random()<0.55) randomNationalEvent();
+
+  if(!G.campaign && !G.pendingEvent && (G.week - (G.lastConferenceWeek||0)) >= CONFERENCE_INTERVAL){ triggerConference(); }
+  if(G.governing && !G.campaign && !G.pendingEvent && (G.week - (G.lastBudgetWeek||0)) >= CONFERENCE_INTERVAL){ triggerBudget(); }
+  if(!G.campaign && !G.pendingEvent && (G.week - (G.lastLocalElectionsWeek||0)) >= 26){ triggerLocalElections(); }
+  if(!G.campaign && !G.pendingEvent) checkManifestoBreaches();
+  if(!G.campaign && !G.pendingEvent) checkFavourExposure();
+  if(!G.campaign && !G.pendingEvent) maybeTriggerByElection();
+  if(!G.campaign && !G.pendingEvent) maybeTriggerRebellion();
+  if(!G.campaign && !G.pendingEvent) maybeTriggerForeignCrisis();
+  if(!G.campaign && !G.pendingEvent) maybeTriggerCaseworkCrisis();
+
+  G.unity = clamp(G.unity + (60-G.unity)*0.02, 0, 100);
+  G.trust = clamp(G.trust + (55-G.trust)*0.015, 0, 100);
+  updateMembers();
+
+  G.week += 1;
+  if(!G.campaign) G.termWeek += 1;
+  G.ap = AP_PER_WEEK;
+
+  calcPolls();
+  G.pollHistory.push({week:G.week, you:G.polls.you, gov:G.polls.gov, opp:G.polls.opp, oth:G.polls.oth});
+  if(G.pollHistory.length>600) G.pollHistory.shift();
+  checkAchievements();
+
+  if(!G.pendingEvent) checkLeadershipChallenge();
+
+  if(!G.campaign && !G.gameOver && !G.pendingEvent && G.termWeek >= G.termLength){
+    log('The parliamentary term reaches its end. A General Election must now be held.', 'lognew');
+    beginCampaignPhase();
+  }
+
+  save();
+  render();
+}
+
+// ---------------------------------------------------------------------
+// MODAL HELPERS
+// ---------------------------------------------------------------------
+function showEventModal(){
+  const ev = G.pendingEvent;
+  if(!ev) return;
+  const box = document.getElementById('modalBox');
+  let html = `<h2>${ev.title}</h2><div class="mbody">${ev.text.replace(/\n/g,'<br>')}</div>`;
+
+  if(ev.type==='donation'){
+    html += `<div class="mchoices">
+      <button onclick="resolveDonation('quiet')"><span class="mc-t">Accept quietly — ${fmtMoney(ev.amount)}</span><span class="mc-d">Big money, and you shift policy as asked. Risk of future exposure.</span></button>
+      <button onclick="resolveDonation('open')"><span class="mc-t">Accept as a declared donation — ${fmtMoney(Math.round(ev.amount*0.5))}</span><span class="mc-d">Smaller sum, publicly registered, no favours owed.</span></button>
+      <button onclick="resolveDonation('decline')"><span class="mc-t">Decline</span><span class="mc-d">Walk away. A small boost to your reputation for integrity.</span></button>
+    </div>`;
+  } else if(ev.type==='exposure'){
+    html += `<div class="mchoices">
+      <button onclick="resolveExposure('deny')"><span class="mc-t">Deny everything</span><span class="mc-d">High risk, high reward — if it holds, the story dies quickly.</span></button>
+      <button onclick="resolveExposure('apologise')"><span class="mc-t">Apologise and repay the money</span><span class="mc-d">Guaranteed damage, but contained and short-lived.</span></button>
+      <button onclick="resolveExposure('blame')"><span class="mc-t">Blame a former aide</span><span class="mc-d">Deflects some heat, but the party sees through it.</span></button>
+    </div>`;
+  } else if(ev.type==='scandal'){
+    html += `<div class="mchoices">
+      <button onclick="resolveScandalResponse('apologise')"><span class="mc-t">Apologise</span><span class="mc-d">Calm, contrite, and clear.</span></button>
+      <button onclick="resolveScandalResponse('defend')"><span class="mc-t">Defend your position</span><span class="mc-d">Refuse to back down.</span></button>
+      <button onclick="resolveScandalResponse('joke')"><span class="mc-t">Make light of it</span><span class="mc-d">Try to laugh it off.</span></button>
+    </div>`;
+  } else if(ev.type==='candidate-select'){
+    html += `<div class="mchoices">
+      <button onclick="selectByElectionCandidate('local')"><span class="mc-t">Local Stalwart</span><span class="mc-d">Reliable, moderate quality, no surprises.</span></button>
+      <button onclick="selectByElectionCandidate('star')"><span class="mc-t">Rising Star</span><span class="mc-d">Strong candidate, higher expected quality.</span></button>
+      <button onclick="selectByElectionCandidate('celeb')"><span class="mc-t">Celebrity Candidate</span><span class="mc-d">Huge attention, wildly unpredictable quality.</span></button>
+    </div>`;
+  } else if(ev.type==='rebellion'){
+    html += `<div class="mchoices">
+      <button onclick="resolveRebellion('whip')"><span class="mc-t">Whip Hard</span><span class="mc-d">Demand loyalty. Risky if it fails.</span></button>
+      <button onclick="resolveRebellion('free')"><span class="mc-t">Allow a Free Vote</span><span class="mc-d">Defuse tension, look a little disorganised.</span></button>
+      <button onclick="resolveRebellion('concede')"><span class="mc-t">Concede the Point</span><span class="mc-d">Shift ground to keep the peace.</span></button>
+    </div>`;
+  } else if(ev.type==='conference'){
+    html += `<div class="mchoices">
+      <button onclick="resolveConference('bold')"><span class="mc-t">A Bold Vision</span><span class="mc-d">High risk, high reward.</span></button>
+      <button onclick="resolveConference('steady')"><span class="mc-t">Reassuring Competence</span><span class="mc-d">Safe, steady, dependable.</span></button>
+      <button onclick="resolveConference('attack')"><span class="mc-t">Attack the Government</span><span class="mc-d">Go on the offensive.</span></button>
+    </div>`;
+  } else if(ev.type==='conference-motion'){
+    html += `<div class="mchoices">
+      <button onclick="resolveConferenceMotion('whip')"><span class="mc-t">Whip Against It</span><span class="mc-d">Defend your current position — risky if the whipping operation fails.</span></button>
+      <button onclick="resolveConferenceMotion('accept')"><span class="mc-t">Accept the Motion</span><span class="mc-d">Let policy shift to match the floor. Boosts Unity.</span></button>
+      <button onclick="resolveConferenceMotion('compromise')"><span class="mc-t">Broker a Compromise</span><span class="mc-d">A partial shift, and a smaller Unity boost.</span></button>
+    </div>`;
+  } else if(ev.type==='broken-pledge'){
+    html += `<div class="mchoices">
+      <button onclick="resolveBrokenPledge('apologise')"><span class="mc-t">Apologise for the U-turn</span><span class="mc-d">Contrite, but you look weak.</span></button>
+      <button onclick="resolveBrokenPledge('defend')"><span class="mc-t">Insist your position hasn't really changed</span><span class="mc-d">High risk — worse if nobody buys it.</span></button>
+      <button onclick="resolveBrokenPledge('ownit')"><span class="mc-t">Openly admit you changed your mind</span><span class="mc-d">Costs you with the party base, reads as honest to voters.</span></button>
+    </div>`;
+  } else if(ev.type==='budget'){
+    html += `<div class="mchoices">`;
+    POLICY_AREAS.forEach(p=>{
+      html += `<button onclick="resolveBudget('${p.key}')"><span class="mc-t">Boost spending: ${p.name}</span><span class="mc-d">Improves that department's performance and nudges policy — costs Unity and funds.</span></button>`;
+    });
+    html += `<button onclick="resolveBudget('balanced')"><span class="mc-t">A Balanced Budget</span><span class="mc-d">No major changes — safe, but unremarkable.</span></button>`;
+    html += `</div>`;
+  } else if(ev.type==='local-elections'){
+    html += `<div class="mchoices">
+      <button onclick="resolveLocalElections('push')"><span class="mc-t">Full National Campaign Push — ${fmtMoney(15000)}</span><span class="mc-d">Spend to maximise the result, for better or worse.</span></button>
+      <button onclick="resolveLocalElections('light')"><span class="mc-t">Light Touch</span><span class="mc-d">Let local parties run their own campaigns.</span></button>
+      <button onclick="resolveLocalElections('skip')"><span class="mc-t">Skip — Focus Elsewhere</span><span class="mc-d">No cost, but little to gain either.</span></button>
+    </div>`;
+  } else if(ev.type==='foreign-crisis'){
+    if(G.governing){
+      html += `<div class="mchoices">
+        <button onclick="resolveForeignCrisis('intervene')"><span class="mc-t">Intervene Directly</span><span class="mc-d">High risk, high reward — decisive leadership or a costly overreach.</span></button>
+        <button onclick="resolveForeignCrisis('sanction')"><span class="mc-t">Targeted Sanctions</span><span class="mc-d">A measured, cautious response.</span></button>
+        <button onclick="resolveForeignCrisis('abstain')"><span class="mc-t">Stay Out Of It</span><span class="mc-d">Keep the country out of the crisis entirely.</span></button>
+      </div>`;
+    } else {
+      html += `<div class="mchoices">
+        <button onclick="resolveForeignCrisis('support')"><span class="mc-t">Support the Government's Response</span><span class="mc-d">Statesmanlike, if it lands.</span></button>
+        <button onclick="resolveForeignCrisis('criticise')"><span class="mc-t">Criticise Their Handling</span><span class="mc-d">Risky — can look opportunistic during a crisis.</span></button>
+        <button onclick="resolveForeignCrisis('silent')"><span class="mc-t">Stay Silent</span><span class="mc-d">Safe, but forgettable.</span></button>
+      </div>`;
+    }
+  } else if(ev.type==='casework-crisis'){
+    html += `<div class="mchoices">
+      <button onclick="resolveCaseworkCrisis('fund')"><span class="mc-t">Fund Emergency Support — ${fmtMoney(8000)}</span><span class="mc-d">Clears the backlog fully and improves local opinion.</span></button>
+      <button onclick="resolveCaseworkCrisis('visit')"><span class="mc-t">Personally Intervene (1 AP)</span><span class="mc-d">No cost in funds, and the MP appreciates it — a smaller but free fix.</span></button>
+      <button onclick="resolveCaseworkCrisis('ignore')"><span class="mc-t">Ignore It</span><span class="mc-d">No cost, but the seat's standing — and the MP's loyalty — take a hit.</span></button>
+    </div>`;
+  } else if(ev.type==='coalition-talks'){
+    html += `<div class="mchoices">`;
+    ev.opts.forEach(o=>{
+      const area = POLICY_AREAS.find(p=>p.key===o.askKey);
+      if(o.viable){
+        html += `<button onclick="resolveCoalitionChoice('${o.id}')"><span class="mc-t">Form a coalition with ${o.name} — ${o.combined} seats combined</span><span class="mc-d">They want movement on ${area.name}. You'll split the difference between your positions, and Unity will take a hit.</span></button>`;
+      } else {
+        html += `<button disabled><span class="mc-t">${o.name} — ${o.seats} seats</span><span class="mc-d">Not enough for a majority even combined (${o.combined} of ${MAJORITY} needed).</span></button>`;
+      }
+    });
+    html += `<button onclick="resolveCoalitionChoice('minority')"><span class="mc-t">Govern Alone as a Minority</span><span class="mc-d">No partner and no concessions — but a fragile Government, prone to collapse.</span></button>`;
+    html += `<button onclick="resolveCoalitionChoice('decline')"><span class="mc-t">Decline — Remain in Opposition</span><span class="mc-d">Let another party attempt to form a Government instead.</span></button>`;
+    html += `</div>`;
+  } else if(ev.type==='hire-offer'){
+    const cand = G.staffMarket.find(c=>c.id===ev.candId);
+    if(!cand){ html += `<div class="mchoices"><button onclick="G.pendingEvent=null; closeModal(); render();">Close</button></div>`; }
+    else {
+      html += `<div class="mchoices">
+        <button onclick="proposeHire('${cand.id}','low')"><span class="mc-t">Lowball — ${fmtMoney(Math.round(cand.salary*0.8))}/wk</span><span class="mc-d">Cheaper, but skilled candidates may refuse — and can walk away for good if insulted.</span></button>
+        <button onclick="proposeHire('${cand.id}','standard')"><span class="mc-t">Standard Offer — ${fmtMoney(cand.salary)}/wk</span><span class="mc-d">Their asking rate. Very likely to be accepted.</span></button>
+        <button onclick="proposeHire('${cand.id}','high')"><span class="mc-t">Generous Offer — ${fmtMoney(Math.round(cand.salary*1.25))}/wk</span><span class="mc-d">Costs more, guaranteed to be accepted, and they start with high morale.</span></button>
+      </div>`;
+    }
+  } else if(ev.type==='byelection-result'){
+    html += `<div class="mchoices"><button class="primary" onclick="G.pendingEvent=null; save(); closeModal(); render();">Continue</button></div>`;
+  } else if(ev.type==='info'){
+    html += `<div class="mchoices"><button class="primary" onclick="G.pendingEvent=null; save(); closeModal(); render();">Continue</button></div>`;
+  } else if(ev.type==='gameover'){
+    html += `<div class="mchoices"><button class="primary" onclick="closeModal(); render();">See Final Summary</button></div>`;
+  } else if(ev.type==='election-result'){
+    const rows = ev.ranked.map(([id,r])=>`<div class="pollbar-row"><span class="pname">${r.name}${id==='you'?' (You)':''}</span><div class="bar-outer"><div class="bar-inner" style="width:${r.seats/TOTAL_SEATS*100}%; background:${id==='you'?'var(--you)':id==='gov'?'var(--gov)':id==='opp'?'var(--opp)':'var(--oth)'}"></div></div><span class="pval">${r.seats}</span></div>`).join('');
+    html += `<div style="margin:14px 0;">${rows}</div>`;
+    html += `<div class="mchoices"><button class="primary" onclick="continueAfterElection()">${G.won?'Begin Governing':'Continue'}</button></div>`;
+  }
+  box.innerHTML = html;
+  document.getElementById('overlay').classList.add('show');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
+function alertModal(title, text){
+  const box = document.getElementById('modalBox');
+  box.innerHTML = `<h2>${title}</h2><div class="mbody">${text}</div><div class="mchoices"><button class="primary" onclick="closeModal()">OK</button></div>`;
+  document.getElementById('overlay').classList.add('show');
+}
+
+// ---------------------------------------------------------------------
+// RENDERING
+// ---------------------------------------------------------------------
+let currentTab = 'overview';
+let partyMpQuery = '';
+let partyShowAllBackbench = false;
+
+function render(){
+  if(!G) return;
+  if(G.gameOver){ renderGameOver(); return; }
+  document.getElementById('tbParty').textContent = G.partyName + (G.governing? ' — HM GOVERNMENT':'');
+  document.getElementById('tbWeek').textContent = G.week + (G.campaign? ' (campaign)': '');
+  document.getElementById('tbFunds').textContent = fmtMoney(G.funds);
+  document.getElementById('tbSeats').textContent = G.seats;
+  document.getElementById('tbPoll').textContent = fmtPct(G.polls.you);
+  document.getElementById('tbUnity').textContent = Math.round(G.unity)+'%';
+  document.getElementById('tbTrust').textContent = Math.round(G.trust)+'%';
+  const apWrap = document.getElementById('apDots');
+  apWrap.innerHTML='';
+  for(let i=0;i<AP_PER_WEEK;i++){
+    const d=document.createElement('div');
+    d.className='apdot'+(i<G.ap?' filled':'');
+    apWrap.appendChild(d);
+  }
+
+  const content = document.getElementById('content');
+  if(currentTab==='overview') content.innerHTML = renderOverview();
+  else if(currentTab==='policies') content.innerHTML = renderPolicies();
+  else if(currentTab==='party') content.innerHTML = renderParty();
+  else if(currentTab==='staff') content.innerHTML = renderStaff();
+  else if(currentTab==='campaign') content.innerHTML = renderCampaign();
+  else if(currentTab==='media') content.innerHTML = renderMedia();
+  else if(currentTab==='finances') content.innerHTML = renderFinances();
+
+  renderLog();
+  wireContentEvents();
+
+  if(G.pendingEvent) showEventModal();
+}
+
+function pollBar(id,name,val,colour){
+  return `<div class="pollbar-row"><span class="pname">${name}</span><div class="bar-outer"><div class="bar-inner" style="width:${clamp(val,0,100)}%; background:${colour}"></div></div><span class="pval">${fmtPct(val)}</span></div>`;
+}
+
+function pollHistorySvg(){
+  const hist = G.pollHistory;
+  if(!hist || hist.length<2) return '<p class="small">Poll trend will appear here after a few weeks.</p>';
+  const W=560, H=140, pad=8;
+  const n = hist.length;
+  const xStep = n>1 ? (W-2*pad)/(n-1) : 0;
+  const colours = {you:'var(--you)', gov:'var(--gov)', opp:'var(--opp)', oth:'var(--oth)'};
+  const lines = ['you','gov','opp','oth'].map(k=>{
+    const pts = hist.map((h,i)=>{
+      const x = pad + i*xStep;
+      const y = (H-pad) - clamp(h[k],0,100)/100*(H-2*pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return `<polyline points="${pts}" fill="none" style="stroke:${colours[k]}; stroke-width:2.2;"/>`;
+  }).join('');
+  return `<div style="margin:10px 0 4px;">
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%; height:130px; display:block;">${lines}</svg>
+    <div class="small" style="margin-top:2px;">Poll trend, week ${hist[0].week}–${hist[n-1].week}</div>
+  </div>`;
+}
+
+function renderSeatMosaic(){
+  const parties = [
+    {id:'you', n:G.seats, colour:'var(--you)', name:G.partyName},
+    {id:'gov', n:G.rivals.find(r=>r.id==='gov').seats, colour:'var(--gov)', name:G.rivals.find(r=>r.id==='gov').name},
+    {id:'opp', n:G.rivals.find(r=>r.id==='opp').seats, colour:'var(--opp)', name:G.rivals.find(r=>r.id==='opp').name},
+    {id:'oth', n:G.rivals.find(r=>r.id==='oth').seats, colour:'var(--oth)', name:G.rivals.find(r=>r.id==='oth').name},
+  ];
+  let cells = '';
+  parties.forEach(p=>{
+    for(let i=0;i<p.n;i++) cells += `<div style="background:${p.colour};" title="${p.name}"></div>`;
+  });
+  const legend = parties.map(p=>`<span class="small"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.colour};margin-right:4px;vertical-align:middle;"></span>${p.name}: ${p.n}</span>`).join(' &nbsp; ');
+  return `<div class="seatmosaic">${cells}</div><div class="flex" style="flex-wrap:wrap;">${legend}</div>`;
+}
+
+function renderUkMap(){
+  const seatsByRegion = computeRegionalSeats();
+  const govName = G.rivals.find(r=>r.id==='gov').name;
+  const oppName = G.rivals.find(r=>r.id==='opp').name;
+  const othName = G.rivals.find(r=>r.id==='oth').name;
+  let blocks = '';
+  REGIONS.forEach(r=>{
+    const c = seatsByRegion[r.key];
+    const total = c.you+c.gov+c.opp+c.oth;
+    const pct = k=> total ? (c[k]/total*100) : 0;
+    const title = `${r.name} — ${G.partyName} ${c.you}, ${govName} ${c.gov}, ${oppName} ${c.opp}, ${othName} ${c.oth}`;
+    blocks += `<div class="ukregion" style="grid-column:${r.grid.col}; grid-row:${r.grid.row};" title="${title}">
+      <div class="ukregion-label">${r.name}</div>
+      <div class="ukregion-bar">
+        <span style="width:${pct('you')}%; background:var(--you);"></span>
+        <span style="width:${pct('gov')}%; background:var(--gov);"></span>
+        <span style="width:${pct('opp')}%; background:var(--opp);"></span>
+        <span style="width:${pct('oth')}%; background:var(--oth);"></span>
+      </div>
+    </div>`;
+  });
+  return `<div class="ukmapwrap"><div class="ukmap">${blocks}</div></div><p class="small">A stylised regional guide to where support leans, derived from your live polling — not individual constituencies.</p>`;
+}
+
+function renderOverview(){
+  const p = G.polls;
+  let html = `<div class="grid2">`;
+  html += `<div class="card"><h3>National Standing</h3>`;
+  html += pollBar('you', G.partyName+' (You)', p.you, 'var(--you)');
+  html += pollBar('gov', G.rivals.find(r=>r.id==='gov').name+' (Govt)', p.gov, 'var(--gov)');
+  html += pollBar('opp', G.rivals.find(r=>r.id==='opp').name, p.opp, 'var(--opp)');
+  html += pollBar('oth', G.rivals.find(r=>r.id==='oth').name, p.oth, 'var(--oth)');
+  html += pollHistorySvg();
+  html += renderSeatMosaic();
+  html += `<hr class="sep">`;
+  html += `<div class="statrow"><span class="lbl">Seats held</span><b>${G.seats} / ${TOTAL_SEATS}</b></div>`;
+  html += `<div class="statrow"><span class="lbl">Party members</span><b>${G.members.toLocaleString()}</b></div>`;
+  html += `<div class="statrow"><span class="lbl">Leader approval</span><b>${Math.round(G.approval)}%</b></div>`;
+  html += `<div class="statrow"><span class="lbl">Term week</span><b>${G.termWeek} / ${G.termLength}</b></div>`;
+  html += `</div>`;
+
+  html += `<div class="card"><h3>This Week's Actions</h3><div class="actiongrid">`;
+  html += actionButton('Public Meeting', 'Meet a demographic group. Costs 1 AP.', 'openMeetingChooser()', G.ap<1);
+  html += actionButton('Media Interview', 'Face the press on the record. Costs 1 AP.', 'actionMediaInterview()', G.ap<1);
+  html += actionButton('Fundraising Dinner', 'Raise money for the party. Costs 1 AP.', 'actionFundraising()', G.ap<1);
+  html += actionButton('Party Management', 'Shore up unity among your MPs. Costs 1 AP.', 'actionPartyManagement()', G.ap<1);
+  if(!G.campaign){
+    html += actionButton(G.governing?'Answer PMQs':'Face PMQs', G.governing?'Defend your record at the despatch box. Costs 1 AP.':'Challenge the PM directly. Costs 1 AP.', 'actionPMQs()', G.ap<1);
+  }
+  if(canTableNoConfidence()){
+    html += actionButton('Table a Motion of No Confidence', 'Attempt to bring down a Government without a majority and force an early Election. Costs 1 AP.', 'tableNoConfidence()', G.ap<1);
+  }
+  html += `</div>`;
+  html += `<hr class="sep"><div class="flex"><button class="primary" onclick="advanceWeek()" style="flex:1;padding:12px;">Advance to Next Week &rarr;</button></div>`;
+  if(canCallSnapElection()){
+    html += `<div style="margin-top:10px;"><button class="danger" onclick="callSnapElection()" style="width:100%;">Call a Snap General Election</button></div>`;
+  }
+  html += `</div></div>`;
+
+  if(G.byElection){ html += renderByElectionCard(); }
+
+  if(G.campaign){
+    html += `<div class="card"><h3>General Election Campaign — ${G.campaign.weeksLeft} week(s) remaining</h3>` + campaignActionsHtml() + `</div>`;
+  }
+
+  if(G.governing && G.departments){
+    html += `<div class="card"><h3>Government Departments${G.minorityGovt?' <span class="tag warn" style="margin-left:6px;">Minority Govt</span>':''}</h3>`;
+    html += `<p class="small">Performance drifts toward the competence of whichever MP holds each portfolio — assign your Cabinet in the Party &amp; MPs tab. Unstaffed departments drift toward a poor baseline.</p>`;
+    POLICY_AREAS.forEach(p=>{
+      const dept = G.departments[p.key];
+      const minister = G.mps.find(m=>m.portfolio===p.name);
+      const perf = Math.round(dept.performance);
+      const barColour = perf>=65 ? 'var(--green)' : perf>=40 ? 'var(--gold)' : 'var(--red)';
+      html += `<div class="pollbar-row"><span class="pname">${p.name}${minister?'':' (vacant)'}</span><div class="bar-outer"><div class="bar-inner" style="width:${perf}%; background:${barColour}"></div></div><span class="pval">${perf}</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div class="card"><h3>Across the Country</h3>` + renderUkMap() + `</div>`;
+
+  html += `<div class="card"><h3>Demographic Support</h3>`;
+  DEMOGRAPHICS.forEach(d=>{
+    const s = G.demoSupport[d.key];
+    if(!s) return;
+    html += `<div class="pollbar-row"><span class="pname">${d.name} (${d.size}%)</span><div class="bar-outer"><div class="bar-inner" style="width:${s.you}%; background:var(--you)"></div></div><span class="pval">${fmtPct(s.you)}</span></div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function actionButton(title, desc, fn, disabled){
+  return `<button class="action-btn" onclick="${fn}" ${disabled?'disabled':''}><span class="atitle">${title}</span><span class="adesc">${desc}</span></button>`;
+}
+
+function renderByElectionCard(){
+  const be = G.byElection;
+  let html = `<div class="card"><h3>By-Election: ${be.seat}</h3>`;
+  if(be.candidateQuality==null){
+    html += `<p class="small">Awaiting candidate selection.</p>`;
+  } else {
+    html += `<div class="statrow"><span class="lbl">Candidate</span><b>${be.candidateName} (quality ${be.candidateQuality})</b></div>
+    <div class="statrow"><span class="lbl">Weeks remaining</span><b>${be.weeksLeft}</b></div>
+    <div class="statrow"><span class="lbl">Campaign effort built</span><b>${Math.round(be.effort)}</b></div>
+    <div class="statrow"><span class="lbl">Funds committed</span><b>${fmtMoney(be.spend)}</b></div>`;
+    if(staffSkill('pollster')>0){
+      html += `<div class="statrow"><span class="lbl">Pollster's estimate</span><b>${byElectionWinProbability(be)}% chance of winning</b></div>`;
+    }
+    html += `<div class="flex" style="margin-top:10px;">
+      <button onclick="campaignByElection()" ${G.ap<1?'disabled':''}>Campaign On The Ground (1 AP)</button>
+      <button onclick="spendOnByElection(5000)" ${G.funds<5000?'disabled':''}>Spend £5,000</button>
+      <button onclick="spendOnByElection(15000)" ${G.funds<15000?'disabled':''}>Spend £15,000</button>
+    </div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function campaignActionsHtml(){
+  const c = G.campaign;
+  let html = `<div class="actiongrid">`;
+  html += actionButton('Launch Manifesto', 'Lock in your platform for a poll boost based on coherence.', 'campaignManifestoLaunch()', c.manifestoLocked || G.ap<1);
+  html += actionButton("TV Leaders' Debate", 'A high-risk, high-reward national moment.', 'campaignTvDebate()', c.debateDone || G.ap<1);
+  html += `</div>`;
+  html += `<div style="margin-top:12px;">
+    <div class="small" style="margin-bottom:6px;">Final Push — spend remaining funds on advertising and canvassing (once per campaign):</div>
+    <div class="flex">
+      <button onclick="campaignFinalPush(10000)" ${c.finalPushDone||G.funds<10000?'disabled':''}>Spend £10,000</button>
+      <button onclick="campaignFinalPush(30000)" ${c.finalPushDone||G.funds<30000?'disabled':''}>Spend £30,000</button>
+      <button onclick="campaignFinalPush(75000)" ${c.finalPushDone||G.funds<75000?'disabled':''}>Spend £75,000</button>
+    </div>
+  </div>`;
+  html += `<hr class="sep"><button class="primary" onclick="advanceWeek()" style="width:100%;padding:12px;">Advance Campaign Week &rarr;</button>`;
+  return html;
+}
+
+function openMeetingChooser(){
+  const box = document.getElementById('modalBox');
+  let html = `<h2>Choose a Public Meeting</h2><div class="mbody">Which group will you address this week?</div><div class="mchoices">`;
+  DEMOGRAPHICS.forEach(d=>{
+    html += `<button onclick="actionPublicMeeting('${d.key}'); closeModal();"><span class="mc-t">${d.name}</span><span class="mc-d">${d.size}% of the electorate</span></button>`;
+  });
+  html += `<button onclick="closeModal()">Cancel</button></div>`;
+  box.innerHTML = html;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function renderPolicies(){
+  let html = `<div class="card"><h3>Party Platform</h3><p class="small">Sliding a policy far from its current setting requires an Action Point to announce, and large U-turns cost Party Unity. Small nudges (under 3 points) are free.</p>`;
+  POLICY_AREAS.forEach(p=>{
+    const v = G.you.stance[p.key];
+    html += `<div class="slider-row">
+      <div class="sl-head"><span>${p.name}</span><b>${v>0?'+':''}${v}</b></div>
+      <input type="range" min="-100" max="100" value="${v}" data-policy="${p.key}" class="policySlider">
+      <div class="sl-labels"><span>${p.lo}</span><span>${p.hi}</span></div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="card"><h3>Rival Party Positions</h3><div class="tblwrap"><table><tr><th>Party</th>`;
+  POLICY_AREAS.forEach(p=>html+=`<th>${p.name}</th>`);
+  html += `</tr>`;
+  html += `<tr><td>${G.partyName} (You)</td>` + POLICY_AREAS.map(p=>`<td>${G.you.stance[p.key]}</td>`).join('') + `</tr>`;
+  G.rivals.forEach(r=>{
+    html += `<tr><td>${r.name}</td>` + POLICY_AREAS.map(p=>`<td>${r.stance[p.key]}</td>`).join('') + `</tr>`;
+  });
+  html += `</table></div></div>`;
+  return html;
+}
+
+function mpTableRows(list){
+  let html = `<div class="tblwrap"><table><tr><th>Name</th><th>Seat</th><th>Personality</th><th>Role</th><th>Loyalty</th><th>Competence</th></tr>`;
+  list.forEach(mp=>{
+    const eff = mp.portfolio ? Math.round(effectiveCompetence(mp)) : mp.competence;
+    html += `<tr>
+      <td><a onclick="openMpDetailModal('${mp.id}'); return false;" href="#">${mp.name}</a></td>
+      <td>${mp.seat}</td>
+      <td>${personalityLabel(mp.personality)}</td>
+      <td>
+        <select data-mpselect="${mp.id}">
+          <option value="">Backbencher</option>
+          ${SHADOW_PORTFOLIOS.map(p=>`<option value="${p}" ${mp.portfolio===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </td>
+      <td>${loyaltyTag(mp.loyalty)}</td>
+      <td>${eff}${eff!==mp.competence?` <span class="small">(base ${mp.competence})</span>`:''}</td>
+    </tr>`;
+  });
+  html += `</table></div>`;
+  return html;
+}
+
+const MP_LIST_COLLAPSE = 25;
+
+function renderParty(){
+  const cabinet = G.mps.filter(m=>m.portfolio).sort((a,b)=>SHADOW_PORTFOLIOS.indexOf(a.portfolio)-SHADOW_PORTFOLIOS.indexOf(b.portfolio));
+  const backbench = G.mps.filter(m=>!m.portfolio);
+
+  let html = `<div class="card"><h3>${G.governing?'Cabinet':'Shadow Cabinet'} (${cabinet.length}/${SHADOW_PORTFOLIOS.length} portfolios filled)</h3>`;
+  html += cabinet.length===0
+    ? `<p class="small">No portfolios assigned yet — appoint MPs to a portfolio in the Backbenchers list below.</p>`
+    : mpTableRows(cabinet);
+  html += `</div>`;
+
+  html += `<div class="card"><h3>Backbenchers (${backbench.length})</h3>`;
+  html += `<div class="field" style="margin-bottom:10px;"><input type="text" id="mpSearchInput" placeholder="Search by name or seat... (Enter to search)" value="${partyMpQuery.replace(/"/g,'&quot;')}"></div>`;
+
+  const query = partyMpQuery.trim().toLowerCase();
+  let shown = query
+    ? backbench.filter(m=>m.name.toLowerCase().includes(query) || m.seat.toLowerCase().includes(query))
+    : backbench.slice();
+  shown.sort((a,b)=>b.competence-a.competence);
+
+  let truncated = false;
+  if(!query && !partyShowAllBackbench && shown.length>MP_LIST_COLLAPSE){
+    shown = shown.slice(0,MP_LIST_COLLAPSE);
+    truncated = true;
+  }
+
+  if(backbench.length===0) html += `<p class="small">No backbenchers — every MP holds a portfolio.</p>`;
+  else if(shown.length===0) html += `<p class="small">No backbenchers match "${partyMpQuery}".</p>`;
+  else html += mpTableRows(shown);
+
+  if(truncated){
+    html += `<button onclick="partyShowAllBackbench=true; render();" style="margin-top:8px;">Show all ${backbench.length} backbenchers</button>`;
+  } else if(!query && partyShowAllBackbench && backbench.length>MP_LIST_COLLAPSE){
+    html += `<button onclick="partyShowAllBackbench=false; render();" style="margin-top:8px;">Collapse list</button>`;
+  }
+  html += `</div>`;
+  return html;
+}
+function loyaltyTag(v){
+  if(v>=70) return `<span class="tag good">${v}</span>`;
+  if(v>=40) return `<span class="tag warn">${v}</span>`;
+  return `<span class="tag bad">${v}</span>`;
+}
+
+function moraleTag(v){
+  if(v>=65) return `<span class="tag good">${Math.round(v)}</span>`;
+  if(v>=30) return `<span class="tag warn">${Math.round(v)}</span>`;
+  return `<span class="tag bad">${Math.round(v)}</span>`;
+}
+
+function renderStaff(){
+  let html = `<div class="card"><h3>Current Staff (Weekly payroll: ${fmtMoney(G.staff.reduce((a,s)=>a+s.salary,0))})</h3>`;
+  if(G.staff.length===0) html += `<p class="small">You have no campaign staff. Hire from the market below.</p>`;
+  else {
+    html += `<p class="small">Underpaid staff lose morale over time and can resign; a raise or a cut takes effect immediately. Skill shown includes the effect of how well they get on with the rest of the team.</p>`;
+    html += `<div class="tblwrap"><table><tr><th>Name</th><th>Role</th><th>Personality</th><th>Skill</th><th>Salary/wk</th><th>Morale</th><th></th></tr>`;
+    G.staff.forEach(s=>{
+      const eff = Math.round(effectiveSkill(s));
+      html += `<tr><td><a onclick="openStaffDetailModal('${s.id}'); return false;" href="#">${s.name}</a></td><td>${s.roleName}</td><td>${personalityLabel(s.personality)}</td><td>${eff}${eff!==s.skill?` <span class="small">(base ${s.skill})</span>`:''}</td><td>${fmtMoney(s.salary)}</td><td>${moraleTag(s.morale===undefined?70:s.morale)}</td>
+        <td class="flex">
+          <button onclick="giveRaise('${s.id}')">Raise</button>
+          <button onclick="cutPay('${s.id}')">Cut Pay</button>
+          <button class="danger" onclick="fireStaff('${s.id}')">Fire</button>
+        </td></tr>`;
+    });
+    html += `</table></div>`;
+  }
+  html += `</div>`;
+
+  html += `<div class="card"><h3>Candidate Market</h3><p class="small">The market turns over every few months, so it's worth checking back.</p><div class="tblwrap"><table><tr><th>Name</th><th>Role</th><th>Personality</th><th>Skill</th><th>Asking Salary/wk</th><th></th></tr>`;
+  G.staffMarket.forEach(c=>{
+    html += `<tr><td>${c.name}</td><td>${c.roleName}</td><td>${personalityLabel(c.personality)}</td><td>${c.skill}</td><td>${fmtMoney(c.salary)}</td><td><button onclick="openHireOfferModal('${c.id}')" ${G.funds<Math.round(c.salary*1.6)?'disabled':''}>Make an Offer</button></td></tr>`;
+  });
+  html += `</table></div></div>`;
+  return html;
+}
+
+function renderCampaign(){
+  let html='';
+  if(G.campaign){
+    html += `<div class="card"><h3>General Election Campaign — ${G.campaign.weeksLeft} week(s) remaining</h3>${campaignActionsHtml()}</div>`;
+  } else {
+    html += `<div class="card"><h3>General Election</h3><p class="small">The current term runs to week ${G.termLength} (currently week ${G.termWeek}). ${canCallSnapElection()?'You may call a snap election at any time.':'You cannot call a snap election before week '+MIN_SNAP_WEEK+'.'}</p>`;
+    if(canCallSnapElection()) html += `<button class="danger" onclick="callSnapElection()">Call a Snap General Election</button>`;
+    html += `</div>`;
+  }
+  if(G.byElection){
+    html += renderByElectionCard();
+  } else if(!G.campaign) {
+    html += `<div class="card"><h3>No Active By-Election</h3><p class="small">By-elections are triggered randomly — most likely when party unity is low, or when you expel one of your own MPs.</p></div>`;
+  }
+  html += `<div class="card"><h3>Election History</h3>`;
+  if(G.electionHistory.length===0) html += `<p class="small">No General Elections held yet.</p>`;
+  else {
+    html += `<div class="tblwrap"><table><tr><th>Term</th><th>${G.partyName}</th><th>Govt</th><th>Opposition</th><th>Others</th><th>Outcome</th></tr>`;
+    G.electionHistory.forEach(h=>{
+      html += `<tr><td>${h.term}</td><td>${h.results.you.seats}</td><td>${h.results.gov.seats}</td><td>${h.results.opp.seats}</td><td>${h.results.oth.seats}</td><td>${h.outcome}</td></tr>`;
+    });
+    html += `</table></div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderMedia(){
+  let html = `<div class="card"><h3>Reputation</h3>`;
+  html += `<div class="statrow"><span class="lbl">Public Trust</span><b>${Math.round(G.trust)}%</b></div>`;
+  html += `<div class="statrow"><span class="lbl">Leader Approval</span><b>${Math.round(G.approval)}%</b></div>`;
+  html += `<div class="statrow"><span class="lbl">Party Unity</span><b>${Math.round(G.unity)}%</b></div>`;
+  html += `<div class="statrow"><span class="lbl">Unresolved hidden favours</span><b>${G.hiddenFavours.length}</b></div>`;
+  html += `</div>`;
+  html += `<div class="card"><h3>Achievements</h3>`;
+  if(!G.achievements || G.achievements.length===0) html += `<p class="small">None yet.</p>`;
+  else html += G.achievements.map(a=>`<span class="tag good" style="margin:3px 4px 3px 0; display:inline-block;">🏆 ${a.label} <span class="small">(wk ${a.week})</span></span>`).join('');
+  html += `</div>`;
+  html += `<div class="card"><h3>News Archive</h3><div>`;
+  G.newsFeed.slice(0,60).forEach(n=>{
+    html += `<div style="padding:6px 0; border-bottom:1px dashed #232838;"><span class="small">Week ${n.week}</span> — ${n.msg}</div>`;
+  });
+  html += `</div></div>`;
+  return html;
+}
+
+function renderFinances(){
+  const payroll = G.staff.reduce((a,s)=>a+s.salary,0);
+  let html = `<div class="card"><h3>Party Finances</h3>`;
+  html += `<div class="statrow"><span class="lbl">Funds on hand</span><b>${fmtMoney(G.funds)}</b></div>`;
+  html += `<div class="statrow"><span class="lbl">Weekly staff payroll</span><b>${fmtMoney(payroll)}</b></div>`;
+  html += `<div class="statrow"><span class="lbl">Party members</span><b>${G.members.toLocaleString()}</b></div>`;
+  html += `</div>`;
+  html += `<div class="card"><h3>Hidden Favours (accepted, unexposed)</h3>`;
+  if(G.hiddenFavours.length===0) html += `<p class="small">None. Your books are clean — for now.</p>`;
+  else {
+    html += `<div class="tblwrap"><table><tr><th>Donor</th><th>Amount</th><th>Taken (Week)</th><th>Exposure Risk</th></tr>`;
+    G.hiddenFavours.forEach(f=>{
+      html += `<tr><td>${f.donor}</td><td>${fmtMoney(f.amount)}</td><td>${f.weekTaken}</td><td>${Math.round(f.exposeChance*100)}%/wk</td></tr>`;
+    });
+    html += `</table></div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderLog(){
+  const bar = document.getElementById('logbar');
+  bar.innerHTML = G.newsFeed.slice(0,12).map(n=>`<div class="${n.cls}">Wk${n.week}: ${n.msg}</div>`).join('');
+}
+
+function renderGameOver(){
+  const wrap = document.getElementById('gameScreen');
+  const peakSeats = Math.max(G.seats, ...(G.electionHistory.map(h=>h.results.you.seats)), 0);
+  wrap.innerHTML = `<div id="topbar"><div class="tb-party">${G.partyName} — GAME OVER</div></div>
+    <div style="max-width:600px;margin:60px auto;padding:0 20px;">
+      <div class="card"><h2>The End of an Era</h2>
+      <p>${G.gameOverReason}</p>
+      <p class="small">You led ${G.partyName} for ${G.week} weeks across ${G.termNumber} Parliament(s), reaching a peak of ${peakSeats} seats.</p>
+      <button class="primary" onclick="resetGame()">Start a New Party</button>
+      </div>
+    </div>`;
+}
+
+function wireContentEvents(){
+  document.querySelectorAll('.policySlider').forEach(el=>{
+    el.addEventListener('change', e=>{
+      changePolicy(el.dataset.policy, parseInt(el.value,10));
+    });
+  });
+  document.querySelectorAll('[data-mpselect]').forEach(el=>{
+    el.addEventListener('change', e=>{
+      assignPortfolio(el.dataset.mpselect, el.value || null);
+    });
+  });
+  const mpSearch = document.getElementById('mpSearchInput');
+  if(mpSearch){
+    mpSearch.addEventListener('change', ()=>{ partyMpQuery = mpSearch.value; render(); });
+    mpSearch.addEventListener('keydown', e=>{ if(e.key==='Enter'){ partyMpQuery = mpSearch.value; render(); } });
+  }
+}
+
+// ---------------------------------------------------------------------
+// NAV / MENU WIRING
+// ---------------------------------------------------------------------
+document.getElementById('nav').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-tab]');
+  if(!btn) return;
+  currentTab = btn.dataset.tab;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active', b===btn));
+  render();
+});
+
+document.getElementById('btnMenu').addEventListener('click', ()=>{
+  const box = document.getElementById('modalBox');
+  box.innerHTML = `<h2>Menu</h2><div class="mbody">Game is auto-saved after every action.</div>
+    <div class="mchoices">
+      <button onclick="closeModal()">Resume</button>
+      <button class="danger" onclick="if(confirm('Abandon this game and start over? This cannot be undone.')) resetGame();">Resign &amp; Start New Party</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('show');
+});
+document.getElementById('overlay').addEventListener('click', e=>{
+  if(e.target.id==='overlay' && G && !G.pendingEvent) closeModal();
+});
+
+// ---------------------------------------------------------------------
+// SETUP SCREEN WIRING
+// ---------------------------------------------------------------------
+let selectedLean='centre', selectedTier='rising', selectedTrait='orator';
+
+function renderSetupOptions(){
+  const leanWrap = document.getElementById('leanOptions');
+  leanWrap.innerHTML = Object.entries(LEAN_PRESETS).map(([k,v])=>
+    `<div class="opt-card ${k===selectedLean?'selected':''}" data-lean="${k}"><h4>${v.label}</h4><p>${v.desc}</p></div>`
+  ).join('');
+  const tierWrap = document.getElementById('tierOptions');
+  tierWrap.innerHTML = Object.entries(TIER_PRESETS).map(([k,v])=>
+    `<div class="opt-card ${k===selectedTier?'selected':''}" data-tier="${k}"><h4>${v.label}</h4><p>${v.desc}</p><p class="small">${v.seats} seats, ${fmtMoney(v.funds)}</p></div>`
+  ).join('');
+  const traitWrap = document.getElementById('traitOptions');
+  traitWrap.innerHTML = Object.entries(LEADER_TRAITS).map(([k,v])=>
+    `<div class="opt-card ${k===selectedTrait?'selected':''}" data-trait="${k}"><h4>${v.label}</h4><p>${v.desc}</p></div>`
+  ).join('');
+  leanWrap.querySelectorAll('[data-lean]').forEach(el=>el.addEventListener('click', ()=>{ selectedLean=el.dataset.lean; renderSetupOptions(); }));
+  tierWrap.querySelectorAll('[data-tier]').forEach(el=>el.addEventListener('click', ()=>{ selectedTier=el.dataset.tier; renderSetupOptions(); }));
+  traitWrap.querySelectorAll('[data-trait]').forEach(el=>el.addEventListener('click', ()=>{ selectedTrait=el.dataset.trait; renderSetupOptions(); }));
+}
+
+document.getElementById('setupForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const leaderName = document.getElementById('inLeaderName').value.trim() || 'The Leader';
+  const partyName = document.getElementById('inPartyName').value.trim() || 'The New Party';
+  newGame(leaderName, partyName, selectedLean, selectedTier, selectedTrait);
+  showGameScreen();
+});
+
+function showGameScreen(){
+  document.getElementById('setupScreen').style.display='none';
+  document.getElementById('gameScreen').style.display='flex';
+  render();
+}
+
+// ---------------------------------------------------------------------
+// INIT
+// ---------------------------------------------------------------------
+(function init(){
+  renderSetupOptions();
+  if(tryLoad()){
+    document.getElementById('continueRow').style.display='block';
+    document.getElementById('btnContinue').addEventListener('click', showGameScreen);
+  }
+})();
+</script>
+</body>
+</html>
