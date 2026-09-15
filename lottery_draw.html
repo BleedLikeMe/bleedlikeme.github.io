@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎱 National Lottery Machine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap');
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 0%, #5b2a86 0%, #2d1a4a 55%, #150c26 100%);
+    font-family: 'Baloo 2', 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  .wrap {
+    text-align: center;
+    padding: 24px 16px 60px;
+    max-width: 720px;
+  }
+
+  h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 800;
+    margin: 0 0 4px;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.35);
+    letter-spacing: 1px;
+  }
+
+  .subtitle {
+    opacity: 0.75;
+    margin-bottom: 18px;
+    font-size: 0.95rem;
+  }
+
+  .stage {
+    position: relative;
+    display: inline-block;
+  }
+
+  .chute {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 46px;
+    height: 34px;
+    background: linear-gradient(180deg, #cfd8ff, #8a97c9);
+    border: 3px solid #4b4f7a;
+    border-bottom: none;
+    border-radius: 14px 14px 0 0;
+    box-shadow: inset 0 -4px 6px rgba(0,0,0,0.25);
+    z-index: 3;
+  }
+
+  canvas#drum {
+    display: block;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #dfe7ff 8%, #b9c4ea 40%, #8892c4 100%);
+    box-shadow:
+      0 0 0 10px #3a2c5e,
+      0 0 0 16px #1c1233,
+      0 20px 40px rgba(0,0,0,0.5),
+      inset 0 0 40px rgba(0,0,0,0.15);
+  }
+
+  .controls {
+    margin: 22px 0 10px;
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 12px 26px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.3), 0 8px 14px rgba(0,0,0,0.3);
+    transition: transform 0.08s ease;
+  }
+  button:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #drawBtn { background: linear-gradient(180deg,#ffd166,#f2a90c); color: #3a2600; }
+  #resetBtn { background: linear-gradient(180deg,#ef476f,#c22a4d); color: #fff; }
+
+  .status {
+    min-height: 26px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 8px 0 4px;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.3);
+  }
+
+  .remaining {
+    font-size: 0.85rem;
+    opacity: 0.65;
+    margin-bottom: 18px;
+  }
+
+  .results {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .slot {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.4rem;
+    background: rgba(255,255,255,0.08);
+    border: 3px dashed rgba(255,255,255,0.35);
+    color: rgba(255,255,255,0.4);
+    position: relative;
+  }
+
+  .slot.filled {
+    border-style: solid;
+    color: #fff;
+    text-shadow: 0 2px 2px rgba(0,0,0,0.4);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.35), inset 0 -6px 10px rgba(0,0,0,0.25), inset 0 4px 8px rgba(255,255,255,0.4);
+  }
+
+  .sorted {
+    margin-top: 22px;
+    font-size: 0.95rem;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .sorted.show { opacity: 0.9; }
+  .sorted b { font-size: 1.05rem; }
+
+  .flyer {
+    position: fixed;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 2px rgba(0,0,0,0.4);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4), inset 0 -6px 10px rgba(0,0,0,0.25), inset 0 4px 8px rgba(255,255,255,0.45);
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  canvas#confetti {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>🎱 Monika's Lucky Lottery Machine 🎱</h1>
+  <div class="subtitle">Drawing 6 balls from a pool of 1–59</div>
+
+  <div class="stage">
+    <div class="chute"></div>
+    <canvas id="drum" width="480" height="480"></canvas>
+  </div>
+
+  <div class="controls">
+    <button id="drawBtn">🎉 Start Draw</button>
+    <button id="resetBtn">🔄 Reset</button>
+  </div>
+
+  <div class="status" id="status">Press "Start Draw" to begin.</div>
+  <div class="remaining" id="remaining">Balls in drum: 59</div>
+
+  <div class="results" id="results"></div>
+  <div class="sorted" id="sorted">Sorted result: <b id="sortedNums">–</b></div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+(() => {
+  const TOTAL = 59;
+  const DRAW_COUNT = 6;
+
+  const canvas = document.getElementById('drum');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const center = { x: W / 2, y: H / 2 };
+  const drumRadius = W / 2 - 14;
+  const nozzle = { x: center.x, y: center.y - drumRadius + 4 };
+  const ballR = 14;
+
+  const drawBtn = document.getElementById('drawBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const statusEl = document.getElementById('status');
+  const remainingEl = document.getElementById('remaining');
+  const resultsEl = document.getElementById('results');
+  const sortedEl = document.getElementById('sorted');
+  const sortedNumsEl = document.getElementById('sortedNums');
+
+  // ---------- Colours by decade band ----------
+  function colorFor(n) {
+    if (n <= 10) return '#ef476f';
+    if (n <= 20) return '#f2994a';
+    if (n <= 30) return '#ffd166';
+    if (n <= 40) return '#06d6a0';
+    if (n <= 50) return '#118ab2';
+    return '#7b2cbf';
+  }
+
+  // ---------- Ball state ----------
+  let balls = [];
+  let agitating = false;
+  let paddleAngle = 0;
+  let leaveResolvers = {};
+
+  function initBalls() {
+    balls = [];
+    for (let n = 1; n <= TOTAL; n++) {
+      let x, y, placed = false, tries = 0;
+      while (!placed && tries < 300) {
+        const ang = Math.random() * Math.PI * 2;
+        const rad = Math.random() * (drumRadius - ballR - 4);
+        x = center.x + Math.cos(ang) * rad;
+        y = center.y + Math.sin(ang) * rad;
+        placed = balls.every(b => Math.hypot(b.x - x, b.y - y) > ballR * 2 + 1);
+        tries++;
+      }
+      const ang = Math.random() * Math.PI * 2;
+      const speed = 0.5 + Math.random() * 0.7;
+      balls.push({
+        n, x, y,
+        vx: Math.cos(ang) * speed,
+        vy: Math.sin(ang) * speed,
+        r: ballR,
+        color: colorFor(n),
+        state: 'idle'
+      });
+    }
+  }
+
+  function setupSlotsAndStatus() {
+    resultsEl.innerHTML = '';
+    for (let i = 0; i < DRAW_COUNT; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.id = 'slot-' + i;
+      slot.textContent = '?';
+      resultsEl.appendChild(slot);
+    }
+    statusEl.textContent = 'Press "Start Draw" to begin.';
+    remainingEl.textContent = 'Balls in drum: ' + TOTAL;
+    sortedEl.classList.remove('show');
+    sortedNumsEl.textContent = '–';
+  }
+
+  // ---------- Physics ----------
+  function step() {
+    const boost = agitating ? 2.1 : 1;
+
+    for (const b of balls) {
+      if (b.state === 'leaving') {
+        const dx = nozzle.x - b.x, dy = nozzle.y - b.y;
+        const dist = Math.hypot(dx, dy) || 0.001;
+        if (dist < 9) {
+          const resolve = leaveResolvers[b.n];
+          delete leaveResolvers[b.n];
+          balls = balls.filter(x => x !== b);
+          if (resolve) resolve();
+          continue;
+        }
+        b.vx = (b.vx + (dx / dist) * 0.9) * 0.85;
+        b.vy = (b.vy + (dy / dist) * 0.9) * 0.85;
+        b.x += b.vx;
+        b.y += b.vy;
+        continue;
+      }
+
+      b.vx += (Math.random() - 0.5) * 0.16 * boost;
+      b.vy += (Math.random() - 0.5) * 0.16 * boost;
+
+      const sp = Math.hypot(b.vx, b.vy);
+      const maxSp = 2.4 * boost;
+      if (sp > maxSp) { b.vx *= maxSp / sp; b.vy *= maxSp / sp; }
+
+      b.x += b.vx;
+      b.y += b.vy;
+
+      const dc = Math.hypot(b.x - center.x, b.y - center.y);
+      if (dc + b.r > drumRadius) {
+        const nx = (b.x - center.x) / dc, ny = (b.y - center.y) / dc;
+        b.x = center.x + nx * (drumRadius - b.r);
+        b.y = center.y + ny * (drumRadius - b.r);
+        const dot = b.vx * nx + b.vy * ny;
+        b.vx = (b.vx - 2 * dot * nx) * 0.92;
+        b.vy = (b.vy - 2 * dot * ny) * 0.92;
+      }
+    }
+
+    for (let i = 0; i < balls.length; i++) {
+      for (let j = i + 1; j < balls.length; j++) {
+        const a = balls[i], b = balls[j];
+        if (a.state === 'leaving' || b.state === 'leaving') continue;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+        const minDist = a.r + b.r;
+        if (dist > 0 && dist < minDist) {
+          const nx = dx / dist, ny = dy / dist;
+          const overlap = (minDist - dist) / 2;
+          a.x -= nx * overlap; a.y -= ny * overlap;
+          b.x += nx * overlap; b.y += ny * overlap;
+          const relVx = b.vx - a.vx, relVy = b.vy - a.vy;
+          const relSpeed = relVx * nx + relVy * ny;
+          if (relSpeed < 0) {
+            a.vx += relSpeed * nx; a.vy += relSpeed * ny;
+            b.vx -= relSpeed * nx; b.vy -= relSpeed * ny;
+          }
+        }
+      }
+    }
+
+    paddleAngle += (agitating ? 0.09 : 0.02);
+  }
+
+  // ---------- Rendering ----------
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    // center agitator paddle (cosmetic)
+    ctx.save();
+    ctx.translate(center.x, center.y);
+    ctx.rotate(paddleAngle);
+    ctx.fillStyle = 'rgba(90,70,150,0.35)';
+    for (let i = 0; i < 3; i++) {
+      ctx.rotate((Math.PI * 2) / 3);
+      ctx.beginPath();
+      ctx.ellipse(0, 26, 8, 26, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // balls
+    for (const b of balls) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      const grad = ctx.createRadialGradient(
+        b.x - b.r * 0.4, b.y - b.r * 0.4, b.r * 0.2,
+        b.x, b.y, b.r
+      );
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.25, b.color);
+      grad.addColorStop(1, shade(b.color, -25));
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = shade(b.color, -40);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px "Baloo 2", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.strokeText(b.n, b.x, b.y + 0.5);
+      ctx.fillText(b.n, b.x, b.y + 0.5);
+      ctx.restore();
+    }
+  }
+
+  function shade(hex, percent) {
+    const num = parseInt(hex.slice(1), 16);
+    let r = (num >> 16) + percent;
+    let g = ((num >> 8) & 0xff) + percent;
+    let b = (num & 0xff) + percent;
+    r = Math.min(255, Math.max(0, r));
+    g = Math.min(255, Math.max(0, g));
+    b = Math.min(255, Math.max(0, b));
+    return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+  }
+
+  function loop() {
+    step();
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Draw sequence ----------
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function waitForLeave(n) {
+    return new Promise(resolve => { leaveResolvers[n] = resolve; });
+  }
+
+  function pageXY(canvasX, canvasY) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = rect.width / W, sy = rect.height / H;
+    return { x: rect.left + canvasX * sx, y: rect.top + canvasY * sy, scale: (sx + sy) / 2 };
+  }
+
+  function flyToSlot(number, color, slotIndex) {
+    return new Promise(resolve => {
+      const start = pageXY(nozzle.x, nozzle.y);
+      const size = ballR * 2 * start.scale;
+      const slot = document.getElementById('slot-' + slotIndex);
+      const slotRect = slot.getBoundingClientRect();
+      const endX = slotRect.left + slotRect.width / 2 - size / 2;
+      const endY = slotRect.top + slotRect.height / 2 - size / 2;
+      const startX = start.x - size / 2;
+      const startY = start.y - size / 2;
+
+      const flyer = document.createElement('div');
+      flyer.className = 'flyer';
+      flyer.style.width = size + 'px';
+      flyer.style.height = size + 'px';
+      flyer.style.left = startX + 'px';
+      flyer.style.top = startY + 'px';
+      flyer.style.background = `radial-gradient(circle at 35% 30%, #fff 0%, ${color} 30%, ${shade(color,-25)} 100%)`;
+      flyer.style.fontSize = (size * 0.42) + 'px';
+      flyer.textContent = number;
+      document.body.appendChild(flyer);
+
+      const dx = endX - startX, dy = endY - startY;
+      const anim = flyer.animate([
+        { transform: 'translate(0px,0px) scale(1) rotate(0deg)', offset: 0 },
+        { transform: `translate(${dx * 0.5}px, ${dy * 0.4 - 70}px) scale(1.15) rotate(180deg)`, offset: 0.55 },
+        { transform: `translate(${dx}px, ${dy}px) scale(0.95) rotate(320deg)`, offset: 1 }
+      ], { duration: 850, easing: 'cubic-bezier(.3,.6,.3,1)' });
+
+      anim.onfinish = () => {
+        flyer.remove();
+        slot.classList.add('filled');
+        slot.style.background = `radial-gradient(circle at 35% 30%, #fff 0%, ${color} 30%, ${shade(color,-25)} 100%)`;
+        slot.textContent = number;
+        slot.animate([
+          { transform: 'scale(1.3)' },
+          { transform: 'scale(1)' }
+        ], { duration: 260, easing: 'ease-out' });
+        resolve();
+      };
+    });
+  }
+
+  let audioCtx;
+  function beep(freq = 660, dur = 0.12) {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + dur);
+    } catch (e) { /* audio not available */ }
+  }
+
+  let drawing = false;
+
+  async function startDraw() {
+    if (drawing) return;
+    drawing = true;
+    drawBtn.disabled = true;
+    resetBtn.disabled = true;
+
+    setupSlotsAndStatus();
+    statusEl.textContent = '🌀 Mixing the balls...';
+    agitating = true;
+    await sleep(1300);
+
+    const drawn = [];
+    for (let i = 0; i < DRAW_COUNT; i++) {
+      statusEl.textContent = `Drawing ball ${i + 1} of ${DRAW_COUNT}...`;
+      await sleep(500);
+
+      const idx = Math.floor(Math.random() * balls.length);
+      const chosen = balls[idx];
+      chosen.state = 'leaving';
+      beep(520 + i * 40);
+
+      await waitForLeave(chosen.n);
+      await flyToSlot(chosen.n, chosen.color, i);
+      drawn.push(chosen.n);
+      remainingEl.textContent = 'Balls in drum: ' + balls.length;
+      beep(880, 0.15);
+      await sleep(350);
+    }
+
+    agitating = false;
+    statusEl.textContent = '🎉 All 6 balls drawn!';
+    sortedNumsEl.textContent = [...drawn].sort((a, b) => a - b).join(' – ');
+    sortedEl.classList.add('show');
+    launchConfetti();
+
+    drawBtn.disabled = false;
+    resetBtn.disabled = false;
+    drawing = false;
+  }
+
+  function resetAll() {
+    if (drawing) return;
+    leaveResolvers = {};
+    initBalls();
+    setupSlotsAndStatus();
+  }
+
+  drawBtn.addEventListener('click', startDraw);
+  resetBtn.addEventListener('click', resetAll);
+
+  // ---------- Confetti ----------
+  const confettiCanvas = document.getElementById('confetti');
+  const cctx = confettiCanvas.getContext('2d');
+  let confettiParticles = [];
+  let confettiRunning = false;
+
+  function resizeConfetti() {
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeConfetti);
+  resizeConfetti();
+
+  function launchConfetti() {
+    const colors = ['#ef476f', '#f2994a', '#ffd166', '#06d6a0', '#118ab2', '#7b2cbf', '#ffffff'];
+    confettiParticles = [];
+    for (let i = 0; i < 160; i++) {
+      confettiParticles.push({
+        x: Math.random() * confettiCanvas.width,
+        y: -20 - Math.random() * confettiCanvas.height * 0.5,
+        vx: (Math.random() - 0.5) * 2.5,
+        vy: 2 + Math.random() * 3,
+        size: 5 + Math.random() * 6,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: 0,
+        maxLife: 260 + Math.random() * 100
+      });
+    }
+    if (!confettiRunning) {
+      confettiRunning = true;
+      confettiLoop();
+    }
+  }
+
+  function confettiLoop() {
+    cctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    let alive = false;
+    for (const p of confettiParticles) {
+      p.life++;
+      if (p.life > p.maxLife) continue;
+      alive = true;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.02;
+      p.rot += p.vr;
+      cctx.save();
+      cctx.translate(p.x, p.y);
+      cctx.rotate(p.rot);
+      cctx.fillStyle = p.color;
+      cctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      cctx.restore();
+    }
+    if (alive) {
+      requestAnimationFrame(confettiLoop);
+    } else {
+      confettiRunning = false;
+      cctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    }
+  }
+
+  // ---------- Init ----------
+  initBalls();
+  setupSlotsAndStatus();
+  loop();
+})();
+</script>
+</body>
+</html>
