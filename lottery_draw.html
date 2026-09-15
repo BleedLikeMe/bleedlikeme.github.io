@@ -246,13 +246,26 @@
   const sortedNumsEl = document.getElementById('sortedNums');
 
   // ---------- Colours by decade band ----------
+  // The National Lottery's real Lotto ball colours (lottery.co.uk/lotto/colours):
+  // 1-9 white, 10-19 blue, 20-29 pink, 30-39 green, 40-49 yellow, 50-59 purple.
   function colorFor(n) {
-    if (n <= 10) return '#ef476f';
-    if (n <= 20) return '#f2994a';
-    if (n <= 30) return '#ffd166';
-    if (n <= 40) return '#06d6a0';
-    if (n <= 50) return '#118ab2';
-    return '#7b2cbf';
+    if (n <= 9) return '#f2f2f2';
+    if (n <= 19) return '#1f6fd6';
+    if (n <= 29) return '#ec4899';
+    if (n <= 39) return '#16a34a';
+    if (n <= 49) return '#facc15';
+    return '#7c3aed';
+  }
+
+  // Real balls use dark text on light balls (white/yellow) and white text on
+  // dark ones, rather than always-white numbers.
+  function textColorFor(bg) {
+    const num = parseInt(bg.slice(1), 16);
+    const r = (num >> 16) & 0xff, g = (num >> 8) & 0xff, b = num & 0xff;
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6
+      ? { fill: '#1c1233', outline: 'rgba(255,255,255,0.55)' }
+      : { fill: '#ffffff', outline: 'rgba(0,0,0,0.35)' };
   }
 
   // ---------- Ball state ----------
@@ -317,12 +330,13 @@
       octx.strokeStyle = shade(color, -40);
       octx.stroke();
 
-      octx.fillStyle = '#ffffff';
+      const textColor = textColorFor(color);
+      octx.fillStyle = textColor.fill;
       octx.font = 'bold 12px "Baloo 2", sans-serif';
       octx.textAlign = 'center';
       octx.textBaseline = 'middle';
       octx.lineWidth = 2.4;
-      octx.strokeStyle = 'rgba(0,0,0,0.35)';
+      octx.strokeStyle = textColor.outline;
       octx.strokeText(n, cx, cy + 0.5);
       octx.fillText(n, cx, cy + 0.5);
 
@@ -478,6 +492,8 @@
       const startX = start.x - size / 2;
       const startY = start.y - size / 2;
 
+      const textColor = textColorFor(color);
+
       const flyer = document.createElement('div');
       flyer.className = 'flyer';
       flyer.style.width = size + 'px';
@@ -486,6 +502,7 @@
       flyer.style.top = startY + 'px';
       flyer.style.background = `radial-gradient(circle at 35% 30%, #fff 0%, ${color} 30%, ${shade(color,-25)} 100%)`;
       flyer.style.fontSize = (size * 0.42) + 'px';
+      flyer.style.color = textColor.fill;
       flyer.textContent = number;
       document.body.appendChild(flyer);
 
@@ -500,6 +517,7 @@
         flyer.remove();
         slot.classList.add('filled');
         slot.style.background = `radial-gradient(circle at 35% 30%, #fff 0%, ${color} 30%, ${shade(color,-25)} 100%)`;
+        slot.style.color = textColor.fill;
         slot.textContent = number;
         slot.animate([
           { transform: 'scale(1.3)' },
