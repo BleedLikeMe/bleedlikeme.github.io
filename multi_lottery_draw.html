@@ -368,6 +368,11 @@
   //    turquoise (mylotterylife.co.uk/set-for-life-results-history/).
   //  - Poland Lotto: current (2012-) Smartplay Saturn machine draws uniform
   //    yellow balls for the main Lotto game.
+  //  - Irish Lotto: 6/45 + Bonus Ball drawn from the same pool, per the
+  //    official rules (lottery.ie/game-information/lotto, format reverted to
+  //    6/45 for draws from 5 Sep 2026). No official per-number ball colour
+  //    bands are published (unlike UK Lotto), so main balls use a uniform
+  //    green — the National Lottery Ireland's own master brand colour.
   const GAMES = {
     lotto: {
       label: 'UK Lotto',
@@ -403,9 +408,16 @@
       subtitle: 'Drawing 6 Main Numbers from a pool of 1–49 — no bonus number',
       main: { count: 6, max: 49, label: 'Main Numbers', colorFn: solidColor('#ffd60a') },
       bonus: null
+    },
+    irishlotto: {
+      label: 'Irish Lotto',
+      emoji: '🍀',
+      subtitle: 'Drawing 6 Main Numbers + 1 Bonus Ball from a pool of 1–45',
+      main: { count: 6, max: 45, label: 'Main Numbers', colorFn: solidColor('#009a44') },
+      bonus: { count: 1, max: 45, label: 'Bonus Ball', separate: false, accent: null }
     }
   };
-  const GAME_ORDER = ['lotto', 'euromillions', 'thunderball', 'setforlife', 'poland'];
+  const GAME_ORDER = ['lotto', 'euromillions', 'thunderball', 'setforlife', 'poland', 'irishlotto'];
 
   let currentGame = 'lotto';
   let mainSlots = [];
