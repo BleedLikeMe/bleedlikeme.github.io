@@ -83,6 +83,10 @@ input[type=text],input[type=number],select,textarea{
 }
 #logbar div{margin-bottom:2px;}
 #logbar .lognew{color:var(--text);}
+.ov-news{max-height:220px; overflow-y:auto;}
+.ov-news div{padding:5px 0; border-bottom:1px dashed #232838; font-size:13px; color:var(--muted);}
+.ov-news div:last-child{border-bottom:none;}
+.ov-news .lognew{color:var(--text);}
 
 .card{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:16px;}
 .card h3{border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:14px; color:var(--gold); font-size:16px;}
@@ -402,7 +406,7 @@ const REGIONS = [
   {key:'wmid',  name:'West Midlands',          demoMix:{working:0.5, suburban:0.5}, grid:{col:'4 / 7', row:'7 / 9'}},
   {key:'east',  name:'East of England',        demoMix:{suburban:0.55, rural:0.45}, grid:{col:'7 / 11', row:'9 / 11'}},
   {key:'lon',   name:'London',                 demoMix:{urban:0.55, business:0.45}, grid:{col:'6 / 9', row:'11 / 13'}},
-  {key:'se',    name:'South East',             demoMix:{suburban:0.5, business:0.5}, grid:{col:'4 / 11', row:'13 / 15'}},
+  {key:'se',    name:'South East',             demoMix:{suburban:0.5, business:0.5}, grid:{col:'6 / 11', row:'13 / 15'}},
   {key:'sw',    name:'South West',             demoMix:{rural:0.55, pensioners:0.45}, grid:{col:'1 / 6', row:'11 / 15'}},
 ];
 
@@ -2510,7 +2514,13 @@ function renderUkMap(){
 
 function renderOverview(){
   const p = G.polls;
-  let html = `<div class="grid2">`;
+  let html = `<div class="card"><h3>Recent News</h3><div class="ov-news">`;
+  html += (G.newsFeed && G.newsFeed.length)
+    ? G.newsFeed.slice(0,12).map(n=>`<div class="${n.cls}">Wk${n.week}: ${n.msg}</div>`).join('')
+    : `<p class="small">No news yet.</p>`;
+  html += `</div></div>`;
+
+  html += `<div class="grid2">`;
   html += `<div class="card"><h3>National Standing</h3>`;
   html += pollBar('you', G.partyName+' (You)', p.you, 'var(--you)');
   html += pollBar('gov', G.rivals.find(r=>r.id==='gov').name+' (Govt)', p.gov, 'var(--gov)');
@@ -2562,8 +2572,6 @@ function renderOverview(){
     html += `</div>`;
   }
 
-  html += `<div class="card"><h3>Across the Country</h3>` + renderUkMap() + `</div>`;
-
   html += `<div class="card"><h3>Demographic Support</h3>`;
   DEMOGRAPHICS.forEach(d=>{
     const s = G.demoSupport[d.key];
@@ -2571,6 +2579,8 @@ function renderOverview(){
     html += `<div class="pollbar-row"><span class="pname">${d.name} (${d.size}%)</span><div class="bar-outer"><div class="bar-inner" style="width:${s.you}%; background:var(--you)"></div></div><span class="pval">${fmtPct(s.you)}</span></div>`;
   });
   html += `</div>`;
+
+  html += `<div class="card"><h3>Across the Country</h3>` + renderUkMap() + `</div>`;
   return html;
 }
 
