@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Coastguard Command</title>
+<style>
+  :root{
+    --bg1:#061119; --bg2:#0a1c2a; --panel:#0c1e2c; --panel2:#0f2536; --edge:#1c3a4d;
+    --text:#dceaf2; --dim:#7fa0b3; --cyan:#37e0ff; --green:#3ddc55; --amber:#ffb300; --red:#ff4d4d;
+    --gold:#e8c76a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;
+    font-family:'Segoe UI',Arial,sans-serif;color:var(--text);user-select:none;}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg1);}
+
+  /* ── top bar ── */
+  #topbar{display:flex;align-items:center;gap:14px;padding:6px 14px;background:linear-gradient(180deg,#0d2233,#081420);
+    border-bottom:2px solid var(--edge);flex:0 0 auto;font-size:12px;z-index:50;}
+  #topbar .stat{display:flex;flex-direction:column;line-height:1.1;}
+  #topbar .stat b{font-size:14px;color:#fff;}
+  #topbar .stat span{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;}
+  #topbar .spacer{flex:1;}
+  .speedbtn{pointer-events:auto;background:#132a3a;color:var(--dim);border:1px solid var(--edge);border-radius:4px;
+    padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700;}
+  .speedbtn.active{background:var(--cyan);color:#03222c;}
+  #navtabs{display:flex;gap:4px;}
+  .navtab{pointer-events:auto;background:#0f2536;color:var(--dim);border:1px solid var(--edge);border-bottom:none;
+    border-radius:6px 6px 0 0;padding:8px 16px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.5px;}
+  .navtab.active{background:var(--panel2);color:#fff;}
+
+  /* ── main area ── */
+  #main{flex:1;display:flex;overflow:hidden;position:relative;}
+  #viewOps, #viewMgmt{position:absolute;inset:0;display:none;}
+  #viewOps.show, #viewMgmt.show{display:flex;}
+
+  #opsCanvasWrap{flex:1;position:relative;}
+  #radarCanvas{display:block;width:100%;height:100%;background:#031019;}
+  #sidebar{width:520px;background:var(--panel);border-left:2px solid var(--edge);display:flex;flex-direction:column;overflow:hidden;}
+  #sidebar h3{margin:0;padding:8px 12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--cyan);
+    background:var(--panel2);border-bottom:1px solid var(--edge);}
+
+  /* ── incident kanban board (mirrors the pharmacy game's pipeline pattern) ── */
+  #kanban{flex:1;display:flex;gap:4px;padding:6px;min-height:0;}
+  .kcol{flex:1;min-width:0;display:flex;flex-direction:column;background:#0e2432;border:1px solid var(--edge);border-radius:6px;overflow:hidden;}
+  .kcol .khead{padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--cyan);
+    background:#0a1e2c;border-bottom:1px solid var(--edge);display:flex;justify-content:space-between;align-items:center;}
+  .kcol .khead .kcount{background:#132a3a;color:#fff;border-radius:8px;padding:0 6px;font-size:10px;}
+  .kcol .kbody{flex:1;overflow-y:auto;padding:5px;}
+  .kcol .kempty{color:var(--dim);font-size:10px;padding:8px 4px;text-align:center;}
+  .incard{pointer-events:auto;background:var(--panel2);border:1px solid var(--edge);border-radius:6px;padding:7px 8px;
+    margin-bottom:6px;cursor:pointer;transition:.15s;}
+  .incard:hover{border-color:var(--cyan);}
+  .incard.crit{border-left:4px solid var(--red);}
+  .incard.high{border-left:4px solid var(--amber);}
+  .incard.medium{border-left:4px solid var(--cyan);}
+  .incard.low{border-left:4px solid var(--dim);}
+  .incard b{display:block;font-size:11px;color:#fff;line-height:1.3;}
+  .incard .meta{font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4;}
+  .incard .bar{height:4px;background:#0a1a24;border-radius:2px;margin-top:6px;overflow:hidden;}
+  .incard .bar i{display:block;height:100%;background:var(--amber);}
+
+  #fleetMini{padding:8px;border-top:1px solid var(--edge);}
+  .fmrow{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 0;}
+  .fmrow .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .dot.avail{background:var(--green);} .dot.busy{background:var(--amber);} .dot.repair{background:var(--red);}
+  .fmrow .nm{flex:1;color:#fff;}
+  .fmrow .st{color:var(--dim);font-size:9px;}
+
+  #weatherbox{padding:8px 12px;font-size:11px;color:var(--dim);border-top:1px solid var(--edge);}
+  #weatherbox b{color:#fff;}
+
+  /* ── management tabs ── */
+  #viewMgmt{background:var(--bg2);}
+  #mgmtShell{display:flex;flex-direction:column;width:100%;}
+  #mgmtTabs{display:flex;gap:2px;background:var(--panel2);padding:6px 6px 0;border-bottom:2px solid var(--edge);}
+  .mtab{pointer-events:auto;background:#0a1c28;color:var(--dim);border:1px solid var(--edge);border-bottom:none;
+    padding:8px 14px;border-radius:6px 6px 0 0;cursor:pointer;font-size:12px;font-weight:700;}
+  .mtab.active{background:var(--bg2);color:var(--cyan);}
+  #mgmtContent{flex:1;overflow-y:auto;padding:16px 20px;}
+
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:14px 16px;margin-bottom:12px;}
+  .card h4{margin:0 0 10px;font-size:13px;color:var(--cyan);text-transform:uppercase;letter-spacing:.5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  table.data{width:100%;border-collapse:collapse;font-size:12px;}
+  table.data th{text-align:left;color:var(--dim);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--edge);font-size:10px;text-transform:uppercase;}
+  table.data td{padding:6px 8px;border-bottom:1px solid #102534;}
+  table.data tr:hover td{background:#0e2432;}
+  .pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+  .pill.ok{background:#123a1e;color:var(--green);} .pill.warn{background:#3a2c12;color:var(--amber);} .pill.bad{background:#3a1414;color:var(--red);}
+  .meterbar{width:70px;height:6px;background:#0a1a24;border-radius:3px;display:inline-block;overflow:hidden;vertical-align:middle;}
+  .meterbar i{display:block;height:100%;}
+  .btn{pointer-events:auto;background:#132a3a;color:#fff;border:1px solid var(--edge);border-radius:5px;padding:5px 10px;
+    font-size:11px;cursor:pointer;font-weight:600;}
+  .btn:hover{border-color:var(--cyan);}
+  .btn.primary{background:linear-gradient(180deg,#2fb84f,#1f8a3a);border-color:#1f8a3a;}
+  .btn.danger{background:linear-gradient(180deg,#c94a4a,#8a2323);border-color:#8a2323;}
+  .btn.small{padding:3px 8px;font-size:10px;}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;}
+
+
+  /* ── modals ── */
+  .overlay{position:fixed;inset:0;background:rgba(2,6,10,.85);z-index:200;display:flex;align-items:center;justify-content:center;
+    pointer-events:auto;}
+  .hidden{display:none!important;}
+  .modalbox{background:#0d1f2b;border:1px solid var(--edge);border-radius:12px;padding:26px 30px;max-width:560px;width:92%;
+    max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+  .modalbox h1{margin:0 0 6px;font-size:22px;color:#fff;}
+  .modalbox h2{margin:16px 0 8px;font-size:12px;color:var(--cyan);text-transform:uppercase;letter-spacing:1px;}
+  .modalbox p{color:var(--dim);font-size:13px;line-height:1.5;}
+  .modalbox p.sub{margin:0 0 16px;}
+  .choices{display:flex;gap:10px;flex-wrap:wrap;}
+  .choice{flex:1 1 140px;background:#0f2536;border:2px solid var(--edge);border-radius:8px;padding:12px;cursor:pointer;}
+  .choice:hover{border-color:var(--cyan);}
+  .choice.sel{border-color:var(--green);background:#102a18;}
+  .choice b{display:block;font-size:13px;color:#fff;}
+  .choice span{font-size:11px;color:var(--dim);}
+  .bigbtn{margin-top:18px;width:100%;padding:13px;font-size:15px;font-weight:700;border:none;border-radius:8px;
+    background:linear-gradient(180deg,#3ddc55,#25a83c);color:#04250c;cursor:pointer;}
+  .bigbtn:hover{filter:brightness(1.1);}
+  .bigbtn.alt{background:linear-gradient(180deg,#37c8e0,#1f8fa8);}
+  kbd{background:#152a38;border:1px solid #2a4a5c;border-radius:3px;padding:1px 6px;font-family:monospace;font-size:11px;}
+  .recall-link{color:var(--red);cursor:pointer;text-decoration:underline;font-size:11px;}
+
+  ::-webkit-scrollbar{height:8px;width:8px;} ::-webkit-scrollbar-thumb{background:#1c3a4d;border-radius:4px;}
+
+  /* ── mobile (one breakpoint, same pattern as election/party_leader.html) ──
+     Ops view stacks the radar above the sidebar instead of side-by-side (a fixed 520px sidebar is wider
+     than most phones on its own); the 3-column kanban becomes 3 stacked sections, each independently
+     capped/scrollable so one busy column doesn't push the other two off screen; stat/career grids drop to
+     one column; tables scroll horizontally inside their card rather than squashing illegibly; and touch
+     targets (small buttons, the inline recall link, dispatch choice cards) are all sized up a little. */
+  @media (max-width:760px){
+    #topbar{flex-wrap:wrap;row-gap:6px;padding:6px 10px;}
+    #topbar .stat{flex:0 0 auto;}
+    #viewOps{flex-direction:column;}
+    #opsCanvasWrap{flex:0 0 36vh;min-height:180px;}
+    #sidebar{width:100%;border-left:none;border-top:2px solid var(--edge);overflow-y:auto;}
+    #kanban{flex:0 0 auto;flex-direction:column;overflow:visible;}
+    .kcol{flex:0 0 auto;}
+    .kcol .kbody{max-height:160px;}
+    .grid2,.grid3{grid-template-columns:1fr;}
+    .card{overflow-x:auto;}
+    table.data{min-width:760px;}
+    /* the incident log is a two-column text feed, not tabular data meant for side-by-side comparison —
+       letting it wrap instead of forcing the wide min-width above reads far better on a narrow screen */
+    table.log-data{min-width:0;}
+    table.log-data td{white-space:normal!important;}
+    .btn.small{padding:6px 10px;font-size:12px;}
+    .recall-link{font-size:13px;padding:4px 0;display:inline-block;}
+    .choice{flex-basis:100%;}
+    .modalbox{padding:18px 16px;}
+    #mgmtContent{padding:12px 10px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="stat"><b id="tbStation">—</b><span>Station</span></div>
+    <div class="stat"><b id="tbDay">Day 1</b><span>Day</span></div>
+    <div class="stat"><b id="tbTime">06:00</b><span>Time</span></div>
+    <div class="stat"><b id="tbBudget">£0</b><span>Budget</span></div>
+    <div class="stat"><b id="tbRep">50</b><span>Reputation</span></div>
+    <div class="stat"><b id="tbWx">Calm</b><span>Sea State</span></div>
+    <div class="spacer"></div>
+    <div id="speedctl">
+      <button class="speedbtn" data-spd="0">II</button>
+      <button class="speedbtn active" data-spd="1">1x</button>
+      <button class="speedbtn" data-spd="2">2x</button>
+      <button class="speedbtn" data-spd="4">4x</button>
+    </div>
+    <div style="width:14px;"></div>
+    <div id="navtabs">
+      <div class="navtab active" data-nav="ops">OPS ROOM</div>
+      <div class="navtab" data-nav="mgmt">STATION</div>
+    </div>
+    <div style="width:10px;"></div>
+    <button class="btn small" id="btnHelpTop">Help</button>
+  </div>
+
+  <div id="main">
+    <div id="viewOps" class="show">
+      <div id="opsCanvasWrap"><canvas id="radarCanvas"></canvas></div>
+      <div id="sidebar">
+        <h3>Incident Board</h3>
+        <div id="kanban">
+          <div class="kcol"><div class="khead">Reported<span class="kcount" id="kCountNew">0</span></div><div class="kbody" id="kanbanNew"></div></div>
+          <div class="kcol"><div class="khead">En Route<span class="kcount" id="kCountDispatched">0</span></div><div class="kbody" id="kanbanDispatched"></div></div>
+          <div class="kcol"><div class="khead">On Scene<span class="kcount" id="kCountOnScene">0</span></div><div class="kbody" id="kanbanOnScene"></div></div>
+        </div>
+        <div id="weatherbox"></div>
+        <h3>Fleet Status</h3>
+        <div id="fleetMini"></div>
+      </div>
+    </div>
+
+    <div id="viewMgmt">
+      <div id="mgmtShell">
+        <div id="mgmtTabs">
+          <div class="mtab active" data-mtab="overview">Overview</div>
+          <div class="mtab" data-mtab="fleet">Fleet</div>
+          <div class="mtab" data-mtab="crew">Crew</div>
+          <div class="mtab" data-mtab="bases">Bases</div>
+          <div class="mtab" data-mtab="log">Incident Log</div>
+        </div>
+        <div id="mgmtContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN MENU -->
+<div class="overlay" id="mainMenu">
+  <div class="modalbox">
+    <h1>⚓ COASTGUARD COMMAND</h1>
+    <p class="sub">The Firth of Clyde. Run the coastguard station at Gourock: watch the radar, dispatch lifeboats and helicopters, and personally take the helm — or the controls — for any rescue.</p>
+    <h2>Station Name</h2>
+    <input id="stationNameInput" type="text" value="Gourock" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--edge);background:#0f2536;color:#fff;font-size:14px;">
+    <h2>Difficulty</h2>
+    <div class="choices" id="diffChoices"></div>
+    <button class="bigbtn" id="btnNewGame">START WATCH</button>
+    <div style="margin-top:12px;text-align:center;">
+      <button class="btn" id="btnContinueGame">Continue Saved Game</button>
+      <button class="btn" id="btnHelp2">Controls &amp; Help</button>
+    </div>
+  </div>
+</div>
+
+<!-- INCIDENT DETAIL (every kanban card opens this, regardless of stage) -->
+<div class="overlay hidden" id="alertModal">
+  <div class="modalbox">
+    <h1 id="alertTitle">Distress Call</h1>
+    <p class="sub" id="alertDetail"></p>
+    <h2>Status</h2>
+    <div id="incidentStatusBox" style="background:#0f2536;border:1px solid var(--edge);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:13px;line-height:1.6;"></div>
+    <button class="btn danger" id="btnRecall" style="width:100%;margin:6px 0;display:none;">RECALL ASSET</button>
+    <button class="btn" id="btnMutualAid" style="width:100%;margin:6px 0;display:none;background:linear-gradient(180deg,#37c8e0,#1f8fa8);border-color:#1f8fa8;"></button>
+    <h2 id="dispatchHeading">Dispatch</h2>
+    <div class="choices" id="dispatchChoices"></div>
+    <button class="bigbtn" id="btnDispatch">DISPATCH</button>
+    <button class="btn" id="btnDismissAlert" style="margin-top:8px;width:100%;">Close</button>
+  </div>
+</div>
+
+<!-- MISSION DEBRIEF -->
+<div class="overlay hidden" id="debriefModal">
+  <div class="modalbox">
+    <h1 id="debriefTitle">Mission Complete</h1>
+    <p class="sub" id="debriefDetail"></p>
+    <button class="bigbtn" id="btnDebriefClose">CONTINUE</button>
+  </div>
+</div>
+
+<!-- DAY REVIEW / GAME OVER -->
+<div class="overlay hidden" id="reviewModal">
+  <div class="modalbox">
+    <h1 id="reviewTitle">Board Review</h1>
+    <p class="sub" id="reviewDetail"></p>
+    <button class="bigbtn" id="btnReviewClose">CONTINUE</button>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="overlay hidden" id="helpModal">
+  <div class="modalbox">
+    <h1>Controls &amp; Guide</h1>
+    <h2>Ops Room</h2>
+    <p>Click an incident marker on the radar, or a card in the sidebar, to open dispatch options — pick the best-matched, available asset and confirm. Use the speed controls (top right) to pause or fast-forward time between incidents.</p>
+    <h2>Station</h2>
+    <p>Repair and refuel your fleet, buy new vessels and mountain rescue teams, hire and assign crew, send crew on training courses, fit vessel upgrades, and open new bases along the Firth to cut response times to distant incidents. Run fundraising events from the Overview tab to top up the budget.</p>
+    <h2>Assets</h2>
+    <p>RIBs and All-Weather Lifeboats respond to incidents at sea; the Search &amp; Rescue Helicopter can reach either sea or land incidents fastest; the Mountain Rescue Team responds to cliff and hillwalking incidents on land and can't put to sea. An asset that takes catastrophic damage is written off and must be replaced.</p>
+    <h2>Major Incidents &amp; Mutual Aid</h2>
+    <p>Some large incidents (⚠ marked "MAJOR" on the board) need two assets on scene together before they can be resolved — dispatch one, then dispatch a second from the same incident's card. If your own fleet can't cover a call, Request Mutual Aid from a neighbouring station for a fee instead.</p>
+    <h2>Storm Seasons</h2>
+    <p>Every so often the forecast turns: a storm season brings several days of worse weather and more frequent incidents. It's announced in the log and shown on the Overview tab — plan crew rest and repairs around it where you can.</p>
+    <button class="bigbtn" id="btnHelpClose">CLOSE</button>
+  </div>
+</div>
+
+<div id="loading" style="position:fixed;inset:0;background:#000;color:#4af;display:flex;align-items:center;justify-content:center;
+  font-size:18px;z-index:300;">Loading…</div>
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════════════
+   COASTGUARD COMMAND — single-file browser app
+   Sections: UTIL → DATA → WORLD MAP → STATE → SIM TICK → INCIDENTS
+   → DISPATCH/AUTO-RESOLVE → OPS RENDER → MANAGEMENT UI → UI WIRING
+   → (3D boat/heli sims + rescue mini-games appended below)
+   ════════════════════════════════════════════════════════════════════ */
+
+// ── UTIL ──────────────────────────────────────────────────────────────
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let rng = mulberry32(Date.now() & 0xffffffff);
+function rrange(a,b){ return a + rng()*(b-a); }
+function rint(a,b){ return Math.floor(rrange(a,b+1)); }
+function rpick(arr){ return arr[Math.floor(rng()*arr.length)]; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function dist2(x1,y1,x2,y2){ return Math.hypot(x2-x1,y2-y1); }
+function fmtTime(mins){
+  mins = ((Math.floor(mins)%1440)+1440)%1440;
+  const h=Math.floor(mins/60), m=mins%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+function fmtMoney(n){ return '£'+Math.round(n).toLocaleString(); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+
+// ── DATA ─────────────────────────────────────────────────────────────
+const WORLD_W = 60000, WORLD_H = 42000; // meters: the Firth of Clyde, station at Gourock
+// Gourock sits ~800m off the actual Renfrewshire coastline (see MAINLAND_POLY below) so the home base
+// itself is unambiguously "at sea", not sitting inside the landmass polygon it's named after.
+const STATION_POS = {x: 40000, y: 2200};
+// real Firth of Clyde landmarks, placed at plausible (not surveyed) relative positions matching the
+// actual landmass layout below — used for on-radar labels and to give incidents a named location
+// instead of raw coordinates ("reported off Largs" reads a lot better than a lat/long).
+const LOCATIONS = [
+  {name:'Gourock', x:40000, y:2200},
+  {name:'Greenock', x:44400, y:900},
+  {name:'Helensburgh', x:35200, y:400},
+  {name:'Dunoon', x:27600, y:4500},
+  {name:'Holy Loch', x:25800, y:7200},
+  {name:'Wemyss Bay', x:40800, y:9800},
+  {name:'Largs', x:37500, y:15500},
+  {name:'Rothesay, Bute', x:32000, y:12500},
+  {name:'Isle of Cumbrae', x:34500, y:18300},
+  {name:'Ardrossan', x:38400, y:23000},
+  {name:'Isle of Arran', x:22000, y:28000},
+];
+function nearestLocationName(x,y){
+  let best=null, bestD=Infinity;
+  LOCATIONS.forEach(l=>{ const d=dist2(x,y,l.x,l.y); if(d<bestD){ bestD=d; best=l; } });
+  const nm = (bestD/1852).toFixed(1);
+  return best.name+' ('+nm+' nm)';
+}
+
+// domain gates which incidents an asset can even be dispatched to ('both' for the helicopter, which in
+// reality does respond to shore/hill incidents as well as sea ones); land incidents are handled by the
+// road-mobile Mountain Rescue Team, which can't put to sea.
+const FLEET_TYPES = {
+  rib:        { name:'RIB', full:'Rigid Inflatable Boat', speedKt:32, crewSlots:2, maxCrew:3, capacity:6,
+                weatherMax:5, cost:60000, upkeep:60, repairCostPerPct:400, fuelBurn:0.9, kind:'boat', domain:'sea' },
+  lifeboat:   { name:'All-Weather Lifeboat', full:'All-Weather Lifeboat', speedKt:18, crewSlots:4, maxCrew:6, capacity:24,
+                weatherMax:9, cost:220000, upkeep:260, repairCostPerPct:900, fuelBurn:0.5, kind:'boat', domain:'sea' },
+  helicopter: { name:'Helicopter', full:'Search &amp; Rescue Helicopter', speedKt:120, crewSlots:3, maxCrew:4, capacity:4,
+                weatherMax:7, cost:1800000, upkeep:700, repairCostPerPct:2500, fuelBurn:2.2, kind:'heli', domain:'both' },
+  mountain:   { name:'Mountain Rescue Team', full:'Coastguard Rescue Team (Cliff &amp; Mountain)', speedKt:45, crewSlots:3, maxCrew:6, capacity:6,
+                weatherMax:9, cost:90000, upkeep:110, repairCostPerPct:300, fuelBurn:0.4, kind:'land', domain:'land' },
+};
+
+const CREW_ROLES = ['Coxswain','Winchman','Medic','Pilot','Deckhand','Team Leader','Rope Technician'];
+const SPECIALTIES = ['Seamanship','Medical','Firefighting','Technical Rescue','Mountain Craft'];
+const FIRST_NAMES = ['Alex','Sam','Jordan','Morgan','Taylor','Casey','Robbie','Fiona','Callum','Erin','Niamh','Craig','Isla','Euan','Mairi','Douglas','Kirsty','Ross','Shona','Ailsa'];
+const LAST_NAMES = ['MacLeod','Fraser','Robertson','Stewart','Campbell','Grant','Munro','Sinclair','Wallace','Mackenzie','Ferguson','Duncan','Reid','Cameron','Kerr'];
+
+// vessel/team upgrades, purchased per-asset from the Fleet tab — bonus keys are read directly by
+// resolveMissionOutcome()/assetSpeedMps() rather than through a generic effect system, since the set
+// is small and fixed.
+const UPGRADES = {
+  engine:   { name:'Engine Overhaul', cost:45000, desc:'+15% transit speed', speedMul:1.15 },
+  thermal:  { name:'Thermal Imaging', cost:35000, desc:'Much less penalty searching at night or in fog/mist', visBonus:0.5 },
+  medkit:   { name:'Advanced Trauma Kit', cost:18000, desc:'+success on medical &amp; collision incidents', medicalBonus:14 },
+  hull:     { name:'Reinforced Hull/Kit', cost:30000, desc:'-40% wear and damage per mission', damageMul:0.6 },
+};
+
+// `multiAsset:true` marks types big enough to sometimes need a coordinated two-asset response (see
+// maybeSpawnIncident() — only a chance, not every time) — a joint lifeboat+helicopter job, not a single
+// boat handling everything alone.
+const INCIDENT_TYPES = {
+  mob:        { name:'Person Overboard', domain:'sea', specialty:'Seamanship', peopleRange:[1,1], timeLimit:22, urgency:'crit', prefer:['rib','helicopter'],
+                desc:'A crew member has gone overboard from a fishing vessel. Time in the water is critical.' },
+  capsize:    { name:'Capsized Vessel', domain:'sea', specialty:'Seamanship', peopleRange:[1,4], timeLimit:18, urgency:'crit', prefer:['rib','lifeboat'],
+                desc:'A small craft has capsized. Occupants are in the water, clinging to the hull.' },
+  fire:       { name:'Vessel Fire', domain:'sea', specialty:'Firefighting', peopleRange:[1,8], timeLimit:28, urgency:'crit', prefer:['lifeboat'], multiAsset:true,
+                desc:'Fire reported aboard a vessel. Crew are fighting it but it is spreading.' },
+  sinking:    { name:'Vessel Taking On Water', domain:'sea', specialty:'Seamanship', peopleRange:[1,6], timeLimit:35, urgency:'high', prefer:['lifeboat','helicopter'], multiAsset:true,
+                desc:'A vessel is flooding and may founder. Evacuation may be required.' },
+  medical:    { name:'Medical Emergency', domain:'sea', specialty:'Medical', peopleRange:[1,1], timeLimit:40, urgency:'high', prefer:['helicopter','lifeboat'],
+                desc:'A serious medical emergency aboard a vessel at sea. Casualty needs urgent evacuation.' },
+  collision:  { name:'Collision At Sea', domain:'sea', specialty:'Technical Rescue', peopleRange:[2,10], timeLimit:30, urgency:'crit', prefer:['lifeboat','helicopter'], multiAsset:true,
+                desc:'Two vessels have collided. Multiple casualties reported, possible flooding.' },
+  aground:    { name:'Vessel Aground', domain:'sea', specialty:'Seamanship', peopleRange:[1,4], timeLimit:100, urgency:'medium', prefer:['lifeboat'],
+                desc:'A vessel has run aground on a falling tide. Occupants are safe for now but need assistance.' },
+  overdue:    { name:'Overdue Vessel', domain:'sea', specialty:'Seamanship', peopleRange:[1,3], timeLimit:220, urgency:'low', prefer:['helicopter','lifeboat'],
+                desc:'A small craft is significantly overdue returning to harbour. Last known position uncertain.' },
+  cliff:      { name:'Cliff Rescue', domain:'land', specialty:'Technical Rescue', peopleRange:[1,2], timeLimit:45, urgency:'crit', prefer:['mountain','helicopter'],
+                desc:'A person is cut off or injured on coastal cliffs and cannot move to safety unaided.' },
+  hillwalker: { name:'Stranded Hillwalker', domain:'land', specialty:'Mountain Craft', peopleRange:[1,3], timeLimit:150, urgency:'medium', prefer:['mountain','helicopter'],
+                desc:'Hillwalkers are overdue and believed stranded or injured on high ground.' },
+};
+
+const DIFFICULTIES = [
+  {key:'easy', title:'Calm Waters', sub:'Fewer incidents, forgiving budget', incidentRateMul:0.7, budgetStart:130000, repStart:60},
+  {key:'normal', title:'Standard Watch', sub:'A balanced, realistic station', incidentRateMul:1.0, budgetStart:85000, repStart:50},
+  {key:'hard', title:'Storm Season', sub:'Frequent incidents, tight budget', incidentRateMul:1.5, budgetStart:50000, repStart:45},
+];
+
+// Player-initiated fundraising events (Overview tab). Payout is scaled by reputation — a well-regarded
+// station draws bigger crowds/donors — via a 0.5x-1.5x multiplier at 0/100 reputation, so reputation has
+// a direct, visible payoff beyond just avoiding a bad board review.
+const FUNDRAISERS = [
+  { key:'bucket', name:'Bucket Collection', desc:'Volunteers rattle collection buckets at the harbour and high street.', cost:0, cooldownDays:2, minReturn:700, maxReturn:1900 },
+  { key:'funday', name:'Community Fun Day', desc:'An open day at the station with boat tours for local families.', cost:1500, cooldownDays:5, minReturn:4000, maxReturn:9500 },
+  { key:'gala', name:'Charity Gala Dinner', desc:'A black-tie dinner courting donations from local businesses.', cost:5000, cooldownDays:10, minReturn:15000, maxReturn:35000 },
+];
+
+// new sub-stations the player can establish along the Firth — each cuts response time to incidents
+// near it since dispatch ETA is just distance/speed from whichever base an asset is currently docked at
+const BASE_OPTIONS = [
+  {name:'Greenock', cost:120000}, {name:'Helensburgh', cost:150000}, {name:'Dunoon', cost:170000},
+  {name:'Wemyss Bay', cost:140000}, {name:'Largs', cost:160000}, {name:'Rothesay, Bute', cost:190000},
+  {name:'Ardrossan', cost:180000},
+];
+
+// ── WORLD MAP (real Firth of Clyde geography, approximated) ───────────
+// Hand-authored landmass outlines rather than a single sine-wave coastline — the Firth of Clyde has
+// water on multiple sides of the station (mainland to the east, the Cowal peninsula to the northwest,
+// islands in open water), which a single y=f(x) boundary can't represent at all. Each polygon is a
+// closed ring of {x,y} points in world meters; coordinates are plausible relative geography, not
+// surveyed. Polygons intentionally extend off-map (negative/over-bound coordinates) at their outer
+// edges so the landmass fills all the way to the canvas edge with no gap.
+const MAINLAND_POLY = [ // Renfrewshire/Ayrshire coast: Greenock/Gourock down through Largs to Ardrossan
+  {x:62000,y:-2000}, {x:44400,y:900}, {x:41500,y:1300}, {x:40800,y:2200}, {x:42000,y:3500},
+  {x:43500,y:6000}, {x:41500,y:8000}, {x:40800,y:9800}, {x:39000,y:12000}, {x:37500,y:15500},
+  {x:39500,y:18000}, {x:38500,y:21000}, {x:38400,y:23000}, {x:40000,y:27000}, {x:42000,y:32000},
+  {x:42000,y:44000}, {x:62000,y:44000},
+];
+const COWAL_POLY = [ // Argyll/Cowal peninsula: Rosneath/Helensburgh down to Dunoon and Holy Loch
+  {x:36000,y:-2000}, {x:35200,y:200}, {x:33000,y:1200}, {x:29500,y:1000}, {x:27600,y:4500},
+  {x:25800,y:7200}, {x:23500,y:9500}, {x:21000,y:8000}, {x:19500,y:4000}, {x:20500,y:-500},
+  {x:24000,y:-2000},
+];
+const BUTE_POLY = [ // Isle of Bute
+  {x:29000,y:8000}, {x:32000,y:9000}, {x:33000,y:12000}, {x:32500,y:15500},
+  {x:30000,y:17500}, {x:27000,y:15000}, {x:26500,y:11000}, {x:27500,y:9000},
+];
+const CUMBRAE_POLY = [ // Isle of Cumbrae
+  {x:33500,y:17000}, {x:35500,y:17300}, {x:36000,y:19000}, {x:34000,y:19500}, {x:32800,y:18000},
+];
+const ARRAN_POLY = [ // Isle of Arran
+  {x:20000,y:21000}, {x:27000,y:22500}, {x:29500,y:27000}, {x:26000,y:33000},
+  {x:19000,y:34000}, {x:15000,y:29000}, {x:16000,y:24000},
+];
+const LAND_POLYGONS = [MAINLAND_POLY, COWAL_POLY, BUTE_POLY, CUMBRAE_POLY, ARRAN_POLY];
+function pointInPoly(x,y,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i].x, yi=poly[i].y, xj=poly[j].x, yj=poly[j].y;
+    if(((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+function isLand(x,y){ return LAND_POLYGONS.some(p=>pointInPoly(x,y,p)); }
+function randomSeaPoint(maxTries){
+  for(let i=0;i<(maxTries||200);i++){
+    const x=rrange(WORLD_W*0.03,WORLD_W*0.99), y=rrange(400,WORLD_H*0.97);
+    if(!isLand(x,y)) return {x,y};
+  }
+  return {x:STATION_POS.x, y:STATION_POS.y+2000};
+}
+function randomLandPoint(maxTries){
+  const candidates = [MAINLAND_POLY, COWAL_POLY, ARRAN_POLY]; // skip tiny, low-lying Cumbrae
+  for(let i=0;i<(maxTries||200);i++){
+    const poly = rpick(candidates);
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    poly.forEach(p=>{ minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x); minY=Math.min(minY,p.y); maxY=Math.max(maxY,p.y); });
+    minX=Math.max(minX,0); minY=Math.max(minY,0); maxX=Math.min(maxX,WORLD_W); maxY=Math.min(maxY,WORLD_H);
+    const x=rrange(minX,maxX), y=rrange(minY,maxY);
+    if(isLand(x,y)) return {x,y};
+  }
+  return {x:STATION_POS.x, y:STATION_POS.y+3000};
+}
+
+// ── STATE ────────────────────────────────────────────────────────────
+function makeCrewMember(role, specialty){
+  return { id:uid(), name:rpick(FIRST_NAMES)+' '+rpick(LAST_NAMES), role, specialty: specialty||rpick(SPECIALTIES),
+    skill:rint(45,75), fatigue:rint(0,15), morale:rint(60,85), status:'available', assetId:null, training:null, medals:[] };
+}
+function basePosOf(baseId){
+  const b = G && G.bases && G.bases.find(x=>x.id===baseId);
+  return b ? {x:b.pos.x, y:b.pos.y} : {x:STATION_POS.x, y:STATION_POS.y};
+}
+function makeAsset(type, name, baseId){
+  baseId = baseId || 'home';
+  return { id:uid(), type, name, condition:100, fuel:100, status:'docked', baseId,
+    pos: basePosOf(baseId), heading:0, speed:0,
+    crewIds:[], missionId:null, upgrades:[] };
+}
+function newGame(stationName, diffKey){
+  const diff = DIFFICULTIES.find(d=>d.key===diffKey) || DIFFICULTIES[1];
+  const bases = [ {id:'home', name:stationName, pos:{x:STATION_POS.x,y:STATION_POS.y}, isHome:true} ];
+  const fleet = [ makeAsset('rib','Guardian 1'), makeAsset('lifeboat','Guardian 2'),
+                   makeAsset('helicopter','Rescue 1'), makeAsset('mountain','Cairn Team 1') ];
+  const crew = [];
+  crew.push(makeCrewMember('Coxswain','Seamanship')); crew.push(makeCrewMember('Deckhand','Seamanship'));
+  crew.push(makeCrewMember('Coxswain','Seamanship')); crew.push(makeCrewMember('Deckhand','Seamanship'));
+  crew.push(makeCrewMember('Deckhand','Seamanship')); crew.push(makeCrewMember('Medic','Medical'));
+  crew.push(makeCrewMember('Pilot','Technical Rescue')); crew.push(makeCrewMember('Winchman','Technical Rescue')); crew.push(makeCrewMember('Medic','Medical'));
+  crew.push(makeCrewMember('Team Leader','Mountain Craft')); crew.push(makeCrewMember('Rope Technician','Mountain Craft')); crew.push(makeCrewMember('Rope Technician','Technical Rescue'));
+  // auto-assign initial crew to fleet — each asset needs at least FLEET_TYPES[type].crewSlots to be
+  // dispatchable at all (assetAvailable()), so the starting roster must actually cover every asset's minimum
+  fleet[0].crewIds = [crew[0].id, crew[1].id];
+  fleet[1].crewIds = [crew[2].id, crew[3].id, crew[4].id, crew[5].id];
+  fleet[2].crewIds = [crew[6].id, crew[7].id, crew[8].id];
+  fleet[3].crewIds = [crew[9].id, crew[10].id, crew[11].id];
+  crew.forEach(c=>{ const a=fleet.find(f=>f.crewIds.includes(c.id)); if(a) c.assetId=a.id; });
+
+  return {
+    stationName, diffKey, diff,
+    day:1, time:6*60, speed:1, paused:false,
+    budget: diff.budgetStart, reputation: diff.repStart,
+    weather: { seaState:2, windKt:10, windDir:rrange(0,360), visibility:1, precip:'none', driftT:0 },
+    bases, fleet, crew,
+    traffic: [],
+    incidents: [],
+    stats: { totalIncidents:0, livesSaved:0, livesLost:0, missionsRun:0, incidentsFailed:0, totalResponseTime:0, respondedCount:0 },
+    nextIncidentIn: rrange(6,14),
+    log: [],
+    achievements: [],
+    nextReviewDay: 8,
+    nextEventIn: rrange(20,40),
+    fundraiserReadyDay: Object.fromEntries(FUNDRAISERS.map(f=>[f.key,1])),
+    stormSeason: null, nextStormCheckDay: 6,
+    history: [],
+    view:'ops', mgmtTab:'overview',
+    gameOver:false,
+  };
+}
+let G = null;
+
+const SAVE_KEY='coastguardSave';
+function trySave(){
+  if(!G) return;
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(G)); }catch(e){}
+}
+function tryLoadRaw(){
+  try{ const s = localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; }
+}
+
+function addLog(msg, kind){
+  G.log.unshift({t:G.day+'d '+fmtTime(G.time), msg, kind:kind||'info'});
+  if(G.log.length>200) G.log.length=200;
+}
+
+// ── SIM TICK (ambient traffic, weather, incident spawns) ─────────────
+function spawnTraffic(){
+  const type = rpick(['fishing','yacht','cargo','ferry']);
+  const {x,y} = randomSeaPoint(40);
+  const speedKt = type==='cargo'?14:type==='ferry'?20:type==='yacht'?8:10;
+  G.traffic.push({ id:uid(), type, pos:{x,y}, heading:rrange(0,360), speedKt, wanderT:rrange(0,1000) });
+}
+function updateTraffic(dtMin){
+  G.traffic.forEach(v=>{
+    v.wanderT += dtMin;
+    v.heading += Math.sin(v.wanderT*0.05)*0.6;
+    const spd = v.speedKt*0.5144; // m/s
+    v.pos.x += Math.sin(v.heading*Math.PI/180)*spd*dtMin*60;
+    v.pos.y += Math.cos(v.heading*Math.PI/180)*spd*dtMin*60;
+    if(v.pos.x<0||v.pos.x>WORLD_W||v.pos.y<400||v.pos.y>WORLD_H||isLand(v.pos.x,v.pos.y)){
+      v.pos.x = clamp(v.pos.x,0,WORLD_W); v.pos.y = clamp(v.pos.y,400,WORLD_H);
+      v.heading = (v.heading+180+rrange(-30,30))%360;
+    }
+  });
+  if(G.traffic.length<18 && rng()<0.01*dtMin) spawnTraffic();
+}
+
+function updateWeather(dtMin){
+  const w = G.weather;
+  w.driftT += dtMin;
+  const stormBoost = G.stormSeason ? 2.8 : 0;
+  const target = 2 + stormBoost + Math.sin(w.driftT*0.003)*2.2 + Math.sin(w.driftT*0.0011+2)*1.6;
+  w.seaState = clamp(lerp(w.seaState, clamp(target,0,9), 0.01*dtMin), 0, 9);
+  w.windKt = 5 + w.seaState*4 + Math.sin(w.driftT*0.004)*4;
+  w.windDir = (w.windDir + Math.sin(w.driftT*0.002)*2) % 360;
+  w.visibility = clamp(1 - w.seaState*0.06 - (w.precip==='storm'?0.3:w.precip==='rain'?0.15:0), 0.15, 1);
+  if(rng() < 0.0006*dtMin){
+    w.precip = w.seaState>6 ? 'storm' : (w.seaState>3 && rng()<0.5) ? 'rain' : 'none';
+  }
+}
+
+// A multi-day spell of worse-than-usual weather and a higher incident rate (maybeSpawnIncident()'s
+// stormMul), rolled for once a day rather than continuously so it reads as a distinct, nameable event
+// ("Storm season has arrived") rather than the sea state simply drifting a bit rougher for a while.
+function maybeStormSeason(){
+  if(G.stormSeason){
+    if(G.day >= G.stormSeason.endDay){
+      G.stormSeason = null;
+      addLog('The storm season has passed — seas are easing back to normal.', 'good');
+    }
+    return;
+  }
+  if(G.day < G.nextStormCheckDay) return;
+  G.nextStormCheckDay = G.day + rint(5,10);
+  if(rng() < 0.35){
+    const days = rint(3,6);
+    G.stormSeason = { startDay: G.day, endDay: G.day+days };
+    addLog('STORM SEASON: forecasters warn of '+days+' days of severe weather ahead — expect rougher seas and more incidents.', 'alert');
+  }
+}
+
+function seaStateLabel(s){
+  return ['Calm','Calm','Slight','Slight','Moderate','Moderate','Rough','Rough','Very Rough','High'][Math.round(clamp(s,0,9))];
+}
+
+function maybeSpawnIncident(dtMin){
+  const stormMul = G.stormSeason ? 1.6 : 1;
+  G.nextIncidentIn -= dtMin * G.diff.incidentRateMul * stormMul * (1 + G.weather.seaState*0.08);
+  if(G.nextIncidentIn > 0) return;
+  G.nextIncidentIn = rrange(18,40) / (G.diff.incidentRateMul * stormMul);
+  const typeKey = rpick(Object.keys(INCIDENT_TYPES));
+  const type = INCIDENT_TYPES[typeKey];
+  const {x,y} = type.domain==='land' ? randomLandPoint() : randomSeaPoint();
+  const people = rint(type.peopleRange[0], type.peopleRange[1]);
+  const assetsNeeded = type.multiAsset && rng()<0.35 ? 2 : 1;
+  const inc = {
+    id: uid(), typeKey, type, pos:{x,y}, people, peopleRescued:0,
+    severity: rrange(0.4,1), startTime: G.day*1440+G.time, timeLimit: type.timeLimit * rrange(0.85,1.2) * (assetsNeeded>1?1.3:1),
+    age:0, status:'new', assignedAssetIds:[], assetsNeeded, nearName: nearestLocationName(x,y),
+    mutualAidT:null, mutualAidEta:null,
+  };
+  G.incidents.push(inc);
+  G.stats.totalIncidents++;
+  addLog((assetsNeeded>1?'MAJOR INCIDENT — ':'')+type.name+' reported off '+(inc.nearName||'the patrol area')+' — '+people+' person(s) involved.'+
+    (assetsNeeded>1?' Two assets will be needed.':''), 'alert');
+  pushAlert(inc);
+}
+
+function updateIncidents(dtMin){
+  for(let i=G.incidents.length-1;i>=0;i--){
+    const inc = G.incidents[i];
+    if(inc.status==='resolved' || inc.status==='failed'){ G.incidents.splice(i,1); continue; }
+    inc.age += dtMin;
+    if(inc.status==='new' && inc.age > inc.timeLimit){
+      failIncident(inc, 'No asset reached the scene in time.');
+    }
+  }
+}
+
+function failIncident(inc, reason){
+  inc.status='failed';
+  const lost = inc.people - inc.peopleRescued;
+  G.stats.livesLost += lost;
+  G.stats.incidentsFailed++;
+  G.reputation = clamp(G.reputation - rint(4,10), 0, 100);
+  addLog(inc.type.name+' — OUTCOME: FAILED. '+reason+' ('+lost+' lives lost)', 'bad');
+  showDebrief('Incident Failed', reason+'<br><br>'+lost+' of '+inc.people+' people were lost. Reputation has taken a hit.');
+}
+
+// ── DISPATCH / AUTO-RESOLVE ───────────────────────────────────────────
+function assetSpeedMps(asset){
+  const mul = asset.upgrades.includes('engine') ? UPGRADES.engine.speedMul : 1;
+  return FLEET_TYPES[asset.type].speedKt*0.5144*mul;
+}
+function etaMinutes(asset, target){
+  const d = dist2(asset.pos.x,asset.pos.y,target.x,target.y);
+  return d / (assetSpeedMps(asset)*60);
+}
+function crewSkillAvg(asset){
+  const ids = asset.crewIds;
+  if(!ids.length) return 30;
+  return ids.reduce((s,id)=>{ const c=G.crew.find(x=>x.id===id); return s+(c?c.skill*(1-c.fatigue/200):40); },0)/ids.length;
+}
+function assetAvailable(asset){
+  const readyCrew = asset.crewIds.filter(id=>{ const c=G.crew.find(x=>x.id===id); return c && c.status!=='training'; }).length;
+  return asset.status==='docked' && asset.condition>25 && asset.fuel>15 && readyCrew>=FLEET_TYPES[asset.type].crewSlots;
+}
+
+function beginDispatch(incident, asset){
+  if(!incident.assignedAssetIds) incident.assignedAssetIds=[]; // safety net for pre-multi-asset saves
+  incident.assignedAssetIds.push(asset.id);
+  const needed = incident.assetsNeeded||1;
+  if(incident.assignedAssetIds.length >= needed) incident.status='dispatched';
+  asset.status='enroute';
+  asset.missionId = uid();
+  const mission = {
+    id: asset.missionId, incidentId: incident.id, assetId: asset.id,
+    phase:'transit', transitT:0, transitEta: etaMinutes(asset, incident.pos),
+    onSceneT:0, onSceneNeeded: rrange(6,14), pob:0, holding:false,
+  };
+  asset.currentMission = mission;
+  addLog('Dispatched '+asset.name+' to '+incident.type.name+'.'+(needed>1?' ('+incident.assignedAssetIds.length+'/'+needed+' assets assigned)':''), 'dispatch');
+}
+
+function crewOnAsset(asset){ return asset.crewIds.map(id=>G.crew.find(c=>c.id===id)).filter(Boolean); }
+
+function tickMissionAuto(mission, dtMin){
+  const asset = G.fleet.find(a=>a.id===mission.assetId);
+  if(!asset){ return true; }
+  // the incident is looked up fresh each tick, but resolveMissionOutcome() marks it 'resolved' and
+  // updateIncidents() then splices it out of G.incidents on the very next tick — the 'return' leg must
+  // NOT bail out just because the incident object it homed in on is gone, or the asset gets stranded
+  // 'enroute' forever (returnAssetToStation() never runs, currentMission never clears).
+  const inc = G.incidents.find(i=>i.id===mission.incidentId);
+  if(mission.phase==='transit'){
+    if(!inc){ return true; }
+    mission.transitT += dtMin;
+    const t = clamp(mission.transitT/Math.max(mission.transitEta,0.01),0,1);
+    asset.pos.x = lerp(asset.pos.x, inc.pos.x, dtMin/Math.max(mission.transitEta-mission.transitT+dtMin,dtMin));
+    asset.pos.y = lerp(asset.pos.y, inc.pos.y, dtMin/Math.max(mission.transitEta-mission.transitT+dtMin,dtMin));
+    if(t>=1){ mission.phase='onscene'; inc.status='onscene'; addLog(asset.name+' on scene.', 'info'); }
+  } else if(mission.phase==='onscene'){
+    if(!inc){ return true; }
+    if(!mission.holding){
+      mission.onSceneT += dtMin;
+      if(mission.onSceneT >= mission.onSceneNeeded){
+        mission.holding = true; // ready to resolve — but for a multi-asset incident, waits for the others
+        maybeResolveMultiAsset(inc);
+      }
+    }
+    // else: this asset has finished its own on-scene work and is holding position, waiting for the rest
+    // of a multi-asset incident's required assets to also arrive — maybeResolveMultiAsset() (called from
+    // wherever the LAST asset reaches holding) moves everyone on to 'return' together once ready.
+  } else if(mission.phase==='return'){
+    mission.transitT += dtMin;
+    const remain = Math.max(mission.transitEta-mission.transitT,0);
+    if(remain<=0){
+      returnAssetToStation(asset);
+      return true;
+    } else {
+      const base = basePosOf(asset.baseId);
+      const f = dtMin/Math.max(remain+dtMin,dtMin);
+      asset.pos.x = lerp(asset.pos.x, base.x, f);
+      asset.pos.y = lerp(asset.pos.y, base.y, f);
+    }
+  }
+  const fdef = FLEET_TYPES[asset.type];
+  asset.fuel = clamp(asset.fuel - fdef.fuelBurn*dtMin*0.06, 0, 100);
+  return false;
+}
+
+function isNight(){ const h=(G.time/60)%24; return h<6 || h>=20; }
+// weather difficulty is domain-aware: sea state doesn't slow a mountain rescue team down, but poor
+// visibility (weather or after dark) makes any kind of search harder — thermal imaging blunts that.
+function weatherDifficultyFor(asset){
+  const domain = FLEET_TYPES[asset.type].domain;
+  let d = domain==='land' ? (1-G.weather.visibility)*9 : G.weather.seaState;
+  if(isNight()) d += asset.upgrades.includes('thermal') ? 0.8 : 2.5;
+  return d;
+}
+function specialtyBonus(asset, inc){
+  const matching = crewOnAsset(asset).filter(c=>c.specialty===inc.type.specialty).length;
+  return clamp(matching*7, 0, 21);
+}
+// Called every time an asset finishes its own on-scene work and starts "holding" (see tickMissionAuto).
+// For a single-asset incident (assetsNeeded===1, the common case) this resolves immediately — the one
+// asset holding IS everyone required. For a major incident it waits until every assigned asset has
+// independently reached "holding" before resolving once, collectively, so an early-arriving fast RIB
+// doesn't finish (and steal the whole outcome roll) before the lifeboat it's meant to be working with
+// even gets there.
+function maybeResolveMultiAsset(inc){
+  const needed = inc.assetsNeeded||1;
+  if(!inc.assignedAssetIds || inc.assignedAssetIds.length < needed) return;
+  const parties = inc.assignedAssetIds.map(id=>{
+    const a = G.fleet.find(x=>x.id===id);
+    return a ? {asset:a, mission:a.currentMission} : null;
+  });
+  if(parties.some(p=>!p || !p.mission || p.mission.phase!=='onscene' || !p.mission.holding)) return;
+  const assets = parties.map(p=>p.asset);
+  resolveMissionOutcome(assets, inc);
+  parties.forEach(p=>{
+    p.mission.phase='return'; p.mission.transitT=0;
+    p.mission.transitEta = etaMinutes(p.asset, basePosOf(p.asset.baseId));
+  });
+}
+function resolveMissionOutcome(assets, inc){
+  const skill = assets.reduce((s,a)=>s+crewSkillAvg(a),0)/assets.length;
+  // weather/condition are judged by the weakest link — a well-found lifeboat doesn't cancel out a RIB
+  // that's out of its depth in the same sea state, since both still have to actually be there and work
+  const wxPenalty = Math.max(...assets.map(a=>clamp(weatherDifficultyFor(a)-FLEET_TYPES[a.type].weatherMax,0,9)*8));
+  const conditionPenalty = assets.reduce((s,a)=>s+clamp(100-a.condition,0,100)*0.15,0)/assets.length;
+  const equipBonus = Math.max(0, ...assets.map(a=>(inc.typeKey==='medical'||inc.typeKey==='collision') && a.upgrades.includes('medkit') ? UPGRADES.medkit.medicalBonus : 0));
+  const specBonus = Math.max(0, ...assets.map(a=>specialtyBonus(a, inc)));
+  // extra hands genuinely help on a big job — a small, capped bonus per additional asset beyond the first
+  const teamBonus = (assets.length-1)*6;
+  const successRoll = clamp(skill - wxPenalty - conditionPenalty + equipBonus + specBonus + teamBonus + rrange(-15,15), 0, 100);
+  const saveFrac = clamp(successRoll/100, 0, 1);
+  inc.peopleRescued = clamp(Math.round(inc.people * saveFrac), 0, inc.people);
+  const lost = inc.people - inc.peopleRescued;
+  G.stats.livesSaved += inc.peopleRescued;
+  G.stats.livesLost += lost;
+  G.stats.missionsRun++;
+  G.stats.respondedCount++;
+  G.stats.totalResponseTime += assets.reduce((s,a)=>s+(a.currentMission?a.currentMission.transitT:0),0)/assets.length;
+  inc.status='resolved';
+  const repDelta = Math.round((saveFrac-0.5)*14);
+  G.reputation = clamp(G.reputation+repDelta,0,100);
+  assets.forEach(asset=>{
+    let dmg = rrange(2, 8) + wxPenalty*0.4;
+    if(asset.upgrades.includes('hull')) dmg *= UPGRADES.hull.damageMul;
+    asset.condition = clamp(asset.condition - dmg, 0, 100);
+    if(asset.condition<=0){
+      asset.status='retired';
+      addLog(asset.name+' has been written off after suffering catastrophic damage and must be replaced.', 'bad');
+    }
+    crewOnAsset(asset).forEach(c=>{ c.fatigue = clamp(c.fatigue + rrange(12,25), 0, 100); c.skill = clamp(c.skill + rrange(0,0.6), 0, 100); });
+  });
+  const reward = Math.round(350 + inc.peopleRescued*280);
+  G.budget += reward;
+  const verdict = saveFrac>0.85?'Excellent outcome':saveFrac>0.5?'Good outcome':saveFrac>0.15?'Mixed outcome':'Poor outcome';
+  const assetNames = assets.map(a=>a.name).join(' & ');
+  addLog((assets.length>1?'MAJOR INCIDENT — ':'')+inc.type.name+' ('+assetNames+') — '+verdict.toUpperCase()+': '+inc.peopleRescued+'/'+inc.people+' rescued. +'+fmtMoney(reward), lost>0?'bad':'good');
+  // a well-publicised save (not just "any" mission — this is separate from the MCA operational reward
+  // above) draws in grateful/goodwill donations; likelier and larger the more dramatic the rescue and
+  // the more the public already trusts the station
+  if(saveFrac>0.5 && rng() < 0.25+saveFrac*0.35){
+    const donation = Math.round((250+inc.peopleRescued*340) * (0.6+G.reputation/100) * rrange(0.8,1.3));
+    G.budget += donation;
+    addLog('Grateful locals have donated '+fmtMoney(donation)+' to the station following the rescue.', 'good');
+  }
+  maybeAwardCommendation(saveFrac, inc, assets, wxPenalty);
+}
+
+function returnAssetToStation(asset){
+  const pos = basePosOf(asset.baseId);
+  asset.pos = {x:pos.x, y:pos.y};
+  asset.currentMission = null;
+  asset.status = asset.condition<20 ? 'repair' : 'docked';
+  addLog(asset.name+' returned to base.', 'info');
+}
+
+// ── ALERTS / MODALS ────────────────────────────────────────────────────
+// A single modal (#alertModal) now serves every stage of an incident's life: it always shows a
+// status block (assigned asset, crew, mission phase/ETA) plus whatever action makes sense — dispatch
+// for a fresh incident, reassign/recall for one already underway.
+let pendingAlertIncident = null, selectedDispatchAssetId=null;
+function pushAlert(inc){
+  if(G.speed>0) G.autoPauseFor = inc.id;
+}
+function recallAssetFromIncident(inc, assetId){
+  assetId = assetId || (inc.assignedAssetIds && inc.assignedAssetIds[0]);
+  const asset = G.fleet.find(a=>a.id===assetId);
+  if(asset && asset.currentMission){
+    asset.currentMission.phase='return';
+    asset.currentMission.transitT=0;
+    asset.currentMission.holding=false;
+    asset.currentMission.transitEta = etaMinutes(asset, basePosOf(asset.baseId));
+  }
+  inc.assignedAssetIds = (inc.assignedAssetIds||[]).filter(id=>id!==assetId);
+  // dropping below the required headcount means the incident needs (re)dispatching, even if it still
+  // has one asset working the scene in the background
+  if(inc.assignedAssetIds.length < (inc.assetsNeeded||1)) inc.status='new';
+  addLog((asset?asset.name:'Asset')+' recalled from '+inc.type.name+'.', 'info');
+  return asset;
+}
+// Mutual aid is a deliberately separate, simpler track from the fleet dispatch system above: it never
+// touches G.fleet (no wear, no crew, nothing to recall-and-reassign) and is ticked by its own small
+// function (updateMutualAid()) rather than through tickMissionAuto()'s asset-based state machine.
+function requestMutualAid(inc){
+  const cost = Math.round(3000 + inc.people*400 + (inc.assetsNeeded>1?2500:0));
+  if(G.budget<cost || inc.mutualAidEta!=null) return;
+  G.budget -= cost;
+  inc.mutualAidT = 0;
+  inc.mutualAidEta = rrange(15,35);
+  if(inc.status==='new') inc.status='dispatched';
+  addLog('Mutual aid requested from a neighbouring station for '+inc.type.name+' ('+fmtMoney(cost)+').', 'dispatch');
+}
+function updateMutualAid(dtMin){
+  G.incidents.forEach(inc=>{
+    if(inc.mutualAidEta==null || inc.status==='resolved' || inc.status==='failed') return;
+    inc.mutualAidT += dtMin;
+    if(inc.mutualAidT>=inc.mutualAidEta){
+      const skill = rrange(55,80);
+      const wxPenalty = clamp((inc.type.domain==='land'?(1-G.weather.visibility)*9:G.weather.seaState) - 6, 0, 9)*8;
+      const saveFrac = clamp((skill-wxPenalty+rrange(-15,15))/100, 0, 1);
+      inc.peopleRescued = clamp(Math.round(inc.people*saveFrac), 0, inc.people);
+      const lost = inc.people-inc.peopleRescued;
+      G.stats.livesSaved += inc.peopleRescued; G.stats.livesLost += lost;
+      G.stats.missionsRun++; G.stats.respondedCount++;
+      G.reputation = clamp(G.reputation + Math.round((saveFrac-0.5)*8), 0, 100); // smaller rep swing — it wasn't really "our" crew
+      inc.status='resolved';
+      const verdict = saveFrac>0.85?'Excellent outcome':saveFrac>0.5?'Good outcome':saveFrac>0.15?'Mixed outcome':'Poor outcome';
+      addLog('Mutual aid unit — '+inc.type.name+' — '+verdict.toUpperCase()+': '+inc.peopleRescued+'/'+inc.people+' rescued.', lost>0?'bad':'good');
+    }
+  });
+}
+function openDispatchModal(inc){
+  pendingAlertIncident = inc;
+  const ids = inc.assignedAssetIds||[];
+  const needed = inc.assetsNeeded||1;
+  const assets = ids.map(id=>G.fleet.find(a=>a.id===id)).filter(Boolean);
+  document.getElementById('alertTitle').textContent = (needed>1?'MAJOR INCIDENT — ':'')+inc.type.name+' — off '+(inc.nearName||'the patrol area');
+  document.getElementById('alertDetail').innerHTML = inc.type.desc+'<br><br><b>People involved:</b> '+inc.people+
+    '<br><b>Time critical:</b> ~'+Math.round(inc.timeLimit)+' min<br><b>Sea state:</b> '+seaStateLabel(G.weather.seaState)+
+    (needed>1?'<br><b>Assets needed:</b> '+ids.length+'/'+needed:'');
+
+  let statusHtml = '';
+  if(assets.length){
+    statusHtml = assets.map(asset=>{
+      const mission = asset.currentMission;
+      const crewList = crewOnAsset(asset).map(c=>c.name+' ('+c.role+')').join(', ') || 'No crew assigned';
+      let phaseHtml = 'Unknown.';
+      if(mission){
+        if(mission.phase==='transit'){
+          const remain = Math.max(mission.transitEta-mission.transitT,0);
+          phaseHtml = 'En route — approx '+remain.toFixed(0)+' min to scene.';
+        } else if(mission.phase==='onscene'){
+          phaseHtml = mission.holding ? 'On scene — holding, waiting on other assigned assets.' :
+            'On scene — rescue in progress ('+Math.round(mission.onSceneT)+'/'+Math.round(mission.onSceneNeeded)+' min).';
+        } else {
+          const remain = Math.max(mission.transitEta-mission.transitT,0);
+          phaseHtml = 'Returning to base — approx '+remain.toFixed(0)+' min.';
+        }
+      }
+      const canRecallThis = mission && mission.phase!=='return';
+      return '<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--edge);">'+
+        '<b>'+asset.name+'</b> ('+FLEET_TYPES[asset.type].name+') <span style="color:var(--dim);">— skill ~'+Math.round(crewSkillAvg(asset))+'</span>'+
+        (canRecallThis ? ' <span class="recall-link" data-recallone="'+asset.id+'">[recall]</span>' : '')+
+        '<br><span style="color:var(--dim);">Crew: '+crewList+'</span><br>'+phaseHtml+'</div>';
+    }).join('');
+  } else if(inc.mutualAidEta!=null){
+    const remain = Math.max(inc.mutualAidEta-inc.mutualAidT,0);
+    statusHtml = 'Mutual aid unit en route — approx '+remain.toFixed(0)+' min.';
+  } else {
+    statusHtml = inc.status==='resolved' ? 'Incident resolved.' : 'Awaiting dispatch — no asset currently assigned.';
+  }
+  document.getElementById('incidentStatusBox').innerHTML = statusHtml;
+  document.querySelectorAll('[data-recallone]').forEach(el=>{
+    el.onclick=(e)=>{ e.stopPropagation(); recallAssetFromIncident(inc, el.dataset.recallone); openDispatchModal(inc); };
+  });
+
+  // the blanket Recall button only covers the classic single-asset case (still the vast majority of
+  // incidents) — a multi-asset incident's individual [recall] links above cover it instead
+  const canRecall = needed===1 && assets.length===1 && assets[0].currentMission && assets[0].currentMission.phase!=='return';
+  document.getElementById('btnRecall').style.display = canRecall ? 'block' : 'none';
+
+  const mutualAidBtn = document.getElementById('btnMutualAid');
+  if(inc.status!=='resolved' && inc.status!=='failed' && inc.mutualAidEta==null){
+    const cost = Math.round(3000 + inc.people*400 + (needed>1?2500:0));
+    mutualAidBtn.style.display = 'block';
+    mutualAidBtn.textContent = 'REQUEST MUTUAL AID ('+fmtMoney(cost)+')';
+    mutualAidBtn.disabled = G.budget<cost;
+  } else {
+    mutualAidBtn.style.display = 'none';
+  }
+
+  const stillNeeded = ids.length < needed;
+  document.getElementById('dispatchHeading').textContent = ids.length===0 ? 'Dispatch' : (stillNeeded ? 'Dispatch Additional Asset' : 'Reassign');
+  document.getElementById('btnDispatch').textContent = ids.length===0 ? 'DISPATCH' : (stillNeeded ? 'DISPATCH' : 'REASSIGN');
+
+  const dc = document.getElementById('dispatchChoices'); dc.innerHTML='';
+  selectedDispatchAssetId=null;
+  G.fleet.forEach(a=>{
+    if(ids.includes(a.id)) return; // already shown in the status block above
+    const def = FLEET_TYPES[a.type];
+    const matches = def.domain==='both' || def.domain===inc.type.domain;
+    const ok = assetAvailable(a) && matches;
+    const el = document.createElement('div');
+    el.className='choice';
+    el.style.opacity = ok?1:0.4;
+    el.style.pointerEvents = ok?'auto':'none';
+    const eta = ok ? etaMinutes(a, inc.pos).toFixed(0) : '—';
+    const why = !matches ? '<br><i>Wrong asset type</i>' : (!assetAvailable(a) ? '<br><i>Unavailable</i>' : '');
+    el.innerHTML = '<b>'+a.name+'</b><span>'+def.name+' · ETA '+eta+' min<br>Crew skill ~'+Math.round(crewSkillAvg(a))+why+'</span>';
+    el.onclick=()=>{ [...dc.children].forEach(c=>c.classList.remove('sel')); el.classList.add('sel'); selectedDispatchAssetId=a.id; };
+    dc.appendChild(el);
+  });
+  document.getElementById('alertModal').classList.remove('hidden');
+  G.paused = true;
+}
+document.getElementById('btnDispatch').onclick=()=>{
+  if(!pendingAlertIncident || !selectedDispatchAssetId) return;
+  const inc = pendingAlertIncident;
+  const ids = inc.assignedAssetIds||[];
+  const needed = inc.assetsNeeded||1;
+  // reassigning (single-asset incident, already has its one asset) replaces it; adding to a still-short
+  // multi-asset incident just adds the new asset alongside whoever's already assigned
+  if(needed===1 && ids.length) recallAssetFromIncident(inc, ids[0]);
+  const asset = G.fleet.find(a=>a.id===selectedDispatchAssetId);
+  beginDispatch(inc, asset);
+  if((inc.assignedAssetIds||[]).length < needed){
+    openDispatchModal(inc); // still short — keep the modal open, refreshed, so more can be picked
+  } else {
+    document.getElementById('alertModal').classList.add('hidden');
+    G.paused=false;
+    pendingAlertIncident=null;
+  }
+};
+document.getElementById('btnRecall').onclick=()=>{
+  if(!pendingAlertIncident) return;
+  recallAssetFromIncident(pendingAlertIncident);
+  document.getElementById('alertModal').classList.add('hidden');
+  G.paused=false;
+  pendingAlertIncident=null;
+};
+document.getElementById('btnMutualAid').onclick=()=>{
+  if(!pendingAlertIncident) return;
+  requestMutualAid(pendingAlertIncident);
+  openDispatchModal(pendingAlertIncident);
+};
+document.getElementById('btnDismissAlert').onclick=()=>{
+  document.getElementById('alertModal').classList.add('hidden');
+  G.paused=false; pendingAlertIncident=null;
+};
+
+function showDebrief(title, html){
+  document.getElementById('debriefTitle').textContent=title;
+  document.getElementById('debriefDetail').innerHTML=html;
+  document.getElementById('debriefModal').classList.remove('hidden');
+  G.paused=true;
+}
+document.getElementById('btnDebriefClose').onclick=()=>{
+  document.getElementById('debriefModal').classList.add('hidden');
+  G.paused=false;
+};
+
+// ── OPS ROOM RENDER (2D radar) ───────────────────────────────────────
+const radarCanvas = document.getElementById('radarCanvas');
+const radarCtx = radarCanvas.getContext('2d');
+let radarView = { scale:1, offX:0, offY:0 };
+function fitRadar(){
+  radarCanvas.width = radarCanvas.clientWidth * devicePixelRatio;
+  radarCanvas.height = radarCanvas.clientHeight * devicePixelRatio;
+  const sx = radarCanvas.width/WORLD_W, sy = radarCanvas.height/WORLD_H;
+  radarView.scale = Math.min(sx,sy)*0.98;
+  radarView.offX = (radarCanvas.width - WORLD_W*radarView.scale)/2;
+  radarView.offY = (radarCanvas.height - WORLD_H*radarView.scale)/2;
+}
+function w2c(x,y){ return [x*radarView.scale+radarView.offX, y*radarView.scale+radarView.offY]; }
+
+function drawRadar(){
+  const ctx = radarCtx, W=radarCanvas.width, H=radarCanvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#03121c'; ctx.fillRect(0,0,W,H);
+  // sea gradient
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#03202e'); grad.addColorStop(1,'#010c14');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  // coastline / land — each real landmass drawn as its own filled polygon
+  LAND_POLYGONS.forEach(poly=>{
+    ctx.beginPath();
+    poly.forEach((p,i)=>{ const [cx,cy]=w2c(p.x,p.y); if(i===0) ctx.moveTo(cx,cy); else ctx.lineTo(cx,cy); });
+    ctx.closePath();
+    ctx.fillStyle='#16301f'; ctx.fill();
+    ctx.strokeStyle='#2c5c3a'; ctx.lineWidth=2; ctx.stroke();
+  });
+  // range rings from station
+  const [sx,sy] = w2c(STATION_POS.x, STATION_POS.y);
+  ctx.strokeStyle='rgba(55,224,255,0.12)'; ctx.lineWidth=1;
+  for(let r=1;r<=4;r++){ ctx.beginPath(); ctx.arc(sx,sy, r*8000*radarView.scale, 0, 7); ctx.stroke(); }
+  // station marker
+  ctx.fillStyle='#ffd966'; ctx.beginPath(); ctx.arc(sx,sy,7,0,7); ctx.fill();
+  ctx.strokeStyle='#000'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText(G.stationName, sx, sy-12);
+
+  // other named Firth of Clyde landmarks, for orientation and incident-location flavour
+  LOCATIONS.forEach(l=>{
+    if(l.name==='Gourock') return;
+    const [lx,ly] = w2c(l.x,l.y);
+    ctx.fillStyle='rgba(220,234,242,0.55)'; ctx.beginPath(); ctx.arc(lx,ly,3,0,7); ctx.fill();
+    ctx.fillStyle='rgba(220,234,242,0.7)'; ctx.font='10px sans-serif'; ctx.textAlign='left'; ctx.fillText(l.name, lx+6, ly+3);
+  });
+
+  // ambient traffic
+  G.traffic.forEach(v=>{
+    const [x,y] = w2c(v.pos.x, v.pos.y);
+    ctx.save(); ctx.translate(x,y); ctx.rotate(v.heading*Math.PI/180);
+    ctx.fillStyle = 'rgba(150,180,200,0.65)';
+    ctx.beginPath(); ctx.moveTo(0,-4); ctx.lineTo(3,4); ctx.lineTo(-3,4); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  });
+
+  // incidents
+  G.incidents.forEach(inc=>{
+    const [x,y] = w2c(inc.pos.x, inc.pos.y);
+    const pulse = 0.6+0.4*Math.sin(performance.now()*0.006);
+    const color = inc.type.urgency==='crit'?'#ff4d4d':inc.type.urgency==='high'?'#ffb300':inc.type.urgency==='medium'?'#37e0ff':'#9fb3bf';
+    ctx.beginPath(); ctx.arc(x,y, 10+pulse*4, 0, 7);
+    ctx.strokeStyle=color; ctx.globalAlpha=0.5; ctx.lineWidth=2; ctx.stroke(); ctx.globalAlpha=1;
+    ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,6,0,7); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('!', x, y+3);
+    if(inc.status==='dispatched' || inc.status==='onscene'){
+      ctx.fillStyle='#cfe'; ctx.font='9px sans-serif'; ctx.fillText('En route', x, y+18);
+    }
+  });
+
+  // fleet assets — docked/repair assets all sit at the exact same station coordinate, so they get a
+  // small fixed pixel-space fan-out here purely for label/icon legibility (never touches a.pos, which
+  // stays the real position other logic reads)
+  let dockedSeen = 0;
+  G.fleet.forEach(a=>{
+    let [x,y] = w2c(a.pos.x, a.pos.y);
+    const atStation = a.status==='docked' || a.status==='repair';
+    if(atStation){ const ang=dockedSeen*(Math.PI*2/Math.max(3,G.fleet.length)); x+=Math.cos(ang)*22; y+=Math.sin(ang)*22; dockedSeen++; }
+    const kind = FLEET_TYPES[a.type].kind;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle = a.status==='docked'?'#3ddc55': a.status==='repair'?'#ff4d4d':'#37e0ff';
+    if(kind==='heli'){
+      ctx.beginPath(); ctx.arc(0,0,6,0,7); ctx.fill();
+      ctx.strokeStyle=ctx.fillStyle; ctx.beginPath(); ctx.moveTo(-9,0); ctx.lineTo(9,0); ctx.stroke();
+    } else {
+      ctx.rotate(a.heading*Math.PI/180 || 0);
+      ctx.beginPath(); ctx.moveTo(0,-7); ctx.lineTo(5,6); ctx.lineTo(-5,6); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    ctx.fillStyle='#dceaf2'; ctx.font='9px sans-serif'; ctx.textAlign='center'; ctx.fillText(a.name, x, y+16);
+  });
+
+  // sweep effect — drawn as a handful of thin fading wedges rather than a canvas conicGradient,
+  // which rendered as a single oversized opaque wedge under SwiftShader's Canvas2D implementation
+  const sweepA = (performance.now()*0.0004)%(Math.PI*2);
+  const sweepR = Math.max(W,H);
+  const slices = 10;
+  for(let i=0;i<slices;i++){
+    const a0 = sweepA - i*0.03, a1 = sweepA - (i+1)*0.03;
+    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.arc(sx,sy,sweepR,a0,a1,true); ctx.closePath();
+    ctx.fillStyle = 'rgba(55,224,255,'+(0.10*(1-i/slices))+')';
+    ctx.fill();
+  }
+}
+
+let radarClickHandlerBound=false;
+function bindRadarClicks(){
+  if(radarClickHandlerBound) return; radarClickHandlerBound=true;
+  radarCanvas.addEventListener('click', e=>{
+    if(!G) return;
+    const rect = radarCanvas.getBoundingClientRect();
+    const px = (e.clientX-rect.left)*devicePixelRatio, py=(e.clientY-rect.top)*devicePixelRatio;
+    let best=null, bestD=26;
+    G.incidents.forEach(inc=>{
+      const [x,y]=w2c(inc.pos.x,inc.pos.y); const d=Math.hypot(px-x,py-y);
+      if(d<bestD){ bestD=d; best=inc; }
+    });
+    if(best) openDispatchModal(best);
+  });
+}
+
+// ── SIDEBAR RENDER ───────────────────────────────────────────────────
+// incident "kanban" board — three columns mirroring the natural New -> En Route -> On Scene lifecycle
+// (the same pattern as the pharmacy game's pipeline). Every card, regardless of stage, opens the same
+// unified incident modal — full status plus whatever action makes sense (dispatch/reassign/recall).
+// Cards are rebuilt from scratch every frame (renderSidebar() runs off the main rAF loop), so a plain
+// per-card el.onclick closure is unreliable: the node under the pointer at mousedown can be a different
+// node (already replaced by the next frame's rebuild) than the one at mouseup, and the resulting click
+// event bubbles to whatever *common* ancestor is still in the DOM — which had no handler. Delegating a
+// single listener on the static #kanban container (bound once, see bindKanbanClicks()) sidesteps this
+// entirely: that container is never destroyed, only its children churn.
+function makeIncidentCard(inc){
+  const el=document.createElement('div');
+  el.className='incard '+inc.type.urgency;
+  el.dataset.incidentId = inc.id;
+  const pct = clamp(100-(inc.age/inc.timeLimit*100),0,100);
+  const needed = inc.assetsNeeded||1;
+  const assets = (inc.assignedAssetIds||[]).map(id=>G.fleet.find(a=>a.id===id)).filter(Boolean);
+  let sub;
+  if(inc.status==='new'){
+    sub = assets.length ? assets.length+'/'+needed+' assets assigned — awaiting more' :
+      (inc.mutualAidEta!=null ? 'Mutual aid en route' : 'Awaiting dispatch');
+  } else {
+    sub = assets.length ? assets.map(a=>a.name).join(' & ')+' — '+inc.status : (inc.mutualAidEta!=null ? 'Mutual aid — '+inc.status : inc.status);
+  }
+  el.innerHTML = '<b>'+(needed>1?'⚠ MAJOR — ':'')+inc.type.name+'</b><div class="meta">off '+(inc.nearName||'the patrol area')+'<br>'+inc.people+' people · '+sub+'</div>'+
+    '<div class="bar"><i style="width:'+pct+'%;background:'+(pct<30?'#ff4d4d':pct<60?'#ffb300':'#3ddc55')+'"></i></div>';
+  return el;
+}
+let kanbanClickHandlerBound=false;
+function bindKanbanClicks(){
+  if(kanbanClickHandlerBound) return; kanbanClickHandlerBound=true;
+  document.getElementById('kanban').addEventListener('click', e=>{
+    const card = e.target.closest('.incard');
+    if(!card) return;
+    const inc = G.incidents.find(i=>i.id===card.dataset.incidentId);
+    if(inc) openDispatchModal(inc);
+  });
+}
+function renderSidebar(){
+  const cols = { new: document.getElementById('kanbanNew'), dispatched: document.getElementById('kanbanDispatched'), onscene: document.getElementById('kanbanOnScene') };
+  const countEls = { new: document.getElementById('kCountNew'), dispatched: document.getElementById('kCountDispatched'), onscene: document.getElementById('kCountOnScene') };
+  Object.values(cols).forEach(c=>c.innerHTML='');
+  const counts = { new:0, dispatched:0, onscene:0 };
+  G.incidents.slice().sort((a,b)=>a.age/a.timeLimit<b.age/b.timeLimit?1:-1).forEach(inc=>{
+    const col = cols[inc.status];
+    if(!col) return; // resolved/failed incidents are spliced out of G.incidents already
+    counts[inc.status]++;
+    col.appendChild(makeIncidentCard(inc));
+  });
+  Object.keys(cols).forEach(k=>{
+    countEls[k].textContent = counts[k];
+    if(!counts[k]) cols[k].innerHTML = '<div class="kempty">Nothing here</div>';
+  });
+
+  document.getElementById('weatherbox').innerHTML =
+    '<b>'+seaStateLabel(G.weather.seaState)+'</b> seas, wind '+Math.round(G.weather.windKt)+'kt<br>'+
+    (G.weather.precip!=='none' ? G.weather.precip+' — ' : '')+'Visibility '+Math.round(G.weather.visibility*100)+'%';
+
+  const fm = document.getElementById('fleetMini'); fm.innerHTML='';
+  G.fleet.forEach(a=>{
+    const dotCls = a.status==='docked'?'avail':(a.status==='repair'||a.status==='retired')?'repair':'busy';
+    const row=document.createElement('div'); row.className='fmrow';
+    row.innerHTML = '<div class="dot '+dotCls+'"></div><div class="nm">'+a.name+'</div><div class="st">'+a.status+'</div>';
+    fm.appendChild(row);
+  });
+}
+
+// ── MANAGEMENT UI ─────────────────────────────────────────────────────
+function meter(pct,color){ return '<span class="meterbar"><i style="width:'+clamp(pct,0,100)+'%;background:'+color+'"></i></span>'; }
+function condColor(pct){ return pct>60?'#3ddc55':pct>30?'#ffb300':'#ff4d4d'; }
+
+// Small inline-SVG line chart, same pattern as the election game's pollHistorySvg() — a pure function of
+// G.history, recomputed on every render, nothing extra persisted beyond the {day,budget,reputation}
+// snapshots endOfDay() already pushes.
+function historySvg(values, color, w, h){
+  if(values.length<2) return '<p style="margin:0;color:var(--dim);font-size:11px;">Not enough history yet — check back after a few days.</p>';
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max-min)||1;
+  const pts = values.map((v,i)=>{
+    const x = (i/(values.length-1))*w;
+    const y = h - ((v-min)/range)*h;
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none" style="display:block;">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/>
+  </svg>`;
+}
+
+function renderMgmt(){
+  const c = document.getElementById('mgmtContent');
+  if(G.mgmtTab==='overview') c.innerHTML = renderOverviewTab();
+  else if(G.mgmtTab==='fleet') c.innerHTML = renderFleetTab();
+  else if(G.mgmtTab==='crew') c.innerHTML = renderCrewTab();
+  else if(G.mgmtTab==='bases') c.innerHTML = renderBasesTab();
+  else if(G.mgmtTab==='log') c.innerHTML = renderLogTab();
+  wireMgmtEvents();
+}
+
+function renderOverviewTab(){
+  const s = G.stats;
+  const avgResp = s.respondedCount ? (s.totalResponseTime/s.respondedCount).toFixed(1) : '—';
+  const daysToReview = G.nextReviewDay - G.day;
+  const recentAch = G.achievements.slice(-4).reverse();
+  return `
+  <div class="grid3">
+    <div class="card"><h4>Station</h4>
+      <p style="color:#fff;font-size:22px;margin:0;">${fmtMoney(G.budget)}</p><p style="margin:2px 0 0;">Budget</p>
+    </div>
+    <div class="card"><h4>Reputation</h4>
+      <p style="color:#fff;font-size:22px;margin:0;">${Math.round(G.reputation)}/100</p>
+      ${meter(G.reputation, G.reputation>60?'#3ddc55':G.reputation>35?'#ffb300':'#ff4d4d')}
+    </div>
+    <div class="card"><h4>Day</h4>
+      <p style="color:#fff;font-size:22px;margin:0;">${G.day}</p><p style="margin:2px 0 0;">${fmtTime(G.time)} · Board review in ${Math.max(daysToReview,0)}d</p>
+    </div>
+  </div>
+  <div class="card"><h4>Career Statistics</h4>
+    <div class="grid3">
+      <div>Total incidents<br><b style="color:#fff;">${s.totalIncidents}</b></div>
+      <div>Lives saved<br><b style="color:var(--green);">${s.livesSaved}</b></div>
+      <div>Lives lost<br><b style="color:var(--red);">${s.livesLost}</b></div>
+      <div>Missions run<br><b style="color:#fff;">${s.missionsRun}</b></div>
+      <div>Incidents failed<br><b style="color:var(--red);">${s.incidentsFailed}</b></div>
+      <div>Avg response<br><b style="color:#fff;">${avgResp} min</b></div>
+    </div>
+  </div>
+  <div class="card"><h4>Weather Now</h4>
+    <p style="margin:0;">${seaStateLabel(G.weather.seaState)} seas · Wind ${Math.round(G.weather.windKt)}kt · Visibility ${Math.round(G.weather.visibility*100)}%
+    ${G.weather.precip!=='none'?' · '+G.weather.precip:''} · ${isNight()?'Night':'Daylight'}</p>
+    ${G.stormSeason ? `<p style="margin:6px 0 0;"><span class="pill bad">STORM SEASON</span> ${G.stormSeason.endDay-G.day} day(s) remaining — expect rougher seas and more incidents.</p>` : ''}
+  </div>
+  <div class="card"><h4>Career Trends</h4>
+    <div class="grid2">
+      <div><p style="margin:0 0 4px;color:var(--dim);font-size:11px;">Reputation (last ${G.history.length}d)</p>${historySvg(G.history.map(h=>h.reputation),'#37e0ff',200,50)}</div>
+      <div><p style="margin:0 0 4px;color:var(--dim);font-size:11px;">Budget (last ${G.history.length}d)</p>${historySvg(G.history.map(h=>h.budget),'#3ddc55',200,50)}</div>
+    </div>
+  </div>
+  <div class="card"><h4>Recent Commendations</h4>
+    ${recentAch.length ? recentAch.map(a=>`<p style="margin:4px 0;"><span class="pill ok">${a.name}</span> ${a.desc} <span style="color:var(--dim);">— day ${a.day}</span></p>`).join('')
+      : '<p style="margin:0;color:var(--dim);">None yet — excellent rescues and long clean streaks earn commendations.</p>'}
+  </div>
+  <div class="card"><h4>Fundraising</h4>
+    <p style="margin:0 0 6px;color:var(--dim);">Public goodwill funds the station alongside grateful post-rescue donations — better reputation means bigger crowds and bigger cheques.</p>
+    ${FUNDRAISERS.map(f=>{
+      const readyDay = G.fundraiserReadyDay[f.key]||1;
+      const daysLeft = readyDay - G.day;
+      const ready = daysLeft<=0 && G.budget>=f.cost;
+      const expected = Math.round((f.minReturn+f.maxReturn)/2 * (0.6+G.reputation/100));
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--edge);">
+        <div><b style="color:#fff;">${f.name}</b><br><span style="color:var(--dim);font-size:11px;">${f.desc}<br>${f.cost?'Cost '+fmtMoney(f.cost)+' · ':''}Expect ~${fmtMoney(expected)}</span></div>
+        <button class="btn small primary" data-fundraise="${f.key}" ${ready?'':'disabled'}>${daysLeft>0?'Ready in '+daysLeft+'d':'Run'}</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderFleetTab(){
+  let rows = G.fleet.map(a=>{
+    const def = FLEET_TYPES[a.type];
+    const base = G.bases.find(b=>b.id===a.baseId);
+    if(a.status==='retired'){
+      return `<tr style="opacity:.6;">
+        <td><b style="color:#fff;">${a.name}</b><br><span style="color:var(--dim);font-size:10px;">${def.full} · ${base?base.name:'Gourock'}</span></td>
+        <td><span class="pill bad">WRITTEN OFF</span></td>
+        <td colspan="4" style="color:var(--dim);">Damaged beyond repair — no longer fit for service.</td>
+        <td><button class="btn small danger" data-decommission="${a.id}">Remove from Fleet</button></td>
+      </tr>`;
+    }
+    const canRepair = a.condition<100 && G.budget>0;
+    const repairCost = Math.round((100-a.condition)*def.repairCostPerPct);
+    const readyCrew = a.crewIds.filter(id=>{ const c=G.crew.find(x=>x.id===id); return c && c.status!=='training'; }).length;
+    const upgradeBadges = a.upgrades.map(u=>`<span class="pill ok">${UPGRADES[u].name}</span>`).join(' ');
+    const upgradeBtns = Object.keys(UPGRADES).filter(k=>!a.upgrades.includes(k)).map(k=>
+      `<button class="btn small" data-upgrade="${a.id}|${k}" ${G.budget<UPGRADES[k].cost?'disabled':''}>+${UPGRADES[k].name} (${fmtMoney(UPGRADES[k].cost)})</button>`).join(' ');
+    const relocateOpts = G.bases.filter(b=>b.id!==a.baseId).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+    const canRelocate = a.status==='docked' && relocateOpts;
+    return `<tr>
+      <td><b style="color:#fff;">${a.name}</b><br><span style="color:var(--dim);font-size:10px;">${def.full} · ${base?base.name:'Gourock'}</span></td>
+      <td>${a.status}</td>
+      <td>${meter(a.condition, condColor(a.condition))} ${Math.round(a.condition)}%</td>
+      <td>${meter(a.fuel,'#37e0ff')} ${Math.round(a.fuel)}%</td>
+      <td>${readyCrew}/${def.crewSlots}${readyCrew<def.crewSlots?' <span class="pill bad">short</span>':''}</td>
+      <td>${upgradeBadges||'<span style="color:var(--dim);">none</span>'}</td>
+      <td><button class="btn small" data-repair="${a.id}" ${canRepair?'':'disabled'}>Repair (${fmtMoney(repairCost)})</button>
+          <button class="btn small" data-refuel="${a.id}" ${a.fuel>=100?'disabled':''}>Refuel</button><br>
+          ${upgradeBtns}<br>
+          ${relocateOpts ? `<select data-relocatebase="${a.id}">${relocateOpts}</select>
+          <button class="btn small" data-relocate="${a.id}" ${canRelocate?'':'disabled'}>Relocate</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+  const baseOpts = G.bases.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+  let buyRows = Object.keys(FLEET_TYPES).map(k=>{
+    const def=FLEET_TYPES[k];
+    return `<tr><td>${def.full}</td><td>${def.speedKt}kt</td><td>${def.capacity} pax</td><td>${fmtMoney(def.cost)}</td>
+      <td><select data-buybase="${k}">${baseOpts}</select></td>
+      <td><button class="btn small primary" data-buy="${k}" ${G.budget<def.cost?'disabled':''}>Purchase</button></td></tr>`;
+  }).join('');
+  return `<div class="card"><h4>Fleet</h4><table class="data"><thead><tr><th>Asset</th><th>Status</th><th>Condition</th><th>Fuel</th><th>Crew</th><th>Upgrades</th><th>Actions</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+    <div class="card"><h4>Procurement</h4><table class="data"><thead><tr><th>Type</th><th>Speed</th><th>Capacity</th><th>Cost</th><th>Base</th><th></th></tr></thead>
+    <tbody>${buyRows}</tbody></table></div>`;
+}
+
+function renderCrewTab(){
+  let rows = G.crew.map(c=>{
+    const assignOpts = G.fleet.map(a=>`<option value="${a.id}" ${c.assetId===a.id?'selected':''}>${a.name}</option>`).join('');
+    const trainCost = Math.round(3000 + c.skill*80);
+    const inTraining = c.status==='training';
+    const daysLeft = inTraining ? Math.max(0, Math.ceil((c.training.endsAt-(G.day*1440+G.time))/1440)) : 0;
+    const medals = c.medals||[];
+    const medalBadges = medals.map(m=>`<span class="pill ok" title="${m.desc} (day ${m.day})">🎖 ${m.tier.replace(' for Gallantry','').replace('Medal','')}</span>`).join(' ');
+    return `<tr>
+      <td><b style="color:#fff;">${c.name}</b>${medalBadges?'<br>'+medalBadges:''}</td><td>${c.role}<br><span style="color:var(--cyan);font-size:10px;">${c.specialty}</span></td>
+      <td>${meter(c.skill,'#37e0ff')} ${Math.round(c.skill)}</td>
+      <td>${meter(100-c.fatigue,c.fatigue>70?'#ff4d4d':'#3ddc55')} ${Math.round(c.fatigue)}</td>
+      <td>${meter(c.morale,'#ffb300')} ${Math.round(c.morale)}</td>
+      <td><select data-assigncrew="${c.id}" ${inTraining?'disabled':''}><option value="">Unassigned</option>${assignOpts}</select></td>
+      <td>${inTraining ? '<span class="pill warn">Training, '+daysLeft+'d left</span>' :
+        `<button class="btn small" data-rest="${c.id}" ${c.fatigue<5?'disabled':''}>Rest</button>
+         <button class="btn small" data-train="${c.id}" ${G.budget<trainCost||c.skill>=98?'disabled':''}>Train (${fmtMoney(trainCost)})</button>`}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="card"><h4>Crew Roster</h4><table class="data"><thead><tr><th>Name</th><th>Role / Specialty</th><th>Skill</th><th>Fatigue</th><th>Morale</th><th>Assigned To</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table></div>
+    <div class="card"><h4>Recruitment</h4><p>Hire a new crew member for ${fmtMoney(8000)}. Pick a role — specialty is assigned to match.</p>
+    <div class="choices">${CREW_ROLES.map(r=>`<div class="choice" data-hire="${r}"><b>${r}</b><span>Hire new</span></div>`).join('')}</div></div>`;
+}
+
+function renderBasesTab(){
+  const ownedRows = G.bases.map(b=>{
+    const stationed = G.fleet.filter(a=>a.baseId===b.id);
+    return `<tr><td><b style="color:#fff;">${b.name}</b>${b.isHome?' <span class="pill ok">Home</span>':''}</td>
+      <td>${stationed.length? stationed.map(a=>a.name).join(', ') : '<span style="color:var(--dim);">none stationed</span>'}</td></tr>`;
+  }).join('');
+  const ownedNames = new Set(G.bases.map(b=>b.name));
+  const buyable = BASE_OPTIONS.filter(o=>!ownedNames.has(o.name));
+  const buyRows = buyable.map(o=>`<tr><td>${o.name}</td><td>${fmtMoney(o.cost)}</td>
+    <td><button class="btn small primary" data-buybaselocation="${o.name}" ${G.budget<o.cost?'disabled':''}>Establish Base</button></td></tr>`).join('');
+  return `<div class="card"><h4>Owned Bases</h4><table class="data"><thead><tr><th>Base</th><th>Assets Stationed</th></tr></thead>
+    <tbody>${ownedRows}</tbody></table></div>
+    <div class="card"><h4>Establish a New Base</h4><p>A new base lets you station assets there directly, cutting response time to nearby incidents — assets you already own can be relocated for free from the Fleet tab's next purchase, or bought fresh already based there.</p>
+    <table class="data"><thead><tr><th>Location</th><th>Cost</th><th></th></tr></thead>
+    <tbody>${buyRows || '<tr><td colspan="3" style="color:var(--dim);">All available locations already have a base.</td></tr>'}</tbody></table></div>`;
+}
+
+function renderLogTab(){
+  const rows = G.log.map(l=>`<tr><td style="color:var(--dim);white-space:nowrap;">${l.t}</td><td style="color:${l.kind==='bad'?'var(--red)':l.kind==='good'?'var(--green)':l.kind==='alert'?'var(--amber)':'#dceaf2'}">${l.msg}</td></tr>`).join('');
+  return `<div class="card"><h4>Incident Log</h4><table class="data log-data"><tbody>${rows||'<tr><td>No events yet.</td></tr>'}</tbody></table></div>`;
+}
+
+// Just like the kanban board (see bindKanbanClicks()), #mgmtContent is fully rebuilt from scratch every
+// single animation frame (renderMgmt() runs unconditionally off the main rAF loop whenever G.view==='mgmt') —
+// so EVERY button in here previously used a plain per-element onclick, rebound after each render. A real
+// human click's mousedown-to-mouseup gap (~80-150ms) reliably spans several of those rebuilds, so the node
+// that received mousedown is gone by mouseup and the click is silently lost — confirmed by simulating a
+// slow (~120ms) click via CDP: no log line, no budget change, nothing. Delegating one listener onto the
+// persistent #mgmtContent element itself (only its innerHTML churns, never the element) fixes every button
+// at once, the same fix already applied to the kanban board.
+let mgmtEventsBound=false;
+function wireMgmtEvents(){
+  if(mgmtEventsBound) return; mgmtEventsBound=true;
+  const root = document.getElementById('mgmtContent');
+  root.addEventListener('click', e=>{
+    let el;
+    if(el = e.target.closest('[data-decommission]')){
+      const a = G.fleet.find(x=>x.id===el.dataset.decommission);
+      if(a){
+        G.crew.forEach(c=>{ if(c.assetId===a.id) c.assetId=null; });
+        G.fleet = G.fleet.filter(x=>x.id!==a.id);
+        addLog(a.name+' removed from the fleet.', 'info');
+        renderMgmt();
+      }
+    } else if(el = e.target.closest('[data-repair]')){
+      const a = G.fleet.find(x=>x.id===el.dataset.repair);
+      const def = FLEET_TYPES[a.type];
+      const cost = Math.round((100-a.condition)*def.repairCostPerPct);
+      if(G.budget>=cost){ G.budget-=cost; a.condition=100; addLog(a.name+' repaired for '+fmtMoney(cost)+'.', 'info'); renderMgmt(); }
+    } else if(el = e.target.closest('[data-refuel]')){
+      const a = G.fleet.find(x=>x.id===el.dataset.refuel); a.fuel=100; renderMgmt();
+    } else if(el = e.target.closest('[data-upgrade]')){
+      const [assetId,key] = el.dataset.upgrade.split('|');
+      const a = G.fleet.find(x=>x.id===assetId), def=UPGRADES[key];
+      if(G.budget>=def.cost && !a.upgrades.includes(key)){ G.budget-=def.cost; a.upgrades.push(key); addLog(a.name+' fitted with '+def.name+'.', 'info'); renderMgmt(); }
+    } else if(el = e.target.closest('[data-relocate]')){
+      const a = G.fleet.find(x=>x.id===el.dataset.relocate);
+      const sel = document.querySelector('[data-relocatebase="'+a.id+'"]');
+      if(!sel || a.status!=='docked') return;
+      a.baseId = sel.value;
+      a.pos = basePosOf(a.baseId);
+      const base = G.bases.find(x=>x.id===a.baseId);
+      addLog(a.name+' relocated to '+base.name+'.', 'info');
+      renderMgmt();
+    } else if(el = e.target.closest('[data-buy]')){
+      const type=el.dataset.buy, def=FLEET_TYPES[type];
+      const baseSel = document.querySelector('[data-buybase="'+type+'"]');
+      const baseId = baseSel ? baseSel.value : 'home';
+      if(G.budget>=def.cost){ G.budget-=def.cost; G.fleet.push(makeAsset(type, def.name+' '+(G.fleet.length+1), baseId)); addLog('Purchased new '+def.full+'.', 'info'); renderMgmt(); }
+    } else if(el = e.target.closest('[data-fundraise]')){
+      const f = FUNDRAISERS.find(x=>x.key===el.dataset.fundraise);
+      const readyDay = G.fundraiserReadyDay[f.key]||1;
+      if(G.day<readyDay || G.budget<f.cost) return;
+      G.budget -= f.cost;
+      const amt = Math.round(rrange(f.minReturn,f.maxReturn) * (0.6+G.reputation/100));
+      G.budget += amt;
+      G.fundraiserReadyDay[f.key] = G.day + f.cooldownDays;
+      addLog(f.name+' raised '+fmtMoney(amt)+' for the station.', 'good');
+      renderMgmt();
+    } else if(el = e.target.closest('[data-buybaselocation]')){
+      const opt = BASE_OPTIONS.find(o=>o.name===el.dataset.buybaselocation);
+      const loc = LOCATIONS.find(l=>l.name===opt.name);
+      if(G.budget>=opt.cost){
+        G.budget-=opt.cost;
+        G.bases.push({id:uid(), name:opt.name, pos:{x:loc.x,y:loc.y}, isHome:false});
+        addLog('Established a new base at '+opt.name+'.', 'info');
+        renderMgmt();
+      }
+    } else if(el = e.target.closest('[data-rest]')){
+      const c=G.crew.find(x=>x.id===el.dataset.rest); c.fatigue=clamp(c.fatigue-40,0,100); c.status='resting'; renderMgmt();
+    } else if(el = e.target.closest('[data-train]')){
+      const c = G.crew.find(x=>x.id===el.dataset.train);
+      const cost = Math.round(3000 + c.skill*80);
+      if(G.budget<cost || c.skill>=98) return;
+      G.budget -= cost; c.status='training';
+      c.training = { endsAt: G.day*1440+G.time+3*1440, bonus: rint(8,15) };
+      addLog(c.name+' sent on a training course.', 'info');
+      renderMgmt();
+    } else if(el = e.target.closest('[data-hire]')){
+      if(G.budget<8000) return;
+      const role = el.dataset.hire;
+      const specMap = {Coxswain:'Seamanship',Deckhand:'Seamanship',Medic:'Medical','Team Leader':'Mountain Craft','Rope Technician':'Technical Rescue',Pilot:'Technical Rescue',Winchman:'Technical Rescue'};
+      G.budget-=8000; G.crew.push(makeCrewMember(role, specMap[role])); addLog('Hired a new '+role+'.', 'info'); renderMgmt();
+    }
+  });
+  root.addEventListener('change', e=>{
+    const sel = e.target.closest('[data-assigncrew]');
+    if(!sel) return;
+    const c = G.crew.find(x=>x.id===sel.dataset.assigncrew);
+    if(c.assetId){ const old=G.fleet.find(a=>a.id===c.assetId); if(old) old.crewIds=old.crewIds.filter(id=>id!==c.id); }
+    c.assetId = sel.value||null;
+    if(c.assetId){ const a=G.fleet.find(x=>x.id===c.assetId); if(!a.crewIds.includes(c.id)) a.crewIds.push(c.id); }
+    renderMgmt();
+  });
+}
+
+// ── TOP BAR / NAV ──────────────────────────────────────────────────────
+function renderTopbar(){
+  document.getElementById('tbStation').textContent = G.stationName;
+  document.getElementById('tbDay').textContent = 'Day '+G.day;
+  document.getElementById('tbTime').textContent = fmtTime(G.time);
+  document.getElementById('tbBudget').textContent = fmtMoney(G.budget);
+  document.getElementById('tbRep').textContent = Math.round(G.reputation);
+  document.getElementById('tbWx').textContent = seaStateLabel(G.weather.seaState);
+}
+
+document.querySelectorAll('.speedbtn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.speedbtn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  if(G) G.speed = parseInt(b.dataset.spd,10);
+});
+document.querySelectorAll('.navtab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.navtab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  if(G) G.view = b.dataset.nav;
+  applyViewVisibility();
+});
+document.querySelectorAll('.mtab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.mtab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  if(G) G.mgmtTab = b.dataset.mtab;
+  renderMgmt();
+});
+function applyViewVisibility(){
+  document.getElementById('viewOps').classList.toggle('show', G.view==='ops');
+  document.getElementById('viewMgmt').classList.toggle('show', G.view==='mgmt');
+  if(G.view==='ops') fitRadar();
+}
+
+// ── MAIN MENU / NEW GAME ──────────────────────────────────────────────
+function buildDiffChoices(){
+  const c = document.getElementById('diffChoices'); c.innerHTML='';
+  DIFFICULTIES.forEach((d,i)=>{
+    const el=document.createElement('div'); el.className='choice'+(i===1?' sel':'');
+    el.innerHTML='<b>'+d.title+'</b><span>'+d.sub+'</span>';
+    el.dataset.key=d.key;
+    el.onclick=()=>{ [...c.children].forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); };
+    c.appendChild(el);
+  });
+}
+buildDiffChoices();
+
+document.getElementById('btnNewGame').onclick=()=>{
+  const name = document.getElementById('stationNameInput').value.trim() || 'Gourock';
+  const sel = document.querySelector('#diffChoices .choice.sel');
+  const key = sel ? sel.dataset.key : 'normal';
+  G = newGame(name, key);
+  document.getElementById('mainMenu').classList.add('hidden');
+  applyViewVisibility(); fitRadar(); renderTopbar(); renderSidebar(); renderMgmt();
+};
+document.getElementById('btnContinueGame').onclick=()=>{
+  const raw = tryLoadRaw();
+  if(!raw){ alert('No saved game found.'); return; }
+  G = raw; G.diff = DIFFICULTIES.find(d=>d.key===G.diffKey)||DIFFICULTIES[1];
+  if(!G.fundraiserReadyDay) G.fundraiserReadyDay = Object.fromEntries(FUNDRAISERS.map(f=>[f.key,1]));
+  if(G.stormSeason===undefined) G.stormSeason = null;
+  if(!G.nextStormCheckDay) G.nextStormCheckDay = G.day+5;
+  if(!G.history) G.history = [];
+  G.crew.forEach(c=>{ if(!c.medals) c.medals=[]; });
+  G.incidents.forEach(inc=>{
+    if(!inc.assignedAssetIds) inc.assignedAssetIds = inc.assignedAssetId ? [inc.assignedAssetId] : [];
+    if(!inc.assetsNeeded) inc.assetsNeeded = 1;
+    if(inc.mutualAidEta===undefined) inc.mutualAidEta = null;
+    if(inc.mutualAidT===undefined) inc.mutualAidT = null;
+  });
+  G.fleet.forEach(a=>{ if(a.currentMission && a.currentMission.holding===undefined) a.currentMission.holding=false; });
+  document.getElementById('mainMenu').classList.add('hidden');
+  applyViewVisibility(); fitRadar(); renderTopbar(); renderSidebar(); renderMgmt();
+};
+document.getElementById('btnHelp2').onclick=()=>document.getElementById('helpModal').classList.remove('hidden');
+document.getElementById('btnHelpTop').onclick=()=>document.getElementById('helpModal').classList.remove('hidden');
+document.getElementById('btnHelpClose').onclick=()=>document.getElementById('helpModal').classList.add('hidden');
+document.getElementById('btnReviewClose').onclick=()=>{ document.getElementById('reviewModal').classList.add('hidden'); if(G) G.paused=false; };
+
+addEventListener('resize', ()=>{ if(G && G.view==='ops') fitRadar(); });
+
+// Both renderSidebar() (kanban) and renderMgmt() tear down and rebuild their entire subtree from scratch
+// every call, and frame() calls them unconditionally on every animation frame (~60/sec). That alone isn't
+// a bug in a vacuum, but it interacts badly with a real mouse click: Chromium (confirmed directly, not
+// just inferred — cloning a button and swapping it in mid-gesture reproduces this in total isolation from
+// this app's code) never synthesizes a 'click' event at all if the element that received 'mousedown' has
+// been disconnected from the DOM by the time 'mouseup' fires, REGARDLESS of where any listener is attached
+// — so delegating onto a stable ancestor (see bindKanbanClicks()/wireMgmtEvents()) is necessary but not
+// sufficient on its own. A real human mousedown-to-mouseup gap (~80-150ms) reliably spans several 60fps
+// rebuilds, so the specific button node under the pointer is essentially guaranteed to already be a
+// different node by mouseup — the click silently never happens, no matter how carefully the listener is
+// bound. The fix is to simply not rebuild these panels while a click is physically in progress: track a
+// global mouse-down/up flag and have frame() skip the rebuild (but keep advancing game time / drawing the
+// radar) for that gesture's duration, catching up on the very next frame once the button is released.
+let uiPointerDown=false;
+addEventListener('mousedown', ()=>{ uiPointerDown=true; }, true);
+addEventListener('mouseup', ()=>{ uiPointerDown=false; }, true);
+
+// ── MAIN LOOP ──────────────────────────────────────────────────────────
+let lastT = performance.now();
+function frame(now){
+  requestAnimationFrame(frame);
+  let dt = (now-lastT)/1000; lastT=now; dt=Math.min(dt,0.1);
+
+  if(G && !G.paused && !G.gameOver){
+    const dtMin = dt * G.speed * 0.5; // game-minutes per real second at 1x
+    if(dtMin>0){
+      advanceTime(dtMin);
+    }
+  }
+
+  if(G){
+    renderTopbar();
+    if(G.view==='ops'){ bindRadarClicks(); bindKanbanClicks(); drawRadar(); if(!uiPointerDown) renderSidebar(); }
+    if(G.view==='mgmt' && !uiPointerDown){ renderMgmt(); }
+  }
+}
+
+function advanceTime(dtMin){
+  G.time += dtMin;
+  if(G.time>=1440){ G.time-=1440; G.day++; endOfDay(); }
+  updateWeather(dtMin);
+  updateTraffic(dtMin);
+  maybeSpawnIncident(dtMin);
+  updateIncidents(dtMin);
+  updateMutualAid(dtMin);
+  updateCrewTraining();
+  maybeStationEvent(dtMin);
+  G.fleet.forEach(a=>{
+    if(a.currentMission){ tickMissionAuto(a.currentMission, dtMin); }
+  });
+  G.crew.forEach(c=>{ if(c.status==='resting'){ c.fatigue=clamp(c.fatigue-dtMin*0.4,0,100); if(c.fatigue<3) c.status='available'; } });
+  if(G.incidents.some(i=>i.status==='new' && !document.getElementById('alertModal').classList.contains('hidden')===false && pendingAlertIncident===null)){
+    const fresh = G.incidents.find(i=>i.status==='new');
+    if(fresh && !G._alertedIds) G._alertedIds = new Set();
+    if(fresh && G._alertedIds && !G._alertedIds.has(fresh.id)){
+      G._alertedIds.add(fresh.id);
+      openDispatchModal(fresh);
+    }
+  }
+  G.budget -= (G.fleet.filter(a=>a.status!=='retired').reduce((s,a)=>s+FLEET_TYPES[a.type].upkeep,0)/1440)*dtMin;
+  if(G.budget < -20000){ triggerGameOver('Bankruptcy', 'The station has run out of funding and been forced to close.'); }
+  if(G.reputation <= 0){ triggerGameOver('Station Closed', 'Public confidence has collapsed. The board has closed the station.'); }
+}
+
+function updateCrewTraining(){
+  const nowT = G.day*1440+G.time;
+  G.crew.forEach(c=>{
+    if(c.status==='training' && c.training && nowT>=c.training.endsAt){
+      c.skill = clamp(c.skill+c.training.bonus, 0, 100);
+      addLog(c.name+' completed training (+'+c.training.bonus+' skill).', 'good');
+      c.training=null; c.status='available';
+    }
+  });
+}
+
+function maybeStationEvent(dtMin){
+  G.nextEventIn -= dtMin;
+  if(G.nextEventIn > 0) return;
+  G.nextEventIn = rrange(30,70);
+  const roll = rng();
+  if(roll<0.22){
+    const avail = G.fleet.filter(a=>a.status==='docked');
+    if(avail.length){
+      const a = rpick(avail), dmg = rint(10,25);
+      a.condition = clamp(a.condition-dmg,0,100);
+      addLog('Equipment fault aboard '+a.name+' during routine checks — condition down '+dmg+'%.', 'bad');
+    }
+  } else if(roll<0.42){
+    const amt = rint(9000,32000);
+    G.budget += amt;
+    addLog('Received a funding grant of '+fmtMoney(amt)+' from the Maritime &amp; Coastguard Agency.', 'good');
+  } else if(roll<0.58){
+    addLog('A reported distress call turned out to be a false alarm. No assets required.', 'info');
+  } else if(roll<0.74){
+    const rep = rint(2,6);
+    G.reputation = clamp(G.reputation+rep,0,100);
+    addLog('A visiting dignitary toured the station and praised the crew — reputation +'+rep+'.', 'good');
+  } else if(roll<0.88 && G.crew.length){
+    const c = rpick(G.crew), drop = rint(5,15);
+    c.morale = clamp(c.morale-drop,0,100);
+    addLog(c.name+' is feeling the strain of a tough spell — morale down.', 'info');
+  } else {
+    addLog('The Met Office has issued a fresh weather warning for the Firth.', 'alert');
+  }
+}
+
+function maybeAwardCommendation(saveFrac, inc, assets, wxPenalty){
+  assets = Array.isArray(assets) ? assets : [assets];
+  if(saveFrac>=1 && inc.people>=3) awardAchievement('Exemplary Rescue', 'Saved all '+inc.people+' people from a '+inc.type.name.toLowerCase()+'.');
+  if(G.stats.missionsRun===10) awardAchievement('Ten Missions', "Completed the station's 10th rescue mission.");
+  if(G.stats.missionsRun===50) awardAchievement('Half Century', "Completed the station's 50th rescue mission.");
+  if(G.stats.livesSaved>=50 && !G._ach50){ G._ach50=true; awardAchievement('50 Lives Saved', 'The station has now saved 50 lives.'); }
+  if(G.stats.livesSaved>=200 && !G._ach200){ G._ach200=true; awardAchievement('200 Lives Saved', 'The station has now saved 200 lives.'); }
+  // personal honours for the crew directly involved — real RNLI-style gallantry medals, awarded only for
+  // a full/near-full save made *despite* the weather genuinely being past the asset's rated limit, not
+  // just for any good outcome (weatherMax comparisons already computed by the caller as wxPenalty)
+  if(saveFrac>=0.8 && wxPenalty>10){
+    const asset = rpick(assets);
+    const crew = crewOnAsset(asset);
+    if(crew.length){
+      const recipient = rpick(crew);
+      const tier = (saveFrac>=1 && inc.people>=4 && wxPenalty>28) ? 'Silver Medal for Gallantry' : 'Bronze Medal for Gallantry';
+      awardCrewMedal(recipient, tier, 'for the rescue of '+inc.peopleRescued+' people during a '+inc.type.name.toLowerCase()+' in severe conditions');
+    }
+  }
+}
+function awardCrewMedal(crewMember, tier, desc){
+  if(!crewMember.medals) crewMember.medals=[];
+  crewMember.medals.push({tier, desc, day:G.day});
+  awardAchievement(tier, crewMember.name+' — '+desc+'.');
+}
+function awardAchievement(name, desc){
+  G.achievements.push({name, desc, day:G.day});
+  addLog('COMMENDATION: '+name+' — '+desc, 'good');
+}
+
+function endOfDay(){
+  addLog('— Day '+G.day+' begins —', 'info');
+  G.history.push({day:G.day, budget:G.budget, reputation:G.reputation});
+  if(G.history.length>200) G.history.shift();
+  maybeStormSeason();
+  maybeBoardReview();
+  trySave();
+}
+
+function maybeBoardReview(){
+  if(G.day < G.nextReviewDay) return;
+  G.nextReviewDay += 7;
+  const s = G.stats;
+  let verdict, budgetDelta;
+  if(G.reputation>=70){ verdict='The board is delighted with the station\'s performance.'; budgetDelta=rint(14000,32000); }
+  else if(G.reputation>=45){ verdict='The board is satisfied with a steady performance.'; budgetDelta=rint(2000,10000); }
+  else { verdict='The board has serious concerns about recent performance.'; budgetDelta=-rint(3000,12000); }
+  G.budget += budgetDelta;
+  addLog('Board Review (Day '+G.day+'): '+verdict+' Budget adjustment: '+(budgetDelta>=0?'+':'')+fmtMoney(budgetDelta), budgetDelta>=0?'good':'bad');
+  showDebrief('Board Review — Day '+G.day, verdict+'<br><br>Reputation: '+Math.round(G.reputation)+'/100<br>Lives saved to date: <b>'+s.livesSaved+'</b><br>Lives lost to date: <b>'+s.livesLost+'</b><br>Budget adjustment: '+(budgetDelta>=0?'+':'')+fmtMoney(budgetDelta));
+}
+
+function triggerGameOver(title, detail){
+  if(G.gameOver) return;
+  G.gameOver = true; G.paused = true;
+  document.getElementById('reviewTitle').textContent = title;
+  document.getElementById('reviewDetail').innerHTML = detail+'<br><br>Final stats — Lives saved: '+G.stats.livesSaved+', Lives lost: '+G.stats.livesLost+', Day: '+G.day;
+  document.getElementById('reviewModal').classList.remove('hidden');
+}
+
+
+document.getElementById('loading').style.display='none';
+requestAnimationFrame(frame);
+addEventListener('beforeunload', trySave);
+setInterval(()=>{ if(G) trySave(); }, 20000);
+
+</script>
+</body>
+</html>
