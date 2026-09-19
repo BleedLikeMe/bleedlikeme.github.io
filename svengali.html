@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Svengali — Artist Management</title>
+<style>
+:root{
+  --bg:#0b0d12; --panel:#151923; --panel2:#1b202c; --border:#2a3142;
+  --gold:#d4af37; --gold-dim:#9c8329; --text:#e8e9ee; --dim:#98a0b3;
+  --good:#4caf7d; --bad:#d1595a; --warn:#e0a63a; --pink:#c069c7; --blue:#5b8dd6;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',Helvetica,Arial,sans-serif;}
+h1,h2,h3,h4{margin:0 0 8px;font-weight:700;}
+button{font-family:inherit;cursor:pointer;}
+.hidden{display:none !important;}
+
+/* ---------- Setup screen ---------- */
+#setupScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(circle at 50% 0%, #1c2233 0%, #0b0d12 60%);}
+.setup-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:36px 40px;max-width:460px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.setup-card h1{font-size:2.4em;letter-spacing:2px;color:var(--gold);text-align:center;}
+.tagline{text-align:center;color:var(--dim);margin-bottom:24px;font-style:italic;}
+.setup-card label{display:block;margin-bottom:16px;font-size:.85em;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+.setup-card input{width:100%;margin-top:6px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:1em;}
+.tier-options{display:flex;gap:8px;margin-top:8px;}
+.tier-options button, .lean-options button{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);padding:10px 6px;font-size:.85em;text-align:center;}
+.tier-options button small{display:block;color:var(--dim);font-weight:normal;margin-top:4px;}
+.tier-options button.selected{border-color:var(--gold);background:#2a2412;color:var(--gold);}
+#btnStart{width:100%;margin-top:10px;padding:14px;background:var(--gold);border:none;border-radius:8px;color:#1a1305;
+  font-weight:700;font-size:1.05em;letter-spacing:1px;}
+#btnStart:hover{background:#e5c04f;}
+#btnContinue{width:100%;margin-top:10px;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;
+  color:var(--dim);}
+
+/* ---------- Main shell ---------- */
+#gameScreen{min-height:100vh;display:flex;flex-direction:column;}
+#topbar{display:flex;align-items:center;gap:18px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--border);
+  flex-wrap:wrap;}
+#topbar .brand{font-weight:700;color:var(--gold);letter-spacing:1px;margin-right:auto;}
+#topbar .brand small{display:block;color:var(--dim);font-weight:normal;font-size:.7em;letter-spacing:0;}
+.stat-chip{font-size:.85em;color:var(--dim);}
+.stat-chip b{color:var(--text);}
+.ap-pips{display:flex;gap:4px;}
+.ap-pip{width:12px;height:12px;border-radius:50%;background:var(--border);}
+.ap-pip.filled{background:var(--gold);}
+#btnEndWeek{background:var(--good);border:none;color:#04150a;font-weight:700;padding:9px 16px;border-radius:8px;}
+#btnEndWeek:hover{background:#5ec98e;}
+#btnNewGame{background:transparent;border:1px solid var(--border);color:var(--dim);padding:9px 12px;border-radius:8px;font-size:.85em;}
+
+#shell{display:flex;flex:1;min-height:0;}
+#nav{width:180px;flex:0 0 180px;background:var(--panel);border-right:1px solid var(--border);padding:14px 0;}
+#nav button{display:block;width:100%;text-align:left;padding:11px 20px;background:none;border:none;color:var(--dim);font-size:.95em;
+  border-left:3px solid transparent;}
+#nav button:hover{color:var(--text);}
+#nav button.active{color:var(--gold);border-left-color:var(--gold);background:var(--panel2);}
+#content{flex:1;padding:22px;overflow-y:auto;}
+
+/* ---------- Cards / grids ---------- */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.statcard{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.statcard .val{font-size:1.6em;font-weight:700;color:var(--gold);}
+.statcard .lbl{color:var(--dim);font-size:.78em;text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+
+/* ---------- Tables ---------- */
+.card{overflow-x:auto;}
+table.data{width:100%;border-collapse:collapse;min-width:640px;}
+table.data th{text-align:left;color:var(--dim);font-size:.75em;text-transform:uppercase;letter-spacing:.5px;
+  padding:6px 10px;border-bottom:1px solid var(--border);}
+table.data td{padding:8px 10px;border-bottom:1px solid #1e2432;font-size:.92em;vertical-align:middle;}
+table.data tr:hover td{background:#1a1f2b;}
+table.data tr.clickable{cursor:pointer;}
+table.log-data{min-width:0;}
+table.log-data td{white-space:normal !important;}
+
+/* ---------- Badges & bars ---------- */
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:.72em;font-weight:600;letter-spacing:.3px;}
+.badge-genre{background:#22283a;color:var(--blue);border:1px solid #33405c;}
+.badge-prospect{background:#2a2718;color:var(--warn);border:1px solid #4a3f1e;}
+.badge-roster{background:#1c2a24;color:var(--good);border:1px solid #2a4436;}
+.badge-contracted{background:#241c2e;color:var(--pink);border:1px solid #3d2a4a;}
+.badge-tour{background:#1c2536;color:var(--blue);border:1px solid #2a3c58;}
+.badge-brokenup{background:#2a1c1c;color:var(--bad);border:1px solid #4a2a2a;}
+.bar{height:7px;background:#20263344;border:1px solid var(--border);border-radius:4px;overflow:hidden;width:100%;min-width:60px;}
+.bar-fill{height:100%;}
+.bar-fill.morale,.bar-fill.chem{background:var(--good);}
+.bar-fill.heat{background:var(--bad);}
+.bar-fill.buzz{background:var(--pink);}
+.bar-fill.fame{background:var(--gold);}
+.bar-row{display:flex;align-items:center;gap:6px;}
+.bar-row span{font-size:.72em;color:var(--dim);width:34px;flex:0 0 34px;}
+.trend-up{color:var(--good);} .trend-down{color:var(--bad);} .trend-flat{color:var(--dim);}
+
+/* ---------- Buttons ---------- */
+.btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:7px;font-size:.88em;margin:2px 4px 2px 0;}
+.btn:hover{border-color:var(--gold);color:var(--gold);}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:#1a1305;font-weight:700;}
+.btn.primary:hover{background:#e5c04f;}
+.btn.danger{border-color:#5a2a2a;color:var(--bad);}
+.btn.danger:hover{background:#2a1414;}
+.btn.small{padding:5px 10px;font-size:.78em;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn:disabled:hover{border-color:var(--border);color:var(--text);}
+.actiongrid{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+
+/* ---------- Modal ---------- */
+#modalRoot{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;
+  background:rgba(4,5,8,.72);overflow-y:auto;z-index:50;}
+#modalRoot.hidden{display:none;}
+.modal-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:640px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);margin-bottom:4vh;}
+.modal-box h2{color:var(--gold);}
+.modal-box .close-row{text-align:right;margin-top:16px;}
+.choice-card{background:var(--panel2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:10px;}
+.choice-card .meta{color:var(--dim);font-size:.8em;margin:4px 0 8px;}
+.member-check{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:7px;margin-bottom:6px;
+  background:var(--panel2);cursor:pointer;}
+.member-check.selected{border-color:var(--gold);}
+.member-check input{pointer-events:none;}
+.song-check{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px solid var(--border);
+  border-radius:7px;margin-bottom:5px;background:var(--panel2);cursor:pointer;}
+.song-check.selected{border-color:var(--gold);}
+
+/* ---------- Log / achievements ---------- */
+.log-entry{padding:6px 0;border-bottom:1px solid #1e2432;font-size:.87em;}
+.log-entry .wk{color:var(--dim);margin-right:8px;font-size:.85em;}
+.log-entry.tag-money,.log-entry.tag-deal{color:var(--gold);}
+.log-entry.tag-chart{color:var(--pink);}
+.log-entry.tag-event,.log-entry.tag-warn{color:var(--warn);}
+.log-entry.tag-achieve{color:var(--good);}
+.log-entry.tag-promo{color:var(--blue);}
+.ach-list{display:flex;flex-wrap:wrap;gap:8px;}
+.ach-chip{background:#1c2a24;border:1px solid #2a4436;color:var(--good);padding:5px 11px;border-radius:14px;font-size:.78em;}
+
+/* ---------- Game over ---------- */
+#gameOverScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0b0d12;padding:20px;}
+.go-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:40px;max-width:520px;text-align:center;}
+.go-card h1{color:var(--bad);font-size:2em;}
+
+/* ---------- Person / band detail ---------- */
+.detail-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.detail-header h2{margin:0;}
+.stat-mini{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0;}
+.stat-mini div{font-size:.8em;color:var(--dim);}
+.stat-mini b{display:block;color:var(--text);font-size:1.1em;}
+.section-title{color:var(--gold);text-transform:uppercase;font-size:.78em;letter-spacing:1px;margin:18px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px;}
+.table-wrap{overflow-x:auto;}
+.deal-box{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:.88em;}
+
+/* ---------- Mobile ---------- */
+@media (max-width:760px){
+  #shell{flex-direction:column;}
+  #nav{width:100%;flex:0 0 auto;display:flex;flex-wrap:wrap;justify-content:center;padding:6px;border-right:none;border-bottom:1px solid var(--border);}
+  #nav button{display:inline-block;width:auto;flex:0 0 auto;border-left:none;border-bottom:3px solid transparent;white-space:nowrap;padding:9px 12px;text-align:center;}
+  #nav button.active{border-left-color:transparent;border-bottom-color:var(--gold);}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr;}
+  table.data{min-width:560px;}
+  table.log-data{min-width:0;}
+  #topbar{gap:10px;}
+}
+</style>
+</head>
+<body>
+
+<div id="setupScreen">
+  <div class="setup-card">
+    <h1>SVENGALI</h1>
+    <div class="tagline">Find them. Sign them. Make them stars.</div>
+    <label>Your Name
+      <input id="inpManager" placeholder="e.g. Frankie Voss" maxlength="24">
+    </label>
+    <label>Agency Name
+      <input id="inpAgency" placeholder="e.g. Voss Artist Management" maxlength="30">
+    </label>
+    <label>Starting Capital
+      <div class="tier-options" id="difficultyOptions">
+        <button data-action="pickDifficulty" data-diff="easy">Easy<small>£12,000</small></button>
+        <button data-action="pickDifficulty" data-diff="normal" class="selected">Normal<small>£6,000</small></button>
+        <button data-action="pickDifficulty" data-diff="hard">Hard<small>£2,500</small></button>
+      </div>
+    </label>
+    <button id="btnStart" data-action="startGame">Open For Business</button>
+    <button id="btnContinue" class="hidden" data-action="continueGame">Continue Previous Agency</button>
+  </div>
+</div>
+
+<div id="gameScreen" class="hidden">
+  <div id="topbar"></div>
+  <div id="shell">
+    <nav id="nav"></nav>
+    <main id="content"></main>
+  </div>
+</div>
+
+<div id="gameOverScreen" class="hidden"></div>
+<div id="modalRoot" class="hidden"></div>
+
+<script>
+'use strict';
+/* =========================================================================
+   CONFIG & DATA
+   ========================================================================= */
+const CONFIG = {
+  AP_PER_WEEK: 3,
+  START_CASH: {easy:12000, normal:6000, hard:2500},
+  WEEKLY_BASE_OVERHEAD: 70,
+  OVERHEAD_PER_BAND: 35,
+  MANAGER_CUT: 0.20,
+  SIGN_COST: 180,
+  PRESS_COST: 110,
+  MAX_LOG: 200,
+  MAX_HISTORY: 200,
+  MAX_PROSPECTS: 8,
+  BANKRUPTCY_CASH: -3000,
+  BANKRUPTCY_WEEKS: 5,
+  CHART_SIZE: 20,
+  CHART_FILLERS: 10,
+  MEMBER_CRITICAL_MORALE: 15,
+  MEMBER_CRITICAL_WEEKS: 2,
+  AUDITION_FEE: 300,
+  SOLO_DEPART_CHANCE: 0.06,
+  AWARDS_FIRST_WEEK: 26,
+  AWARDS_INTERVAL_MIN: 40,
+  AWARDS_INTERVAL_MAX: 55,
+  MERCH_FAME_THRESHOLD: 15,
+  STAFF_SKILL_MIN: 0.75,
+  STAFF_SKILL_MAX: 1.3,
+  STAFF_REFRESH_MIN: 8,
+  STAFF_REFRESH_MAX: 14,
+};
+
+const FIRST_NAMES = ['Alex','Jamie','Sam','Jordan','Casey','Riley','Morgan','Taylor','Charlie','Danny','Robbie','Frankie',
+  'Lenny','Marcus','Nico','Ronnie','Sid','Vic','Wes','Kit','Ash','Bex','Coz','Dez','Elle','Finn','Gaz','Hux','Iris','Jools',
+  'Kez','Lux','Mo','Nash','Ozzy','Pip','Quinn','Reeve','Stevie','Tex','Billie','Cam','Dax','Ez','Fable','Gia'];
+const SURNAMES = ['Ford','Sharp','Kane','Rivers','Voss','Blake','Cross','Dunn','Ellis','Frost','Gale','Holt','Ives',
+  'Jarrow','Knox','Lowe','Marsh','Nye','Orr','Pryce','Quill','Rourke','Slate','Thorn','Vance','Wilde','Yale','Zane',
+  'Brennan','Cole','Doyle','Fenn','Grange','Hart','Ashby','Byrne'];
+
+const GENRES = ['Pop','Rock','Punk','Indie','Glam Rock','Synth-Pop','Folk-Rock','Metal','Power Pop','Post-Punk'];
+const ROLES = ['Lead Vocals','Guitar','Bass','Drums','Keys'];
+
+const PERSONALITIES = [
+  {id:'pro',   name:'Professional', desc:'Steady, reliable, low-drama.'},
+  {id:'wild',  name:'Wildchild',    desc:'Magnetic on stage, unpredictable off it.'},
+  {id:'perf',  name:'Perfectionist',desc:'Obsesses over every take — the songs are better for it.'},
+  {id:'diva',  name:'Diva',         desc:'Born for the spotlight. Needs to feel like the star.'},
+  {id:'peace', name:'Peacemaker',   desc:'Keeps the band together when it matters.'},
+];
+
+const BAND_ADJ = ['Crimson','Electric','Velvet','Broken','Neon','Silver','Copper','Midnight','Static','Fractured',
+  'Golden','Hollow','Wandering','Concrete','Violet','Screaming','Silent','Rusty','Restless','Paper'];
+const BAND_NOUN = ['Wolves','Saints','Riot','Echoes','Mirrors','Vultures','Kings','Ghosts','Sirens','Engines',
+  'Radios','Roses','Thieves','Ravens','Machines','Angels','Rebels','Kids','Wires','Static'];
+const BAND_SINGLE = ['Kerosene','Static Bloom','Halfmoon','Wraith Parade','Lo-Fi Saints','Nightshade','Fuzzbox',
+  'Tremor','Aftertaste','Blacklight','Sunburn','Feedback','Glasshouse','Wildfire Radio','Paper Crown'];
+
+const SONG_ADJ = ['Broken','Electric','Silent','Golden','Runaway','Neon','Midnight','Paper','Restless','Velvet',
+  'Hollow','Radio','Fading','Endless','Crooked','Burning','Wasted','Reckless','Savage','Tender',
+  'Bitter','Sacred','Wicked','Lonesome','Radiant','Frozen','Wild','Feral','Holy','Fragile',
+  'Blind','Empty','Naked','Weightless','Toxic','Divine','Ruined','Shattered','Delirious','Euphoric',
+  'Nocturnal','Painted','Crimson','Violent','Quiet'];
+const SONG_NOUN = ['Heart','Skyline','Confession','Bulletin','Sunrise','Highway','Halo','Wildfire','Mirror','Machine',
+  'Season','Signal','Fever','Parade','Silence','Bones','Ashes','Static','Gravity','Horizon',
+  'Shadows','Embers','Fireflies','Ghosts','Vertigo','Chemicals','Wreckage','Feathers','Diamonds','Nightfall',
+  'Daylight','Bloodline','Heartbeat','Wavelength','Constellations','Aftermath','Confetti','Anthem','Requiem','Elegy',
+  'Reverie','Lullaby','Serenade','Rebellion','Wanderlust'];
+const SONG_GERUND = ['Falling','Burning','Chasing','Breaking','Dancing','Drowning','Waiting','Bleeding','Screaming','Running',
+  'Fading','Calling','Dreaming','Losing','Flying','Crawling','Shaking','Melting','Sinking','Rising',
+  'Haunting','Unraveling','Disappearing','Wandering'];
+const SONG_VERB = ['Run','Fall','Bleed','Dream','Fly','Burn','Break','Shine','Fade','Wait',
+  'Lie','Cry','Dance','Fight','Stay','Go','Breathe','Bend','Believe','Surrender'];
+const SONG_TAILS = ['With Me','Without You','Tonight','Forever','Alone','Together','Like This','Anymore','For You','In the Dark','On Fire','In Reverse'];
+const SONG_NEG = ["Don't",'Never','Always','Maybe'];
+
+const LABELS = [
+  {id:'broken-clock', name:'Broken Clock Records', tier:'Indie', advanceMin:500,  advanceMax:2500,  royaltyMin:0.12, royaltyMax:0.18, marketing:35, famReq:0,  genres:['Post-Punk','Punk','Indie']},
+  {id:'velvet-static', name:'Velvet Static',       tier:'Indie', advanceMin:800,  advanceMax:3000,  royaltyMin:0.13, royaltyMax:0.19, marketing:40, famReq:5,  genres:['Synth-Pop','Indie','Pop']},
+  {id:'riot-grrrl',    name:"Riot Grrrl House",    tier:'Indie', advanceMin:400,  advanceMax:2000,  royaltyMin:0.14, royaltyMax:0.20, marketing:30, famReq:0,  genres:['Punk','Post-Punk','Metal']},
+  {id:'apex-sound',    name:'Apex Sound Group',    tier:'Major', advanceMin:8000, advanceMax:40000, royaltyMin:0.08, royaltyMax:0.13, marketing:85, famReq:35, genres:['Pop','Power Pop','Synth-Pop']},
+  {id:'continental',   name:'Continental Records', tier:'Major', advanceMin:6000, advanceMax:30000, royaltyMin:0.09, royaltyMax:0.14, marketing:75, famReq:30, genres:['Rock','Glam Rock','Folk-Rock']},
+  {id:'skyline',       name:'Skyline Music',       tier:'Major', advanceMin:10000,advanceMax:50000, royaltyMin:0.08, royaltyMax:0.12, marketing:95, famReq:45, genres:GENRES.slice()},
+];
+
+const PUBLISHERS = [
+  {id:'northgate',   name:'Northgate Publishing',              advanceMin:300,  advanceMax:2000, splitMin:0.65, splitMax:0.80},
+  {id:'halcyon',     name:'Halcyon Songworks',                 advanceMin:500,  advanceMax:3000, splitMin:0.60, splitMax:0.75},
+  {id:'meridian',    name:'Meridian Rights Co',                advanceMin:1000, advanceMax:6000, splitMin:0.55, splitMax:0.70},
+  {id:'copperquill', name:'Copper & Quill Music Publishing',   advanceMin:200,  advanceMax:1500, splitMin:0.68, splitMax:0.82},
+  {id:'ironwood',    name:'Ironwood Songs',                    advanceMin:1500, advanceMax:8000, splitMin:0.50, splitMax:0.65},
+];
+
+const CITIES = ['London','Manchester','Glasgow','Birmingham','Bristol','Leeds','Liverpool','Edinburgh','Dublin',
+  'Cardiff','Paris','Berlin','Amsterdam','Madrid','Milan','Copenhagen','New York','Los Angeles','Chicago','Toronto',
+  'Tokyo','Osaka','Sydney','Melbourne'];
+
+const TOUR_SCALES = [
+  {id:'club',    name:'Club Tour',    minFame:0,  capacity:250,   price:14, legsMin:4, legsMax:6,  supportCost:150},
+  {id:'theatre', name:'Theatre Tour', minFame:22, capacity:1500,  price:28, legsMin:5, legsMax:8,  supportCost:1800},
+  {id:'arena',   name:'Arena Tour',   minFame:50, capacity:9000,  price:52, legsMin:6, legsMax:10, supportCost:9000},
+  {id:'stadium', name:'Stadium Tour', minFame:78, capacity:42000, price:80, legsMin:4, legsMax:7,  supportCost:38000},
+];
+
+const TV_SHOWS = [
+  {id:'sofa',      name:'Morning Sofa Show',        minFame:8,  cost:200,  fameMin:1, fameMax:3, buzzMin:10, buzzMax:20, gaffeRisk:0.06},
+  {id:'latenight', name:'Late Night Slot',          minFame:25, cost:800,  fameMin:2, fameMax:5, buzzMin:18, buzzMax:32, gaffeRisk:0.09},
+  {id:'saturday',  name:'Big Saturday Night Show',  minFame:55, cost:3000, fameMin:4, fameMax:9, buzzMin:28, buzzMax:45, gaffeRisk:0.12},
+];
+
+const RADIO_TIERS = [
+  {id:'local',    name:'Local & Specialist Radio',   minQuality:20, cost:100,  addedMin:5,  addedMax:12, weeks:3},
+  {id:'regional', name:'Regional Daytime Radio',     minQuality:45, cost:400,  addedMin:10, addedMax:20, weeks:4},
+  {id:'national', name:'National A-List Playlist',   minQuality:65, cost:1200, addedMin:20, addedMax:35, weeks:5},
+];
+
+const STAFF_ROLES = [
+  {id:'publicist',     name:'Publicist',      hireCost:400, salary:50, desc:'Cuts press costs and reduces gaffe risk — better ones cut deeper.'},
+  {id:'ar',            name:'A&R Scout',      hireCost:500, salary:60, desc:'Finds more, better prospects when you scout.'},
+  {id:'tourmgr',       name:'Tour Manager',   hireCost:600, salary:65, desc:'Boosts ticket sales and cuts tour support costs.'},
+  {id:'videoproducer', name:'Video Producer', hireCost:700, salary:70, desc:'Cuts music video costs and makes them land harder.'},
+];
+
+const VIDEO_TIERS = [
+  {id:'lowbudget', name:'Low-Budget Video', cost:1000,  minFame:0,  addedMin:15, addedMax:25, weeks:5, fameMin:0.5, fameMax:1.5},
+  {id:'midbudget', name:'Mid-Budget Video', cost:4000,  minFame:20, addedMin:25, addedMax:40, weeks:6, fameMin:1,   fameMax:3},
+  {id:'bigbudget', name:'Big-Budget Video', cost:12000, minFame:50, addedMin:35, addedMax:55, weeks:8, fameMin:2,   fameMax:5},
+];
+
+const SPONSORS = [
+  {id:'threadline', name:'Threadline Apparel', minFame:20, lumpMin:500,  lumpMax:2000,  weeklyMin:40,  weeklyMax:120, weeks:8},
+  {id:'voltenergy', name:'Volt Energy Drinks', minFame:35, lumpMin:1500, lumpMax:5000,  weeklyMin:100, weeklyMax:300, weeks:10},
+  {id:'apexphones', name:'Apex Phones',        minFame:60, lumpMin:5000, lumpMax:15000, weeklyMin:300, weeklyMax:800, weeks:12},
+];
+
+const FESTIVALS = [
+  {id:'meadow',       name:'Meadowfest Second Stage',     minFame:35, feeMin:800,   feeMax:2500,  fameMin:2, fameMax:5,  buzzMin:15, buzzMax:25},
+  {id:'skyline_fest', name:'Skyline Festival Main Stage',  minFame:65, feeMin:4000,  feeMax:12000, fameMin:4, fameMax:8,  buzzMin:25, buzzMax:40},
+  {id:'legends',      name:'The Legends Stage (Headline)', minFame:85, feeMin:15000, feeMax:40000, fameMin:6, fameMax:12, buzzMin:35, buzzMax:55},
+];
+
+const AWARD_CATEGORIES = ['Best New Act','Best Single','Best Album','Best Live Act','Act of the Year'];
+
+const PERSONALITY_COMPAT = {
+  'pro-pro':10, 'pro-wild':-5, 'pro-perf':5, 'pro-diva':-5, 'pro-peace':10,
+  'wild-wild':-10, 'wild-perf':-15, 'wild-diva':-15, 'wild-peace':5,
+  'perf-perf':0, 'perf-diva':-10, 'perf-peace':10,
+  'diva-diva':-20, 'diva-peace':5,
+  'peace-peace':10,
+};
+
+/* Random band-level events. condition(band) gates eligibility; each choice.apply(band) mutates state and
+   returns the log message. */
+const EVENT_DEFS = [
+  {id:'creative_differences', title:'Creative Differences',
+    desc:b=>`Two members of ${b.name} are butting heads over the band's direction.`,
+    condition:b=>b.members.length>=2,
+    choices:[
+      {label:'Let them fight it out', apply(b){
+        if(Math.random()<0.5){ b.chemistry=clamp(b.chemistry+8,0,100); return `${b.name} argue it out and come out the other side tighter than ever.`; }
+        b.chemistry=clamp(b.chemistry-10,0,100); return `${b.name}'s row over the new direction leaves things tense.`;
+      }},
+      {label:'Step in and mediate', apply(b){
+        b.chemistry=clamp(b.chemistry+4,0,100); b.members.forEach(m=>m.morale=clamp(m.morale+2,0,100));
+        return `You broker peace between ${b.name} — cooler heads prevail.`;
+      }},
+    ]},
+  {id:'solo_offer', title:'Solo Temptation',
+    desc:b=>`A member of ${b.name} has been quietly approached about a solo deal.`,
+    condition:b=>b.members.some(m=>m.personality==='diva'||m.personality==='wild') && b.fame>15,
+    choices:[
+      {label:'Talk them out of it (£500)', apply(b){
+        if(G.cash<500) return `You couldn't afford to smooth things over — hope it blows over.`;
+        G.cash-=500; b.members.forEach(m=>m.morale=clamp(m.morale+6,0,100));
+        return `A late-night phone call and a bit of cash keeps ${b.name} together.`;
+      }},
+      {label:'Let them explore it', apply(b){
+        b.members.forEach(m=>{ if(m.personality==='diva'||m.personality==='wild'){ m.reliability=clamp(m.reliability-10,0,100); m.soloFlag=true; } });
+        return `You give them room to explore a solo career on the side. Risky — they might not come back.`;
+      }},
+    ]},
+  {id:'rival_poach', title:'Poaching Attempt',
+    desc:b=>`A rival manager has been sniffing around ${b.name}.`,
+    condition:b=>G.reputation<70,
+    choices:[
+      {label:'Fight to keep them (£800)', apply(b){
+        if(G.cash<800) return `You couldn't match the rival offer — fingers crossed.`;
+        G.cash-=800; return `You convince ${b.name} to stay put — for now.`;
+      }},
+      {label:'Let fate decide', apply(b){
+        if(Math.random()<0.25){ const idx=G.bands.indexOf(b); if(idx>=0) G.bands.splice(idx,1); G.reputation=clamp(G.reputation-4,0,100);
+          return `${b.name} jump ship to a rival manager. Ouch.`; }
+        return `${b.name} decide to stick with you after all.`;
+      }},
+    ]},
+  {id:'viral_moment', title:'Viral Moment',
+    desc:b=>`${b.name} are suddenly everywhere online.`,
+    condition:b=>true,
+    choices:[
+      {label:'Ride the wave', apply(b){
+        b.buzz=clamp(b.buzz+30,0,100); b.fame=clamp(b.fame+2,0,100);
+        return `A clip of ${b.name} goes viral overnight — buzz is through the roof.`;
+      }},
+      {label:'Rush-release merch (£300)', apply(b){
+        if(G.cash<300){ b.buzz=clamp(b.buzz+30,0,100); return `Went viral but you missed the merch window — buzz alone will have to do.`; }
+        G.cash-=300; G.cash+=1100; b.buzz=clamp(b.buzz+22,0,100);
+        return `You rush a merch drop while ${b.name} are trending — nice little earner.`;
+      }},
+    ]},
+  {id:'gear_stolen', title:'Gear Stolen',
+    desc:b=>`${b.name}'s equipment van was broken into before tonight's show.`,
+    condition:b=>!!b.tour,
+    choices:[
+      {label:'Replace it fast (£600)', apply(b){
+        if(G.cash<600) return `Couldn't cover the replacement gear — the next date suffers for it.`;
+        G.cash-=600; return `Quick thinking (and cash) gets ${b.name} back on stage without missing a beat.`;
+      }},
+      {label:'Push through with borrowed gear', apply(b){
+        b.members.forEach(m=>m.morale=clamp(m.morale-4,0,100)); b.heat=clamp(b.heat+3,0,100);
+        return `${b.name} scrape through the next show on borrowed gear — not their best night.`;
+      }},
+    ]},
+  {id:'plagiarism_claim', title:'Plagiarism Claim',
+    desc:b=>`Another artist claims ${b.name} lifted a melody from their song.`,
+    condition:b=>b.catalog.some(s=>s.quality>70),
+    choices:[
+      {label:'Settle quietly (£1,200)', apply(b){
+        if(G.cash<1200){ G.reputation=clamp(G.reputation-3,0,100); return `Couldn't afford to settle — the story drags on.`; }
+        G.cash-=1200; return `A quiet settlement makes the plagiarism claim against ${b.name} go away.`;
+      }},
+      {label:'Fight it publicly', apply(b){
+        if(Math.random()<0.5){ G.reputation=clamp(G.reputation+3,0,100); b.buzz=clamp(b.buzz+10,0,100);
+          return `${b.name} are cleared — and the publicity does them no harm at all.`; }
+        G.reputation=clamp(G.reputation-6,0,100); b.heat=clamp(b.heat+15,0,100);
+        return `The court sides against ${b.name} — a costly, embarrassing loss.`;
+      }},
+    ]},
+  {id:'health_scare', title:'Health Scare',
+    desc:b=>`A member of ${b.name} has collapsed from exhaustion.`,
+    condition:b=>!!b.tour || b.members.some(m=>m.reliability<40),
+    choices:[
+      {label:'Insist on rest', apply(b){
+        if(b.tour) b.tour=null;
+        b.members.forEach(m=>{ m.morale=clamp(m.morale+10,0,100); m.reliability=clamp(m.reliability+8,0,100); });
+        return `You pull ${b.name} off the road to rest up. The right call.`;
+      }},
+      {label:'Push through it', apply(b){
+        b.members.forEach(m=>m.reliability=clamp(m.reliability-8,0,100));
+        return `${b.name} push through, exhausted. It'll catch up with them eventually.`;
+      }},
+    ]},
+  {id:'label_dispute', title:'Label Getting Impatient',
+    desc:b=>`${b.name}'s label is asking pointed questions about the lack of new material.`,
+    condition:b=>!!b.recordDeal && b.weeksSinceRelease>10,
+    choices:[
+      {label:'Reassure the label', apply(b){ b.weeksSinceRelease=6; return `A reassuring phone call buys ${b.name} more time with the label.`; }},
+      {label:'Ignore it', apply(b){
+        if(Math.random()<0.4){ b.recordDeal=null; G.reputation=clamp(G.reputation-3,0,100); return `${b.name} are dropped from their label — back to square one.`; }
+        return `The label grumbles but backs off, for now.`;
+      }},
+    ]},
+  {id:'member_recognition', title:'Feeling Overlooked',
+    desc:b=>`A member of ${b.name} feels like they're not getting the recognition they deserve.`,
+    condition:b=>b.members.some(m=>m.personality==='diva'),
+    choices:[
+      {label:'Give them the spotlight (£300)', apply(b){
+        if(G.cash<300) return `Couldn't stretch to a proper gesture — noted.`;
+        G.cash-=300; b.members.forEach(m=>{ if(m.personality==='diva') m.morale=clamp(m.morale+15,0,100); });
+        return `A little extra spotlight keeps everyone happy in ${b.name}.`;
+      }},
+      {label:'Brush it off', apply(b){
+        b.members.forEach(m=>{ if(m.personality==='diva') m.morale=clamp(m.morale-10,0,100); });
+        return `${b.name}'s diva doesn't take kindly to being overlooked.`;
+      }},
+    ]},
+  {id:'awards_buzz', title:'Awards Nomination',
+    desc:b=>`${b.name} have been nominated for a major industry award.`,
+    condition:b=>b.fame>60,
+    choices:[
+      {label:'Full campaign push (£1,500)', apply(b){
+        if(G.cash<1500) return `Couldn't fund the campaign push — a modest showing it is.`;
+        G.cash-=1500;
+        if(Math.random()<0.5){ G.reputation=clamp(G.reputation+6,0,100); b.fame=clamp(b.fame+6,0,100); return `${b.name} take home the award — a huge moment for the agency.`; }
+        return `The campaign push doesn't land the win, but ${b.name} get plenty of exposure.`;
+      }},
+      {label:'Modest attendance', apply(b){ b.fame=clamp(b.fame+1,0,100); return `${b.name} attend the ceremony, no campaign, no fuss.`; }},
+    ]},
+];
+
+/* Relationship (pair-level) events. pickPair(band) returns the eligible relationship record (or null);
+   desc/apply take (band, memberA, memberB, relationshipRecord). */
+const REL_EVENT_DEFS = [
+  {id:'band_feud', title:'Bad Blood',
+    pickPair(band){
+      ensureRelationships(band);
+      const pairs = Object.values(band.relationships);
+      if(!pairs.length) return null;
+      const worst = pairs.reduce((a,b)=>a.bond<b.bond?a:b);
+      return worst.bond<=-25 ? worst : null;
+    },
+    desc(band,m1,m2){ return `${m1.name} and ${m2.name} in ${band.name} can barely be in the same room together.`; },
+    choices:[
+      {label:'Sit them down together', apply(band,m1,m2,rel){
+        if(Math.random()<0.7){ rel.bond=clamp(rel.bond+25,-100,100); band.chemistry=clamp(band.chemistry+6,0,100);
+          return `A frank conversation clears the air between ${m1.name} and ${m2.name}.`; }
+        rel.bond=clamp(rel.bond+5,-100,100);
+        return `The conversation helps a little, but the tension between ${m1.name} and ${m2.name} isn't fully gone.`;
+      }},
+      {label:'Let it play out', apply(band,m1,m2,rel){
+        rel.bond=clamp(rel.bond-10,-100,100); band.chemistry=clamp(band.chemistry-8,0,100);
+        return `${m1.name} and ${m2.name}'s feud drags ${band.name}'s whole mood down.`;
+      }},
+    ]},
+  {id:'creative_partnership', title:'Creative Spark',
+    pickPair(band){
+      ensureRelationships(band);
+      const pairs = Object.values(band.relationships).filter(r=>!r.partnership);
+      if(!pairs.length) return null;
+      const best = pairs.reduce((a,b)=>a.bond>b.bond?a:b);
+      return best.bond>=25 ? best : null;
+    },
+    desc(band,m1,m2){ return `${m1.name} and ${m2.name} have found real creative chemistry writing together.`; },
+    choices:[
+      {label:'Encourage the partnership', apply(band,m1,m2,rel){
+        rel.partnership=true; rel.bond=clamp(rel.bond+10,-100,100);
+        unlock('first_partnership','Formed a Songwriting Partnership');
+        return `You back the ${m1.name}/${m2.name} partnership — expect better songs from ${band.name} when they write together.`;
+      }},
+      {label:'Keep it professional', apply(band,m1,m2){
+        return `You keep things even-handed — ${m1.name} and ${m2.name} stay just another pairing in ${band.name}.`;
+      }},
+    ]},
+  {id:'secret_romance_spark', title:'Rumour Mill',
+    pickPair(band){
+      ensureRelationships(band);
+      const pairs = Object.values(band.relationships).filter(r=>!r.romance);
+      if(!pairs.length) return null;
+      const best = pairs.reduce((a,b)=>a.bond>b.bond?a:b);
+      return best.bond>=35 ? best : null;
+    },
+    desc(band,m1,m2){ return `Rumours are swirling that ${m1.name} and ${m2.name} from ${band.name} are seeing each other.`; },
+    choices:[
+      {label:'Let them be', apply(band,m1,m2,rel){
+        rel.romance=true; rel.bond=clamp(rel.bond+10,-100,100); band.heat=clamp(band.heat+5,0,100);
+        unlock('band_romance','A Band Romance Blossomed');
+        return `${m1.name} and ${m2.name} go public — it's a good story, and ${band.name} play along.`;
+      }},
+      {label:'Ask them to keep it off the road', apply(band,m1,m2,rel){
+        rel.bond=clamp(rel.bond-5,-100,100);
+        return `${m1.name} and ${m2.name} agree to keep it quiet — grudgingly.`;
+      }},
+    ]},
+  {id:'romance_breakup', title:'Messy Breakup',
+    pickPair(band){
+      ensureRelationships(band);
+      const pairs = Object.values(band.relationships).filter(r=>r.romance && r.bond<10);
+      return pairs.length ? pairs[0] : null;
+    },
+    desc(band,m1,m2){ return `${m1.name} and ${m2.name}'s relationship has fallen apart — and everyone in ${band.name} can feel it.`; },
+    choices:[
+      {label:'Give them space', apply(band,m1,m2,rel){
+        rel.romance=false; band.chemistry=clamp(band.chemistry-5,0,100);
+        return `You ease off on joint promo for a while — painful, but ${band.name} manage.`;
+      }},
+      {label:'Push through it', apply(band,m1,m2,rel){
+        rel.romance=false; band.chemistry=clamp(band.chemistry-15,0,100);
+        m1.morale=clamp(m1.morale-10,0,100); m2.morale=clamp(m2.morale-10,0,100);
+        return `Forcing ${m1.name} and ${m2.name} to keep working side by side is brutal on ${band.name}'s mood.`;
+      }},
+    ]},
+];
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+let _uid=1;
+function uid(){ return 'id'+(_uid++); }
+function rrange(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function rrangeF(min,max){ return Math.random()*(max-min)+min; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function clamp(n,lo,hi){ return Math.max(lo,Math.min(hi,n)); }
+function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function avg(arr,key){ if(!arr.length) return 0; return arr.reduce((s,x)=>s+(key?x[key]:x),0)/arr.length; }
+function fmtMoney(n){ const neg=n<0; n=Math.round(Math.abs(n)); return (neg?'-':'')+'£'+n.toLocaleString(); }
+function fmtSigned(n){ n=Math.round(n); return (n>=0?'+':'')+n.toLocaleString(); }
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function genPersonName(){ return pick(FIRST_NAMES)+' '+pick(SURNAMES); }
+function genBandName(){
+  if(Math.random()<0.4) return pick(BAND_SINGLE);
+  const prefix = Math.random()<0.5 ? 'The ' : '';
+  return prefix+pick(BAND_ADJ)+' '+pick(BAND_NOUN);
+}
+function pickTwo(arr){
+  const a = pick(arr);
+  let b = pick(arr), guard = 0;
+  while(b===a && guard++<5) b = pick(arr);
+  return [a,b];
+}
+const SONG_TITLE_TEMPLATES = [
+  ()=>`${pick(SONG_ADJ)} ${pick(SONG_NOUN)}`,
+  ()=>pick(SONG_NOUN),
+  ()=>`The ${pick(SONG_NOUN)}`,
+  ()=>`${pick(SONG_GERUND)} ${pick(SONG_NOUN)}`,
+  ()=>{ const [a,b]=pickTwo(SONG_NOUN); return `${a} & ${b}`; },
+  ()=>{ const [a,b]=pickTwo(SONG_NOUN); return `${a} of ${b}`; },
+  ()=>`${pick(SONG_VERB)} ${pick(SONG_TAILS)}`,
+  ()=>`${pick(SONG_NEG)} ${pick(SONG_VERB)}`,
+  ()=>{ const [a,b]=pickTwo(SONG_ADJ); return `${a}, ${b}`; },
+  ()=>pick(SONG_GERUND),
+];
+const ALBUM_TITLE_TEMPLATES = [
+  ()=>`${pick(SONG_ADJ)} ${pick(SONG_NOUN)}`,
+  ()=>pick(SONG_NOUN),
+  ()=>`The ${pick(SONG_NOUN)}`,
+  ()=>{ const [a,b]=pickTwo(SONG_NOUN); return `${a} of ${b}`; },
+  ()=>{ const [a,b]=pickTwo(SONG_ADJ); return `${a}, ${b}`; },
+  ()=>pick(SONG_GERUND),
+];
+function genSongTitle(){ return pick(SONG_TITLE_TEMPLATES)(); }
+function genAlbumTitle(){ return pick(ALBUM_TITLE_TEMPLATES)(); }
+
+function repTitle(rep){ return rep>=80?'Legend':rep>=60?'Industry Player':rep>=40?'Respected':rep>=20?'Up-and-Comer':'Unknown'; }
+function personalityName(id){ const p=PERSONALITIES.find(x=>x.id===id); return p?p.name:id; }
+function labelById(id){ return LABELS.find(l=>l.id===id); }
+function publisherById(id){ return PUBLISHERS.find(p=>p.id===id); }
+function statusLabel(band){
+  if(band.tour) return 'On Tour';
+  if(band.recordDeal) return 'Signed (Label)';
+  return 'Roster';
+}
+function statusClass(band){
+  if(band.tour) return 'badge-tour';
+  if(band.recordDeal) return 'badge-contracted';
+  return 'badge-roster';
+}
+function compatOf(a,b){ if(a>b){ const t=a; a=b; b=t; } const key=a+'-'+b; return PERSONALITY_COMPAT[key]!==undefined ? PERSONALITY_COMPAT[key] : 0; }
+function bandCompatAvg(band){
+  if(band.members.length<2) return 5;
+  ensureRelationships(band);
+  const vals = Object.values(band.relationships).map(r=>r.bond);
+  return vals.length ? avg(vals)/2 : 5;
+}
+function relKey(id1,id2){ return [id1,id2].sort().join('__'); }
+function ensureRelationships(band){
+  band.relationships = band.relationships || {};
+  const m = band.members;
+  for(let i=0;i<m.length;i++) for(let j=i+1;j<m.length;j++){
+    const key = relKey(m[i].id,m[j].id);
+    if(!band.relationships[key]){
+      band.relationships[key] = { a:m[i].id, b:m[j].id, bond: clamp(compatOf(m[i].personality,m[j].personality)*2 + rrange(-15,15), -80, 80), romance:false, partnership:false };
+    }
+  }
+}
+function cleanupRelationships(band){
+  const ids = new Set(band.members.map(m=>m.id));
+  Object.keys(band.relationships||{}).forEach(k=>{
+    const r = band.relationships[k];
+    if(!ids.has(r.a) || !ids.has(r.b)) delete band.relationships[k];
+  });
+}
+function tickRelationships(band){
+  ensureRelationships(band);
+  Object.values(band.relationships).forEach(r=>{
+    const m1 = band.members.find(m=>m.id===r.a), m2 = band.members.find(m=>m.id===r.b);
+    if(!m1||!m2) return;
+    const target = compatOf(m1.personality,m2.personality)*2;
+    r.bond = clamp(r.bond + (target-r.bond)*0.03 + rrange(-6,6), -100, 100);
+  });
+}
+function relLabel(bond){
+  if(bond>=55) return 'Best Mates';
+  if(bond>=20) return 'Get On Well';
+  if(bond>-20) return 'Cordial';
+  if(bond>-55) return 'Tense';
+  return 'Rivals';
+}
+function hasStaff(roleId){ return G.staff.some(s=>s.roleId===roleId); }
+function getStaff(roleId){ return G.staff.find(s=>s.roleId===roleId); }
+function staffById(roleId){ return STAFF_ROLES.find(s=>s.id===roleId); }
+function skillLabel(skill){
+  if(skill>=1.2) return 'Exceptional';
+  if(skill>=1.05) return 'Skilled';
+  if(skill>=0.9) return 'Solid';
+  if(skill>=0.8) return 'Green';
+  return 'Struggling';
+}
+function makeStaffCandidate(roleId){
+  const role = staffById(roleId);
+  const skill = Math.round(rrangeF(CONFIG.STAFF_SKILL_MIN,CONFIG.STAFF_SKILL_MAX)*100)/100;
+  return { id:uid(), name:genPersonName(), roleId, skill,
+    hireCost: Math.round(role.hireCost*skill), salary: Math.round(role.salary*skill) };
+}
+function ensureStaffMarket(){
+  STAFF_ROLES.forEach(role=>{
+    if(hasStaff(role.id)) return;
+    if(!G.staffMarket.some(c=>c.roleId===role.id)) G.staffMarket.push(makeStaffCandidate(role.id));
+  });
+  G.staffMarket = G.staffMarket.filter(c=>!hasStaff(c.roleId));
+}
+function tickStaffMarket(){
+  ensureStaffMarket();
+  if(G.week>=G.nextStaffRefreshWeek){
+    G.nextStaffRefreshWeek = G.week + rrange(CONFIG.STAFF_REFRESH_MIN, CONFIG.STAFF_REFRESH_MAX);
+    if(G.staffMarket.length){
+      const idx = rrange(0,G.staffMarket.length-1);
+      const roleId = G.staffMarket[idx].roleId, oldName = G.staffMarket[idx].name;
+      G.staffMarket[idx] = makeStaffCandidate(roleId);
+      addLog(`${oldName} takes a job elsewhere — ${G.staffMarket[idx].name} is now on the market as a ${staffById(roleId).name}.`,'info');
+    }
+  }
+}
+function tourSupportCost(scale){ const tm=getStaff('tourmgr'); return tm ? Math.round(scale.supportCost*(1-0.25*tm.skill)) : scale.supportCost; }
+
+/* =========================================================================
+   STATE
+   ========================================================================= */
+let G = null;
+
+function makeMember(role){
+  const personality = pick(PERSONALITIES).id;
+  const m = {
+    id: uid(),
+    name: genPersonName(),
+    role,
+    personality,
+    songwriting: rrange(20,70),
+    performance: rrange(25,75),
+    charisma: rrange(20,75),
+    reliability: rrange(40,85),
+    morale: rrange(55,80),
+    soloFlag: false,
+    criticalMoraleWeeks: 0,
+    founding: false,
+  };
+  if(personality==='wild'){ m.charisma+=12; m.reliability-=15; }
+  if(personality==='perf'){ m.songwriting+=15; }
+  if(personality==='diva'){ m.charisma+=15; m.reliability-=5; }
+  if(personality==='pro'){ m.reliability+=10; m.morale+=5; }
+  if(personality==='peace'){ m.morale+=5; }
+  ['songwriting','performance','charisma','reliability','morale'].forEach(k=>m[k]=clamp(m[k],5,99));
+  return m;
+}
+
+function makeBand(fameBias){
+  fameBias = fameBias||0;
+  const roles = shuffle(ROLES.slice());
+  const n = rrange(3,5);
+  const members = roles.slice(0,n).map(r=>makeMember(r));
+  members.forEach(m=>m.founding=true);
+  const band = {
+    id: uid(),
+    name: genBandName(),
+    genre: pick(GENRES),
+    members,
+    chemistry: rrange(35,65),
+    fame: clamp(rrange(1,10)+Math.round(fameBias),0,100),
+    buzz: 0,
+    heat: 0,
+    catalog: [],
+    singles: [],
+    albums: [],
+    recordDeal: null,
+    publishingDeal: null,
+    tour: null,
+    tourHistory: [],
+    status: 'prospect',
+    weeksSinceRelease: 0,
+    sponsorship: null,
+    signedWeek: null,
+    relationships: {},
+    leaderId: null,
+  };
+  ensureRelationships(band);
+  band.leaderId = members.reduce((best,m)=>m.charisma>best.charisma?m:best).id;
+  return band;
+}
+
+function findBand(id){ return G.bands.find(b=>b.id===id) || G.prospects.find(b=>b.id===id); }
+
+function memberDeparts(band, memberId){
+  const idx = band.members.findIndex(m=>m.id===memberId);
+  if(idx<0) return null;
+  const member = band.members.splice(idx,1)[0];
+  band.chemistry = clamp(band.chemistry-10,0,100);
+  cleanupRelationships(band);
+  if(band.leaderId===memberId){
+    band.leaderId = band.members.length ? band.members.reduce((best,m)=>m.charisma>best.charisma?m:best).id : null;
+  }
+  if(band.members.length<2){
+    const bidx = G.bands.indexOf(band);
+    if(bidx>=0) G.bands.splice(bidx,1);
+    addLog(`${band.name} have officially split up — too few members left to carry on.`,'band');
+  }
+  return member;
+}
+
+function fireMember(bandId, memberId){
+  const band = findBand(bandId);
+  if(!band) return;
+  if(band.members.length<=1){ addLog('Use "Drop Act" to let go of a solo act.','warn'); return; }
+  if(!spendAP()) return;
+  const member = band.members.find(m=>m.id===memberId);
+  if(!member) return;
+  const wasFounding = member.founding, bandName = band.name, memberName = member.name;
+  memberDeparts(band, memberId);
+  if(!G.bands.includes(band)) return;
+  if(wasFounding){
+    const fameLoss = clamp(band.fame*0.15,2,20);
+    band.fame = clamp(band.fame-fameLoss,0,100);
+    band.heat = clamp(band.heat+20,0,100);
+    G.reputation = clamp(G.reputation-2,0,100);
+    addLog(`Sacking founding member ${memberName} from ${bandName} doesn't sit well with longtime fans — a real backlash.`,'band');
+  } else {
+    band.chemistry = clamp(band.chemistry+3,0,100);
+    addLog(`${memberName} is let go from ${bandName}. Barely a ripple.`,'band');
+  }
+}
+
+function setLeader(bandId, memberId){
+  const band = findBand(bandId);
+  const m = band && band.members.find(x=>x.id===memberId);
+  if(!band||!m) return;
+  band.leaderId = memberId;
+  addLog(`${m.name} becomes the face of ${band.name}.`,'band');
+}
+
+function makeSoloAct(member, genre, fame){
+  const clone = Object.assign({}, member, { id:uid(), soloFlag:false, criticalMoraleWeeks:0, morale:clamp(member.morale+10,0,100), founding:true });
+  return {
+    id:uid(), name:member.name, genre, members:[clone], chemistry:75, fame:clamp(Math.round(fame),1,100),
+    buzz:0, heat:0, catalog:[], singles:[], albums:[], recordDeal:null, publishingDeal:null,
+    tour:null, tourHistory:[], status:'prospect', weeksSinceRelease:0, sponsorship:null, signedWeek:null,
+    relationships:{}, leaderId:clone.id,
+  };
+}
+
+function newGame(managerName, agencyName, difficulty){
+  G = {
+    managerName: managerName || 'Manager',
+    agencyName: agencyName || 'The Agency',
+    difficulty: difficulty,
+    week: 1,
+    ap: CONFIG.AP_PER_WEEK,
+    cash: CONFIG.START_CASH[difficulty] || CONFIG.START_CASH.normal,
+    reputation: 15,
+    negativeCashStreak: 0,
+    bands: [],
+    prospects: [],
+    chartsSingles: [],
+    chartsAlbums: [],
+    log: [],
+    achievements: [],
+    history: [],
+    pendingEvent: null,
+    pendingOffer: null,
+    pendingAwards: null,
+    view: 'overview',
+    ui: { modal:null, tempSelect:[], studioMode:'single', auditionCandidates:null },
+    gameOver: null,
+    staff: [],
+    staffMarket: [],
+    nextStaffRefreshWeek: rrange(CONFIG.STAFF_REFRESH_MIN, CONFIG.STAFF_REFRESH_MAX),
+    rivalActs: [],
+    genreTrends: {},
+    genreBreakoutLogged: [],
+    nextAwardsWeek: CONFIG.AWARDS_FIRST_WEEK,
+    awardsWon: 0,
+  };
+  GENRES.forEach(g=>G.genreTrends[g]=1);
+  for(let i=0;i<14;i++) G.rivalActs.push({ id:uid(), name:genBandName(), genre:pick(GENRES), strength:rrange(30,70) });
+  for(let i=0;i<3;i++) G.prospects.push(makeBand(0));
+  ensureStaffMarket();
+  addLog(`Welcome to the industry, ${G.managerName}. ${G.agencyName} is open for business.`,'info');
+  snapshotHistory();
+  render();
+}
+
+function trySave(){
+  try{ localStorage.setItem('svengaliSave', JSON.stringify(G)); }catch(e){}
+}
+function tryLoad(){
+  try{
+    const raw = localStorage.getItem('svengaliSave');
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+
+function addLog(msg, tag){
+  G.log.unshift({week:G.week, msg, tag:tag||'info'});
+  if(G.log.length>CONFIG.MAX_LOG) G.log.length=CONFIG.MAX_LOG;
+}
+function snapshotHistory(){
+  G.history.push({week:G.week, cash:G.cash, reputation:G.reputation});
+  if(G.history.length>CONFIG.MAX_HISTORY) G.history.shift();
+}
+function unlock(id, title){
+  if(G.achievements.some(a=>a.id===id)) return;
+  G.achievements.unshift({id, title, week:G.week});
+  addLog('🏆 Achievement: '+title, 'achieve');
+  G.reputation = clamp(G.reputation+2,0,100);
+}
+
+/* =========================================================================
+   CORE ACTIONS
+   ========================================================================= */
+function spendAP(){
+  if(G.ap<=0){ addLog('No time left this week — end the week to continue.','warn'); return false; }
+  G.ap--; return true;
+}
+
+function doScout(){
+  if(G.prospects.length>=CONFIG.MAX_PROSPECTS){ addLog('Your scouting list is full — sign or pass on someone first.','warn'); return; }
+  if(!spendAP()) return;
+  let n = rrange(1,2);
+  const ar = getStaff('ar');
+  if(ar) n += 1;
+  const fameBonus = G.reputation*0.15 + (ar?8*ar.skill:0);
+  for(let i=0;i<n;i++){
+    if(G.prospects.length>=CONFIG.MAX_PROSPECTS) break;
+    G.prospects.push(makeBand(fameBonus));
+  }
+  addLog(`Your scouts turn up ${n} new act(s) worth a look.`,'scout');
+}
+
+function doSignBand(prospectId){
+  if(G.cash<CONFIG.SIGN_COST){ addLog('Not enough cash to cover the signing meeting.','warn'); return; }
+  if(!spendAP()) return;
+  const idx = G.prospects.findIndex(b=>b.id===prospectId);
+  if(idx<0) return;
+  G.cash -= CONFIG.SIGN_COST;
+  const band = G.prospects.splice(idx,1)[0];
+  band.status = 'roster';
+  band.signedWeek = G.week;
+  G.bands.push(band);
+  addLog(`You sign ${band.name} to the agency!`,'sign');
+  unlock('first_signing','Signed Your First Act');
+  if(G.bands.length>=5) unlock('five_bands_signed','Built a Five-Act Roster');
+}
+
+function passProspect(prospectId){
+  const idx = G.prospects.findIndex(b=>b.id===prospectId);
+  if(idx<0) return;
+  const band = G.prospects.splice(idx,1)[0];
+  addLog(`You pass on ${band.name}.`,'scout');
+}
+
+function dropBand(bandId){
+  const idx = G.bands.findIndex(b=>b.id===bandId);
+  if(idx<0) return;
+  const band = G.bands.splice(idx,1)[0];
+  addLog(`You drop ${band.name} from the agency.`,'warn');
+  G.reputation = clamp(G.reputation-2,0,100);
+  closeModal();
+}
+
+function commitSongwriting(bandId){
+  const band = findBand(bandId);
+  const memberIds = G.ui.tempSelect;
+  if(!memberIds.length){ addLog('Pick at least one member to write with.','warn'); return; }
+  if(!spendAP()) return;
+  const parts = band.members.filter(m=>memberIds.includes(m.id));
+  let q = avg(parts,'songwriting')*0.55 + band.chemistry*0.2 + rrange(-15,15);
+  if(parts.some(m=>m.personality==='perf')) q += 12;
+  ensureRelationships(band);
+  let partnershipHit = false;
+  Object.values(band.relationships).forEach(r=>{
+    if(r.partnership && memberIds.includes(r.a) && memberIds.includes(r.b)){ q += 14; partnershipHit = true; }
+  });
+  q = clamp(Math.round(q),5,99);
+  const song = { id:uid(), title:genSongTitle(), genre:band.genre, quality:q, writers:parts.map(m=>m.id), recorded:false, writtenWeek:G.week };
+  band.catalog.push(song);
+  let msg;
+  if(partnershipHit) msg = `${band.name}'s songwriting partnership clicks again on "${song.title}" (Quality ${q}).`;
+  else if(q>=80) msg = `${band.name} just wrote something special: "${song.title}" (Quality ${q}).`;
+  else if(q<=25) msg = `${band.name}'s writing session on "${song.title}" fell flat (Quality ${q}).`;
+  else msg = `${band.name} wrote a new song: "${song.title}" (Quality ${q}).`;
+  addLog(msg,'song');
+  band.chemistry = clamp(band.chemistry+rrange(-1,3),0,100);
+  closeModal();
+}
+
+function studioCost(mode, trackCount){ return mode==='single' ? 550 : 700*trackCount; }
+
+function commitStudio(bandId){
+  const band = findBand(bandId);
+  const mode = G.ui.studioMode;
+  const songIds = G.ui.tempSelect;
+  if(mode==='single' && songIds.length!==1){ addLog('Pick exactly one song to record as a single.','warn'); return; }
+  if(mode==='album' && songIds.length<4){ addLog('You need at least 4 unrecorded songs for an album.','warn'); return; }
+  if(!spendAP()) return;
+  const cost = studioCost(mode, songIds.length);
+  let fundedByLabel=false;
+  if(band.recordDeal && band.recordDeal.advanceRemaining>=cost){
+    band.recordDeal.advanceRemaining -= cost; fundedByLabel=true;
+  } else if(G.cash>=cost){
+    G.cash -= cost;
+  } else {
+    addLog(`Not enough cash to book studio time (needs ${fmtMoney(cost)}).`,'warn');
+    G.ap++; return;
+  }
+  const songs = songIds.map(id=>band.catalog.find(s=>s.id===id)).filter(Boolean);
+  songs.forEach(s=>s.recorded=true);
+  const release = {
+    id:uid(), title: mode==='single' ? songs[0].title : genAlbumTitle(),
+    type:mode, trackIds:songIds.slice(), releaseWeek:G.week, chartPeak:null, weeksOnChart:0, active:true, fundedByLabel, promo:null,
+  };
+  (mode==='single' ? band.singles : band.albums).push(release);
+  band.weeksSinceRelease = 0;
+  if(mode==='album' && band.recordDeal){
+    band.recordDeal.albumsDelivered++;
+    band.recordDeal.albumsOwed--;
+    if(band.recordDeal.albumsOwed<=0){
+      addLog(`${band.name} fulfil their record deal — free agents once again.`,'deal');
+      band.recordDeal = null;
+    }
+  }
+  addLog(`${band.name} release ${mode==='single'?'the single':'the album'} "${release.title}"! ${fundedByLabel?'(label-funded)':''}`,'release');
+  closeModal();
+}
+
+function recordPitchChance(band, label){
+  let chance = 0.35;
+  chance += (G.reputation-40)*0.004;
+  chance += (band.fame-label.famReq)*0.01;
+  const bestSongQ = band.catalog.length ? Math.max(...band.catalog.map(s=>s.quality)) : 20;
+  chance += (bestSongQ-50)*0.006;
+  if(label.genres.includes(band.genre)) chance += 0.12;
+  chance += band.buzz*0.002;
+  return clamp(chance,0.05,0.92);
+}
+function publishingPitchChance(band, pub){
+  let chance = 0.4 + (G.reputation-40)*0.004 + band.fame*0.005;
+  const bestSongQ = band.catalog.length ? Math.max(...band.catalog.map(s=>s.quality)) : 20;
+  chance += (bestSongQ-50)*0.005;
+  return clamp(chance,0.08,0.9);
+}
+
+function pitchRecordDeal(bandId, labelId){
+  const band = findBand(bandId); const label = labelById(labelId);
+  if(!spendAP()) return;
+  const chance = recordPitchChance(band, label);
+  if(Math.random()<chance){
+    const fameF = 0.5 + band.fame/100;
+    const advance = Math.round(clamp(rrange(label.advanceMin,label.advanceMax)*fameF, label.advanceMin, label.advanceMax*1.4));
+    const royalty = Math.round((rrangeF(label.royaltyMin,label.royaltyMax))*1000)/1000;
+    const albumsOwed = label.tier==='Major' ? rrange(2,4) : rrange(1,2);
+    G.pendingOffer = { type:'record', bandId, labelId, advance, royalty, albumsOwed };
+    addLog(`${label.name} are interested in signing ${band.name}!`,'deal');
+  } else {
+    addLog(`${label.name} pass on ${band.name} this time.`,'deal');
+  }
+}
+function pitchPublishingDeal(bandId, publisherId){
+  const band = findBand(bandId); const pub = publisherById(publisherId);
+  if(!spendAP()) return;
+  const chance = publishingPitchChance(band, pub);
+  if(Math.random()<chance){
+    const advance = rrange(pub.advanceMin, pub.advanceMax);
+    const split = Math.round(rrangeF(pub.splitMin,pub.splitMax)*100)/100;
+    G.pendingOffer = { type:'publishing', bandId, publisherId, advance, split };
+    addLog(`${pub.name} want to talk publishing with ${band.name}!`,'deal');
+  } else {
+    addLog(`${pub.name} pass on a publishing deal with ${band.name}.`,'deal');
+  }
+}
+function acceptOffer(){
+  const offer = G.pendingOffer; if(!offer) return;
+  const band = findBand(offer.bandId);
+  if(offer.type==='record'){
+    const label = labelById(offer.labelId);
+    band.recordDeal = { labelId:offer.labelId, advance:offer.advance, advanceRemaining:offer.advance, royalty:offer.royalty,
+      albumsOwed:offer.albumsOwed, albumsDelivered:0, signWeek:G.week };
+    G.cash += Math.round(offer.advance*CONFIG.MANAGER_CUT);
+    addLog(`${band.name} sign to ${label.name}! Advance: ${fmtMoney(offer.advance)}, royalty ${(offer.royalty*100).toFixed(1)}%.`,'deal');
+    unlock('first_record_deal','Landed Your First Record Deal');
+    G.reputation = clamp(G.reputation+3,0,100);
+  } else {
+    const pub = publisherById(offer.publisherId);
+    band.publishingDeal = { publisherId:offer.publisherId, advance:offer.advance, split:offer.split, signWeek:G.week };
+    G.cash += Math.round(offer.advance*CONFIG.MANAGER_CUT);
+    addLog(`${band.name} sign a publishing deal with ${pub.name}! Advance: ${fmtMoney(offer.advance)}, band keeps ${(offer.split*100).toFixed(0)}%.`,'deal');
+    unlock('first_publishing_deal','Signed Your First Publishing Deal');
+  }
+  G.pendingOffer = null;
+  closeModal();
+}
+function declineOffer(){
+  const offer = G.pendingOffer; if(!offer) return;
+  const band = findBand(offer.bandId);
+  addLog(`You turn down the offer for ${band.name}.`,'deal');
+  G.pendingOffer = null;
+}
+function counterOffer(){
+  const o = G.pendingOffer; if(!o || o.negotiated) return;
+  o.negotiated = true;
+  const band = findBand(o.bandId);
+  const roll = Math.random();
+  if(roll<0.55){
+    if(o.type==='record'){
+      o.advance = Math.round(o.advance*rrangeF(1.15,1.3));
+      o.royalty = Math.round(clamp(o.royalty+0.01,0,0.3)*1000)/1000;
+    } else {
+      o.advance = Math.round(o.advance*rrangeF(1.15,1.3));
+      o.split = Math.round(clamp(o.split+0.03,0,0.95)*100)/100;
+    }
+    addLog(`You push back and ${band.name} get a better deal on the table.`,'deal');
+  } else if(roll<0.80){
+    addLog(`They won't budge, but the offer still stands.`,'deal');
+  } else {
+    addLog(`They walk away from the table — the offer is withdrawn.`,'deal');
+    G.pendingOffer = null;
+  }
+}
+
+function arrangePress(bandId){
+  const publicist = getStaff('publicist');
+  const cost = publicist ? Math.round(CONFIG.PRESS_COST*(1-0.35*publicist.skill)) : CONFIG.PRESS_COST;
+  if(G.cash<cost){ addLog('Not enough cash for a publicist.','warn'); return; }
+  if(!spendAP()) return;
+  const band = findBand(bandId);
+  G.cash -= cost;
+  const leader = band.members.find(m=>m.id===band.leaderId) || band.members[0];
+  const rest = band.members.filter(m=>m.id!==leader.id);
+  const charisma = rest.length ? leader.charisma*0.7+avg(rest,'charisma')*0.3 : leader.charisma;
+  const leaderRisky = leader.personality==='wild'||leader.personality==='diva';
+  const gaffeRisk = clamp(0.08 + (leaderRisky?0.09:(rest.some(m=>m.personality==='wild'||m.personality==='diva')?0.04:0)) + band.heat*0.001 - (publicist?0.03*publicist.skill:0), 0.01, 0.6);
+  if(Math.random()<gaffeRisk){
+    band.heat=clamp(band.heat+28,0,100); band.buzz=clamp(band.buzz+6,0,100); band.chemistry=clamp(band.chemistry-6,0,100);
+    G.reputation=clamp(G.reputation-2,0,100);
+    addLog(`PR disaster — ${band.name}'s interview spirals into headlines for all the wrong reasons.`,'press');
+  } else {
+    const scoreVal = charisma + G.reputation*0.2 + (publicist?8*publicist.skill:0) + rrange(-10,20);
+    if(scoreVal>85){ band.fame=clamp(band.fame+2.5,0,100); band.buzz=clamp(band.buzz+22,0,100); band.heat=clamp(band.heat+6,0,100);
+      addLog(`${band.name} own the room in an electric press conference — buzz is soaring.`,'press'); }
+    else if(scoreVal>55){ band.fame=clamp(band.fame+1,0,100); band.buzz=clamp(band.buzz+10,0,100); band.heat=clamp(band.heat+4,0,100);
+      addLog(`${band.name} give a solid interview.`,'press'); }
+    else { band.buzz=clamp(band.buzz+4,0,100); band.heat=clamp(band.heat+3,0,100);
+      addLog(`${band.name}'s interview is fine, but forgettable.`,'press'); }
+  }
+}
+
+function hireStaff(candidateId){
+  const idx = G.staffMarket.findIndex(c=>c.id===candidateId);
+  if(idx<0) return;
+  const candidate = G.staffMarket[idx];
+  if(hasStaff(candidate.roleId)){ addLog('You already have someone in that role.','warn'); return; }
+  if(G.cash<candidate.hireCost){ addLog('Not enough cash to make this hire.','warn'); return; }
+  G.cash -= candidate.hireCost;
+  G.staffMarket.splice(idx,1);
+  G.staff.push({ id:uid(), roleId:candidate.roleId, name:candidate.name, skill:candidate.skill, salary:candidate.salary, hiredWeek:G.week });
+  addLog(`You hire ${candidate.name} as your new ${staffById(candidate.roleId).name}.`,'deal');
+  ensureStaffMarket();
+}
+function fireStaff(staffId){
+  const idx = G.staff.findIndex(s=>s.id===staffId);
+  if(idx<0) return;
+  const s = G.staff.splice(idx,1)[0];
+  addLog(`You let ${s.name} (your ${staffById(s.roleId).name}) go.`,'warn');
+  ensureStaffMarket();
+}
+
+function shootVideo(bandId, relId, tierId){
+  const band = findBand(bandId); const rel = band.singles.find(r=>r.id===relId); const tier = VIDEO_TIERS.find(t=>t.id===tierId);
+  if(!band||!rel||!tier) return;
+  if(band.fame<tier.minFame){ addLog(`${band.name} aren't big enough yet for a ${tier.name.toLowerCase()}.`,'warn'); return; }
+  const videoproducer = getStaff('videoproducer');
+  const discount = videoproducer ? (1-0.3*videoproducer.skill) : 1;
+  const cost = Math.round(tier.cost*discount);
+  if(!spendAP()) return;
+  let fundedByLabel = false;
+  if(band.recordDeal && band.recordDeal.advanceRemaining>=cost){
+    band.recordDeal.advanceRemaining -= cost; fundedByLabel = true;
+  } else if(G.cash>=cost){
+    G.cash -= cost;
+  } else {
+    addLog(`Not enough cash to shoot a video (needs ${fmtMoney(cost)}).`,'warn');
+    G.ap++; return;
+  }
+  const addedMult = videoproducer ? (1+0.25*videoproducer.skill) : 1;
+  const amount = Math.round(rrange(tier.addedMin, tier.addedMax)*addedMult);
+  rel.promo = rel.promo || {amount:0, weeksLeft:0};
+  rel.promo.amount = clamp(rel.promo.amount+amount,0,80);
+  rel.promo.weeksLeft = Math.max(rel.promo.weeksLeft, tier.weeks);
+  band.fame = clamp(band.fame+rrangeF(tier.fameMin,tier.fameMax),0,100);
+  band.buzz = clamp(band.buzz+15,0,100);
+  let msg = `${band.name} shoot a video for "${rel.title}"${fundedByLabel?' (label-funded)':''}.`;
+  if(Math.random()<0.12){
+    band.fame=clamp(band.fame+3,0,100); band.buzz=clamp(band.buzz+10,0,100);
+    msg = `${band.name}'s video for "${rel.title}" becomes an instant classic — iconic.`;
+  }
+  addLog(msg,'promo');
+  unlock('first_video','Shot Your First Music Video');
+  closeModal();
+}
+
+function pitchSponsorship(bandId, sponsorId){
+  const band = findBand(bandId); const sponsor = SPONSORS.find(s=>s.id===sponsorId);
+  if(!band||!sponsor) return;
+  if(band.sponsorship){ addLog(`${band.name} already have an active sponsorship deal.`,'warn'); return; }
+  if(band.fame<sponsor.minFame){ addLog(`${band.name} aren't famous enough for ${sponsor.name} yet.`,'warn'); return; }
+  if(!spendAP()) return;
+  const chance = clamp(0.4 + (band.fame-sponsor.minFame)*0.006 + G.reputation*0.003, 0.1, 0.9);
+  if(Math.random()<chance){
+    const lump = rrange(sponsor.lumpMin, sponsor.lumpMax);
+    const weekly = rrange(sponsor.weeklyMin, sponsor.weeklyMax);
+    band.sponsorship = { sponsorId, weeksLeft:sponsor.weeks, weeklyAmount:weekly };
+    G.cash += Math.round(lump*CONFIG.MANAGER_CUT);
+    addLog(`${band.name} sign an endorsement deal with ${sponsor.name}! Signing fee: ${fmtMoney(lump)}.`,'money');
+    if(Math.random()<0.15){
+      band.heat=clamp(band.heat+10,0,100); band.chemistry=clamp(band.chemistry-3,0,100);
+      addLog(`Some fans mutter about ${band.name} "selling out" with the ${sponsor.name} deal.`,'event');
+    }
+    unlock('first_sponsorship','Landed Your First Sponsorship Deal');
+  } else {
+    addLog(`${sponsor.name} pass on sponsoring ${band.name} this time.`,'money');
+  }
+  closeModal();
+}
+
+function bookFestival(bandId, festId){
+  const band = findBand(bandId); const fest = FESTIVALS.find(f=>f.id===festId);
+  if(!band||!fest) return;
+  if(band.tour){ addLog(`${band.name} are already on tour.`,'warn'); return; }
+  if(band.fame<fest.minFame){ addLog(`${band.name} aren't famous enough yet for ${fest.name}.`,'warn'); return; }
+  if(!spendAP()) return;
+  const fee = rrange(fest.feeMin, fest.feeMax);
+  G.cash += Math.round(fee*CONFIG.MANAGER_CUT);
+  band.fame = clamp(band.fame+rrangeF(fest.fameMin,fest.fameMax),0,100);
+  band.buzz = clamp(band.buzz+rrange(fest.buzzMin,fest.buzzMax),0,100);
+  addLog(`${band.name} play ${fest.name}! Fee: ${fmtMoney(fee)}.`,'tour');
+  unlock('first_festival','Played Your First Festival');
+  if(fest.id==='legends') unlock('headline_festival','Headlined a Major Festival');
+  closeModal();
+}
+
+function openAudition(bandId){
+  const band = findBand(bandId);
+  if(!band || band.members.length>=5){ addLog('The lineup is already full.','warn'); return; }
+  const usedRoles = band.members.map(m=>m.role);
+  const missingRoles = ROLES.filter(r=>!usedRoles.includes(r));
+  const rolePool = missingRoles.length ? missingRoles : ROLES;
+  G.ui.auditionCandidates = [0,1,2].map(()=>makeMember(pick(rolePool)));
+  G.ui.modal = { type:'audition', bandId };
+}
+function commitAudition(bandId, idx){
+  const band = findBand(bandId);
+  const candidates = G.ui.auditionCandidates || [];
+  const candidate = candidates[idx];
+  if(!candidate) return;
+  if(band.members.length>=5){ addLog('The lineup is already full.','warn'); return; }
+  if(G.cash<CONFIG.AUDITION_FEE){ addLog('Not enough cash to bring in a new member.','warn'); return; }
+  if(!spendAP()) return;
+  G.cash -= CONFIG.AUDITION_FEE;
+  band.members.push(candidate);
+  band.chemistry = clamp(band.chemistry-5,0,100);
+  ensureRelationships(band);
+  addLog(`${candidate.name} joins ${band.name} on ${candidate.role}.`,'band');
+  G.ui.auditionCandidates = null;
+  closeModal();
+}
+
+function pitchRadio(bandId, relId, tierId){
+  const band = findBand(bandId); const rel = band.singles.find(r=>r.id===relId); const tier = RADIO_TIERS.find(t=>t.id===tierId);
+  if(!band||!rel||!tier) return;
+  if(G.cash<tier.cost){ addLog('Not enough cash to cover radio plugging costs.','warn'); return; }
+  if(!spendAP()) return;
+  G.cash -= tier.cost;
+  const songs = rel.trackIds.map(id=>band.catalog.find(s=>s.id===id)).filter(Boolean);
+  const q = songs.length ? avg(songs,'quality') : 40;
+  const label = band.recordDeal ? labelById(band.recordDeal.labelId) : null;
+  let chance = 0.3 + (q-tier.minQuality)*0.01 + (label?label.marketing*0.003:0) + G.reputation*0.003 + band.buzz*0.002;
+  chance = clamp(chance,0.05,0.9);
+  if(Math.random()<chance){
+    const amount = rrange(tier.addedMin, tier.addedMax);
+    rel.promo = rel.promo || {amount:0, weeksLeft:0};
+    rel.promo.amount = clamp(rel.promo.amount+amount,0,60);
+    rel.promo.weeksLeft = Math.max(rel.promo.weeksLeft, tier.weeks);
+    band.buzz = clamp(band.buzz+Math.round(amount*0.4),0,100);
+    addLog(`"${rel.title}" lands on ${tier.name} for ${band.name}!`,'promo');
+    if(tier.id==='national') unlock('first_national_playlist','Landed a National Playlist Add');
+  } else {
+    addLog(`${tier.name} passes on "${rel.title}" this time.`,'promo');
+  }
+  closeModal();
+}
+
+function bookTV(bandId, showId){
+  const band = findBand(bandId); const show = TV_SHOWS.find(s=>s.id===showId);
+  if(!band||!show) return;
+  if(band.fame<show.minFame){ addLog(`${band.name} aren't famous enough yet for ${show.name}.`,'warn'); return; }
+  if(G.cash<show.cost){ addLog('Not enough cash to cover promo costs for this booking.','warn'); return; }
+  if(!spendAP()) return;
+  G.cash -= show.cost;
+  const leader = band.members.find(m=>m.id===band.leaderId) || band.members[0];
+  const leaderRisky = leader.personality==='wild'||leader.personality==='diva';
+  const risk = show.gaffeRisk + (leaderRisky?0.08:(band.members.some(m=>m.id!==leader.id&&(m.personality==='wild'||m.personality==='diva'))?0.03:0)) + band.heat*0.001;
+  if(Math.random()<risk){
+    band.heat=clamp(band.heat+30,0,100); G.reputation=clamp(G.reputation-2,0,100); band.chemistry=clamp(band.chemistry-4,0,100);
+    addLog(`${band.name}'s appearance on ${show.name} turns into a car-crash moment.`,'promo');
+  } else {
+    const fameGain = rrangeF(show.fameMin, show.fameMax); const buzzGain = rrange(show.buzzMin, show.buzzMax);
+    band.fame = clamp(band.fame+fameGain,0,100); band.buzz = clamp(band.buzz+buzzGain,0,100); band.heat = clamp(band.heat+5,0,100);
+    const activeSingle = band.singles.find(r=>r.active);
+    if(activeSingle){ activeSingle.promo = activeSingle.promo || {amount:0,weeksLeft:0};
+      activeSingle.promo.amount = clamp(activeSingle.promo.amount+12,0,60);
+      activeSingle.promo.weeksLeft = Math.max(activeSingle.promo.weeksLeft,3); }
+    addLog(`${band.name} smash their slot on ${show.name} — huge exposure.`,'promo');
+    unlock('first_tv','First TV Appearance');
+  }
+  closeModal();
+}
+
+function pepTalk(bandId, memberId){
+  const band = findBand(bandId);
+  if(!spendAP()) return;
+  const m = band.members.find(x=>x.id===memberId);
+  m.morale = clamp(m.morale+rrange(8,16),0,100);
+  addLog(`You have a heart-to-heart with ${m.name} — morale improves.`,'band');
+}
+
+function bookTour(bandId, scaleId){
+  const band = findBand(bandId); const scale = TOUR_SCALES.find(s=>s.id===scaleId);
+  const supportCost = tourSupportCost(scale);
+  if(band.tour){ addLog(`${band.name} are already on tour.`,'warn'); return; }
+  if(band.fame<scale.minFame){ addLog(`${band.name} aren't famous enough yet for a ${scale.name}.`,'warn'); return; }
+  if(G.cash<supportCost){ addLog('Not enough cash to front tour support costs.','warn'); return; }
+  if(!spendAP()) return;
+  G.cash -= supportCost;
+  const legsCount = rrange(scale.legsMin, scale.legsMax);
+  const pool = shuffle(CITIES.slice());
+  const legs = []; for(let i=0;i<legsCount;i++) legs.push(pool[i%pool.length]);
+  band.tour = { scaleId, legs, legIndex:0, grossRevenue:0, ticketsSold:0, active:true };
+  addLog(`${band.name} announce a ${scale.name}! ${legsCount} dates booked.`,'tour');
+  closeModal();
+}
+
+function tickTourLeg(band){
+  const tour = band.tour; const scale = TOUR_SCALES.find(s=>s.id===tour.scaleId);
+  const city = tour.legs[tour.legIndex];
+  const demand = clamp(0.12 + (band.fame*0.8+band.buzz*0.5)/100,0,1.1);
+  const relAvg = avg(band.members,'reliability')/100;
+  let soldPct = clamp(demand*rrangeF(0.7,1.2)*relAvg,0,1);
+  const tourmgr = getStaff('tourmgr');
+  if(tourmgr) soldPct = clamp(soldPct*(1+0.15*tourmgr.skill),0,1);
+  const ticketsSold = Math.round(scale.capacity*soldPct);
+  const revenue = ticketsSold*scale.price;
+  const managerIncome = Math.round(revenue*CONFIG.MANAGER_CUT);
+  G.cash += managerIncome;
+  tour.grossRevenue += revenue; tour.ticketsSold += ticketsSold;
+  let outcome;
+  if(soldPct>=0.95){ outcome='sellout'; band.fame=clamp(band.fame+2.5,0,100); band.buzz=clamp(band.buzz+14,0,100);
+    if(scale.id==='stadium') unlock('sold_out_stadium','Sold Out a Stadium Tour'); }
+  else if(soldPct>=0.65){ outcome='strong'; band.fame=clamp(band.fame+1,0,100); band.buzz=clamp(band.buzz+6,0,100); }
+  else if(soldPct<0.3){ outcome='poor'; band.heat=clamp(band.heat+4,0,100); band.members.forEach(m=>m.morale=clamp(m.morale-2,0,100)); }
+  else outcome='steady';
+  addLog(`${band.name} play ${city} on the ${scale.name} — ${ticketsSold.toLocaleString()}/${scale.capacity.toLocaleString()} tickets (${outcome}).`,'tour');
+  band.chemistry = clamp(band.chemistry+rrange(-1,3),0,100);
+  band.members.forEach(m=>m.morale=clamp(m.morale-1,0,100));
+  tour.legIndex++;
+  if(tour.legIndex>=tour.legs.length){
+    tour.active=false;
+    const avgSold = tour.ticketsSold/(scale.capacity*tour.legs.length);
+    band.fame = clamp(band.fame+avgSold*6,0,100);
+    band.tourHistory.unshift({scale:scale.name, legs:tour.legs.length, gross:tour.grossRevenue, ticketsSold:tour.ticketsSold, finishedWeek:G.week});
+    addLog(`${band.name}'s ${scale.name} has wrapped up! Total gross: ${fmtMoney(tour.grossRevenue)}.`,'tour');
+    band.tour = null;
+  }
+}
+
+/* =========================================================================
+   WEEKLY TICK
+   ========================================================================= */
+function tickCharts(){
+  ['singles','albums'].forEach(kind=>{
+    const chartKey = kind==='singles' ? 'chartsSingles' : 'chartsAlbums';
+    const prevChart = G[chartKey] || [];
+    const entries = [];
+    G.bands.forEach(band=>{
+      const list = kind==='singles' ? band.singles : band.albums;
+      list.forEach(rel=>{
+        if(!rel.active) return;
+        rel.weeksOnChart++;
+        const label = band.recordDeal ? labelById(band.recordDeal.labelId) : null;
+        const songs = rel.trackIds.map(id=>band.catalog.find(s=>s.id===id)).filter(Boolean);
+        const q = songs.length ? avg(songs,'quality') : 40;
+        const promoAmt = rel.promo ? rel.promo.amount : 0;
+        let strength = q*0.5 + band.fame*0.3 + (label?label.marketing*0.15:0) + band.buzz*0.15 + promoAmt - rel.weeksOnChart*2.5 + rrange(-8,8);
+        strength *= (G.genreTrends[band.genre]||1);
+        strength = clamp(strength,0,160);
+        if(rel.promo){ rel.promo.weeksLeft--; if(rel.promo.weeksLeft<=0) rel.promo=null; }
+        if(strength<=8 && rel.weeksOnChart>2){
+          rel.active = false;
+          addLog(`"${rel.title}" by ${band.name} has fallen off the ${kind==='singles'?'singles':'albums'} chart.`,'chart');
+          return;
+        }
+        entries.push({ title:rel.title, artist:band.name, isPlayer:true, bandId:band.id, relId:rel.id, strength, weeksOnChart:rel.weeksOnChart });
+      });
+    });
+    G.rivalActs.forEach(r=>{
+      r.strength = clamp(r.strength + rrange(-6,7)*(G.genreTrends[r.genre]||1), 8, 98);
+      entries.push({ title:genSongTitle(), artist:r.name, isPlayer:false, strength:clamp(r.strength+rrange(-5,5),0,120), weeksOnChart:rrange(1,15) });
+    });
+    entries.sort((a,b)=>b.strength-a.strength);
+    const top = entries.slice(0,CONFIG.CHART_SIZE);
+    top.forEach((e,i)=>{
+      e.position = i+1;
+      const prevEntry = prevChart.find(p => e.isPlayer ? (p.isPlayer && p.relId===e.relId) : (!p.isPlayer && p.title===e.title && p.artist===e.artist));
+      e.prevPosition = prevEntry ? prevEntry.position : null;
+      if(e.isPlayer){
+        const band = G.bands.find(b=>b.id===e.bandId);
+        const rel = (kind==='singles'?band.singles:band.albums).find(r=>r.id===e.relId);
+        rel.chartPeak = rel.chartPeak ? Math.min(rel.chartPeak, e.position) : e.position;
+        const baseVal = kind==='singles' ? 220 : 550;
+        const royaltyMult = band.recordDeal ? clamp(band.recordDeal.royalty*8,0.6,1.6) : 0.7;
+        const royalty = Math.round((21-e.position)*baseVal*CONFIG.MANAGER_CUT*royaltyMult);
+        G.cash += royalty;
+        if(e.position===1 && !rel._hitNo1){
+          rel._hitNo1 = true;
+          addLog(`🥇 "${rel.title}" by ${band.name} hits #1 on the ${kind} chart!`,'chart');
+          unlock(kind==='singles'?'first_number_one_single':'first_number_one_album', 'First #1 '+(kind==='singles'?'Single':'Album'));
+          band.fame = clamp(band.fame+8,0,100);
+        } else if(e.position<=10 && !rel._hitTop10){
+          rel._hitTop10 = true;
+          addLog(`"${rel.title}" by ${band.name} breaks into the Top 10!`,'chart');
+          unlock(kind==='singles'?'first_top10_single':'first_top10_album', 'First Top 10 '+(kind==='singles'?'Single':'Album'));
+          band.fame = clamp(band.fame+3,0,100);
+        }
+      }
+    });
+    G[chartKey] = top;
+  });
+}
+
+function triggerAwardsNight(){
+  const results = AWARD_CATEGORIES.map(cat=>{
+    const pool = [];
+    G.bands.forEach(band=>{
+      let eligible = false;
+      if(cat==='Best New Act') eligible = band.signedWeek!=null && (G.week-band.signedWeek)<=52;
+      else if(cat==='Best Single') eligible = band.singles.some(r=>r.chartPeak && r.chartPeak<=10);
+      else if(cat==='Best Album') eligible = band.albums.some(r=>r.chartPeak && r.chartPeak<=10);
+      else if(cat==='Best Live Act') eligible = band.tourHistory.length>0;
+      else if(cat==='Act of the Year') eligible = band.fame>=50;
+      if(eligible) pool.push({ name:band.name, isPlayer:true, bandId:band.id, score:band.fame*0.6+G.reputation*0.2+rrange(0,20) });
+    });
+    shuffle(G.rivalActs).slice(0,3).forEach(r=>{
+      pool.push({ name:r.name, isPlayer:false, score:r.strength*0.8+rrange(0,20) });
+    });
+    if(!pool.length) return { category:cat, nominees:[], winner:null, winnerIsPlayer:false };
+    pool.sort((a,b)=>b.score-a.score);
+    const winner = pool[0];
+    if(winner.isPlayer){
+      const band = G.bands.find(b=>b.id===winner.bandId);
+      band.fame = clamp(band.fame+5,0,100);
+      G.reputation = clamp(G.reputation+4,0,100);
+      G.awardsWon = (G.awardsWon||0)+1;
+      unlock('first_award_win','Won Your First Industry Award');
+      if(G.awardsWon>=3) unlock('awards_hall_of_fame','Hall of Fame: 3 Award Wins');
+    }
+    return { category:cat, nominees:pool.slice(0,4).map(p=>p.name), winner:winner.name, winnerIsPlayer:winner.isPlayer };
+  });
+  G.pendingAwards = { results };
+  addLog(`🎉 Awards Night! Check the results.`,'chart');
+}
+
+function maybeTriggerEvent(){
+  if(G.pendingEvent || G.pendingOffer || G.pendingAwards) return;
+  if(Math.random()>0.35) return;
+  const eligible = [];
+  G.bands.forEach(band=>{
+    EVENT_DEFS.forEach(ev=>{ if(ev.condition(band)) eligible.push({kind:'band',ev,band}); });
+    REL_EVENT_DEFS.forEach(ev=>{ const pair=ev.pickPair(band); if(pair) eligible.push({kind:'rel',ev,band,pair}); });
+  });
+  if(!eligible.length) return;
+  const chosen = eligible[rrange(0,eligible.length-1)];
+  if(chosen.kind==='rel'){
+    G.pendingEvent = { kind:'rel', eventId: chosen.ev.id, bandId: chosen.band.id, pairA: chosen.pair.a, pairB: chosen.pair.b };
+  } else {
+    G.pendingEvent = { kind:'band', eventId: chosen.ev.id, bandId: chosen.band.id };
+  }
+}
+
+function resolveEvent(choiceIndex){
+  const pending = G.pendingEvent; if(!pending) return;
+  const band = findBand(pending.bandId);
+  if(pending.kind==='rel'){
+    const ev = REL_EVENT_DEFS.find(e=>e.id===pending.eventId);
+    const rel = band.relationships[relKey(pending.pairA,pending.pairB)];
+    const m1 = band.members.find(m=>m.id===pending.pairA), m2 = band.members.find(m=>m.id===pending.pairB);
+    if(!ev || !rel || !m1 || !m2){ G.pendingEvent = null; return; }
+    const choice = ev.choices[choiceIndex];
+    if(!choice) return;
+    addLog(choice.apply(band,m1,m2,rel),'event');
+  } else {
+    const ev = EVENT_DEFS.find(e=>e.id===pending.eventId);
+    const choice = ev.choices[choiceIndex];
+    if(!choice) return;
+    addLog(choice.apply(band),'event');
+  }
+  G.pendingEvent = null;
+}
+
+function checkGameOver(){
+  if(G.cash < CONFIG.BANKRUPTCY_CASH) G.negativeCashStreak++;
+  else G.negativeCashStreak = 0;
+  if(G.negativeCashStreak >= CONFIG.BANKRUPTCY_WEEKS){
+    G.gameOver = 'bankrupt';
+  }
+}
+
+function tickGenreTrends(){
+  GENRES.forEach(g=>{
+    let t = G.genreTrends[g]===undefined ? 1 : G.genreTrends[g];
+    t += rrangeF(-0.04,0.04) + (1-t)*0.05;
+    t = clamp(t,0.7,1.4);
+    G.genreTrends[g] = Math.round(t*100)/100;
+    if(t>=1.25 && !G.genreBreakoutLogged.includes(g)){
+      G.genreBreakoutLogged.push(g);
+      addLog(`${g} is having a real moment right now.`,'info');
+    } else if(t<=1.05){
+      const idx = G.genreBreakoutLogged.indexOf(g);
+      if(idx>=0) G.genreBreakoutLogged.splice(idx,1);
+    }
+  });
+}
+
+function advanceWeek(){
+  if(G.pendingEvent || G.pendingOffer || G.pendingAwards){ addLog('Resolve the pending situation before ending the week.','warn'); return; }
+  const staffCost = G.staff.reduce((s,x)=>s+x.salary,0);
+  const overhead = CONFIG.WEEKLY_BASE_OVERHEAD + G.bands.length*CONFIG.OVERHEAD_PER_BAND + staffCost;
+  G.cash -= overhead;
+
+  tickGenreTrends();
+  tickStaffMarket();
+
+  let totalMerch = 0;
+  G.bands.slice().forEach(band=>{
+    tickRelationships(band);
+    band.buzz = Math.round(band.buzz*0.82);
+    band.heat = Math.round(band.heat*0.9);
+    const compat = bandCompatAvg(band);
+    const target = avg(band.members,'morale')*0.55 + clamp(compat,-20,15);
+    band.chemistry = clamp(band.chemistry + (target-band.chemistry)*0.15 + rrange(-3,3), 0, 100);
+
+    band.members.slice().forEach(m=>{
+      const baseline = clamp(60 + (m.personality==='pro'?5:0) - clamp((band.heat-30)*0.3,0,25) - clamp((50-band.chemistry)*0.3,0,20), 5, 90);
+      m.morale = clamp(m.morale + (baseline-m.morale)*0.1 + rrange(-2,2), 0, 100);
+      if(m.morale<=CONFIG.MEMBER_CRITICAL_MORALE) m.criticalMoraleWeeks = (m.criticalMoraleWeeks||0)+1;
+      else m.criticalMoraleWeeks = 0;
+
+      if(m.criticalMoraleWeeks>=CONFIG.MEMBER_CRITICAL_WEEKS && band.members.includes(m)){
+        addLog(`${m.name} has quit ${band.name}, burnt out and unhappy.`,'band');
+        memberDeparts(band, m.id);
+        return;
+      }
+      if(m.soloFlag && band.members.includes(m) && Math.random()<CONFIG.SOLO_DEPART_CHANCE){
+        const soloFame = band.fame*0.3, departedName = m.name, departedGenre = band.genre;
+        memberDeparts(band, m.id);
+        addLog(`${departedName} leaves ${band.name} to go solo!`,'band');
+        if(G.prospects.length<CONFIG.MAX_PROSPECTS) G.prospects.push(makeSoloAct(m, departedGenre, soloFame));
+      }
+    });
+    if(!G.bands.includes(band)) return;
+
+    if(band.weeksSinceRelease>8 && !band.tour) band.fame = clamp(band.fame-0.3,0,100);
+    band.weeksSinceRelease++;
+    if(band.tour && band.tour.active) tickTourLeg(band);
+
+    if(band.sponsorship){
+      G.cash += Math.round(band.sponsorship.weeklyAmount*CONFIG.MANAGER_CUT);
+      band.sponsorship.weeksLeft--;
+      if(band.sponsorship.weeksLeft<=0){
+        addLog(`${band.name}'s sponsorship deal comes to an end.`,'money');
+        band.sponsorship = null;
+      }
+    }
+    if(band.fame>=CONFIG.MERCH_FAME_THRESHOLD){
+      const merch = Math.round(band.fame*1.3*CONFIG.MANAGER_CUT*rrangeF(0.8,1.2));
+      G.cash += merch; totalMerch += merch;
+    }
+  });
+  if(totalMerch>0) addLog(`Merchandise sales bring in ${fmtMoney(totalMerch)} across the roster this week.`,'money');
+
+  tickCharts();
+
+  if(G.week>=G.nextAwardsWeek){
+    triggerAwardsNight();
+    G.nextAwardsWeek = G.week + rrange(CONFIG.AWARDS_INTERVAL_MIN, CONFIG.AWARDS_INTERVAL_MAX);
+  }
+
+  maybeTriggerEvent();
+  if(Math.random()<0.2 && G.prospects.length<CONFIG.MAX_PROSPECTS) G.prospects.push(makeBand(G.reputation*0.1));
+
+  snapshotHistory();
+  if(G.reputation>=50) unlock('rep50','Reached Respected Status');
+  if(G.reputation>=80) unlock('rep80','Industry Legend Status');
+  checkGameOver();
+
+  G.week++;
+  G.ap = CONFIG.AP_PER_WEEK;
+  addLog(`— Week ${G.week} begins —`,'info');
+}
+
+/* =========================================================================
+   MODAL / UI STATE HELPERS
+   ========================================================================= */
+function openModal(type, bandId){ G.ui.modal = {type, bandId}; G.ui.tempSelect = []; G.ui.studioMode='single'; }
+function closeModal(){ G.ui.modal = null; G.ui.tempSelect = []; G.ui.auditionCandidates = null; }
+function toggleTemp(id){
+  const i = G.ui.tempSelect.indexOf(id);
+  if(i>=0) G.ui.tempSelect.splice(i,1); else G.ui.tempSelect.push(id);
+}
+
+/* =========================================================================
+   RENDER — SHELL
+   ========================================================================= */
+const NAV_TABS = [
+  {id:'overview', label:'Overview'},
+  {id:'roster', label:'Roster'},
+  {id:'scouting', label:'Scouting'},
+  {id:'charts', label:'Charts'},
+  {id:'touring', label:'Touring'},
+  {id:'deals', label:'Deals'},
+  {id:'agency', label:'Agency'},
+  {id:'finances', label:'Finances'},
+];
+
+function render(){
+  trySave();
+  if(G.gameOver){ renderGameOver(); return; }
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  renderTopbar();
+  renderNav();
+  renderView();
+  renderModal();
+}
+
+function renderTopbar(){
+  const pips = Array.from({length:CONFIG.AP_PER_WEEK}).map((_,i)=>
+    `<div class="ap-pip ${i<G.ap?'filled':''}"></div>`).join('');
+  const year = Math.floor((G.week-1)/52)+1;
+  const weekInYear = ((G.week-1)%52)+1;
+  document.getElementById('topbar').innerHTML = `
+    <div class="brand">${esc(G.agencyName)}<small>${esc(G.managerName)} · Year ${year}, Week ${weekInYear}</small></div>
+    <div class="stat-chip">Cash <b style="color:${G.cash<0?'var(--bad)':'var(--gold)'}">${fmtMoney(G.cash)}</b></div>
+    <div class="stat-chip">Reputation <b>${Math.round(G.reputation)} (${repTitle(G.reputation)})</b></div>
+    <div class="stat-chip">Action Points <div class="ap-pips">${pips}</div></div>
+    <button id="btnEndWeek" data-action="endWeek">End Week &raquo;</button>
+    <button id="btnNewGame" data-action="requestNewGame">New Agency</button>
+  `;
+}
+
+function renderNav(){
+  document.getElementById('nav').innerHTML = NAV_TABS.map(t=>
+    `<button data-action="setView" data-view="${t.id}" class="${G.view===t.id?'active':''}">${t.label}</button>`
+  ).join('');
+}
+
+function renderView(){
+  const c = document.getElementById('content');
+  switch(G.view){
+    case 'overview': c.innerHTML = renderOverview(); break;
+    case 'roster': c.innerHTML = renderRoster(); break;
+    case 'scouting': c.innerHTML = renderScouting(); break;
+    case 'charts': c.innerHTML = renderCharts(); break;
+    case 'touring': c.innerHTML = renderTouring(); break;
+    case 'deals': c.innerHTML = renderDeals(); break;
+    case 'agency': c.innerHTML = renderAgency(); break;
+    case 'finances': c.innerHTML = renderFinances(); break;
+    default: c.innerHTML = renderOverview();
+  }
+}
+
+function bar(pct, cls){ return `<div class="bar"><div class="bar-fill ${cls}" style="width:${clamp(pct,0,100)}%"></div></div>`; }
+function barRow(label,pct,cls){ return `<div class="bar-row"><span>${label}</span>${bar(pct,cls)}</div>`; }
+
+/* ---------- Overview ---------- */
+function renderOverview(){
+  const topSingle = G.chartsSingles.find(e=>e.isPlayer);
+  const topAlbum = G.chartsAlbums.find(e=>e.isPlayer);
+  const trendBadges = Object.entries(G.genreTrends||{}).sort((a,b)=>b[1]-a[1]).slice(0,4)
+    .map(([g,t])=>`<span class="badge badge-genre">${g} ${t>1.02?'▲':t<0.98?'▼':'–'} ${(t*100).toFixed(0)}%</span>`).join(' ');
+  return `
+    <div class="grid4">
+      <div class="statcard"><div class="val">${fmtMoney(G.cash)}</div><div class="lbl">Cash</div></div>
+      <div class="statcard"><div class="val">${Math.round(G.reputation)}</div><div class="lbl">${repTitle(G.reputation)}</div></div>
+      <div class="statcard"><div class="val">${G.bands.length}</div><div class="lbl">Signed Acts</div></div>
+      <div class="statcard"><div class="val">${G.prospects.length}</div><div class="lbl">Prospects</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Agency Trends</h3>
+        ${historySvg()}
+      </div>
+      <div class="card">
+        <h3>Chart Highlights</h3>
+        <p style="color:var(--dim);font-size:.9em;">${topSingle?`Top single: <b style="color:var(--gold)">#${topSingle.position}</b> "${esc(topSingle.title)}" — ${esc(topSingle.artist)}`:'No singles on the chart yet.'}</p>
+        <p style="color:var(--dim);font-size:.9em;">${topAlbum?`Top album: <b style="color:var(--gold)">#${topAlbum.position}</b> "${esc(topAlbum.title)}" — ${esc(topAlbum.artist)}`:'No albums on the chart yet.'}</p>
+        <h3 style="margin-top:16px;">Genre Trends</h3>
+        <div class="ach-list">${trendBadges}</div>
+        <h3 style="margin-top:16px;">Achievements</h3>
+        <div class="ach-list">${G.achievements.length ? G.achievements.map(a=>`<span class="ach-chip">🏆 ${esc(a.title)}</span>`).join('') : '<span style="color:var(--dim);font-size:.85em;">None yet — get to work.</span>'}</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>News</h3>
+      ${G.log.slice(0,20).map(e=>`<div class="log-entry tag-${e.tag}"><span class="wk">Wk${e.week}</span>${esc(e.msg)}</div>`).join('') || '<p style="color:var(--dim)">Nothing yet.</p>'}
+    </div>
+  `;
+}
+
+function historySvg(){
+  const h = G.history;
+  if(h.length<2) return `<p style="color:var(--dim);font-size:.85em;">Not enough history yet.</p>`;
+  const w=460, ht=120, pad=10;
+  const cashVals = h.map(x=>x.cash);
+  const repVals = h.map(x=>x.reputation);
+  const cMin=Math.min(...cashVals,0), cMax=Math.max(...cashVals,100);
+  const rMin=0, rMax=100;
+  function pts(vals,min,max){
+    return vals.map((v,i)=>{
+      const x = pad + i*(w-2*pad)/(vals.length-1||1);
+      const y = ht-pad - (v-min)/(max-min||1)*(ht-2*pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
+  return `<svg width="100%" viewBox="0 0 ${w} ${ht}" preserveAspectRatio="none" style="background:var(--panel2);border-radius:8px;">
+    <polyline points="${pts(cashVals,cMin,cMax)}" fill="none" stroke="var(--gold)" stroke-width="2"/>
+    <polyline points="${pts(repVals,rMin,rMax)}" fill="none" stroke="var(--blue)" stroke-width="2"/>
+  </svg>
+  <div style="display:flex;gap:16px;margin-top:6px;font-size:.75em;color:var(--dim)">
+    <span><span style="color:var(--gold)">■</span> Cash</span>
+    <span><span style="color:var(--blue)">■</span> Reputation</span>
+  </div>`;
+}
+
+/* ---------- Roster ---------- */
+function renderRoster(){
+  if(!G.bands.length) return `<div class="card"><p style="color:var(--dim)">No acts signed yet. Head to <b>Scouting</b> to find some talent.</p></div>`;
+  const rows = G.bands.map(b=>`
+    <tr class="clickable" data-action="openBand" data-band-id="${b.id}">
+      <td><b>${esc(b.name)}</b></td>
+      <td><span class="badge badge-genre">${b.genre}</span></td>
+      <td>${barRow('Fame',b.fame,'fame')}</td>
+      <td>${barRow('Chem',b.chemistry,'chem')}</td>
+      <td>${barRow('Heat',b.heat,'heat')}</td>
+      <td><span class="badge ${statusClass(b)}">${statusLabel(b)}</span></td>
+      <td>${b.catalog.length}</td>
+    </tr>
+  `).join('');
+  return `<div class="card"><table class="data">
+    <thead><tr><th>Act</th><th>Genre</th><th>Fame</th><th>Chemistry</th><th>Heat</th><th>Status</th><th>Songs</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+/* ---------- Scouting ---------- */
+function renderScouting(){
+  const rows = G.prospects.map(b=>`
+    <tr>
+      <td><b>${esc(b.name)}</b></td>
+      <td><span class="badge badge-genre">${b.genre}</span></td>
+      <td>${b.members.length}</td>
+      <td>${barRow('Fame',b.fame,'fame')}</td>
+      <td>
+        <button class="btn small primary" data-action="signBand" data-band-id="${b.id}">Sign (${fmtMoney(CONFIG.SIGN_COST)})</button>
+        <button class="btn small danger" data-action="passProspect" data-band-id="${b.id}">Pass</button>
+      </td>
+    </tr>
+  `).join('');
+  return `
+    <div class="card">
+      <h3>Scouting</h3>
+      <p style="color:var(--dim);font-size:.9em;">Send your scouts out to find new acts worth signing.</p>
+      <button class="btn primary" data-action="scoutTalent">Scout for Talent (1 AP)</button>
+    </div>
+    <div class="card"><table class="data">
+      <thead><tr><th>Act</th><th>Genre</th><th>Members</th><th>Fame</th><th>Action</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" style="color:var(--dim)">No prospects right now — go scouting.</td></tr>'}</tbody>
+    </table></div>
+  `;
+}
+
+/* ---------- Charts ---------- */
+function chartTable(list, kind){
+  if(!list.length) return `<p style="color:var(--dim)">No chart data yet — release some music!</p>`;
+  const rows = list.map(e=>{
+    let trend = '<span class="trend-flat">–</span>';
+    if(e.prevPosition!=null){
+      if(e.position<e.prevPosition) trend = '<span class="trend-up">▲</span>';
+      else if(e.position>e.prevPosition) trend = '<span class="trend-down">▼</span>';
+      else trend = '<span class="trend-flat">–</span>';
+    } else trend = '<span class="trend-up">NEW</span>';
+    return `<tr style="${e.isPlayer?'background:#1c1710':''}">
+      <td>${e.position}</td><td>${trend}</td>
+      <td>${e.isPlayer?'<b style="color:var(--gold)">':''}"${esc(e.title)}"${e.isPlayer?'</b>':''}</td>
+      <td>${esc(e.artist)}</td><td>${e.weeksOnChart}</td>
+    </tr>`;
+  }).join('');
+  return `<table class="data"><thead><tr><th>#</th><th></th><th>Title</th><th>Artist</th><th>Weeks</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderCharts(){
+  return `
+    <div class="grid2">
+      <div class="card"><h3>Top Singles</h3>${chartTable(G.chartsSingles,'singles')}</div>
+      <div class="card"><h3>Top Albums</h3>${chartTable(G.chartsAlbums,'albums')}</div>
+    </div>
+  `;
+}
+
+/* ---------- Touring ---------- */
+function renderTouring(){
+  const active = G.bands.filter(b=>b.tour);
+  const activeHtml = active.length ? active.map(b=>{
+    const scale = TOUR_SCALES.find(s=>s.id===b.tour.scaleId);
+    const pct = Math.round(b.tour.legIndex/b.tour.legs.length*100);
+    return `<div class="card">
+      <h3>${esc(b.name)} — ${scale.name}</h3>
+      <p style="color:var(--dim);font-size:.85em">Leg ${b.tour.legIndex+1} of ${b.tour.legs.length} · Gross so far: ${fmtMoney(b.tour.grossRevenue)} · Tickets sold: ${b.tour.ticketsSold.toLocaleString()}</p>
+      <div class="bar"><div class="bar-fill fame" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('') : `<div class="card"><p style="color:var(--dim)">No acts currently on the road.</p></div>`;
+
+  const history = [];
+  G.bands.forEach(b=>b.tourHistory.forEach(t=>history.push(Object.assign({bandName:b.name},t))));
+  history.sort((a,b)=>b.finishedWeek-a.finishedWeek);
+  const histHtml = history.length ? `<div class="card"><h3>Tour History</h3><table class="data">
+    <thead><tr><th>Act</th><th>Tour</th><th>Legs</th><th>Gross</th><th>Tickets</th><th>Week</th></tr></thead>
+    <tbody>${history.slice(0,15).map(t=>`<tr><td>${esc(t.bandName)}</td><td>${t.scale}</td><td>${t.legs}</td><td>${fmtMoney(t.gross)}</td><td>${t.ticketsSold.toLocaleString()}</td><td>${t.finishedWeek}</td></tr>`).join('')}</tbody>
+  </table></div>` : '';
+
+  return activeHtml + histHtml;
+}
+
+/* ---------- Deals directory ---------- */
+function renderDeals(){
+  const labelRows = LABELS.map(l=>`<tr><td><b>${l.name}</b></td><td>${l.tier}</td><td>${fmtMoney(l.advanceMin)}–${fmtMoney(l.advanceMax)}</td>
+    <td>${(l.royaltyMin*100).toFixed(0)}–${(l.royaltyMax*100).toFixed(0)}%</td><td>${l.marketing}</td><td>${l.famReq}</td>
+    <td>${l.genres.slice(0,3).join(', ')}${l.genres.length>3?'…':''}</td></tr>`).join('');
+  const pubRows = PUBLISHERS.map(p=>`<tr><td><b>${p.name}</b></td><td>${fmtMoney(p.advanceMin)}–${fmtMoney(p.advanceMax)}</td>
+    <td>${(p.splitMin*100).toFixed(0)}–${(p.splitMax*100).toFixed(0)}%</td></tr>`).join('');
+  return `
+    <div class="card"><h3>Record Labels</h3><table class="data">
+      <thead><tr><th>Label</th><th>Tier</th><th>Advance</th><th>Royalty</th><th>Marketing</th><th>Min Fame</th><th>Genre Focus</th></tr></thead>
+      <tbody>${labelRows}</tbody></table></div>
+    <div class="card"><h3>Publishers</h3><table class="data">
+      <thead><tr><th>Publisher</th><th>Advance</th><th>Band Split</th></tr></thead>
+      <tbody>${pubRows}</tbody></table></div>
+  `;
+}
+
+/* ---------- Agency staff ---------- */
+function renderAgency(){
+  ensureStaffMarket();
+  const hiredRows = STAFF_ROLES.map(role=>{
+    const hired = getStaff(role.id);
+    if(!hired) return '';
+    return `<div class="choice-card">
+      <b>${esc(hired.name)}</b> <span class="badge badge-roster">${role.name}</span> <span class="badge badge-genre">${skillLabel(hired.skill)}</span>
+      <div class="meta">${role.desc} — salary ${fmtMoney(hired.salary)}/week</div>
+      <button class="btn small danger" data-action="fireStaff" data-staff-id="${hired.id}">Let Go</button>
+    </div>`;
+  }).join('');
+  const marketRows = G.staffMarket.map(c=>{
+    const role = staffById(c.roleId);
+    return `<div class="choice-card">
+      <b>${esc(c.name)}</b> <span class="badge badge-genre">${role.name}</span> <span class="badge badge-genre">${skillLabel(c.skill)}</span>
+      <div class="meta">${role.desc} — Hire fee ${fmtMoney(c.hireCost)}, salary ${fmtMoney(c.salary)}/week</div>
+      <button class="btn small primary" data-action="hireStaff" data-candidate-id="${c.id}">Hire</button>
+    </div>`;
+  }).join('');
+  const weeklySalaries = G.staff.reduce((s,x)=>s+x.salary,0);
+  return `
+    <div class="card">
+      <h3>Agency Staff</h3>
+      <p style="color:var(--dim);font-size:.9em;">Permanent hires that boost specific parts of the business. Salaries are paid automatically each week on top of your base overhead.</p>
+      <p style="color:var(--dim);font-size:.85em;">Current weekly staff cost: ${fmtMoney(weeklySalaries)}</p>
+      ${hiredRows || '<p style="color:var(--dim);font-size:.85em">Nobody on staff yet.</p>'}
+    </div>
+    <div class="card">
+      <h3>On the Market</h3>
+      <p style="color:var(--dim);font-size:.9em;">Candidates come and go — a good one won't wait around forever.</p>
+      ${marketRows || '<p style="color:var(--dim)">No one currently looking (every role is filled).</p>'}
+    </div>
+  `;
+}
+
+/* ---------- Finances ---------- */
+function renderFinances(){
+  const staffCost = G.staff.reduce((s,x)=>s+x.salary,0);
+  const overhead = CONFIG.WEEKLY_BASE_OVERHEAD + G.bands.length*CONFIG.OVERHEAD_PER_BAND + staffCost;
+  const moneyLog = G.log.filter(e=>['deal','chart','tour','money','promo'].includes(e.tag)).slice(0,30);
+  return `
+    <div class="grid3">
+      <div class="statcard"><div class="val">${fmtMoney(G.cash)}</div><div class="lbl">Current Cash</div></div>
+      <div class="statcard"><div class="val">${fmtMoney(overhead)}</div><div class="lbl">Weekly Overhead</div></div>
+      <div class="statcard"><div class="val">${(CONFIG.MANAGER_CUT*100).toFixed(0)}%</div><div class="lbl">Manager's Cut</div></div>
+    </div>
+    <div class="card"><h3>Cash & Reputation History</h3>${historySvg()}</div>
+    <div class="card"><h3>Financial Log</h3>${moneyLog.map(e=>`<div class="log-entry tag-${e.tag}"><span class="wk">Wk${e.week}</span>${esc(e.msg)}</div>`).join('') || '<p style="color:var(--dim)">Nothing yet.</p>'}</div>
+  `;
+}
+
+/* =========================================================================
+   RENDER — MODALS
+   ========================================================================= */
+function renderModal(){
+  const root = document.getElementById('modalRoot');
+  if(G.pendingAwards){ root.innerHTML = renderAwardsModal(); root.classList.remove('hidden'); return; }
+  if(G.pendingEvent){ root.innerHTML = renderEventModal(); root.classList.remove('hidden'); return; }
+  if(G.pendingOffer){ root.innerHTML = renderOfferModal(); root.classList.remove('hidden'); return; }
+  if(G.ui.modal){ root.innerHTML = renderActionModal(G.ui.modal); root.classList.remove('hidden'); return; }
+  root.classList.add('hidden'); root.innerHTML='';
+}
+
+function renderAwardsModal(){
+  const rows = G.pendingAwards.results.map(r=>`
+    <div class="choice-card">
+      <b>${r.category}</b>
+      <div class="meta">Nominees: ${r.nominees.length?r.nominees.map(esc).join(', '):'—'}</div>
+      <div style="${r.winnerIsPlayer?'color:var(--gold);font-weight:700;':''}">${r.winner?('Winner: '+esc(r.winner)+(r.winnerIsPlayer?' 🏆':'')):'No result this year.'}</div>
+    </div>`).join('');
+  return `<div class="modal-box"><h2>🎉 Industry Awards Night</h2>${rows}
+    <div class="close-row"><button class="btn primary" data-action="ackAwards">Continue</button></div></div>`;
+}
+
+function renderEventModal(){
+  const pending = G.pendingEvent;
+  const band = findBand(pending.bandId);
+  if(pending.kind==='rel'){
+    const ev = REL_EVENT_DEFS.find(e=>e.id===pending.eventId);
+    const m1 = band.members.find(m=>m.id===pending.pairA), m2 = band.members.find(m=>m.id===pending.pairB);
+    return `<div class="modal-box">
+      <h2>${ev.title}</h2>
+      <p>${ev.desc(band,m1,m2)}</p>
+      ${ev.choices.map((c,i)=>`<button class="btn primary" style="display:block;width:100%;margin-bottom:8px;text-align:left;" data-action="resolveEvent" data-choice="${i}">${esc(c.label)}</button>`).join('')}
+    </div>`;
+  }
+  const ev = EVENT_DEFS.find(e=>e.id===pending.eventId);
+  return `<div class="modal-box">
+    <h2>${ev.title}</h2>
+    <p>${ev.desc(band)}</p>
+    ${ev.choices.map((c,i)=>`<button class="btn primary" style="display:block;width:100%;margin-bottom:8px;text-align:left;" data-action="resolveEvent" data-choice="${i}">${esc(c.label)}</button>`).join('')}
+  </div>`;
+}
+
+function renderOfferModal(){
+  const o = G.pendingOffer;
+  const band = findBand(o.bandId);
+  if(o.type==='record'){
+    const label = labelById(o.labelId);
+    return `<div class="modal-box">
+      <h2>Offer from ${label.name}</h2>
+      <div class="choice-card">
+        <b>${esc(band.name)}</b>
+        <div class="meta">Advance: ${fmtMoney(o.advance)} · Royalty: ${(o.royalty*100).toFixed(1)}% · Albums owed: ${o.albumsOwed}</div>
+        <p style="color:var(--dim);font-size:.85em;">You'll immediately pocket ${fmtMoney(Math.round(o.advance*CONFIG.MANAGER_CUT))} commission on signing.</p>
+      </div>
+      <button class="btn primary" data-action="acceptOffer">Accept Deal</button>
+      ${!o.negotiated ? `<button class="btn" data-action="counterOffer">Push for Better Terms</button>` : ''}
+      <button class="btn danger" data-action="declineOffer">Decline</button>
+    </div>`;
+  }
+  const pub = publisherById(o.publisherId);
+  return `<div class="modal-box">
+    <h2>Offer from ${pub.name}</h2>
+    <div class="choice-card">
+      <b>${esc(band.name)}</b>
+      <div class="meta">Advance: ${fmtMoney(o.advance)} · Band keeps ${(o.split*100).toFixed(0)}% of publishing royalties</div>
+      <p style="color:var(--dim);font-size:.85em;">You'll immediately pocket ${fmtMoney(Math.round(o.advance*CONFIG.MANAGER_CUT))} commission on signing.</p>
+    </div>
+    <button class="btn primary" data-action="acceptOffer">Accept Deal</button>
+    ${!o.negotiated ? `<button class="btn" data-action="counterOffer">Push for Better Terms</button>` : ''}
+    <button class="btn danger" data-action="declineOffer">Decline</button>
+  </div>`;
+}
+
+function renderActionModal(modal){
+  const band = findBand(modal.bandId);
+  switch(modal.type){
+    case 'bandDetail': return renderBandDetailModal(band);
+    case 'songwriting': return renderSongwritingModal(band);
+    case 'studio': return renderStudioModal(band);
+    case 'recordDeal': return renderRecordDealModal(band);
+    case 'pubDeal': return renderPubDealModal(band);
+    case 'tour': return renderTourModal(band);
+    case 'radio': return renderRadioModal(band);
+    case 'tv': return renderTVModal(band);
+    case 'video': return renderVideoModal(band);
+    case 'sponsorship': return renderSponsorshipModal(band);
+    case 'festival': return renderFestivalModal(band);
+    case 'audition': return renderAuditionModal(band);
+    default: return '';
+  }
+}
+
+function renderRelationships(band){
+  ensureRelationships(band);
+  const entries = Object.values(band.relationships);
+  if(!entries.length) return '<p style="color:var(--dim);font-size:.85em">Solo act — no bandmate relationships.</p>';
+  return entries.map(r=>{
+    const m1 = band.members.find(m=>m.id===r.a), m2 = band.members.find(m=>m.id===r.b);
+    if(!m1||!m2) return '';
+    const flags = (r.romance?' 💕':'')+(r.partnership?' ✍️':'');
+    return `<div class="deal-box">${esc(m1.name)} &amp; ${esc(m2.name)}: <b>${relLabel(r.bond)}</b>${flags}</div>`;
+  }).join('');
+}
+
+function renderBandDetailModal(band){
+  const unrecorded = band.catalog.filter(s=>!s.recorded);
+  const leader = band.members.find(m=>m.id===band.leaderId);
+  const memberRows = band.members.map(m=>`
+    <tr>
+      <td><b>${esc(m.name)}</b> ${band.leaderId===m.id?'<span title="Face of the band">⭐</span>':''}${m.founding?'<span title="Founding member" style="color:var(--dim)"> ●</span>':''}<br>
+        <span style="color:var(--dim);font-size:.78em">${m.role} · ${personalityName(m.personality)}</span></td>
+      <td>${m.songwriting}</td><td>${m.performance}</td><td>${m.charisma}</td><td>${m.reliability}</td>
+      <td>${barRow('',m.morale,'morale')}</td>
+      <td>
+        <button class="btn small" data-action="pepTalk" data-band-id="${band.id}" data-member-id="${m.id}">Pep Talk</button>
+        ${band.leaderId!==m.id?`<button class="btn small" data-action="setLeader" data-band-id="${band.id}" data-member-id="${m.id}">Make Leader</button>`:''}
+        ${band.members.length>1?`<button class="btn small danger" data-action="fireMember" data-band-id="${band.id}" data-member-id="${m.id}">Fire</button>`:''}
+      </td>
+    </tr>`).join('');
+
+  const catalogRows = band.catalog.slice().reverse().map(s=>`
+    <tr><td>"${esc(s.title)}"</td><td>${s.genre}</td><td>${s.quality}</td><td>${s.recorded?'Recorded':'Unrecorded'}</td></tr>
+  `).join('') || `<tr><td colspan="4" style="color:var(--dim)">No songs written yet.</td></tr>`;
+
+  const releaseRows = [...band.singles.map(r=>({...r,kind:'Single'})), ...band.albums.map(r=>({...r,kind:'Album'}))]
+    .sort((a,b)=>b.releaseWeek-a.releaseWeek)
+    .map(r=>`<tr><td>"${esc(r.title)}"</td><td>${r.kind}</td><td>${r.chartPeak?'#'+r.chartPeak:'—'}</td><td>${r.active?'Charting':'Off Chart'}</td></tr>`)
+    .join('') || `<tr><td colspan="4" style="color:var(--dim)">No releases yet.</td></tr>`;
+
+  const dealBoxes = `
+    ${band.recordDeal ? `<div class="deal-box"><b>${labelById(band.recordDeal.labelId).name}</b> — Royalty ${(band.recordDeal.royalty*100).toFixed(1)}%,
+      albums owed: ${band.recordDeal.albumsOwed}, advance remaining: ${fmtMoney(band.recordDeal.advanceRemaining)}</div>` : ''}
+    ${band.publishingDeal ? `<div class="deal-box"><b>${publisherById(band.publishingDeal.publisherId).name}</b> — Band keeps ${(band.publishingDeal.split*100).toFixed(0)}% of royalties</div>` : ''}
+    ${band.sponsorship ? `<div class="deal-box"><b>${SPONSORS.find(s=>s.id===band.sponsorship.sponsorId).name}</b> — sponsorship deal, ${band.sponsorship.weeksLeft} weeks remaining</div>` : ''}
+  `;
+
+  return `<div class="modal-box">
+    <div class="detail-header">
+      <div>
+        <h2>${esc(band.name)} <span class="badge badge-genre">${band.genre}</span> <span class="badge ${statusClass(band)}">${statusLabel(band)}</span></h2>
+        <div class="stat-mini">
+          <div>Fame<b>${Math.round(band.fame)}</b></div>
+          <div>Chemistry<b>${Math.round(band.chemistry)}</b></div>
+          <div>Buzz<b>${Math.round(band.buzz)}</b></div>
+          <div>Heat<b>${Math.round(band.heat)}</b></div>
+          <div>Face of the Band<b>${leader?esc(leader.name):'—'}</b></div>
+        </div>
+      </div>
+    </div>
+
+    ${dealBoxes}
+
+    <div class="section-title">Members</div>
+    <div class="table-wrap"><table class="data"><thead><tr><th>Name</th><th>Write</th><th>Perf</th><th>Charm</th><th>Rely</th><th>Morale</th><th></th></tr></thead>
+    <tbody>${memberRows}</tbody></table></div>
+
+    <div class="section-title">Actions</div>
+    <div class="actiongrid">
+      <button class="btn" data-action="openModal" data-modal="songwriting" data-band-id="${band.id}">Write a Song</button>
+      <button class="btn" ${unrecorded.length?'':'disabled'} data-action="openModal" data-modal="studio" data-band-id="${band.id}">Book Studio Time</button>
+      <button class="btn" ${band.recordDeal?'disabled':''} data-action="openModal" data-modal="recordDeal" data-band-id="${band.id}">Pitch Record Deal</button>
+      <button class="btn" ${band.publishingDeal?'disabled':''} data-action="openModal" data-modal="pubDeal" data-band-id="${band.id}">Pitch Publishing Deal</button>
+      <button class="btn" data-action="arrangePress" data-band-id="${band.id}">Arrange Press (${fmtMoney(CONFIG.PRESS_COST)})</button>
+      <button class="btn" ${band.singles.some(r=>r.active)?'':'disabled'} data-action="openModal" data-modal="radio" data-band-id="${band.id}">Pitch Radio Playlist</button>
+      <button class="btn" data-action="openModal" data-modal="tv" data-band-id="${band.id}">Book TV Appearance</button>
+      <button class="btn" ${band.singles.some(r=>r.active)?'':'disabled'} data-action="openModal" data-modal="video" data-band-id="${band.id}">Shoot Music Video</button>
+      <button class="btn" ${band.tour?'disabled':''} data-action="openModal" data-modal="tour" data-band-id="${band.id}">Book a Tour</button>
+      <button class="btn" ${band.tour?'disabled':''} data-action="openModal" data-modal="festival" data-band-id="${band.id}">Play a Festival</button>
+      <button class="btn" ${band.sponsorship?'disabled':''} data-action="openModal" data-modal="sponsorship" data-band-id="${band.id}">Pitch Sponsorship</button>
+      <button class="btn" ${band.members.length>=5?'disabled':''} data-action="openAudition" data-band-id="${band.id}">Audition New Member</button>
+      <button class="btn danger" data-action="dropBand" data-band-id="${band.id}">Drop Act</button>
+    </div>
+
+    <div class="section-title">Relationships</div>
+    ${renderRelationships(band)}
+
+    <div class="section-title">Catalog</div>
+    <div class="table-wrap"><table class="data"><thead><tr><th>Title</th><th>Genre</th><th>Quality</th><th>Status</th></tr></thead><tbody>${catalogRows}</tbody></table></div>
+
+    <div class="section-title">Releases</div>
+    <div class="table-wrap"><table class="data"><thead><tr><th>Title</th><th>Type</th><th>Chart Peak</th><th>Status</th></tr></thead><tbody>${releaseRows}</tbody></table></div>
+
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div>
+  </div>`;
+}
+
+function renderSongwritingModal(band){
+  ensureRelationships(band);
+  const partnerIds = new Set();
+  Object.values(band.relationships).forEach(r=>{ if(r.partnership){ partnerIds.add(r.a); partnerIds.add(r.b); } });
+  const rows = band.members.map(m=>{
+    const sel = G.ui.tempSelect.includes(m.id);
+    return `<div class="member-check ${sel?'selected':''}" data-action="toggleMember" data-member-id="${m.id}">
+      <input type="checkbox" ${sel?'checked':''}><div><b>${esc(m.name)}</b> — ${m.role} <span style="color:var(--dim);font-size:.8em">(Writing ${m.songwriting})</span>${partnerIds.has(m.id)?' ✍️':''}</div>
+    </div>`;
+  }).join('');
+  return `<div class="modal-box">
+    <h2>Songwriting Session — ${esc(band.name)}</h2>
+    <p style="color:var(--dim);font-size:.85em">Pick which members are writing together. More skilled writers (and better chemistry) mean better songs — a ✍️ partnership pair writes best together.</p>
+    ${rows}
+    <div class="close-row">
+      <button class="btn" data-action="closeModal">Cancel</button>
+      <button class="btn primary" data-action="commitSongwriting" data-band-id="${band.id}">Write Song (1 AP)</button>
+    </div>
+  </div>`;
+}
+
+function renderStudioModal(band){
+  const unrecorded = band.catalog.filter(s=>!s.recorded);
+  const mode = G.ui.studioMode;
+  const rows = unrecorded.map(s=>{
+    const sel = G.ui.tempSelect.includes(s.id);
+    return `<div class="song-check ${sel?'selected':''}" data-action="toggleSong" data-song-id="${s.id}">
+      <span>"${esc(s.title)}" <span style="color:var(--dim);font-size:.8em">(Quality ${s.quality})</span></span>
+      <input type="checkbox" ${sel?'checked':''}>
+    </div>`;
+  }).join('') || `<p style="color:var(--dim)">No unrecorded songs available.</p>`;
+  const cost = studioCost(mode, G.ui.tempSelect.length||1);
+  const funded = band.recordDeal && band.recordDeal.advanceRemaining>=cost;
+  return `<div class="modal-box">
+    <h2>Studio Session — ${esc(band.name)}</h2>
+    <div class="tier-options">
+      <button class="${mode==='single'?'selected':''}" data-action="setStudioMode" data-mode="single">Single<small>1 track</small></button>
+      <button class="${mode==='album'?'selected':''}" data-action="setStudioMode" data-mode="album">Album<small>4+ tracks</small></button>
+    </div>
+    <p style="color:var(--dim);font-size:.85em;margin-top:10px;">${mode==='single'?'Select exactly one song.':'Select at least four songs.'}
+      Cost: ${fmtMoney(cost)} ${band.recordDeal?(funded?'(label will fund this)':'(exceeds remaining advance — self-funded)'):'(self-funded)'}</p>
+    ${rows}
+    <div class="close-row">
+      <button class="btn" data-action="closeModal">Cancel</button>
+      <button class="btn primary" data-action="commitStudio" data-band-id="${band.id}">Record &amp; Release (1 AP)</button>
+    </div>
+  </div>`;
+}
+
+function renderRecordDealModal(band){
+  const rows = LABELS.map(l=>{
+    const chance = Math.round(recordPitchChance(band,l)*100);
+    const locked = band.fame < l.famReq-15;
+    return `<div class="choice-card">
+      <b>${l.name}</b> <span class="badge badge-genre">${l.tier}</span>
+      <div class="meta">Advance ${fmtMoney(l.advanceMin)}–${fmtMoney(l.advanceMax)} · Royalty ${(l.royaltyMin*100).toFixed(0)}–${(l.royaltyMax*100).toFixed(0)}%
+        · Min Fame ${l.famReq} · Est. chance ${chance}%</div>
+      <button class="btn small primary" ${locked?'disabled':''} data-action="pitchRecordDeal" data-band-id="${band.id}" data-label-id="${l.id}">Pitch (1 AP)</button>
+    </div>`;
+  }).join('');
+  return `<div class="modal-box"><h2>Pitch a Record Deal — ${esc(band.name)}</h2>${rows}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+function renderPubDealModal(band){
+  const rows = PUBLISHERS.map(p=>{
+    const chance = Math.round(publishingPitchChance(band,p)*100);
+    return `<div class="choice-card">
+      <b>${p.name}</b>
+      <div class="meta">Advance ${fmtMoney(p.advanceMin)}–${fmtMoney(p.advanceMax)} · Band split ${(p.splitMin*100).toFixed(0)}–${(p.splitMax*100).toFixed(0)}% · Est. chance ${chance}%</div>
+      <button class="btn small primary" data-action="pitchPublishingDeal" data-band-id="${band.id}" data-publisher-id="${p.id}">Pitch (1 AP)</button>
+    </div>`;
+  }).join('');
+  return `<div class="modal-box"><h2>Pitch a Publishing Deal — ${esc(band.name)}</h2>${rows}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+function renderTourModal(band){
+  const rows = TOUR_SCALES.map(s=>{
+    const locked = band.fame < s.minFame;
+    return `<div class="choice-card">
+      <b>${s.name}</b>
+      <div class="meta">Min Fame ${s.minFame} · Capacity ${s.capacity.toLocaleString()} · Ticket £${s.price} · ${s.legsMin}-${s.legsMax} dates
+        · Support cost ${fmtMoney(tourSupportCost(s))}${hasStaff('tourmgr')?' (Tour Manager discount applied)':''}</div>
+      <button class="btn small primary" ${locked?'disabled':''} data-action="bookTour" data-band-id="${band.id}" data-scale-id="${s.id}">Book (1 AP)</button>
+    </div>`;
+  }).join('');
+  return `<div class="modal-box"><h2>Book a Tour — ${esc(band.name)}</h2>${rows}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+function renderVideoModal(band){
+  const actives = band.singles.filter(r=>r.active);
+  if(!actives.length) return `<div class="modal-box"><h2>Shoot a Music Video — ${esc(band.name)}</h2><p style="color:var(--dim)">No active singles to promote.</p>
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+  const vpStaff = getStaff('videoproducer');
+  const discount = vpStaff ? (1-0.3*vpStaff.skill) : 1;
+  const relOptions = actives.map(rel=>{
+    const tierBtns = VIDEO_TIERS.map(t=>{
+      const locked = band.fame < t.minFame;
+      const cost = Math.round(t.cost*discount);
+      return `<button class="btn small primary" ${locked?'disabled':''} data-action="shootVideo" data-band-id="${band.id}" data-rel-id="${rel.id}" data-tier-id="${t.id}">${t.name} (${fmtMoney(cost)})</button>`;
+    }).join(' ');
+    return `<div class="choice-card"><b>"${esc(rel.title)}"</b><div class="meta">${tierBtns}</div></div>`;
+  }).join('');
+  return `<div class="modal-box"><h2>Shoot a Music Video — ${esc(band.name)}</h2>${relOptions}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+function renderSponsorshipModal(band){
+  if(band.sponsorship){
+    const sponsor = SPONSORS.find(s=>s.id===band.sponsorship.sponsorId);
+    return `<div class="modal-box"><h2>Sponsorship — ${esc(band.name)}</h2>
+      <p>Already sponsored by <b>${sponsor.name}</b> — ${band.sponsorship.weeksLeft} weeks remaining.</p>
+      <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+  }
+  const rows = SPONSORS.map(s=>{
+    const locked = band.fame < s.minFame;
+    return `<div class="choice-card"><b>${s.name}</b>
+      <div class="meta">Min Fame ${s.minFame} · Signing fee ${fmtMoney(s.lumpMin)}-${fmtMoney(s.lumpMax)} · Weekly ${fmtMoney(s.weeklyMin)}-${fmtMoney(s.weeklyMax)} for ${s.weeks} weeks</div>
+      <button class="btn small primary" ${locked?'disabled':''} data-action="pitchSponsorship" data-band-id="${band.id}" data-sponsor-id="${s.id}">Pitch (1 AP)</button>
+    </div>`;
+  }).join('');
+  return `<div class="modal-box"><h2>Pitch a Sponsorship — ${esc(band.name)}</h2>${rows}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+function renderFestivalModal(band){
+  const rows = FESTIVALS.map(f=>{
+    const locked = band.fame < f.minFame;
+    return `<div class="choice-card"><b>${f.name}</b>
+      <div class="meta">Min Fame ${f.minFame} · Fee ${fmtMoney(f.feeMin)}-${fmtMoney(f.feeMax)} · Fame +${f.fameMin}-${f.fameMax}, Buzz +${f.buzzMin}-${f.buzzMax}</div>
+      <button class="btn small primary" ${locked?'disabled':''} data-action="bookFestival" data-band-id="${band.id}" data-fest-id="${f.id}">Book (1 AP)</button>
+    </div>`;
+  }).join('');
+  return `<div class="modal-box"><h2>Play a Festival — ${esc(band.name)}</h2>${rows}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+function renderAuditionModal(band){
+  const candidates = G.ui.auditionCandidates || [];
+  const rows = candidates.map((c,i)=>`
+    <div class="choice-card">
+      <b>${esc(c.name)}</b> — ${c.role} <span class="badge badge-genre">${personalityName(c.personality)}</span>
+      <div class="meta">Writing ${c.songwriting} · Performance ${c.performance} · Charisma ${c.charisma} · Reliability ${c.reliability}</div>
+      <button class="btn small primary" data-action="commitAudition" data-band-id="${band.id}" data-idx="${i}">Sign Them (${fmtMoney(CONFIG.AUDITION_FEE)}, 1 AP)</button>
+    </div>`).join('');
+  return `<div class="modal-box"><h2>Audition New Members — ${esc(band.name)}</h2>${rows || '<p style="color:var(--dim)">No candidates available.</p>'}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+function renderRadioModal(band){
+  const single = band.singles.filter(r=>r.active);
+  if(!single.length) return `<div class="modal-box"><h2>Radio Pluggers — ${esc(band.name)}</h2><p style="color:var(--dim)">No active singles to plug.</p>
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+  const relOptions = single.map(rel=>{
+    const tierRows = RADIO_TIERS.map(t=>`<button class="btn small primary" data-action="pitchRadio" data-band-id="${band.id}" data-rel-id="${rel.id}" data-tier-id="${t.id}">${t.name} (${fmtMoney(t.cost)})</button>`).join(' ');
+    return `<div class="choice-card"><b>"${esc(rel.title)}"</b><div class="meta">${tierRows}</div></div>`;
+  }).join('');
+  return `<div class="modal-box"><h2>Pitch for Radio Play — ${esc(band.name)}</h2>${relOptions}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+function renderTVModal(band){
+  const rows = TV_SHOWS.map(s=>{
+    const locked = band.fame < s.minFame;
+    return `<div class="choice-card">
+      <b>${s.name}</b>
+      <div class="meta">Min Fame ${s.minFame} · Cost ${fmtMoney(s.cost)} · Fame +${s.fameMin}-${s.fameMax}, Buzz +${s.buzzMin}-${s.buzzMax}</div>
+      <button class="btn small primary" ${locked?'disabled':''} data-action="bookTV" data-band-id="${band.id}" data-show-id="${s.id}">Book (1 AP)</button>
+    </div>`;
+  }).join('');
+  return `<div class="modal-box"><h2>Book a TV Appearance — ${esc(band.name)}</h2>${rows}
+    <div class="close-row"><button class="btn" data-action="closeModal">Close</button></div></div>`;
+}
+
+/* ---------- Game over ---------- */
+function renderGameOver(){
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('modalRoot').classList.add('hidden');
+  const go = document.getElementById('gameOverScreen');
+  go.classList.remove('hidden');
+  go.innerHTML = `<div class="go-card">
+    <h1>Agency Shut Down</h1>
+    <p>${esc(G.agencyName)} ran out of money after ${G.week} weeks in business.</p>
+    <p style="color:var(--dim)">Acts signed: ${G.bands.length} · Reputation reached: ${Math.round(G.reputation)} · Achievements: ${G.achievements.length}</p>
+    <button class="btn primary" data-action="requestNewGame">Start a New Agency</button>
+  </div>`;
+}
+
+/* =========================================================================
+   EVENT DELEGATION
+   ========================================================================= */
+document.body.addEventListener('click', e=>{
+  const btn = e.target.closest('[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+
+  if(action==='pickDifficulty'){
+    document.querySelectorAll('#difficultyOptions button').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    window._chosenDifficulty = btn.dataset.diff;
+    return;
+  }
+  if(action==='startGame'){
+    const name = document.getElementById('inpManager').value.trim() || 'Manager';
+    const agency = document.getElementById('inpAgency').value.trim() || (name+"'s Management");
+    const diff = window._chosenDifficulty || 'normal';
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('gameScreen').classList.remove('hidden');
+    newGame(name, agency, diff);
+    return;
+  }
+  if(action==='continueGame'){
+    const loaded = tryLoad();
+    if(loaded){ G = loaded; document.getElementById('setupScreen').classList.add('hidden'); document.getElementById('gameScreen').classList.remove('hidden'); render(); }
+    return;
+  }
+  if(action==='requestNewGame'){
+    if(confirm('Start a brand new agency? Your current progress will be lost.')){
+      localStorage.removeItem('svengaliSave');
+      document.getElementById('gameOverScreen').classList.add('hidden');
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('setupScreen').classList.remove('hidden');
+      document.getElementById('btnContinue').classList.add('hidden');
+      G = null;
+    }
+    return;
+  }
+
+  if(!G) return;
+
+  switch(action){
+    case 'setView': G.view = btn.dataset.view; closeModal(); break;
+    case 'endWeek': advanceWeek(); break;
+    case 'scoutTalent': doScout(); break;
+    case 'signBand': doSignBand(btn.dataset.bandId); break;
+    case 'passProspect': passProspect(btn.dataset.bandId); break;
+    case 'dropBand': if(confirm('Drop this act from the agency?')) dropBand(btn.dataset.bandId); break;
+    case 'openBand': openModal('bandDetail', btn.dataset.bandId); break;
+    case 'openModal': openModal(btn.dataset.modal, btn.dataset.bandId); break;
+    case 'closeModal': closeModal(); break;
+    case 'toggleMember': toggleTemp(btn.dataset.memberId); break;
+    case 'toggleSong': toggleTemp(btn.dataset.songId); break;
+    case 'setStudioMode': G.ui.studioMode = btn.dataset.mode; G.ui.tempSelect=[]; break;
+    case 'commitSongwriting': commitSongwriting(btn.dataset.bandId); break;
+    case 'commitStudio': commitStudio(btn.dataset.bandId); break;
+    case 'pitchRecordDeal': pitchRecordDeal(btn.dataset.bandId, btn.dataset.labelId); break;
+    case 'pitchPublishingDeal': pitchPublishingDeal(btn.dataset.bandId, btn.dataset.publisherId); break;
+    case 'acceptOffer': acceptOffer(); break;
+    case 'declineOffer': declineOffer(); break;
+    case 'arrangePress': arrangePress(btn.dataset.bandId); break;
+    case 'pitchRadio': pitchRadio(btn.dataset.bandId, btn.dataset.relId, btn.dataset.tierId); break;
+    case 'bookTV': bookTV(btn.dataset.bandId, btn.dataset.showId); break;
+    case 'bookTour': bookTour(btn.dataset.bandId, btn.dataset.scaleId); break;
+    case 'pepTalk': pepTalk(btn.dataset.bandId, btn.dataset.memberId); break;
+    case 'resolveEvent': resolveEvent(parseInt(btn.dataset.choice,10)); break;
+    case 'counterOffer': counterOffer(); break;
+    case 'hireStaff': hireStaff(btn.dataset.candidateId); break;
+    case 'fireStaff': fireStaff(btn.dataset.staffId); break;
+    case 'shootVideo': shootVideo(btn.dataset.bandId, btn.dataset.relId, btn.dataset.tierId); break;
+    case 'pitchSponsorship': pitchSponsorship(btn.dataset.bandId, btn.dataset.sponsorId); break;
+    case 'bookFestival': bookFestival(btn.dataset.bandId, btn.dataset.festId); break;
+    case 'openAudition': openAudition(btn.dataset.bandId); break;
+    case 'commitAudition': commitAudition(btn.dataset.bandId, parseInt(btn.dataset.idx,10)); break;
+    case 'ackAwards': G.pendingAwards = null; break;
+    case 'fireMember': if(confirm('Fire this member? Founding members leaving can hurt fan goodwill.')) fireMember(btn.dataset.bandId, btn.dataset.memberId); break;
+    case 'setLeader': setLeader(btn.dataset.bandId, btn.dataset.memberId); break;
+    default: return;
+  }
+  render();
+});
+
+/* =========================================================================
+   BOOT
+   ========================================================================= */
+(function boot(){
+  const existing = tryLoad();
+  if(existing){
+    document.getElementById('btnContinue').classList.remove('hidden');
+  }
+})();
+</script>
+</body>
+</html>
