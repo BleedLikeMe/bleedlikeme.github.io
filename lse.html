@@ -62,9 +62,6 @@ input[type=checkbox]{accent-color:var(--bl);}
 #stbl tbody tr{border-bottom:1px solid var(--bd);cursor:pointer;}
 #stbl tbody tr:hover{background:var(--bg3);}
 #stbl tbody tr.sel{background:#1a2035;}
-.fg{animation:flg .5s;}.fr{animation:flr .5s;}
-@keyframes flg{0%,100%{background:transparent;}50%{background:rgba(63,185,80,.2);}}
-@keyframes flr{0%,100%{background:transparent;}50%{background:rgba(248,81,73,.2);}}
 #stbl tbody td{padding:5px 9px;font-size:12px;white-space:nowrap;}
 .tc{font-weight:bold;color:var(--bl);font-size:13px;width:56px;}
 .nc{max-width:140px;overflow:hidden;text-overflow:ellipsis;}
@@ -1947,10 +1944,6 @@ function fireNews(){
   }
   newsItems.push({txt,pos,time:gameTimeStr(),affected});
   scrollNews(txt);
-  affected.slice(0,3).forEach(tk=>{
-    const row=document.querySelector(`#stb tr[data-t="${tk}"]`);
-    if(row){row.classList.remove('fg','fr');void row.offsetWidth;row.classList.add(pos?'fg':'fr');}
-  });
   if(soundEnabled){initAudio();sndNews();}
   renderRows();
   checkIPOListings();
@@ -2453,7 +2446,6 @@ function renderRows(rebuild){
       drawSparkline(tr.querySelector('.spkc'),st);continue;
     }
     const chg=st.price-st.open,cp=(st.price/st.open-1)*100;
-    const dir=st.price>st.prev?1:st.price<st.prev?-1:0;
     tr.querySelector('.pc').textContent=fmtP(st.price);tr.querySelector('.pc').className='pc '+clsChg(chg);
     tr.querySelector('.cc').textContent=fmtC(chg);tr.querySelector('.cc').className='cc '+clsChg(chg);
     tr.querySelector('.pcc').textContent=fmtPct(cp);tr.querySelector('.pcc').className='pcc '+clsChg(chg);
@@ -2464,8 +2456,6 @@ function renderRows(rebuild){
     const ern=tr.querySelector('.ern-badge');
     const ernSoon=st.nextEarnings-gameTime<30*60&&st.nextEarnings>gameTime;
     if(ern)ern.style.display=ernSoon?'':'none';
-    if(dir===1){tr.classList.remove('fr');void tr.offsetWidth;tr.classList.add('fg');}
-    else if(dir===-1){tr.classList.remove('fg');void tr.offsetWidth;tr.classList.add('fr');}
     if(st.t===selTicker)tr.classList.add('sel');else tr.classList.remove('sel');
     drawSparkline(tr.querySelector('.spkc'),st);
   }
