@@ -542,7 +542,7 @@ input[type=checkbox]{accent-color:var(--bl);}
     <button class="vbtn" id="vmap" onclick="setView('map')">🌡 Heatmap</button>
     <button class="vbtn" id="vperf" onclick="setView('perf')">📈 Perf</button>
     <button class="vbtn" id="vscr" onclick="setView('scr')">🔍 Screener</button>
-    <button class="vbtn" id="vfx" onclick="setView('fx')">💱 FX &amp; Metals</button>
+    <button class="vbtn" id="vfx" onclick="setView('fx')">💱 FX &amp; Commodities</button>
     <button class="vbtn" id="vscen" onclick="openScenario()">🎬 Scenario</button>
     <button class="vbtn" onclick="exportTrades()">⬇ CSV</button>
     <button class="vbtn" onclick="openHelp('overview')">❓ Help</button>
@@ -610,7 +610,23 @@ input[type=checkbox]{accent-color:var(--bl);}
       </tr></thead>
       <tbody id="fx-metal-body"></tbody>
     </table>
-    <div class="fx-section" id="fx-pos-hdr" style="display:none">📂 My FX &amp; Metal Positions</div>
+    <div class="fx-section">🛢️ Energy &amp; Other Commodities</div>
+    <table class="fx-tbl" id="fx-energy-tbl">
+      <thead><tr>
+        <th>Commodity</th><th>Unit</th><th>Price (£)</th><th>Change</th><th>%</th>
+        <th>Day High</th><th>Day Low</th><th>Trend</th><th>Held</th>
+      </tr></thead>
+      <tbody id="fx-energy-body"></tbody>
+    </table>
+    <div class="fx-section">📈 Futures</div>
+    <table class="fx-tbl" id="fx-future-tbl">
+      <thead><tr>
+        <th>Contract</th><th>Type</th><th>Price (£)</th><th>Change</th><th>%</th>
+        <th>Day High</th><th>Day Low</th><th>Trend</th><th>Held</th>
+      </tr></thead>
+      <tbody id="fx-future-body"></tbody>
+    </table>
+    <div class="fx-section" id="fx-pos-hdr" style="display:none">📂 My FX, Metal &amp; Commodity Positions</div>
     <div id="fx-pos-list" class="fx-pos-wrap"></div>
   </div>
   <button id="side-toggle" onclick="document.getElementById('side').classList.toggle('mob-open')">☰ Portfolio / Orders</button>
@@ -678,7 +694,7 @@ input[type=checkbox]{accent-color:var(--bl);}
       <!-- OVERVIEW -->
       <div class="hpanel on" id="hp-overview">
         <div class="h1">Welcome to the LSE Simulator</div>
-        <p class="hp">You start with <b style="color:var(--gd)">£100,000</b> and trade on a simulated London Stock Exchange with <b>80 real UK-listed stocks</b> across all major sectors. Your goal is to grow your portfolio through smart trading, risk management, and reading the market.</p>
+        <p class="hp">You start with <b style="color:var(--gd)">£100,000</b> and trade on a simulated London Stock Exchange with <b>100+ real UK-listed stocks</b> across all major sectors. Your goal is to grow your portfolio through smart trading, risk management, and reading the market.</p>
         <div class="h2">How a Day Works</div>
         <table class="htbl">
           <tr><td>Pre-Market</td><td>The clock begins at 08:00. Prices are set from the previous close. Place orders in advance.</td></tr>
@@ -794,6 +810,14 @@ input[type=checkbox]{accent-color:var(--bl);}
           <tr><td>⚡ Volatility Storm</td><td>Neutral drift but 2.5× volatility. Wild swings in both directions.</td><td>Options-like strategies: buy dips, take-profit quickly</td></tr>
           <tr><td>🛢 Stagflation</td><td>Mild negative bias. Commodities (mining, energy) win; tech suffers.</td><td>Rotate into mining, energy, avoid growth stocks</td></tr>
           <tr><td>🏦 Rate Shock</td><td>BoE rate hike. Banks surge; property and utilities plummet.</td><td>Long finance, short REITS and utilities</td></tr>
+          <tr><td>💻 Tech Bubble</td><td>Strong positive bias, 1.6× volatility. Tech, gaming and telecom rocket.</td><td>Ride the momentum in growth sectors, take profits early</td></tr>
+          <tr><td>🧊 Recession</td><td>Grinding negative bias, low volatility. Consumer-facing sectors suffer.</td><td>Rotate into healthcare and food &amp; beverage defensives</td></tr>
+          <tr><td>⛏️ Commodity Supercycle</td><td>Mild positive bias, 1.5× volatility. Mining, energy and chemicals boom.</td><td>Overweight miners and energy producers</td></tr>
+          <tr><td>💷 Sterling Crisis</td><td>Negative bias, 1.7× volatility. £-earning multinationals gain; domestic stocks fall.</td><td>Long mining/energy/healthcare, short retail and property</td></tr>
+          <tr><td>🌱 Green Transition</td><td>Mild positive bias. Utilities and clean tech gain; fossil energy sinks.</td><td>Long utilities and engineering, avoid oil &amp; gas</td></tr>
+          <tr><td>🏠 Housing Boom</td><td>Positive bias, low volatility. Property and finance surge on cheap credit.</td><td>Long property developers and mortgage lenders</td></tr>
+          <tr><td>🚢 Trade War</td><td>Negative bias, 1.6× volatility. Transport and retail hit hard; defence gains.</td><td>Short shipping/retail, long defence</td></tr>
+          <tr><td>🦠 Pandemic Shock</td><td>Sharp negative bias, 2.4× volatility. Travel collapses; healthcare and tech surge.</td><td>Short airlines and travel, long healthcare and tech</td></tr>
         </table>
         <div class="tip-box"><b>Tip:</b> Open the 🎬 Scenario selector from the control bar and click a card to apply it immediately. You can change scenarios mid-day to simulate news shocks.</div>
       </div>
@@ -898,6 +922,30 @@ const SCENARIOS = {
   rateshock:  {name:'Rate Shock',       icon:'🏦',mktBias:-0.06,volMult:1.4, sectorBias:{Finance:0.28,Utilities:-0.32,Property:-0.38,Technology:-0.15,Aerospace:0.1},
                desc:'BoE hikes rates sharply. Banks gain; property and utilities crater.',
                effect:'↑ Finance, Aerospace · ↓ Property, Utilities'},
+  techbubble: {name:'Tech Bubble',      icon:'💻',mktBias:0.18, volMult:1.6, sectorBias:{Technology:0.55,Gaming:0.4,Telecom:0.2,Utilities:-0.15,'Food & Bev':-0.1},
+               desc:'Euphoric tech buying overwhelms fundamentals. Growth stocks rocket while defensives are left behind.',
+               effect:'↑↑ Technology, Gaming, Telecom · ↓ Utilities, Food & Bev'},
+  recession:  {name:'Recession',        icon:'🧊',mktBias:-0.10,volMult:0.9, sectorBias:{Retail:-0.3,Consumer:-0.28,Transport:-0.25,Property:-0.22,Healthcare:0.12,'Food & Bev':0.08},
+               desc:'A grinding, low-volatility slowdown. Consumer spending dries up while defensives hold steady.',
+               effect:'↓ Retail, Consumer, Transport, Property · ↑ Healthcare, Food & Bev'},
+  commodsuper:{name:'Commodity Supercycle',icon:'⛏️',mktBias:0.05,volMult:1.5, sectorBias:{Mining:0.5,Energy:0.45,Chemicals:0.25,Engineering:0.15,Technology:-0.15,Consumer:-0.1},
+               desc:'Surging global demand for raw materials. Miners and energy producers boom.',
+               effect:'↑↑ Mining, Energy, Chemicals · ↓ Technology, Consumer'},
+  ccrisis:    {name:'Sterling Crisis',  icon:'💷',mktBias:-0.07,volMult:1.7, sectorBias:{Mining:0.3,Energy:0.25,Healthcare:0.15,Retail:-0.3,Property:-0.25,Transport:-0.2,Utilities:-0.15},
+               desc:'The pound slumps against major currencies. Multinational £-earners gain on FX translation; domestic-facing stocks suffer rising import costs.',
+               effect:'↑ Mining, Energy, Healthcare · ↓ Retail, Property, Transport'},
+  green:      {name:'Green Transition', icon:'🌱',mktBias:0.03, volMult:1.1, sectorBias:{Utilities:0.3,Technology:0.25,Engineering:0.2,Energy:-0.35,Mining:-0.1},
+               desc:'Policy and investment pivot hard toward renewables and efficiency. Fossil fuel producers are left behind.',
+               effect:'↑ Utilities, Technology, Engineering · ↓↓ Energy'},
+  housing:    {name:'Housing Boom',     icon:'🏠',mktBias:0.09, volMult:0.85,sectorBias:{Property:0.4,Finance:0.25,Retail:0.15,Consumer:0.1,Utilities:-0.05},
+               desc:'Cheap credit and buoyant confidence send house prices soaring. Property developers and lenders thrive.',
+               effect:'↑↑ Property, Finance · ↑ Retail, Consumer'},
+  tradewar:   {name:'Trade War',        icon:'🚢',mktBias:-0.09,volMult:1.6, sectorBias:{Transport:-0.35,Retail:-0.25,Consumer:-0.2,Defence:0.2,Mining:-0.1,Aerospace:-0.15},
+               desc:'Tariffs and export restrictions disrupt global supply chains. Import-heavy sectors are hit hardest.',
+               effect:'↓↓ Transport, Retail · ↑ Defence · ↓ Aerospace, Mining'},
+  pandemic:   {name:'Pandemic Shock',   icon:'🦠',mktBias:-0.16,volMult:2.4, sectorBias:{Aerospace:-0.45,Transport:-0.4,Consumer:-0.3,Retail:-0.25,Healthcare:0.4,Technology:0.3},
+               desc:'A public health emergency grounds travel and shutters the high street, while healthcare and remote-everything tech surge.',
+               effect:'↓↓ Aerospace, Transport · ↑↑ Healthcare, Technology'},
 };
 let activeScenario = 'normal';
 const FX_COMM = 4.95;
@@ -916,10 +964,21 @@ const FX_DEFS = [
   {t:'SGD',n:'Singapore Dollar',sub:'SGD/GBP', type:'fx',   p:0.58720,v:.00035,flag:'S$', region:'Asia'},
   {t:'HKD',n:'Hong Kong Dollar',sub:'HKD/GBP', type:'fx',   p:0.10150,v:.00020,flag:'HK$',region:'Asia'},
   // Precious Metals — price = GBP per troy oz
-  {t:'XAU',n:'Gold',     sub:'XAU/GBP', type:'metal',p:1823.4,v:.0055,flag:'Au',region:'Metals'},
-  {t:'XAG',n:'Silver',   sub:'XAG/GBP', type:'metal',p:21.450,v:.0115,flag:'Ag',region:'Metals'},
-  {t:'XPT',n:'Platinum', sub:'XPT/GBP', type:'metal',p:876.20,v:.0085,flag:'Pt',region:'Metals'},
-  {t:'XPD',n:'Palladium',sub:'XPD/GBP', type:'metal',p:945.60,v:.0125,flag:'Pd',region:'Metals'},
+  {t:'XAU',n:'Gold',     sub:'XAU/GBP', type:'metal',p:1823.4,v:.0055,flag:'Au',region:'Metals',unit:'oz'},
+  {t:'XAG',n:'Silver',   sub:'XAG/GBP', type:'metal',p:21.450,v:.0115,flag:'Ag',region:'Metals',unit:'oz'},
+  {t:'XPT',n:'Platinum', sub:'XPT/GBP', type:'metal',p:876.20,v:.0085,flag:'Pt',region:'Metals',unit:'oz'},
+  {t:'XPD',n:'Palladium',sub:'XPD/GBP', type:'metal',p:945.60,v:.0125,flag:'Pd',region:'Metals',unit:'oz'},
+  {t:'XRH',n:'Rhodium',  sub:'XRH/GBP', type:'metal',p:4850.0,v:.0180,flag:'Rh',region:'Metals',unit:'oz'},
+  // Energy & Other Commodities — price = GBP per unit shown
+  {t:'BRENT',n:'Brent Crude Oil', sub:'£/Barrel', type:'energy',p:64.50, v:.0140,flag:'Oil', region:'Energy',unit:'barrel'},
+  {t:'WTI',  n:'WTI Crude Oil',   sub:'£/Barrel', type:'energy',p:61.20, v:.0150,flag:'Oil', region:'Energy',unit:'barrel'},
+  {t:'NGAS', n:'UK Natural Gas',  sub:'£/Therm',  type:'energy',p:0.820, v:.0200,flag:'Gas', region:'Energy',unit:'therm'},
+  {t:'COAL', n:'Thermal Coal',    sub:'£/Tonne',  type:'energy',p:92.50, v:.0170,flag:'Coal',region:'Energy',unit:'tonne'},
+  // Futures — simplified GBP-denominated forward contracts
+  {t:'FFIF', n:'FTSE 100 Future',       sub:'Index Future',  type:'future',p:8150.0,v:.0060,flag:'FTSE',region:'Futures',unit:'contract'},
+  {t:'GCF',  n:'Gold Future',           sub:'Metal Future',  type:'future',p:1845.0,v:.0065,flag:'Au',  region:'Futures',unit:'contract'},
+  {t:'BCF',  n:'Brent Crude Future',    sub:'Energy Future', type:'future',p:65.80, v:.0150,flag:'Oil', region:'Futures',unit:'contract'},
+  {t:'WHTF', n:'Wheat Future',          sub:'Grain Future',  type:'future',p:195.0, v:.0180,flag:'Wht', region:'Futures',unit:'contract'},
 ];
 const fxItems=[], fxMap={};
 let selFxTicker=null, fxModeSide='buy';
@@ -993,7 +1052,7 @@ const SCOLORS = {
   Consumer:'#9b59b6',Technology:'#00d4ff',Utilities:'#2ecc71',Retail:'#e84393',
   Telecom:'#7b68ee',Media:'#f39c12',Transport:'#3498db',Defence:'#e74c3c',
   Aerospace:'#a0a0a0',Gaming:'#ff44ff',Chemicals:'#1abc9c',Investment:'#f1c40f',
-  Property:'#d35400','Food & Bev':'#27ae60',
+  Property:'#d35400','Food & Bev':'#27ae60',Engineering:'#5b8def',Services:'#8e9aad',
 };
 const DIV_YIELD = {
   LLOY:6.2,LGEN:8.8,IMB:8.1,VOD:6.8,NG:5.4,SSE:5.2,SVT:4.1,UU:4.3,
@@ -1002,6 +1061,9 @@ const DIV_YIELD = {
   AV:7.5,ADM:3.2,LSEG:1.4,STJ:5.5,NXT:2.5,GRG:2.0,BRBY:3.5,
   BLND:5.8,PNN:5.0,DRX:5.5,CNA:4.2,FRES:2.2,INF:2.3,PSON:2.1,
   PSN:7.2,BDEV:5.8,TW:6.5,MNDI:3.8,SMIN:2.0,WEIR:1.8,RTO:1.5,
+  SQZ:3.5,ENOG:6.0,CNE:2.0,DEC:9.0,TGA:8.0,APF:5.5,
+  SN:2.6,RKT:3.0,BATS:8.5,III:3.0,MNG:9.5,PHNX:9.8,BNZL:2.2,AHT:1.8,
+  ANTO:4.0,EDV:5.0,SPX:1.2,ITRK:2.5,BYIT:3.0,GAW:3.5,CEY:6.5,
 };
 const PE_RATIOS = {
   AZN:42,SHEL:12,HSBA:11,ULVR:19,BP:10,RIO:8,GLEN:7,DGE:22,REL:28,LGEN:9,
@@ -1012,6 +1074,9 @@ const PE_RATIOS = {
   AV:12,ADM:14,LSEG:32,STJ:16,QLT:13,NXT:14,BME:13,DNLM:15,CURY:9,GRG:22,
   BRBY:18,HIK:14,BLND:12,PNN:18,DRX:9,HBR:7,FRES:20,FUTR:12,INF:18,PSON:18,
   ENT:14,PSN:12,BDEV:11,TW:10,MNDI:12,CNA:10,SMIN:22,WEIR:20,RTO:20,DPLM:30,
+  TLW:0,ENQ:6,SQZ:8,ENOG:5,CNE:9,DEC:10,TGA:4,APF:11,
+  SN:17,RKT:19,BATS:8,III:9,MNG:10,PHNX:11,BNZL:16,AHT:14,
+  ANTO:10,EDV:7,SPX:30,ITRK:22,BYIT:20,GAW:24,CEY:9,
 };
 const STOCK_BETA = {
   AZN:0.8,SHEL:1.0,HSBA:1.1,ULVR:0.65,BP:1.05,RIO:1.3,GLEN:1.4,DGE:0.7,REL:0.75,LGEN:1.2,
@@ -1022,6 +1087,9 @@ const STOCK_BETA = {
   AV:1.2,ADM:1.0,LSEG:0.9,STJ:1.3,QLT:1.1,NXT:0.9,BME:1.1,DNLM:1.0,CURY:1.4,GRG:0.9,
   BRBY:1.1,HIK:0.8,BLND:0.9,PNN:0.6,DRX:1.1,HBR:1.4,FRES:1.3,FUTR:1.5,INF:0.9,PSON:0.7,
   ENT:1.4,PSN:1.2,BDEV:1.2,TW:1.2,MNDI:0.9,CNA:0.8,SMIN:0.9,WEIR:1.1,RTO:0.9,DPLM:0.8,
+  TLW:1.8,ENQ:1.9,SQZ:1.6,ENOG:1.4,CNE:1.5,DEC:1.3,TGA:1.7,APF:1.2,
+  SN:0.75,RKT:0.7,BATS:0.65,III:1.1,MNG:1.15,PHNX:1.1,BNZL:0.8,AHT:1.3,
+  ANTO:1.3,EDV:1.4,SPX:0.9,ITRK:0.85,BYIT:1.2,GAW:0.9,CEY:1.4,
 };
 const DEFS = [
   {t:'AZN', n:'AstraZeneca',               s:'Healthcare', p:11234,v:.008},
@@ -1105,6 +1173,31 @@ const DEFS = [
   {t:'WEIR',n:'Weir Group',                s:'Engineering',p:2345, v:.011},
   {t:'RTO', n:'Rentokil Initial',          s:'Services',   p:345,  v:.010},
   {t:'DPLM',n:'Diploma',                   s:'Technology', p:3867, v:.009},
+  /* ── oil, gas & coal ── */
+  {t:'TLW', n:'Tullow Oil',                s:'Energy',     p:28,   v:.020},
+  {t:'ENQ', n:'EnQuest',                   s:'Energy',     p:14,   v:.022},
+  {t:'SQZ', n:'Serica Energy',             s:'Energy',     p:132,  v:.017},
+  {t:'ENOG',n:'Energean',                  s:'Energy',     p:950,  v:.016},
+  {t:'CNE', n:'Capricorn Energy',          s:'Energy',     p:185,  v:.018},
+  {t:'DEC', n:'Diversified Energy',        s:'Energy',     p:950,  v:.015},
+  {t:'TGA', n:'Thungela Resources',        s:'Mining',     p:1450, v:.020},
+  {t:'APF', n:'Anglo Pacific Group',       s:'Mining',     p:180,  v:.014},
+  /* ── more companies ── */
+  {t:'SN',  n:'Smith & Nephew',            s:'Healthcare', p:1050, v:.009},
+  {t:'RKT', n:'Reckitt Benckiser',         s:'Consumer',   p:4900, v:.009},
+  {t:'BATS',n:'British American Tobacco',  s:'Food & Bev', p:2550, v:.008},
+  {t:'III', n:'3i Group',                  s:'Investment', p:3200, v:.010},
+  {t:'MNG', n:'M&G',                       s:'Finance',    p:190,  v:.011},
+  {t:'PHNX',n:'Phoenix Group Holdings',    s:'Finance',    p:510,  v:.010},
+  {t:'BNZL',n:'Bunzl',                     s:'Consumer',   p:3100, v:.008},
+  {t:'AHT', n:'Ashtead Group',             s:'Engineering',p:5200, v:.011},
+  {t:'ANTO',n:'Antofagasta',               s:'Mining',     p:1750, v:.013},
+  {t:'EDV', n:'Endeavour Mining',          s:'Mining',     p:1650, v:.015},
+  {t:'SPX', n:'Spirax Group',              s:'Technology', p:6500, v:.010},
+  {t:'ITRK',n:'Intertek Group',            s:'Services',   p:4700, v:.009},
+  {t:'BYIT',n:'Bytes Technology Group',    s:'Technology', p:450,  v:.013},
+  {t:'GAW', n:'Games Workshop',            s:'Gaming',     p:9800, v:.012},
+  {t:'CEY', n:'Centamin',                  s:'Mining',     p:145,  v:.017},
 ];
 const IPO_POOL = [
   {t:'NXRT',n:'Nexart Technologies',  s:'Technology', p:350,  v:.020},
@@ -1476,9 +1569,11 @@ function tick(){
   // tick FX items
   for(const item of fxItems){
     if(circuitBreakerActive)break;
-    const isMetal=item.type==='metal';
-    // Gold/silver negatively correlated with market risk-on moves
-    const mktLink=isMetal?-mktSentiment*.0008:mktSentiment*.0001;
+    // Precious metals are a safe haven (negatively correlated with risk-on moves);
+    // energy commodities are procyclical and lean into the scenario's Energy sector bias.
+    const mktLink = item.type==='metal' ? -mktSentiment*.0008
+      : item.type==='energy' ? mktSentiment*.0010+(sc.sectorBias.Energy||0)*.0012
+      : mktSentiment*.0001;
     const chg=randn()*item.v+mktLink;
     item.prev=item.price;
     item.price=Math.max(item.baseP*.25,item.price*(1+chg));
@@ -3272,8 +3367,9 @@ function toggleWatchlist(ticker){
   renderRows(true);renderWatchlist();
 }
 // ── FX & METALS ──────────────────────────────────────────────────────────────
+function isGbpPriced(item){return item.type!=='fx';}
 function fmtFxPrice(item){
-  if(item.type==='metal')return'£'+item.price.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(isGbpPriced(item))return'£'+item.price.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
   if(item.price<0.01)return item.price.toFixed(6);
   if(item.price<1)return item.price.toFixed(4);
   return item.price.toFixed(4);
@@ -3281,7 +3377,7 @@ function fmtFxPrice(item){
 function fmtFxChg(item){
   const d=item.price-item.open,pct=(d/item.open)*100;
   const sgn=d>=0?'+':'';
-  if(item.type==='metal')return`${sgn}£${Math.abs(d).toFixed(2)} (${sgn}${pct.toFixed(2)}%)`;
+  if(isGbpPriced(item))return`${sgn}£${Math.abs(d).toFixed(2)} (${sgn}${pct.toFixed(2)}%)`;
   return`${sgn}${Math.abs(d)<0.001?d.toFixed(6):d.toFixed(4)} (${sgn}${pct.toFixed(2)}%)`;
 }
 function fxSparkline(item,w,h){
@@ -3297,19 +3393,22 @@ function fxSparkline(item,w,h){
 }
 function renderFxView(){
   const fxBody=el('fx-ccy-body'), metalBody=el('fx-metal-body');
+  const energyBody=el('fx-energy-body'), futureBody=el('fx-future-body');
   if(!fxBody)return;
   const ccys=fxItems.filter(i=>i.type==='fx');
   const metals=fxItems.filter(i=>i.type==='metal');
+  const energies=fxItems.filter(i=>i.type==='energy');
+  const futures=fxItems.filter(i=>i.type==='future');
   function rowHtml(item){
     const held=G.fxHoldings[item.t]&&G.fxHoldings[item.t].qty>0;
     const chg=item.price-item.open,pct=(chg/item.open)*100;
     const cls=chg>=0?'up':'dn';
     const sgn=chg>=0?'+':'';
-    const isMetal=item.type==='metal';
+    const gbp=isGbpPriced(item);
     const priceStr=fmtFxPrice(item);
-    const highStr=isMetal?'£'+item.high.toFixed(2):item.high.toFixed(item.price<0.01?6:4);
-    const lowStr=isMetal?'£'+item.low.toFixed(2):item.low.toFixed(item.price<0.01?6:4);
-    const chgStr=isMetal?`${sgn}£${Math.abs(chg).toFixed(2)}`:`${sgn}${Math.abs(chg)<0.001?chg.toFixed(6):chg.toFixed(4)}`;
+    const highStr=gbp?'£'+item.high.toFixed(2):item.high.toFixed(item.price<0.01?6:4);
+    const lowStr=gbp?'£'+item.low.toFixed(2):item.low.toFixed(item.price<0.01?6:4);
+    const chgStr=gbp?`${sgn}£${Math.abs(chg).toFixed(2)}`:`${sgn}${Math.abs(chg)<0.001?chg.toFixed(6):chg.toFixed(4)}`;
     return`<tr data-fx="${item.t}" class="${selFxTicker===item.t?'fxsel':''}">
       <td><span class="fx-tc">${item.flag}</span> ${item.n}</td>
       <td style="color:var(--dm);font-size:10px">${item.sub}</td>
@@ -3324,6 +3423,8 @@ function renderFxView(){
   }
   fxBody.innerHTML=ccys.map(rowHtml).join('');
   metalBody.innerHTML=metals.map(rowHtml).join('');
+  if(energyBody)energyBody.innerHTML=energies.map(rowHtml).join('');
+  if(futureBody)futureBody.innerHTML=futures.map(rowHtml).join('');
   // draw sparklines
   fxItems.forEach(item=>{
     const cell=el('fxspk-'+item.t);if(!cell)return;
@@ -3338,13 +3439,13 @@ function renderFxView(){
       const item=fxMap[t];if(!item)return'';
       const curVal=h.qty*item.price,entryVal=h.qty*h.entryPrice;
       const pnl=curVal-entryVal,pct=(pnl/entryVal)*100;
-      const isMetal=item.type==='metal';
-      const unitLabel=isMetal?'oz':'units';
-      const qtyFmt=isMetal?h.qty.toFixed(4):h.qty.toLocaleString();
+      const gbp=isGbpPriced(item);
+      const unitLabel=item.unit||'units';
+      const qtyFmt=gbp?h.qty.toFixed(4):h.qty.toLocaleString();
       return`<div class="fx-pos-row">
         <div class="fx-pos-l">
           <span class="fx-pos-ticker">${item.flag} ${t} — ${item.n}</span>
-          <span class="fx-pos-detail">${qtyFmt} ${unitLabel} @ ${isMetal?'£'+h.entryPrice.toFixed(2):h.entryPrice.toFixed(6)}</span>
+          <span class="fx-pos-detail">${qtyFmt} ${unitLabel} @ ${gbp?'£'+h.entryPrice.toFixed(2):h.entryPrice.toFixed(6)}</span>
         </div>
         <div class="fx-pos-r">
           <div style="font-weight:bold">£${curVal.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
@@ -3388,12 +3489,13 @@ function renderFxModal(){
   el('fm-rate').className='fm-rate '+(chg>=0?'up':'dn');
   el('fm-chg').textContent=fmtFxChg(item);
   el('fm-chg').className=cls;
-  const isMetal=item.type==='metal';
-  el('fm-unit').textContent=isMetal?'(troy oz)':'(units)';
+  const gbp=isGbpPriced(item);
+  const unitLabel=item.unit||'units';
+  el('fm-unit').textContent=`(${unitLabel})`;
   // stats
   const dayChgPct=pct.toFixed(3)+'%';
-  const highStr=isMetal?'£'+item.high.toFixed(2):item.high.toFixed(item.price<0.01?6:4);
-  const lowStr=isMetal?'£'+item.low.toFixed(2):item.low.toFixed(item.price<0.01?6:4);
+  const highStr=gbp?'£'+item.high.toFixed(2):item.high.toFixed(item.price<0.01?6:4);
+  const lowStr=gbp?'£'+item.low.toFixed(2):item.low.toFixed(item.price<0.01?6:4);
   el('fm-stats').innerHTML=`
     <div class="fm-st-l">Day High</div><div class="fm-st-v up">${highStr}</div>
     <div class="fm-st-l">Day Low</div><div class="fm-st-v dn">${lowStr}</div>
@@ -3405,13 +3507,13 @@ function renderFxModal(){
   if(held&&held.qty>0){
     const curVal=held.qty*item.price,entryVal=held.qty*held.entryPrice;
     const pnl=curVal-entryVal,pp=(pnl/entryVal)*100;
-    const qtyFmt=isMetal?held.qty.toFixed(4):held.qty.toLocaleString();
+    const qtyFmt=gbp?held.qty.toFixed(4):held.qty.toLocaleString();
     posEl.style.display='';
-    posEl.innerHTML=`<b>Your position:</b> ${qtyFmt} ${isMetal?'oz':'units'} @ ${isMetal?'£'+held.entryPrice.toFixed(2):held.entryPrice.toFixed(6)}<br>
+    posEl.innerHTML=`<b>Your position:</b> ${qtyFmt} ${unitLabel} @ ${gbp?'£'+held.entryPrice.toFixed(2):held.entryPrice.toFixed(6)}<br>
       Value: <b>£${curVal.toFixed(2)}</b> | P&L: <span class="${pnl>=0?'up':'dn'}">${pnl>=0?'+':''}£${Math.abs(pnl).toFixed(2)} (${pnl>=0?'+':''}${pp.toFixed(2)}%)</span>`;
   } else { posEl.style.display='none'; }
   // default qty
-  const defaultQty=isMetal?1:(item.price<0.02?10000:1000);
+  const defaultQty=gbp?1:(item.price<0.02?10000:1000);
   el('fm-qty').value=defaultQty;
   setFxSide('buy');
   drawFxChart();
@@ -3451,7 +3553,6 @@ function updateFxCost(){
   const item=fxMap[selFxTicker];if(!item)return;
   const qty=parseFloat(el('fm-qty').value)||0;
   if(qty<=0){el('fm-cost').textContent='Cost: —';el('fm-pnl').textContent='';return;}
-  const isMetal=item.type==='metal';
   const cost=qty*item.price;
   if(fxModeSide==='buy'){
     el('fm-cost').textContent=`Cost: £${cost.toFixed(2)} + £${FX_COMM} commission`;
@@ -3467,21 +3568,21 @@ function updateFxCost(){
 }
 function setFxMaxQty(){
   const item=fxMap[selFxTicker];if(!item)return;
-  const isMetal=item.type==='metal';
+  const gbp=isGbpPriced(item);
   if(fxModeSide==='buy'){
     const avail=(G.cash-FX_COMM);
     const maxQty=avail/item.price;
-    el('fm-qty').value=isMetal?Math.floor(maxQty*100)/100:Math.floor(maxQty);
+    el('fm-qty').value=gbp?Math.floor(maxQty*100)/100:Math.floor(maxQty);
   } else {
     const held=G.fxHoldings[item.t];
-    el('fm-qty').value=held?(isMetal?held.qty:Math.floor(held.qty)):0;
+    el('fm-qty').value=held?(gbp?held.qty:Math.floor(held.qty)):0;
   }
   updateFxCost();
 }
 function execFxTrade(){
   const item=fxMap[selFxTicker];if(!item)return;
   const qty=parseFloat(el('fm-qty').value)||0;
-  const isMetal=item.type==='metal';
+  const unitLabel=item.unit||'units';
   el('fm-err').textContent='';
   if(qty<=0){el('fm-err').textContent='Enter a valid quantity';return;}
   if(fxModeSide==='buy'){
@@ -3497,7 +3598,7 @@ function execFxTrade(){
       G.fxHoldings[item.t]={qty,entryPrice:item.price};
     }
     G.commPaid+=FX_COMM;
-    toast(`Bought ${isMetal?qty.toFixed(4)+' oz':qty.toLocaleString()+' units'} ${item.n} @ ${fmtFxPrice(item)}`,'ok');
+    toast(`Bought ${isGbpPriced(item)?qty.toFixed(4):qty.toLocaleString()} ${unitLabel} ${item.n} @ ${fmtFxPrice(item)}`,'ok');
   } else {
     const held=G.fxHoldings[item.t];
     if(!held||held.qty<qty){el('fm-err').textContent='Insufficient position';return;}
@@ -3508,7 +3609,7 @@ function execFxTrade(){
     G.commPaid+=FX_COMM;
     const pnl=qty*(item.price-held.entryPrice)-FX_COMM;
     G.realisedPnl+=pnl;
-    toast(`Sold ${isMetal?qty.toFixed(4)+' oz':qty.toLocaleString()+' units'} ${item.n} @ ${fmtFxPrice(item)}`,'ok');
+    toast(`Sold ${isGbpPriced(item)?qty.toFixed(4):qty.toLocaleString()} ${unitLabel} ${item.n} @ ${fmtFxPrice(item)}`,'ok');
   }
   updatePortfolioBar();
   renderFxModal();
