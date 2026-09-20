@@ -1573,9 +1573,23 @@ addEventListener('resize', ()=>{ if(G && G.view==='ops') fitRadar(); });
 // bound. The fix is to simply not rebuild these panels while a click is physically in progress: track a
 // global mouse-down/up flag and have frame() skip the rebuild (but keep advancing game time / drawing the
 // radar) for that gesture's duration, catching up on the very next frame once the button is released.
+//
+// The same rebuild-while-touching problem also breaks touch *scrolling* on mobile, and worse than the
+// click case: a touch-scroll drag on the kanban/sidebar lasts hundreds of milliseconds and spans dozens of
+// rebuilds, so the .incard/.kcol node under the finger is being destroyed and replaced continuously for
+// the whole gesture (confirmed with a MutationObserver — 500+ child replacements during a single ~300ms
+// drag) rather than just at the two endpoints like a click. The browser can't maintain a native scroll
+// gesture on an element that keeps getting ripped out from under the touch point, so the kanban/sidebar
+// silently never scrolls on a real phone even though the CSS overflow is correctly set up (scrollTop can
+// still be set programmatically — this isn't a layout/overflow bug). Gating on touchstart/touchend too,
+// exactly like the existing mouse handling, fixes it the same way: the DOM stays stable for the gesture's
+// duration and catches up once the finger lifts.
 let uiPointerDown=false;
 addEventListener('mousedown', ()=>{ uiPointerDown=true; }, true);
 addEventListener('mouseup', ()=>{ uiPointerDown=false; }, true);
+addEventListener('touchstart', ()=>{ uiPointerDown=true; }, true);
+addEventListener('touchend', ()=>{ uiPointerDown=false; }, true);
+addEventListener('touchcancel', ()=>{ uiPointerDown=false; }, true);
 
 // ── MAIN LOOP ──────────────────────────────────────────────────────────
 let lastT = performance.now();
