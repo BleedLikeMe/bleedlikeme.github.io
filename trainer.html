@@ -245,6 +245,16 @@ select option{background:#1a2a1a;}
   .fin-table,.odds-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
   .result-box{width:96%;padding:.8rem}
   .race-row{font-size:.8rem;gap:.3rem}
+  /* betting screen collapses to one column, which otherwise buries the bet
+     slip far below a long list of race cards — tapping odds looked like it
+     did nothing because the slip populated thousands of pixels offscreen.
+     position:sticky can't fix this: a sticky element can only stay stuck for
+     as long as its own parent box is scrolling past (confirmed empirically —
+     it stuck for ~600px then detached), and its parent here (a small card)
+     is far shorter than the multi-thousand-pixel race list. position:fixed
+     pins it to the viewport itself, independent of any container height. */
+  #bet-slip-area{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg2);border-top:2px solid var(--gold);padding:.6rem .8rem;max-height:55vh;overflow-y:auto;box-shadow:0 -4px 14px rgba(0,0,0,.45);}
+  #content{padding-bottom:6rem;}
 }
 </style>
 </head>
@@ -3417,7 +3427,7 @@ ${bettable.length===0?'<p style="color:var(--dim);font-style:italic;">No upcomin
   }).join('')}
 </div>`).join('')}
 </div>
-<div>
+<div class="betslip-col">
 <div id="bet-slip-area">
   <div class="card">
     <h3>&#128203; Bet Slip</h3>
