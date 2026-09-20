@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kelvin Cars — Control Room</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e14;--panel:#121a24;--panel2:#1a2532;--border:#2a3a4a;
+  --accent:#ffb703;--green:#06d6a0;--red:#ef233c;--amber:#ffd60a;
+  --purple:#c084fc;--urgent:#ff6b35;--text:#dce4ec;--sub:#5d7690;
+}
+body{background:var(--bg);color:var(--text);font-family:'Courier New',monospace;font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+button,input,select{font-family:inherit}
+/* ── SETUP ── */
+#setup{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px;overflow-y:auto}
+#setup.on{display:flex}
+.setup-card{background:var(--panel);border:1px solid var(--border);padding:26px 32px;max-width:520px;width:100%}
+.setup-title{color:var(--accent);font-size:20px;letter-spacing:2px;margin-bottom:4px;text-align:center}
+.setup-sub{color:var(--sub);font-size:11px;text-align:center;margin-bottom:18px}
+.setup-label{font-size:10px;color:var(--sub);letter-spacing:1px;margin:14px 0 6px}
+.setup-input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 10px;font-family:inherit;font-size:13px}
+.diff-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.diff-card{background:var(--panel2);border:1px solid var(--border);padding:10px;cursor:pointer;text-align:center}
+.diff-card.sel{border-color:var(--accent);background:#ffb70311}
+.diff-name{font-weight:bold;font-size:12px;margin-bottom:4px}
+.diff-desc{font-size:9px;color:var(--sub);line-height:1.4}
+#startBtn{width:100%;margin-top:20px;background:var(--accent);border:none;color:#1a1200;padding:11px;font-weight:bold;letter-spacing:2px;cursor:pointer;font-size:13px}
+#startBtn:hover{opacity:0.88}
+/* ── TOPBAR ── */
+#topbar{background:var(--panel);border-bottom:1px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;position:relative;z-index:60}
+.kc-title{color:var(--accent);font-size:14px;font-weight:bold;letter-spacing:2px}
+.stat{display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.stat-l{color:var(--sub);font-size:9px;letter-spacing:1px}
+.stat-v{font-size:13px}
+.stat-v.money{color:var(--green)}.stat-v.bad{color:var(--red)}.stat-v.rating{color:var(--amber)}
+#spd{margin-left:auto;display:flex;gap:3px}
+.sbtn{background:var(--panel2);border:1px solid var(--border);color:var(--sub);padding:3px 8px;cursor:pointer;font-size:11px}
+.sbtn.on{border-color:var(--accent);color:var(--accent)}
+/* ── NAV ── */
+#nav{background:var(--panel);border-bottom:1px solid var(--border);display:flex;flex-shrink:0;overflow-x:auto}
+.ntab{padding:7px 14px;cursor:pointer;border:none;border-bottom:2px solid transparent;border-right:1px solid var(--border);color:var(--sub);font-size:11px;letter-spacing:1px;background:none;position:relative;white-space:nowrap}
+.ntab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.badge{position:absolute;top:2px;right:2px;background:var(--red);color:#fff;font-size:9px;padding:1px 4px;border-radius:8px;min-width:14px;text-align:center}
+#content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.tpanel{display:none;flex:1;overflow-y:auto;padding:10px;flex-direction:column;gap:8px}
+.tpanel.on{display:flex}
+#tab-board.on{overflow:hidden}
+/* ── BOARD / KANBAN ── */
+#kanban{flex:1;display:flex;gap:6px;overflow-x:auto;overflow-y:hidden}
+.pcol{min-width:172px;flex:1;display:flex;flex-direction:column;gap:5px}
+.pcol-hd{background:var(--panel);border:1px solid var(--border);padding:5px 7px;font-size:10px;letter-spacing:1px;color:var(--sub);display:flex;justify-content:space-between;flex-shrink:0}
+.pcol-hd .cnt{background:var(--panel2);padding:0 5px;border-radius:8px;font-size:9px}
+.pitems{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.jobc{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--border);padding:6px 8px;font-size:11px;cursor:pointer}
+.jobc:hover{border-color:var(--accent)}
+.jobc.wav{border-left-color:var(--purple)}
+.jobc.acct{border-left-color:var(--accent)}
+.jobc.urg{border-left-color:var(--urgent)}
+.jobc-top{display:flex;justify-content:space-between;margin-bottom:2px}
+.jobc-id{color:var(--sub);font-size:9px}
+.jobc-fare{color:var(--green);font-size:10px;font-weight:bold}
+.jobc-lbl{font-weight:bold;font-size:11px;margin-bottom:2px}
+.jobc-route{color:var(--sub);font-size:9px;margin-bottom:3px;line-height:1.4}
+.progwrap{height:2px;background:var(--panel2);border-radius:1px;margin:3px 0;overflow:hidden}
+.progbar{height:100%;background:var(--accent);transition:width 0.6s}
+.jobc-who{color:var(--green);font-size:9px;margin-top:1px}
+.jobc-tag{font-size:8px;padding:1px 4px;border-radius:2px;background:var(--panel2);color:var(--sub);margin-right:3px}
+.jobc-tag.wav{color:var(--purple)}.jobc-tag.acct{color:var(--accent)}.jobc-tag.grp{color:var(--amber)}
+.jobc-eta{font-size:9px;margin-top:2px;color:var(--sub)}
+/* ── DRIVERS ── */
+.stfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px;margin-bottom:10px}
+.drvc{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--sub);padding:10px 12px}
+.drvc.day{border-left-color:var(--amber)}.drvc.night{border-left-color:var(--purple)}
+.drvc.notice{border-left-color:var(--red);border-color:var(--red)}
+.drvc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.drvc-name{font-weight:bold;font-size:12px}
+.drvc-role{font-size:9px;color:var(--sub);letter-spacing:1px;margin-bottom:6px}
+.trait-badge{font-size:9px;padding:1px 5px;border-radius:3px}
+.trait-badge.Grafter{background:#c9a84c22;color:#c9a84c;border:1px solid #c9a84c44}
+.trait-badge.Steady{background:#06d6a022;color:#06d6a0;border:1px solid #06d6a044}
+.trait-badge.Chatty{background:#c084fc22;color:#c084fc;border:1px solid #c084fc44}
+.morale-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.morale-bar-wrap{flex:1;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.morale-bar{height:100%;border-radius:3px;transition:width 0.5s}
+.morale-bar.happy{background:var(--green)}.morale-bar.content{background:var(--amber)}.morale-bar.unhappy{background:var(--urgent)}.morale-bar.miserable{background:var(--red)}
+.morale-lbl{font-size:9px;min-width:58px}
+.drvc-meta{display:flex;gap:8px;font-size:10px;color:var(--sub);margin-bottom:5px;flex-wrap:wrap}
+.drvc-status{font-size:10px;margin-bottom:5px}
+.drvc-status.avail{color:var(--green)}.drvc-status.busy{color:var(--amber)}.drvc-status.off{color:var(--sub)}.drvc-status.hol{color:var(--accent)}.drvc-status.notice{color:var(--red)}.drvc-status.lock{color:var(--red)}
+.shift-toggle{display:flex;gap:3px;margin-bottom:6px}
+.shift-btn{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--sub);padding:3px;cursor:pointer;font-size:9px}
+.shift-btn.on{border-color:var(--accent);color:var(--accent)}
+.veh-select{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:3px 5px;font-size:9px;margin-bottom:5px}
+.veh-select.hustle-moonlight{border-color:var(--amber)}
+.veh-select.hustle-boot{border-color:var(--red)}
+.req-box{background:#ffd60a11;border:1px solid var(--amber);border-left:3px solid var(--amber);padding:5px 7px;margin:5px 0;font-size:10px}
+.req-box .req-label{color:var(--amber);font-size:9px;letter-spacing:1px;margin-bottom:3px}
+.req-btns{display:flex;gap:4px;margin-top:4px}
+.req-btn{flex:1;padding:3px;border:1px solid;cursor:pointer;font-size:9px;background:none;letter-spacing:1px}
+.req-btn.accept{color:var(--green);border-color:var(--green)}.req-btn.accept:hover{background:var(--green);color:var(--bg)}
+.req-btn.decline{color:var(--red);border-color:var(--red)}.req-btn.decline:hover{background:var(--red);color:#fff}
+.drvc-actions{display:flex;gap:4px;margin-top:6px}
+.fire-btn{flex:1;background:none;border:1px solid var(--sub);color:var(--sub);padding:3px;cursor:pointer;font-size:9px;letter-spacing:1px}
+.fire-btn:hover{border-color:var(--red);color:var(--red)}
+.fire-confirm{background:#ef233c11;border:1px solid var(--red);padding:5px;display:flex;gap:4px;margin-top:4px}
+.fire-confirm button{flex:1;padding:3px;border:1px solid;cursor:pointer;font-size:9px;background:none}
+.fire-yes{color:var(--red);border-color:var(--red)}.fire-yes:hover{background:var(--red);color:#fff}
+.fire-no{color:var(--sub);border-color:var(--sub)}
+.cand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.cand-card{background:var(--panel);border:1px solid var(--border);border-style:dashed;padding:10px 12px}
+.cand-name{font-weight:bold;margin-bottom:2px}
+.cand-meta{font-size:9px;color:var(--sub);margin-bottom:5px}
+.hire-btn{width:100%;background:none;border:1px solid var(--accent);color:var(--accent);padding:4px;cursor:pointer;font-size:10px;margin-top:4px;letter-spacing:1px}
+.hire-btn:hover{background:var(--accent);color:var(--bg)}
+.sec-hd{font-size:11px;letter-spacing:1px;color:var(--sub);margin:10px 0 4px;border-bottom:1px solid var(--border);padding-bottom:3px}
+/* ── FLEET ── */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.vehc{background:var(--panel);border:1px solid var(--border);padding:10px 12px}
+.vehc.written-off{opacity:0.6}
+.vehc-name{font-weight:bold;margin-bottom:2px;font-size:12px}
+.vehc-reg{font-size:9px;color:var(--sub);letter-spacing:1px;margin-bottom:6px}
+.sb-wrap{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin:3px 0}
+.sb{height:100%;border-radius:3px;transition:width 0.4s}
+.sb.ok{background:var(--green)}.sb.low{background:var(--amber)}.sb.crit{background:var(--red)}
+.vehc-nums{display:flex;justify-content:space-between;font-size:9px;color:var(--sub);margin-bottom:5px}
+.vehc-warn{color:var(--red);font-size:9px;margin-bottom:4px}
+.vrow{display:flex;gap:4px;margin-top:4px}
+.vbtn{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--accent);padding:3px;cursor:pointer;font-size:9px}
+.vbtn:hover{background:var(--accent);color:var(--bg)}
+.vbtn:disabled{color:var(--sub);cursor:not-allowed;opacity:0.5}
+.catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.cat-card{background:var(--panel);border:1px solid var(--border);padding:10px 12px}
+.cat-name{font-weight:bold;font-size:12px;margin-bottom:3px}
+.cat-meta{font-size:9px;color:var(--sub);margin-bottom:6px;line-height:1.5}
+.buy-btn{width:100%;background:none;border:1px solid var(--green);color:var(--green);padding:4px;cursor:pointer;font-size:10px}
+.buy-btn:hover{background:var(--green);color:var(--bg)}
+.buy-btn:disabled{border-color:var(--sub);color:var(--sub);cursor:not-allowed}
+/* ── AREAS ── */
+.map-wrap{background:var(--panel);border:1px solid var(--border);padding:8px;margin-bottom:10px}
+.areagrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.areac{background:var(--panel);border:1px solid var(--border);padding:8px 10px;font-size:11px;cursor:pointer}
+.areac:hover{border-color:var(--accent)}
+.areac-name{font-weight:bold;margin-bottom:3px}
+.demand-pill{font-size:9px;padding:1px 6px;border-radius:8px;display:inline-block;margin-bottom:4px}
+.demand-pill.low{background:#5d769022;color:var(--sub)}
+.demand-pill.med{background:#ffd60a22;color:var(--amber)}
+.demand-pill.high{background:#ff6b3522;color:var(--urgent)}
+.demand-pill.surge{background:#ef233c22;color:var(--red)}
+.areac-venues{font-size:9px;color:var(--sub);line-height:1.5}
+.fix-item{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--accent);padding:6px 8px;font-size:10px;margin-bottom:5px}
+.fix-item.big{border-left-color:var(--red)}
+/* ── FINANCES ── */
+.fingrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-bottom:10px}
+.fincard{background:var(--panel);border:1px solid var(--border);padding:10px 12px}
+.fincard .fl{color:var(--sub);font-size:9px;letter-spacing:1px;margin-bottom:4px}
+.fincard .fv{font-size:16px}
+table.fintab{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px}
+table.fintab th,table.fintab td{border-bottom:1px solid var(--border);padding:4px 6px;text-align:left}
+table.fintab th{color:var(--sub);font-size:9px;letter-spacing:1px}
+table.fintab td.num{text-align:right}
+.chart-wrap{background:var(--panel);border:1px solid var(--border);padding:8px;margin-bottom:10px}
+/* ── LOG ── */
+#logfeed{display:flex;flex-direction:column-reverse;gap:3px;font-size:11px}
+.logline{padding:3px 6px;border-left:2px solid var(--border);color:var(--sub)}
+.logline.money{border-left-color:var(--green);color:var(--text)}
+.logline.warn{border-left-color:var(--amber);color:var(--text)}
+.logline.bad{border-left-color:var(--red);color:var(--text)}
+.logline .lt{color:var(--sub);font-size:9px;margin-right:6px}
+/* ── MODAL ── */
+#modalOverlay{display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modalOverlay.on{display:flex}
+.modal{background:var(--panel);border:1px solid var(--accent);padding:18px 20px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto}
+.modal h3{color:var(--accent);font-size:14px;letter-spacing:1px;margin-bottom:10px}
+.modal .mrow{margin-bottom:8px;font-size:11px;color:var(--sub)}
+.modal .mrow b{color:var(--text)}
+.drv-opt{background:var(--panel2);border:1px solid var(--border);padding:6px 8px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;font-size:10px}
+.drv-opt button{background:none;border:1px solid var(--green);color:var(--green);padding:3px 10px;cursor:pointer;font-size:9px}
+.drv-opt button:hover{background:var(--green);color:var(--bg)}
+.mini-btn{background:var(--panel2);border:1px solid var(--border);color:var(--accent);padding:2px 8px;cursor:pointer;font-size:9px;margin-left:8px}
+.mini-btn:hover{background:var(--accent);color:var(--bg)}
+.modal-close,.modal-actions{margin-top:12px;display:flex;gap:6px}
+.modal-actions button,.modal-close button{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px;cursor:pointer;font-size:10px;letter-spacing:1px}
+.modal-actions button.primary{border-color:var(--accent);color:var(--accent)}
+.modal-actions button.danger{border-color:var(--red);color:var(--red)}
+/* ── responsive ── */
+@media (max-width:760px){
+  #kanban{flex-direction:column;overflow-y:auto;overflow-x:hidden}
+  .pcol{min-width:0;flex:0 0 auto}
+  .pitems{max-height:220px}
+  .stfgrid,.vgrid,.cand-grid,.catalog-grid,.areagrid{grid-template-columns:1fr}
+  #topbar{gap:8px}
+  #spd{width:100%;flex-wrap:wrap;justify-content:center;margin-left:0}
+  .sbtn{padding:7px 12px;font-size:12px}
+  .modal{padding:14px 14px}
+  .drv-opt{flex-direction:column;align-items:stretch;gap:6px}
+  .drv-opt button{padding:7px}
+}
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <div class="setup-card">
+    <div class="setup-title">🚕 KELVIN CARS</div>
+    <div class="setup-sub">GLASGOW PRIVATE HIRE — CONTROL ROOM</div>
+    <div class="setup-label">FIRM NAME</div>
+    <input id="companyName" class="setup-input" value="Kelvin Cars" maxlength="24">
+    <div class="setup-label">DIFFICULTY</div>
+    <div class="diff-grid" id="diffGrid"></div>
+    <button id="startBtn">TAKE YOUR FIRST CALL</button>
+  </div>
+</div>
+
+<div id="topbar" style="display:none">
+  <div class="kc-title" id="hdCompany">KELVIN CARS</div>
+  <div class="stat"><div class="stat-l">DAY</div><div class="stat-v" id="hdDay">1</div></div>
+  <div class="stat"><div class="stat-l">TIME</div><div class="stat-v" id="hdTime">06:00</div></div>
+  <div class="stat"><div class="stat-l">CASH</div><div class="stat-v money" id="hdCash">£0</div></div>
+  <div class="stat"><div class="stat-l">RATING</div><div class="stat-v rating" id="hdRating">★4.2</div></div>
+  <div class="stat"><div class="stat-l">JOBS TODAY</div><div class="stat-v" id="hdJobs">0/0</div></div>
+  <div class="stat"><div class="stat-l">ON THE BOARD</div><div class="stat-v" id="hdActive">0</div></div>
+  <div class="stat"><div class="stat-l">WEATHER</div><div class="stat-v" id="hdWeather">Clear</div></div>
+  <div id="spd">
+    <button class="sbtn" data-speed="0">⏸</button>
+    <button class="sbtn" data-speed="1">1x</button>
+    <button class="sbtn" data-speed="3">2x</button>
+    <button class="sbtn" data-speed="6">4x</button>
+    <button class="sbtn" id="autoDispatchBtn" title="Auto-assign incoming calls to the nearest suitable driver">AUTO-DISPATCH: OFF</button>
+    <button class="sbtn" id="newGameBtn" title="Clear the saved game and start over">⟲ NEW GAME</button>
+  </div>
+</div>
+<div id="nav" style="display:none">
+  <button class="ntab" data-tab="overview">OVERVIEW</button>
+  <button class="ntab" data-tab="board">BOARD<span class="badge" id="bdIncoming" style="display:none"></span></button>
+  <button class="ntab" data-tab="drivers">DRIVERS</button>
+  <button class="ntab" data-tab="fleet">FLEET</button>
+  <button class="ntab" data-tab="areas">AREAS</button>
+  <button class="ntab" data-tab="finances">FINANCES</button>
+  <button class="ntab" data-tab="log">LOG</button>
+</div>
+<div id="content" style="display:none">
+  <div class="tpanel" id="tab-overview"></div>
+  <div class="tpanel" id="tab-board"><div id="kanban"></div></div>
+  <div class="tpanel" id="tab-drivers"></div>
+  <div class="tpanel" id="tab-fleet"></div>
+  <div class="tpanel" id="tab-areas"></div>
+  <div class="tpanel" id="tab-finances"></div>
+  <div class="tpanel" id="tab-log"><div id="logfeed"></div></div>
+</div>
+
+<div id="modalOverlay"><div class="modal" id="modalBox"></div></div>
+
+<script>
+'use strict';
+/* ══════════════════════════ UTIL ══════════════════════════ */
+function rnd(a,b){return a+Math.random()*(b-a);}
+function rndInt(a,b){return Math.floor(rnd(a,b+1));}
+function rndPick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function round1(v){return Math.round(v*10)/10;}
+function fmtMoney(v){const neg=v<0;v=Math.abs(v);return (neg?'-':'')+'£'+v.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtMoney0(v){return '£'+Math.round(v).toLocaleString('en-GB');}
+function fmtClock(mins){const h=Math.floor(mins/60)%24,m=Math.floor(mins%60);return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
+const DOW_NAMES=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function hourOf(clock){return Math.floor(clock/60)%24;}
+function dowOf(clock){return Math.floor(clock/1440)%7;}
+function dayOf(clock){return Math.floor(clock/1440)+1;}
+function daypart(hour){
+  if(hour>=23||hour<3) return 'latenight';
+  if(hour>=3&&hour<7) return 'earlyam';
+  if(hour>=7&&hour<10) return 'amrush';
+  if(hour>=10&&hour<16) return 'midday';
+  if(hour>=16&&hour<19) return 'pmrush';
+  return 'evening';
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* ══════════════════════════ DATA ══════════════════════════ */
+const DIFFICULTIES={
+  easy:{label:'Easy',desc:'£16,000 start.\nSteady demand.\nForgiving fines.\nTarget: £35,000 by day 70.',cash:16000,fineMult:0.7,demandMult:1.1,seasonDays:70,targetCash:35000},
+  normal:{label:'Normal',desc:'£9,000 start.\nRealistic demand.\nStandard fines.\nTarget: £25,000 by day 80.',cash:9000,fineMult:1,demandMult:1,seasonDays:80,targetCash:25000},
+  hard:{label:'Hard',desc:'£4,500 start.\nThin margins.\nSteep fines.\nTarget: £15,000 by day 95.',cash:4500,fineMult:1.5,demandMult:0.92,seasonDays:95,targetCash:15000},
+};
+const WEATHER_LABELS={clear:'Clear',rain:'Rain',fog:'Fog'};
+
+const AREAS={
+  westend:{label:'West End',x:18,y:36,type:'affluent'},
+  finnieston:{label:'Finnieston & Yorkhill',x:29,y:47,type:'trendy'},
+  citycentre:{label:'City Centre',x:44,y:45,type:'core'},
+  merchantcity:{label:'Merchant City',x:51,y:46,type:'core'},
+  govan:{label:'Govan',x:25,y:57,type:'workingclass'},
+  ibrox:{label:'Ibrox & Cessnock',x:23,y:53,type:'workingclass'},
+  southside:{label:'Shawlands & Mount Florida',x:42,y:68,type:'residential'},
+  govanhill:{label:'Govanhill',x:47,y:61,type:'residential'},
+  eastend:{label:'Dennistoun & the East End',x:64,y:47,type:'residential'},
+  easterhouse:{label:'Easterhouse',x:87,y:37,type:'scheme'},
+  baillieston:{label:'Baillieston',x:80,y:43,type:'suburb'},
+  castlemilk:{label:'Castlemilk',x:58,y:87,type:'scheme'},
+  drumchapel:{label:'Drumchapel',x:8,y:17,type:'scheme'},
+  maryhill:{label:'Maryhill',x:34,y:23,type:'residential'},
+  possilpark:{label:'Possilpark & Springburn',x:50,y:16,type:'scheme'},
+  cardonald:{label:'Paisley Road & Cardonald',x:15,y:63,type:'residential'},
+  newtonmearns:{label:'Newton Mearns & Giffnock',x:46,y:97,type:'affluent'},
+  bearsden:{label:'Bearsden & Milngavie',x:12,y:3,type:'affluent'},
+  rutherglen:{label:'Rutherglen & Cambuslang',x:68,y:76,type:'suburb'},
+  airport:{label:'Glasgow Airport',x:1,y:69,type:'transport'},
+};
+const AREA_KEYS=Object.keys(AREAS);
+
+const VENUES={
+  westend:{nightlife:['Òran Mór','The Big Blue'],restaurant:['Ubiquitous Chip','Stravaigin'],uni:['University of Glasgow'],residential:['Byres Road','Hyndland Road','Great Western Road'],hospital:['Gartnavel General Hospital']},
+  finnieston:{nightlife:['SWG3','OVO Hydro','SEC Centre'],restaurant:['The Finnieston','Crabshakk','Ox and Finch'],residential:['Argyle Street','Old Dumbarton Road']},
+  citycentre:{nightlife:["The Garage","King Tut's Wah Wah Hut",'Bamboo'],restaurant:['Rogano','Amarone','Dakota'],hotel:['Grand Central Hotel','Radisson RED','citizenM Glasgow'],shop:['Buchanan Galleries','Princes Square','St Enoch Centre'],transport:['Glasgow Central Station','Queen Street Station','Buchanan Bus Station'],residential:['Sauchiehall Street','Bath Street']},
+  merchantcity:{nightlife:['Sub Club','La Cheetah Club','The Buff Club'],restaurant:['Mother India','Gamba'],residential:['Ingram Street','Candleriggs']},
+  govan:{residential:['Govan Road','Elder Street'],hospital:['Queen Elizabeth University Hospital']},
+  ibrox:{stadium:['Ibrox Stadium'],residential:['Copland Road','Paisley Road West']},
+  southside:{stadium:['Hampden Park'],residential:['Kilmarnock Road','Pollokshaws Road','Skirving Street'],restaurant:['Cail Bruich'],shop:['Silverburn Shopping Centre']},
+  govanhill:{residential:['Victoria Road','Calder Street']},
+  eastend:{stadium:['Celtic Park'],nightlife:['Barrowland Ballroom'],residential:['Duke Street','Alexandra Parade']},
+  easterhouse:{residential:['Auchinlea Road','Bellrock Street']},
+  baillieston:{residential:['Main Street, Baillieston']},
+  castlemilk:{residential:['Castlemilk Drive','Ardencraig Road']},
+  drumchapel:{residential:['Drumchapel Road','Kinfauns Drive']},
+  maryhill:{residential:['Maryhill Road','Wyndford Road']},
+  possilpark:{residential:['Balmore Road','Springburn Road'],hospital:['Stobhill Hospital']},
+  cardonald:{residential:['Paisley Road West','Mosspark Boulevard'],shop:['Braehead Shopping Centre']},
+  newtonmearns:{residential:['Ayr Road','Fenwick Road'],shop:['The Avenue, Newton Mearns']},
+  bearsden:{residential:['Milngavie Road','Drymen Road']},
+  rutherglen:{residential:['Main Street, Rutherglen','Cambuslang Road']},
+  airport:{transport:['Glasgow Airport Terminal 1']},
+};
+function pickVenue(areaKey,kind){
+  const v=VENUES[areaKey]&&VENUES[areaKey][kind];
+  if(v&&v.length) return rndPick(v);
+  return null;
+}
+function areaLabel(k){return AREAS[k]?AREAS[k].label:k;}
+const NIGHTLIFE_AREAS=AREA_KEYS.filter(k=>VENUES[k]&&VENUES[k].nightlife);
+const RESIDENTIAL_AREAS=AREA_KEYS.filter(k=>VENUES[k]&&VENUES[k].residential);
+const SHOP_AREAS=AREA_KEYS.filter(k=>VENUES[k]&&VENUES[k].shop);
+const HOSPITAL_AREAS=AREA_KEYS.filter(k=>VENUES[k]&&VENUES[k].hospital);
+const RESTAURANT_AREAS=AREA_KEYS.filter(k=>VENUES[k]&&VENUES[k].restaurant);
+
+function areaDist(a,b){
+  if(a===b) return 1.3;
+  const A=AREAS[a],B=AREAS[b];
+  const dx=A.x-B.x,dy=A.y-B.y;
+  return round1(Math.sqrt(dx*dx+dy*dy)*0.3);
+}
+function travelMinutes(km,hour){
+  let speed=32;
+  if((hour>=7&&hour<9)||(hour>=16&&hour<18)) speed*=0.62;
+  else if(hour>=22||hour<6) speed*=1.2;
+  if(G.weather==='rain') speed*=0.82;
+  else if(G.weather==='fog') speed*=0.68;
+  return Math.max(2,round1((km/speed)*60));
+}
+function travelMinutesBetween(fromArea,toArea){
+  let mins=travelMinutes(areaDist(fromArea,toArea),hourOf(G.clock));
+  G.incidents.forEach(inc=>{ if(inc.area===fromArea||inc.area===toArea) mins+=inc.delayMin; });
+  return mins;
+}
+
+const VEHICLE_MODELS=[
+  {key:'saloon',label:'Toyota Prius (Saloon)',seats:4,wav:false,cost:14000,runCostPerKm:0.13},
+  {key:'estate',label:'Skoda Octavia Estate',seats:4,wav:false,cost:16500,runCostPerKm:0.15},
+  {key:'mpv',label:'Ford Galaxy (8-Seater MPV)',seats:7,wav:false,cost:21000,runCostPerKm:0.19},
+  {key:'wav',label:'LEVC TX (Wheelchair Access)',seats:5,wav:true,cost:34000,runCostPerKm:0.21},
+  {key:'ev',label:'Peugeot e-208 (Electric)',seats:4,wav:false,cost:19000,runCostPerKm:0.07},
+];
+function vehicleModel(k){return VEHICLE_MODELS.find(m=>m.key===k);}
+function rndPlate(){
+  const l1='SFGHKMPRW'[rndInt(0,8)]+'ABDEFGKLMNPRSTVWXY'[rndInt(0,17)];
+  const age=rndInt(15,25);
+  const l3=Array.from({length:3},()=>String.fromCharCode(65+rndInt(0,25))).join('');
+  return `${l1}${age} ${l3}`;
+}
+
+const TRAITS=['Grafter','Steady','Chatty'];
+const TRAIT_DESC={Grafter:'wants the fares stacked up',Steady:'wants regular hours, not a 16-hour shift',Chatty:'lives for a good passenger review'};
+const TRAIT_SEVERITY={
+  Grafter:{raiseDeclined:1.5,holidayDeclined:0.7,overworked:0.6,idle:1.4},
+  Steady:{raiseDeclined:0.7,holidayDeclined:1.6,overworked:1.6,idle:0.6},
+  Chatty:{raiseDeclined:1.0,holidayDeclined:1.0,overworked:1.0,idle:1.0,praise:1.6},
+};
+const DRIVER_FIRST=['Stevie','Davie','Gary','Kenny','Barry','Alan','Colin','Frankie','Wullie','Tam','Rab','Jim','Craig','Scott','Amir','Tariq','Sunny','Kamil','Jozef','Sandra','Karen','Tracy','Michelle','Linda','Joan','Aisha','Priya','Yusuf','Bobby','Archie'];
+const DRIVER_LAST=['McLeod','Docherty','Boyle','Reilly','Devlin','Quinn','Nesbitt','Cairney','Farrell','Sharkey','Gallacher','McStay','Hussain','Iqbal','Khan','Nowak','Kowalski','Singh','Kaur','Fraser','Baxter'];
+function rndDriverName(){return rndPick(DRIVER_FIRST)+' '+rndPick(DRIVER_LAST);}
+const PASSENGER_FIRST=['John','Margaret','Paul','Fiona','Derek','Susan','Andy','Claire','Iain','Deborah','Mark','Elaine','Steven','Nicola','Graeme','Lorna','Neil','Shona','Cammy','Kirsty'];
+function rndPassengerName(){return rndPick(PASSENGER_FIRST)+' '+String.fromCharCode(65+rndInt(0,25))+'.';}
+const ACCOUNT_NAMES=['Bannerman & Reid Solicitors','Clyde Business Park','St Vincent Street Accountants','Riverside Medical Practice','Anderston Print & Design','Merchant City Recruitment'];
+
+const LOAN_TIERS=[
+  {amount:2000,days:20,dailyPayment:112},
+  {amount:5000,days:30,dailyPayment:192},
+  {amount:10000,days:45,dailyPayment:262},
+  {amount:20000,days:60,dailyPayment:407},
+];
+function maxLoanTierIdx(){
+  if(G.rating>=4.5) return 3;
+  if(G.rating>=4.0) return 2;
+  if(G.rating>=3.5) return 1;
+  return 0;
+}
+
+const SIDE_HUSTLES=[
+  {key:'none',label:'None'},
+  {key:'delivery',label:'Food delivery (quiet hours)',desc:'Driver uses downtime for delivery work. No cost to you, a little extra wear on the car.'},
+  {key:'moonlight',label:'Moonlighting for a rival firm',desc:'Extra cash in their pocket, but it can dent their loyalty — or lose you the driver entirely.'},
+  {key:'boot',label:'Selling out the boot',desc:'Whatever it is, it is not your business — until the police make it your business.'},
+];
+function hustleOf(key){return SIDE_HUSTLES.find(h=>h.key===key)||SIDE_HUSTLES[0];}
+const BOOT_ITEMS=['a boot full of dodgy phone chargers','a box of unlicensed fireworks','a stack of bootleg DVDs','a suspiciously large crate of Irn-Bru','a bag of knock-off perfume','three dozen counterfeit lottery scratchcards'];
+
+const MARKETING_CAMPAIGNS=[
+  {key:'flyers',label:'Leaflets & flyers',cost:150,cooldownDays:4,ratingBoost:0.05,demandDays:2},
+  {key:'radioad',label:'Local radio ad',cost:500,cooldownDays:8,ratingBoost:0.1,demandDays:4},
+  {key:'sponsor',label:'Sponsor a local event',cost:1200,cooldownDays:14,ratingBoost:0.2,demandDays:7},
+];
+
+const FIXTURE_TEMPLATES=[
+  {label:'Rangers vs Celtic (Old Firm derby)',area:'ibrox',big:true},
+  {label:'Rangers vs Aberdeen',area:'ibrox',big:false},
+  {label:'Celtic vs Hearts',area:'eastend',big:false},
+  {label:'Celtic vs Rangers (Old Firm derby)',area:'eastend',big:true},
+  {label:'Concert at OVO Hydro',area:'finnieston',big:false},
+  {label:'Gig at Barrowland Ballroom',area:'eastend',big:false},
+  {label:'Scotland international at Hampden Park',area:'southside',big:true},
+];
+
+const RADIO_QUIPS=[
+  "Base to car 4, you still sat outside Greggs?",
+  "Any car free for a shout at the Squiggly Bridge?",
+  "Control to all cars — keep an eye on the M8, roadworks at junction 17 again.",
+  "Base to Sandra, your fare's away up the road on foot — chase it or let it go.",
+  "Radio check, radio check, control receiving fine.",
+  "If anybody's passing the office, the kettle's broken again.",
+  "Control to all cars, quiet one so far the night — enjoy it while it lasts.",
+  "Someone tell car 2 his meter's still running from three fares ago.",
+];
+
+const JOB_TYPES=[
+  {key:'airport',label:'Airport run',wav:false,rate:1.3,weights:{latenight:5,earlyam:6,amrush:6,midday:4,pmrush:5,evening:6},weekendMult:1.1,patience:6,holdPatience:16,
+    gen:()=>{const toAirport=Math.random()<0.5;const other=rndPick(AREA_KEYS.filter(k=>k!=='airport'));return toAirport?{pickupArea:other,pickupVenue:pickVenue(other,'residential'),dropArea:'airport',dropVenue:'Departures',passengers:rndInt(1,3)}:{pickupArea:'airport',pickupVenue:'Arrivals',dropArea:other,dropVenue:pickVenue(other,'residential'),passengers:rndInt(1,3)};}},
+  {key:'station',label:'Rail station transfer',wav:false,rate:2.0,weights:{latenight:1,earlyam:2,amrush:8,midday:3,pmrush:8,evening:3},weekendMult:0.8,patience:5,holdPatience:10,
+    gen:()=>{const st=rndPick(['Glasgow Central Station','Queen Street Station']);const other=rndPick(AREA_KEYS);return Math.random()<0.5?{pickupArea:'citycentre',pickupVenue:st,dropArea:other,dropVenue:pickVenue(other,'residential'),passengers:rndInt(1,2)}:{pickupArea:other,pickupVenue:pickVenue(other,'residential'),dropArea:'citycentre',dropVenue:st,passengers:rndInt(1,2)};}},
+  {key:'schoolrun',label:'School run',wav:false,rate:1.6,weights:{latenight:0,earlyam:0,amrush:7,midday:0,pmrush:6,evening:0},weekdayOnly:true,patience:3,holdPatience:8,
+    gen:()=>{const a=rndPick(RESIDENTIAL_AREAS);const school=rndPick(['Hutchesons Grammar','Notre Dame High','St Aloysius College','the local primary']);return {pickupArea:a,pickupVenue:pickVenue(a,'residential'),dropArea:rndPick(RESIDENTIAL_AREAS),dropVenue:school,passengers:1};}},
+  {key:'hospital',label:'Hospital appointment',wav:false,rate:1.2,weights:{latenight:1,earlyam:2,amrush:4,midday:6,pmrush:3,evening:2},patience:5,holdPatience:12,
+    gen:()=>{const h=rndPick(HOSPITAL_AREAS);const home=rndPick(RESIDENTIAL_AREAS);return Math.random()<0.5?{pickupArea:home,pickupVenue:pickVenue(home,'residential'),dropArea:h,dropVenue:pickVenue(h,'hospital'),passengers:1}:{pickupArea:h,pickupVenue:pickVenue(h,'hospital'),dropArea:home,dropVenue:pickVenue(home,'residential'),passengers:1};}},
+  {key:'shopping',label:'Shopping trip',wav:false,rate:1.4,weights:{latenight:0,earlyam:0,amrush:2,midday:7,pmrush:4,evening:2},patience:5,holdPatience:12,
+    gen:()=>{const s=rndPick(SHOP_AREAS);const home=rndPick(RESIDENTIAL_AREAS);return {pickupArea:home,pickupVenue:pickVenue(home,'residential'),dropArea:s,dropVenue:pickVenue(s,'shop'),passengers:rndInt(1,3)};}},
+  {key:'nightclubOut',label:'Night out (heading in)',wav:false,rate:1.0,weights:{latenight:0,earlyam:0,amrush:0,midday:0,pmrush:0,evening:7},weekendMult:1.6,patience:4,holdPatience:9,
+    gen:()=>{const n=rndPick(NIGHTLIFE_AREAS);const home=rndPick(RESIDENTIAL_AREAS);return {pickupArea:home,pickupVenue:pickVenue(home,'residential'),dropArea:n,dropVenue:pickVenue(n,'nightlife'),passengers:rndInt(1,4)};}},
+  {key:'nightclubHome',label:'Home from a night out',wav:false,rate:2.2,weights:{latenight:9,earlyam:2,amrush:0,midday:0,pmrush:0,evening:2},weekendMult:1.7,patience:6,holdPatience:14,
+    gen:()=>{const n=rndPick(NIGHTLIFE_AREAS);const home=rndPick(RESIDENTIAL_AREAS);return {pickupArea:n,pickupVenue:pickVenue(n,'nightlife'),dropArea:home,dropVenue:pickVenue(home,'residential'),passengers:rndInt(1,4)};}},
+  {key:'pubHome',label:'Home from the pub',wav:false,rate:1.8,weights:{latenight:6,earlyam:1,amrush:0,midday:0,pmrush:0,evening:5},weekendMult:1.3,patience:5,holdPatience:11,
+    gen:()=>{const n=rndPick(AREA_KEYS);const home=rndPick(RESIDENTIAL_AREAS);return {pickupArea:n,pickupVenue:pickVenue(n,'nightlife')||areaLabel(n),dropArea:home,dropVenue:pickVenue(home,'residential'),passengers:rndInt(1,3)};}},
+  {key:'restaurant',label:'Dinner reservation',wav:false,rate:1.5,weights:{latenight:0,earlyam:0,amrush:0,midday:1,pmrush:2,evening:7},patience:4,holdPatience:10,
+    gen:()=>{const r=rndPick(RESTAURANT_AREAS);const home=rndPick(RESIDENTIAL_AREAS);return {pickupArea:home,pickupVenue:pickVenue(home,'residential'),dropArea:r,dropVenue:pickVenue(r,'restaurant'),passengers:rndInt(2,4)};}},
+  {key:'wedding',label:'Wedding car booking',wav:false,rate:0.15,weights:{latenight:0,earlyam:0,amrush:1,midday:4,pmrush:2,evening:0},minSeats:5,patience:8,holdPatience:20,
+    gen:()=>{const a=rndPick(RESIDENTIAL_AREAS);const b=rndPick(AREA_KEYS);return {pickupArea:a,pickupVenue:'the registry office',dropArea:b,dropVenue:'the reception venue',passengers:rndInt(5,7)};}},
+  {key:'account',label:'Account job',wav:false,rate:1.6,weights:{latenight:0,earlyam:1,amrush:5,midday:5,pmrush:5,evening:1},weekdayOnly:true,account:true,patience:6,holdPatience:16,
+    gen:()=>{const a=rndPick(AREA_KEYS);const other=rndPick(AREA_KEYS);return {pickupArea:a,pickupVenue:pickVenue(a,'residential')||areaLabel(a),dropArea:other,dropVenue:pickVenue(other,'residential')||areaLabel(other),passengers:1,account:true,accountName:rndPick(ACCOUNT_NAMES)};}},
+  {key:'courier',label:'Courier / document run',wav:false,rate:1.1,weights:{latenight:0,earlyam:1,amrush:3,midday:4,pmrush:3,evening:1},weekdayOnly:true,patience:8,holdPatience:20,courier:true,
+    gen:()=>{const a=rndPick(AREA_KEYS);const other=rndPick(AREA_KEYS);return {pickupArea:a,pickupVenue:pickVenue(a,'residential')||areaLabel(a),dropArea:other,dropVenue:pickVenue(other,'residential')||areaLabel(other),passengers:0,courier:true};}},
+  {key:'wheelchair',label:'Wheelchair-accessible booking',wav:true,rate:0.6,weights:{latenight:0,earlyam:0,amrush:2,midday:3,pmrush:2,evening:1},patience:8,holdPatience:20,
+    gen:()=>{const h=rndPick(HOSPITAL_AREAS.concat(SHOP_AREAS));const home=rndPick(RESIDENTIAL_AREAS);return {pickupArea:home,pickupVenue:pickVenue(home,'residential'),dropArea:h,dropVenue:pickVenue(h,'hospital')||pickVenue(h,'shop'),passengers:1};}},
+];
+function jobTypeOf(job){return JOB_TYPES.find(t=>t.key===job.typeKey);}
+
+/* ══════════════════════════ STATE ══════════════════════════ */
+let G=null;
+
+function newGame(company,diffKey){
+  const diff=DIFFICULTIES[diffKey];
+  G={
+    company:company||'Kelvin Cars',
+    diffKey,
+    clock:6*60,
+    speed:3,
+    cash:diff.cash,
+    accountsReceivable:0,
+    rating:4.2,
+    jobsCompletedToday:0,jobsMissedToday:0,
+    jobsCompletedTotal:0,jobsMissedTotal:0,
+    nextJobId:1,jobs:[],
+    nextDriverId:1,drivers:[],
+    nextVehicleId:1,vehicles:[],
+    candidates:[],
+    fixtures:[],
+    nextFixtureCheckDay:3,
+    nextComplianceDay:rndInt(9,15),
+    nextWeeklySettleDay:8,
+    lastDaySeen:1,
+    log:[],
+    achievements:[],
+    history:[],
+    pendingEvent:null,
+    uiModal:null,
+    autoDispatch:false,
+    view:'overview',
+    dailyRevenueByType:{},
+    todayRevenue:0,todayDriverPay:0,todayRunCost:0,todayFixed:0,
+    weather:'clear',
+    nextWeatherCheck:6*60+rndInt(120,240),
+    incidents:[],
+    nextIncidentCheck:6*60+rndInt(240,420),
+    seasonDays:diff.seasonDays,
+    targetCash:diff.targetCash,
+    bankruptcyFloor:-Math.max(3000,Math.round(diff.cash*0.6)),
+    milestoneFlags:{},
+    loan:null,
+    marketingCooldowns:{},
+    marketingBoostUntil:0,
+    todayLoanPayment:0,todayAdIncome:0,
+  };
+  seedDrivers();
+  seedVehicles();
+  seedCandidates();
+  seedFixtures();
+  addLog('📻 Control room online. Kelvin Cars is open for business.');
+  save();
+}
+
+function seedDrivers(){
+  const seed=[
+    {name:null,shift:'day',area:'westend'},
+    {name:null,shift:'day',area:'southside'},
+    {name:null,shift:'day',area:'citycentre'},
+    {name:null,shift:'night',area:'merchantcity'},
+    {name:null,shift:'night',area:'eastend'},
+  ];
+  seed.forEach(s=>{
+    G.drivers.push(makeDriver(s.shift,s.area));
+  });
+}
+function makeDriver(shift,area){
+  return {
+    id:G.nextDriverId++,
+    name:rndDriverName(),
+    trait:rndPick(TRAITS),
+    morale:rndInt(60,85),
+    honesty:rndInt(50,95),
+    dodgyCount:0,dodgyToday:false,warnings:0,
+    dailyWage:rndInt(55,70),
+    commissionPct:0.42,
+    badgeExpiryDay:rndInt(70,120),
+    shift:shift||'day',
+    status:'available',
+    currentArea:area||rndPick(AREA_KEYS),
+    currentJobId:null,
+    vehicleId:null,
+    onHoliday:false,holidayDaysLeft:0,
+    fatigue:rndInt(0,15),injuredDaysLeft:0,forceRestUntil:0,
+    noticeDaysLeft:0,
+    jobsToday:0,earningsToday:0,jobsTotal:0,ratingSum:0,ratingCount:0,
+    consecutiveDaysWorked:0,
+    pendingRequest:null,
+    sideHustle:'none',
+  };
+}
+function driverAvgRating(d){return d.ratingCount? (d.ratingSum/d.ratingCount).toFixed(1):'—';}
+function honestyLabel(h){return h>=85?'Honest':h>=65?'Mostly OK':h>=40?'Shifty':'Bent';}
+
+function seedVehicles(){
+  const kinds=['saloon','saloon','estate','mpv','wav'];
+  kinds.forEach((k,i)=>{
+    const v=makeVehicle(k);
+    G.vehicles.push(v);
+    if(G.drivers[i]) G.drivers[i].vehicleId=v.id;
+  });
+}
+function makeVehicle(kind){
+  const m=vehicleModel(kind);
+  return {
+    id:G.nextVehicleId++,
+    kind,reg:rndPlate(),
+    condition:rndInt(78,96),
+    mileage:rndInt(8000,40000),
+    motDueDay:rndInt(60,110),
+    status:'active',
+    dashcam:false,
+    livery:false,
+    repairUntil:0,
+  };
+}
+function vehicleOf(driver){return driver&&driver.vehicleId? G.vehicles.find(v=>v.id===driver.vehicleId):null;}
+
+function seedCandidates(){
+  G.candidates=[];
+  for(let i=0;i<4;i++) G.candidates.push(makeCandidate());
+}
+function makeCandidate(){
+  return {id:'c'+Math.random().toString(36).slice(2,8),name:rndDriverName(),trait:rndPick(TRAITS),askWage:rndInt(55,75),badgeReady:Math.random()<0.8};
+}
+
+function seedFixtures(){
+  for(let i=0;i<2;i++) addFixture();
+}
+function addFixture(){
+  const t=rndPick(FIXTURE_TEMPLATES);
+  const day=dayOf(G.clock)+rndInt(4,11);
+  const hour=t.area==='ibrox'||t.area==='eastend'||t.area==='southside'?rndPick([15,17,19.5]):rndPick([19,20]);
+  G.fixtures.push({id:Math.random().toString(36).slice(2,8),label:t.label,area:t.area,big:t.big,day,hour,announced:false,resolved:false});
+}
+
+function rollWeather(){
+  const prev=G.weather;
+  const r=Math.random();
+  G.weather=r<0.55?'clear':r<0.85?'rain':'fog';
+  if(G.weather!==prev){
+    if(G.weather==='clear') addLog('☀ The weather has cleared up — roads back to normal.');
+    else if(G.weather==='rain') addLog('🌧 Rain has come on — expect more calls and slower runs.','warn');
+    else addLog('🌫 Fog has rolled in off the Clyde — journeys will take longer.','warn');
+  }
+}
+const AREA_INCIDENT_TYPES=[
+  {key:'roadworks',label:'Roadworks',icon:'🚧',delayRange:[5,12],demandDelta:0,weight:4},
+  {key:'flooding',label:'Flooding',icon:'🌊',delayRange:[10,20],demandDelta:-1,weight:2},
+  {key:'protest',label:'Protest march',icon:'📢',delayRange:[8,15],demandDelta:-1,weight:1},
+  {key:'disturbance',label:'Disturbance',icon:'🔥',delayRange:[12,25],demandDelta:-2,weight:1},
+  {key:'gasleak',label:'Gas leak — street closed',icon:'⚠',delayRange:[15,25],demandDelta:-1,weight:1},
+  {key:'powercut',label:'Power cut',icon:'⚡',delayRange:[3,8],demandDelta:1,weight:1},
+];
+function pickIncidentType(){
+  const total=AREA_INCIDENT_TYPES.reduce((s,t)=>s+t.weight,0);
+  let r=Math.random()*total;
+  for(const t of AREA_INCIDENT_TYPES){ if(r<t.weight) return t; r-=t.weight; }
+  return AREA_INCIDENT_TYPES[0];
+}
+function maybeAreaIncident(){
+  G.incidents=G.incidents.filter(inc=>{
+    if(G.clock>=inc.endClock){ addLog(`${inc.icon} The ${inc.label.toLowerCase()} around ${areaLabel(inc.area)} has cleared.`,'warn'); return false; }
+    return true;
+  });
+  if(G.incidents.length<2 && Math.random()<0.5){
+    const candidates=AREA_KEYS.filter(k=>!G.incidents.find(i=>i.area===k));
+    if(candidates.length){
+      const area=rndPick(candidates);
+      const type=pickIncidentType();
+      const inc={id:Math.random().toString(36).slice(2,8),area,label:type.label,icon:type.icon,delayMin:rndInt(type.delayRange[0],type.delayRange[1]),demandDelta:type.demandDelta,endClock:G.clock+rndInt(150,320)};
+      G.incidents.push(inc);
+      addLog(`${inc.icon} ${inc.label} reported around ${areaLabel(area)} — expect disruption.`,'warn');
+    }
+  }
+}
+
+/* ══════════════════════════ PERSISTENCE ══════════════════════════ */
+function save(){try{localStorage.setItem('kelvinCarsSave',JSON.stringify(G));}catch(e){}}
+function tryLoad(){try{const raw=localStorage.getItem('kelvinCarsSave');if(!raw)return null;return JSON.parse(raw);}catch(e){return null;}}
+
+/* ══════════════════════════ LOG ══════════════════════════ */
+function addLog(msg,cls){
+  G.log.push({t:fmtClock(G.clock%1440)+' D'+dayOf(G.clock),msg,cls:cls||''});
+  if(G.log.length>220) G.log.shift();
+}
+
+/* ══════════════════════════ FARE / DEMAND ══════════════════════════ */
+function areaDemandLevel(areaKey){
+  const hour=hourOf(G.clock),dow=dowOf(G.clock);
+  let lvl=1;
+  if((dow===4||dow===5)&&(hour>=20||hour<3)&&VENUES[areaKey]&&VENUES[areaKey].nightlife) lvl=3;
+  else if((hour>=7&&hour<9)||(hour>=16&&hour<18)) lvl=2;
+  const activeFx=G.fixtures.find(f=>!f.resolved&&f.day===dayOf(G.clock)&&f.area===areaKey&&Math.abs((G.clock%1440)/60-f.hour)<2.5);
+  if(activeFx) lvl=activeFx.big?4:3;
+  if(G.weather==='rain') lvl=Math.min(4,lvl+1);
+  if(G.clock<G.marketingBoostUntil) lvl=Math.min(4,lvl+1);
+  const inc=G.incidents.find(i=>i.area===areaKey);
+  if(inc) lvl=clamp(lvl+inc.demandDelta,1,4);
+  return lvl;
+}
+function demandLabel(lvl){return lvl>=4?'SURGE':lvl===3?'HIGH':lvl===2?'MED':'LOW';}
+function demandClass(lvl){return lvl>=4?'surge':lvl===3?'high':lvl===2?'med':'low';}
+
+function computeFare(job,type){
+  let fare=3.20+job.distanceKm*1.95;
+  const hour=hourOf(job.createdAt),dow=dowOf(job.createdAt);
+  if(hour>=22||hour<6) fare*=1.25;
+  if((dow===4||dow===5)&&(hour>=20||hour<4)) fare*=1.15;
+  const lvl=areaDemandLevel(job.pickupArea);
+  fare*=(1+(lvl-1)*0.08);
+  if(job.passengers>1) fare+=(job.passengers-1)*1.2;
+  if(type.courier) fare=Math.max(4.5,fare*0.6);
+  if(job.account) fare*=0.92;
+  return round1(fare);
+}
+
+/* ══════════════════════════ JOB SPAWNING ══════════════════════════ */
+const GLOBAL_SPAWN_SCALE=0.5;
+function trySpawnJobs(dtMinutes){
+  const hour=hourOf(G.clock),dow=dowOf(G.clock),dp=daypart(hour);
+  const weekend=(dow===4||dow===5);
+  const diff=DIFFICULTIES[G.diffKey];
+  JOB_TYPES.forEach(type=>{
+    if(type.weekdayOnly&&weekend) return;
+    const w=type.weights[dp]||0;
+    if(w<=0) return;
+    let perMinute=(type.rate/60)*(w/8)*GLOBAL_SPAWN_SCALE;
+    if(weekend&&type.weekendMult) perMinute*=type.weekendMult;
+    perMinute*=diff.demandMult;
+    perMinute*=(0.7+(G.rating/5)*0.6);
+    const expected=perMinute*dtMinutes;
+    if(Math.random()<expected) spawnFromType(type);
+  });
+}
+function spawnFromType(type){
+  const spec=type.gen();
+  if(!spec) return;
+  const distanceKm=areaDist(spec.pickupArea,spec.dropArea);
+  const job={
+    id:G.nextJobId++,
+    typeKey:type.key,
+    label:type.label,
+    pickupArea:spec.pickupArea,pickupVenue:spec.pickupVenue,
+    dropArea:spec.dropArea,dropVenue:spec.dropVenue,
+    passengers:spec.passengers||0,
+    passengerName:spec.account?spec.accountName:(type.courier?'Parcel — no passenger':rndPassengerName()),
+    account:!!spec.account,
+    wavRequired:!!type.wav,
+    minSeats:type.minSeats||(spec.passengers>4?7:Math.max(1,spec.passengers)),
+    status:'incoming',
+    createdAt:G.clock,
+    holdElapsed:0,
+    holdPatience:type.holdPatience||12,
+    distanceKm,
+    driverId:null,
+    noShow:false,
+    finishedAt:null,
+    radioOn:Math.random()<0.7,
+    cabActionUsed:false,
+    cabRatingBonus:0,
+    cabTipBonus:0,
+  };
+  job.fare=computeFare(job,type);
+  G.jobs.push(job);
+  const acctTag=job.account?' [ACCOUNT]':'';
+  addLog(`📞 New booking: ${job.label}${acctTag} — ${venueStr(job.pickupArea,job.pickupVenue)} → ${venueStr(job.dropArea,job.dropVenue)}.`);
+}
+function venueStr(area,venue){return venue?`${venue}, ${areaLabel(area)}`:areaLabel(area);}
+
+function spawnMatchdayJobs(){
+  G.fixtures.forEach(f=>{
+    if(f.resolved) return;
+    if(f.day===dayOf(G.clock)){
+      const hourNow=(G.clock%1440)/60;
+      if(!f.announced && f.day===dayOf(G.clock)+0 && hourNow<f.hour){
+        // handled by announce check elsewhere
+      }
+      if(Math.abs(hourNow-(f.hour+1.5))<1.0 && Math.random()<0.18){
+        const type=JOB_TYPES.find(t=>t.key==='pubHome');
+        const home=rndPick(RESIDENTIAL_AREAS);
+        const spec={pickupArea:f.area,pickupVenue:f.label,dropArea:home,dropVenue:pickVenue(home,'residential'),passengers:rndInt(1,4)};
+        const distanceKm=areaDist(spec.pickupArea,spec.dropArea);
+        const job={id:G.nextJobId++,typeKey:'matchday',label:'Post-match rush',pickupArea:spec.pickupArea,pickupVenue:spec.pickupVenue,dropArea:spec.dropArea,dropVenue:spec.dropVenue,passengers:spec.passengers,passengerName:rndPassengerName(),account:false,wavRequired:false,minSeats:Math.max(1,spec.passengers),status:'incoming',createdAt:G.clock,holdElapsed:0,holdPatience:9,distanceKm,driverId:null,noShow:false,finishedAt:null,radioOn:Math.random()<0.7,cabActionUsed:false,cabRatingBonus:0,cabTipBonus:0};
+        job.fare=computeFare(job,{courier:false,account:false});
+        job.fare*=1.2;
+        G.jobs.push(job);
+      }
+      if(hourNow>=f.hour+3) f.resolved=true;
+    }
+  });
+}
+
+/* ══════════════════════════ JOB LIFECYCLE ══════════════════════════ */
+function allocateJob(jobId,driverId){
+  const job=G.jobs.find(j=>j.id===jobId);
+  const drv=G.drivers.find(d=>d.id===driverId);
+  if(!job||!drv||job.status!=='incoming'||drv.status!=='available') return;
+  const veh=vehicleOf(drv);
+  if(job.wavRequired&&(!veh||!vehicleModel(veh.kind).wav)){addLog('⚠ That car cannot take a wheelchair-accessible booking.','warn');return;}
+  if(job.minSeats>1&&(!veh||vehicleModel(veh.kind).seats<job.minSeats)){addLog('⚠ Not enough seats in that car for this booking.','warn');return;}
+  job.driverId=driverId;
+  job.status='enroute';
+  job.etaPickup=travelMinutesBetween(drv.currentArea,job.pickupArea);
+  job.etaPickupTotal=job.etaPickup;
+  drv.status='enroute';
+  drv.currentJobId=job.id;
+  addLog(`🚕 ${drv.name} dispatched to ${venueStr(job.pickupArea,job.pickupVenue)} (ETA ${Math.ceil(job.etaPickup)} min).`);
+}
+function subOutJob(jobId){
+  const job=G.jobs.find(j=>j.id===jobId);
+  if(!job||job.status!=='incoming') return;
+  const fee=5+job.distanceKm*0.4;
+  G.cash-=fee;
+  job.status='subbed';
+  job.finishedAt=G.clock;
+  addLog(`📤 Subbed out "${job.label}" to another circuit for ${fmtMoney0(fee)} — no rating impact.`,'warn');
+  closeUiModal();
+}
+function declineJob(jobId){
+  const job=G.jobs.find(j=>j.id===jobId);
+  if(!job||job.status!=='incoming') return;
+  missJob(job,'Declined — no driver available.');
+  closeUiModal();
+}
+function recallJob(jobId){
+  const job=G.jobs.find(j=>j.id===jobId);
+  if(!job||!['enroute','waiting','onhire'].includes(job.status)) return;
+  const drv=G.drivers.find(d=>d.id===job.driverId);
+  if(drv){
+    if(job.status!=='enroute') drv.currentArea=job.pickupArea;
+    drv.status='available';drv.currentJobId=null;
+  }
+  addLog(`↩ Recalled ${drv?drv.name:'the driver'} from "${job.label}" — booking's back on the board.`,'warn');
+  job.status='incoming';
+  job.driverId=null;
+  job.holdElapsed=0;
+  job.holdPatience=Math.max(job.holdPatience,10);
+  closeUiModal();
+}
+function toggleRadio(jobId){
+  const job=G.jobs.find(j=>j.id===jobId);
+  if(!job||!['enroute','waiting','onhire'].includes(job.status)) return;
+  job.radioOn=!job.radioOn;
+  render();
+}
+function cabAction(jobId,action){
+  const job=G.jobs.find(j=>j.id===jobId);
+  if(!job||job.status!=='onhire'||job.cabActionUsed) return;
+  const drv=G.drivers.find(d=>d.id===job.driverId);
+  if(!drv) return;
+  job.cabActionUsed=true;
+  if(action==='chat'){
+    const good=Math.random()<(drv.trait==='Chatty'?0.85:0.65);
+    if(good){
+      job.cabRatingBonus+=0.3;job.cabTipBonus+=0.1;
+      addLog(`💬 ${drv.name} gets chatting with the passenger — going down well.`,'money');
+    } else {
+      job.cabRatingBonus-=0.2;
+      addLog(`💬 ${drv.name} tries to make conversation — the passenger just wanted a quiet ride.`,'warn');
+    }
+  } else if(action==='flirt'){
+    const good=Math.random()<(drv.trait==='Chatty'?0.55:0.4);
+    if(good){
+      job.cabRatingBonus+=0.6;job.cabTipBonus+=0.35;
+      drv.morale=clamp(drv.morale+3,0,100);
+      addLog(`😏 ${drv.name} gives it the patter — the passenger's well chuffed.`,'money');
+    } else {
+      job.cabRatingBonus-=0.8;
+      drv.morale=clamp(drv.morale-3,0,100);
+      G.rating=clamp(round1(G.rating-0.03),1,5);
+      addLog(`😬 ${drv.name} gives it the patter and it lands badly — the passenger's unimpressed and a complaint's noted. Maybe leave it to the radio next time.`,'bad');
+    }
+  } else if(action==='diversion'){
+    const skim=round1(job.fare*rnd(0.08,0.2));
+    G.cash-=skim;
+    drv.earningsToday=round1(drv.earningsToday+skim);
+    drv.honesty=clamp(drv.honesty-rndInt(2,5),0,100);
+    drv.dodgyToday=true;
+    drv.dodgyCount=(drv.dodgyCount||0)+1;
+    const caught=Math.random()<0.35;
+    if(caught){
+      drv.honesty=clamp(drv.honesty-rndInt(6,12),0,100);
+      G.rating=clamp(round1(G.rating-0.05),1,5);
+      job.cabRatingBonus-=1;
+      addLog(`🚨 ${drv.name} takes the scenic route on your say-so — the passenger clocks it and complains.`,'bad');
+    } else {
+      addLog(`🗺 ${drv.name} takes the scenic route on "${job.label}" — nobody's the wiser, ${fmtMoney(skim)} extra off the meter.`,'warn');
+    }
+  }
+  render();
+}
+function runAutoDispatch(){
+  G.jobs.filter(j=>j.status==='incoming').forEach(job=>{
+    if(job.status!=='incoming') return;
+    let best=null,bestEta=Infinity;
+    G.drivers.filter(d=>d.status==='available').forEach(d=>{
+      const veh=vehicleOf(d);
+      const ok=(!job.wavRequired||(veh&&vehicleModel(veh.kind).wav)) && (job.minSeats<=1||(veh&&vehicleModel(veh.kind).seats>=job.minSeats));
+      if(!ok) return;
+      const eta=travelMinutesBetween(d.currentArea,job.pickupArea);
+      if(eta<bestEta){bestEta=eta;best=d;}
+    });
+    if(best) allocateJob(job.id,best.id);
+  });
+}
+function missJob(job,reason){
+  job.status='missed';
+  job.finishedAt=G.clock;
+  G.jobsMissedToday++;G.jobsMissedTotal++;
+  G.rating=clamp(round1(G.rating-0.03),1,5);
+  addLog(`✖ Missed booking: ${job.label} (${venueStr(job.pickupArea,job.pickupVenue)}) — ${reason||'customer gave up waiting.'}`,'bad');
+}
+function startOnHire(job){
+  job.status='onhire';
+  job.etaDropoff=travelMinutesBetween(job.pickupArea,job.dropArea);
+  job.etaDropoffTotal=job.etaDropoff;
+}
+function resolveNoShow(job){
+  const drv=G.drivers.find(d=>d.id===job.driverId);
+  job.status='noshow';
+  job.finishedAt=G.clock;
+  if(drv){drv.status='available';drv.currentArea=job.pickupArea;drv.currentJobId=null;}
+  if(!job.account){G.cash+=4;addLog(`👻 No-show at ${venueStr(job.pickupArea,job.pickupVenue)} — £4.00 waiting fee collected.`,'warn');}
+  else addLog(`👻 No-show at ${venueStr(job.pickupArea,job.pickupVenue)} (account job, no fee).`,'warn');
+}
+const CANT_PAY_ITEMS=['a phone','a watch','a pair of trainers','a set of tools','a guitar','a jacket'];
+function completeJob(job){
+  const drv=G.drivers.find(d=>d.id===job.driverId);
+  const veh=drv?vehicleOf(drv):null;
+  job.status='complete';
+  job.finishedAt=G.clock;
+  G.jobsCompletedToday++;G.jobsCompletedTotal++;
+  const type=jobTypeOf2(job);
+  const cantPay=!job.account && !type.courier && Math.random()<0.045;
+  let paidFrac=1,dodgy=null;
+  if(cantPay){
+    const outcome=rndPick(['runner','pawn','arrangement']);
+    if(outcome==='runner'){
+      paidFrac=0;
+      addLog(`💸 No cash on "${job.label}" — the passenger did a runner and ${drv?drv.name:'the driver'} watched them go.`,'bad');
+      if(drv) drv.morale=clamp(drv.morale-3,0,100);
+    } else if(outcome==='pawn'){
+      paidFrac=rnd(0.4,0.7);
+      addLog(`📱 No cash on "${job.label}" — passenger left ${rndPick(CANT_PAY_ITEMS)} as security, ${drv?drv.name:'the driver'} took a partial fare.`,'warn');
+    } else {
+      paidFrac=rnd(0.7,1.0);
+      addLog(`🤝 No cash on "${job.label}" — ${drv?drv.name:'the driver'} "sorted something out" with the passenger. No further questions asked.`,'warn');
+    }
+  } else if(drv){
+    const hasDashcam=veh&&veh.dashcam;
+    const dodgyChance=clamp((100-drv.honesty)/100*0.22,0,0.22)*(hasDashcam?0.3:1);
+    if(Math.random()<dodgyChance){
+      const kind=Math.random()<0.5?'longway':'change';
+      const skim=kind==='longway'?round1(job.fare*rnd(0.08,0.22)):round1(rnd(1,5));
+      G.cash-=skim;
+      drv.earningsToday=round1(drv.earningsToday+skim);
+      drv.dodgyCount=(drv.dodgyCount||0)+1;
+      drv.dodgyToday=true;
+      dodgy={kind,caught:Math.random()<(hasDashcam?0.9:0.4)};
+      if(dodgy.caught){
+        drv.honesty=clamp(drv.honesty-rndInt(8,15),0,100);
+        G.rating=clamp(round1(G.rating-0.05),1,5);
+        drv.morale=clamp(drv.morale-4,0,100);
+        drv.warnings=(drv.warnings||0)+1;
+        addLog(kind==='longway'
+          ?`🚨 Passenger rumbled ${drv.name} taking the scenic route on "${job.label}" and complained.${hasDashcam?' Dashcam footage settled it.':''}`
+          :`🚨 Passenger caught ${drv.name} short-changing them on "${job.label}" — a complaint's been logged.${hasDashcam?' Dashcam footage settled it.':''}`,'bad');
+        if(drv.warnings===1) addLog(`📋 ${drv.name} has been issued a written warning over this.`,'warn');
+        else if(drv.warnings>=2 && !G.pendingEvent) G.pendingEvent={type:'warningEscalation',driverId:drv.id};
+      } else {
+        drv.honesty=clamp(drv.honesty-rndInt(1,3),0,100);
+        addLog(kind==='longway'
+          ?`👀 ${drv.name} took a "scenic route" on "${job.label}" — nobody the wiser, for now.`
+          :`👀 ${drv.name} was a bit light with the change on "${job.label}".`,'warn');
+      }
+    }
+  }
+  const actualFare=round1(job.fare*paidFrac);
+  const driverPay=round1(actualFare*(drv?drv.commissionPct:0.42));
+  const runCost=veh?round1(job.distanceKm*vehicleModel(veh.kind).runCostPerKm):0;
+  if(job.account) G.accountsReceivable+=actualFare;
+  else G.cash+=actualFare;
+  G.cash-=driverPay;
+  G.cash-=runCost;
+  G.todayRevenue+=actualFare;G.todayDriverPay+=driverPay;G.todayRunCost+=runCost;
+  G.dailyRevenueByType[job.typeKey]=(G.dailyRevenueByType[job.typeKey]||0)+actualFare;
+  if(drv){
+    drv.status='available';drv.currentArea=job.dropArea;drv.currentJobId=null;
+    drv.jobsToday++;drv.jobsTotal++;drv.earningsToday=round1(drv.earningsToday+driverPay);
+    drv.fatigue=clamp(round1(drv.fatigue+rnd(0.5,1.5)),0,100);
+    if(!cantPay){
+      let passengerRating=clamp(round1(rnd(3.4,5)+(job.cabRatingBonus||0)),1,5);
+      if(job.account) passengerRating=clamp(round1(rnd(3.8,5)),1,5);
+      if(dodgy&&dodgy.caught) passengerRating=clamp(round1(rnd(1,2.5)),1,5);
+      drv.ratingSum+=passengerRating;drv.ratingCount++;
+      const tipRoll=Math.random();
+      if(!job.account && !type.courier && !dodgy && tipRoll<0.22+(job.cabTipBonus||0)){const tip=round1(rnd(1,6));G.cash+=tip;}
+      if(passengerRating>=4.6){
+        G.rating=clamp(round1(G.rating+0.01),1,5);
+        drv.morale=clamp(drv.morale+round1(2*sev(drv,'praise')),0,100);
+        if(Math.random()<0.06) maybeCommendation(drv,job);
+      } else if(passengerRating<=3.6 && !dodgy){
+        G.rating=clamp(round1(G.rating-0.02),1,5);
+        drv.morale=clamp(drv.morale-2,0,100);
+        if(Math.random()<0.15) addLog(`💬 Complaint logged against ${drv.name}: "a bit short with me, driving was fine but no chat."`,'warn');
+      }
+    }
+  }
+  if(veh){
+    veh.mileage+=Math.round(job.distanceKm);
+    veh.condition=clamp(round1(veh.condition-job.distanceKm*0.06),0,100);
+    if(veh.condition<=0){
+      veh.status='written-off';
+      addLog(`💥 ${vehicleModel(veh.kind).label} (${veh.reg}) has broken down for good and is written off.`,'bad');
+      if(drv) drv.vehicleId=null;
+    }
+  }
+  const tag=job.account?' (invoiced)':'';
+  if(!cantPay) addLog(`✅ Job complete: ${job.label} — ${drv?drv.name:'?'} earned ${fmtMoney(driverPay)}, fare ${fmtMoney(actualFare)}${tag}.`,'money');
+}
+function jobTypeOf2(job){return JOB_TYPES.find(t=>t.key===job.typeKey)||{};}
+function sev(drv,key){const t=TRAIT_SEVERITY[drv.trait];return t&&t[key]!==undefined?t[key]:1;}
+function maybeCommendation(drv,job){
+  G.achievements.push({day:dayOf(G.clock),text:`${drv.name} earned a glowing review after the ${job.label.toLowerCase()} to ${areaLabel(job.dropArea)}.`});
+  addLog(`⭐ Glowing passenger review for ${drv.name}!`,'money');
+}
+
+/* ══════════════════════════ TICK ══════════════════════════ */
+function progressJobs(dt){
+  G.jobs.forEach(job=>{
+    if(job.status==='incoming'){
+      job.holdElapsed+=dt;
+      if(job.holdElapsed>=job.holdPatience) missJob(job);
+    } else if(job.status==='enroute'){
+      if(maybeCrash(job,dt)) return;
+      if(maybeBreakdown(job,dt)) return;
+      job.etaPickup-=dt;
+      if(job.etaPickup<=0){
+        job.status='waiting';
+        const type=jobTypeOf2(job);
+        const patience=type.patience||5;
+        job.waitPatience=patience;
+        const actual=rnd(0,patience*1.4);
+        job.noShow=actual>=patience;
+        job.waitActual=Math.min(actual,patience);
+        job.waitTimer=0;
+      }
+    } else if(job.status==='waiting'){
+      job.waitTimer+=dt;
+      if(job.waitTimer>=job.waitActual){
+        if(job.noShow) resolveNoShow(job); else startOnHire(job);
+      }
+    } else if(job.status==='onhire'){
+      if(maybeCrash(job,dt)) return;
+      if(maybeBreakdown(job,dt)) return;
+      job.etaDropoff-=dt;
+      if(job.etaDropoff<=0) completeJob(job);
+    }
+  });
+  G.jobs=G.jobs.filter(j=>!(['complete','noshow','missed','subbed'].includes(j.status) && (G.clock-j.finishedAt)>7));
+}
+function maybeCrash(job,dt){
+  const drv=G.drivers.find(d=>d.id===job.driverId);
+  const veh=drv?vehicleOf(drv):null;
+  if(!drv||!veh) return false;
+  if(drv.fatigue<40) return false;
+  const fatigueFactor=(drv.fatigue-40)/60;
+  const chance=dt*0.0005*fatigueFactor;
+  if(Math.random()>=chance) return false;
+  const severe=Math.random()<0.3+fatigueFactor*0.3;
+  const hasPassenger=job.status==='onhire';
+  const injured=hasPassenger && Math.random()<(severe?0.5:0.15);
+  const condLoss=rndInt(severe?30:15,severe?55:30);
+  veh.condition=clamp(round1(veh.condition-condLoss),0,100);
+  let cost;
+  if(injured){
+    cost=rndInt(400,900);
+    G.rating=clamp(round1(G.rating-0.15),1,5);
+    drv.injuredDaysLeft=rndInt(3,6);
+    addLog(`🚑 CRASH: ${drv.name} was too tired at the wheel on "${job.label}" — the passenger's been taken to hospital. This is serious.`,'bad');
+  } else {
+    cost=rndInt(150,400);
+    G.rating=clamp(round1(G.rating-0.07),1,5);
+    drv.injuredDaysLeft=rndInt(1,3);
+    addLog(`💥 CRASH: ${drv.name} was too tired and pranged it on "${job.label}"${hasPassenger?' — the passenger is shaken but okay':''}. ${drv.name} needs a few days to recover.`,'bad');
+  }
+  G.cash-=cost;
+  drv.status='injured';
+  drv.currentJobId=null;
+  drv.fatigue=clamp(round1(drv.fatigue-30),0,100);
+  if(veh.condition<=0){
+    veh.status='written-off';
+    addLog(`💥 ${vehicleModel(veh.kind).label} (${veh.reg}) is a write-off after the crash.`,'bad');
+  } else {
+    veh.status='repair';
+    veh.repairUntil=G.clock+rndInt(150,300);
+  }
+  job.status='missed';
+  job.finishedAt=G.clock;
+  G.jobsMissedToday++;G.jobsMissedTotal++;
+  return true;
+}
+function maybeBreakdown(job,dt){
+  const drv=G.drivers.find(d=>d.id===job.driverId);
+  const veh=drv?vehicleOf(drv):null;
+  if(!drv||!veh) return false;
+  const chance=dt*0.00035*(1+(100-veh.condition)/100);
+  if(Math.random()>=chance) return false;
+  const fee=rndInt(80,200);
+  G.cash-=fee;
+  veh.status='repair';
+  veh.repairUntil=G.clock+rndInt(90,220);
+  veh.condition=clamp(round1(veh.condition-rndInt(10,20)),0,100);
+  drv.status='available';
+  drv.currentJobId=null;
+  job.status='missed';
+  job.finishedAt=G.clock;
+  G.jobsMissedToday++;G.jobsMissedTotal++;
+  G.rating=clamp(round1(G.rating-0.02),1,5);
+  addLog(`🔧 BREAKDOWN: ${vehicleModel(veh.kind).label} (${veh.reg}) has broken down on "${job.label}" — recovery cost ${fmtMoney0(fee)}. ${drv.name} is off the road for a while.`,'bad');
+  return true;
+}
+
+function tickDrivers(dt){
+  G.drivers.forEach(d=>{
+    if(d.injuredDaysLeft>0){
+      d.injuredDaysLeft-=dt/1440;
+      if(d.injuredDaysLeft<=0){d.injuredDaysLeft=0;d.status='available';addLog(`${d.name} is back on the road after recovering.`);}
+      return;
+    }
+    if(d.onHoliday){
+      d.holidayDaysLeft-=dt/1440;
+      if(d.holidayDaysLeft<=0){d.onHoliday=false;d.status='available';d.fatigue=0;addLog(`${d.name} is back from holiday, well rested.`);}
+      return;
+    }
+    if(d.forceRestUntil){
+      d.fatigue=clamp(round1(d.fatigue-dt*0.2),0,100);
+      if(G.clock>=d.forceRestUntil){d.forceRestUntil=0;d.status='available';addLog(`${d.name} is back on shift, well rested.`);}
+      else{d.status='resting';return;}
+    }
+    if(d.noticeDaysLeft>0) return;
+    const hour=hourOf(G.clock);
+    const onShiftWindow=d.shift==='day'? (hour>=7&&hour<19) : (hour>=19||hour<7);
+    if(!onShiftWindow){
+      if(d.status==='available') d.status='offshift';
+      d.fatigue=clamp(round1(d.fatigue-dt*0.13),0,100);
+      return;
+    }
+    d.fatigue=clamp(round1(d.fatigue+dt*0.08),0,100);
+    if(d.status==='offshift') d.status='available';
+    const IDLE_STATUSES=['available','no-vehicle','lock-mot','lock-badge','lock-repair'];
+    if(IDLE_STATUSES.includes(d.status)){
+      if(d.badgeExpiryDay<=dayOf(G.clock)) d.status='lock-badge';
+      else{
+        const veh=vehicleOf(d);
+        if(!veh) d.status='no-vehicle';
+        else if(veh.status==='written-off') d.status='no-vehicle';
+        else if(veh.status==='repair') d.status='lock-repair';
+        else if(veh.motDueDay<=dayOf(G.clock)) d.status='lock-mot';
+        else d.status='available';
+      }
+    }
+    if(d.status==='available' && d.morale<10 && Math.random()<0.002){
+      d.noticeDaysLeft=2;d.status='notice';
+      addLog(`⚠ ${d.name} has handed in two shifts' notice. Morale bottomed out.`,'bad');
+    }
+    if(d.status==='available' && sev(d,'idle')>1 && Math.random()<0.0006){
+      d.morale=clamp(d.morale-1,0,100);
+    }
+  });
+}
+
+function maybeCompliance(){
+  if(G.pendingEvent) return;
+  if(dayOf(G.clock)<G.nextComplianceDay) return;
+  G.nextComplianceDay=dayOf(G.clock)+rndInt(9,16);
+  const diff=DIFFICULTIES[G.diffKey];
+  const checkedDrivers=[];
+  const pool=G.drivers.filter(d=>d.noticeDaysLeft<=0);
+  for(let i=0;i<Math.min(3,pool.length);i++) checkedDrivers.push(rndPick(pool));
+  let totalFine=0;
+  const results=checkedDrivers.map(d=>{
+    const veh=vehicleOf(d);
+    const issues=[];
+    if(d.badgeExpiryDay<=dayOf(G.clock)) issues.push('Driver badge expired');
+    if(veh&&veh.motDueDay<=dayOf(G.clock)) issues.push('Vehicle test overdue');
+    if(veh&&veh.condition<25) issues.push('Vehicle condition below standard');
+    if(!veh) issues.push('No vehicle assigned');
+    const fine=issues.length? Math.round((120+issues.length*40)*diff.fineMult):0;
+    totalFine+=fine;
+    return {driver:d.name,issues,fine};
+  });
+  G.rating=clamp(round1(G.rating-0.04*results.filter(r=>r.issues.length).length),1,5);
+  G.pendingEvent={type:'compliance',results,totalFine};
+}
+
+function maybeDriverRequest(){
+  if(G.pendingEvent) return;
+  if(Math.random()>0.10) return;
+  const pool=G.drivers.filter(d=>d.noticeDaysLeft<=0 && !d.onHoliday && !d.pendingRequest);
+  if(!pool.length) return;
+  const d=rndPick(pool);
+  const wantsRaise=d.morale<70? Math.random()<0.6 : Math.random()<0.3;
+  if(wantsRaise){
+    const amount=Math.round(d.dailyWage*0.15);
+    d.pendingRequest={kind:'raise',amount};
+    G.pendingEvent={type:'request',driverId:d.id,kind:'raise',amount};
+  } else {
+    const days=rndInt(2,5);
+    d.pendingRequest={kind:'holiday',days};
+    G.pendingEvent={type:'request',driverId:d.id,kind:'holiday',days};
+  }
+}
+
+function endOfDay(){
+  G.history.push({day:dayOf(G.clock)-1,cash:Math.round(G.cash),rating:G.rating,jobsCompleted:G.jobsCompletedToday});
+  if(G.history.length>200) G.history.shift();
+  let payroll=0;
+  G.drivers.forEach(d=>{
+    if(d.noticeDaysLeft>0){
+      d.noticeDaysLeft--;
+      if(d.noticeDaysLeft<=0){
+        addLog(`${d.name} has left Kelvin Cars.`,'bad');
+        if(d.vehicleId){const v=vehicleOf(d); }
+        G.drivers=G.drivers.filter(x=>x.id!==d.id);
+        return;
+      }
+    }
+    if(d.onHoliday||d.status==='offshift') return;
+    payroll+=d.dailyWage;
+    if(d.earningsToday<d.dailyWage*0.6 && d.jobsToday>0){
+      const topUp=round1(d.dailyWage*0.6-d.earningsToday);
+      G.cash-=topUp;payroll+=topUp;
+    }
+    if(d.jobsToday>0) d.consecutiveDaysWorked++; else d.consecutiveDaysWorked=0;
+    if(d.consecutiveDaysWorked>=6){
+      d.morale=clamp(d.morale-Math.round(3*sev(d,'overworked')),0,100);
+    }
+    d.earningsToday=0;d.jobsToday=0;
+  });
+  G.drivers.forEach(d=>{
+    if(!d.dodgyToday) d.honesty=clamp(d.honesty+rndInt(1,3),0,100);
+    d.dodgyToday=false;
+  });
+  G.cash-=payroll;
+  const fixedCost=G.vehicles.filter(v=>v.status!=='written-off').length*20 + G.drivers.length*8 + 45/7;
+  G.cash-=fixedCost;
+  G.todayFixed=fixedCost;
+  if(G.loan){
+    G.cash-=G.loan.dailyPayment;
+    G.todayLoanPayment=G.loan.dailyPayment;
+    G.loan.daysLeft--;
+    if(G.loan.daysLeft<=0){
+      addLog(`🏦 Loan fully repaid — ${esc(G.company)} is debt-free.`,'money');
+      G.loan=null;
+    }
+  } else G.todayLoanPayment=0;
+  const liveryCount=G.vehicles.filter(v=>v.livery&&v.status!=='written-off').length;
+  if(liveryCount>0){
+    G.todayAdIncome=liveryCount*rndInt(5,8);
+    G.cash+=G.todayAdIncome;
+  } else G.todayAdIncome=0;
+  addLog(`📅 End of day ${dayOf(G.clock)-1}: revenue ${fmtMoney0(G.todayRevenue)}, driver pay ${fmtMoney0(G.todayDriverPay+payroll)}, running costs ${fmtMoney0(G.todayRunCost+fixedCost)}.`);
+  G.dailyRevenueByType={};G.todayRevenue=0;G.todayDriverPay=0;G.todayRunCost=0;G.todayFixed=0;
+  G.jobsCompletedToday=0;G.jobsMissedToday=0;
+  if(dayOf(G.clock)>=G.nextWeeklySettleDay){
+    if(G.accountsReceivable>0){
+      addLog(`💼 Weekly account settlement received: ${fmtMoney0(G.accountsReceivable)}.`,'money');
+      G.cash+=G.accountsReceivable;G.accountsReceivable=0;
+    }
+    G.nextWeeklySettleDay+=7;
+  }
+  G.fixtures=G.fixtures.filter(f=>!f.resolved||f.day>=dayOf(G.clock)-1);
+  if(G.fixtures.filter(f=>!f.resolved).length<2 && Math.random()<0.6) addFixture();
+  maybeCompliance();
+  maybeDriverRequest();
+  resolveSideHustles();
+  checkMilestones();
+  if(G.candidates.length<4 && Math.random()<0.4) G.candidates.push(makeCandidate());
+  save();
+}
+function checkMilestones(){
+  const hit=[];
+  const mark=(key,text)=>{if(!G.milestoneFlags[key]){G.milestoneFlags[key]=true;hit.push(text);}};
+  if(G.jobsCompletedTotal>=100) mark('jobs100','Completed 100 jobs.');
+  if(G.jobsCompletedTotal>=500) mark('jobs500','Completed 500 jobs.');
+  if(G.jobsCompletedTotal>=1000) mark('jobs1000','Completed 1,000 jobs — a proper Glasgow institution.');
+  if(G.cash>=10000) mark('cash10k','Passed £10,000 in the bank.');
+  if(G.cash>=25000) mark('cash25k','Passed £25,000 in the bank.');
+  if(G.drivers.length>=10) mark('drivers10','Grew the fleet to 10 drivers.');
+  if(G.rating>=4.8) mark('rating48','Hit a 4.8-star rating.');
+  hit.forEach(text=>{G.achievements.push({day:dayOf(G.clock),text});addLog('🏆 '+text,'money');});
+}
+
+function announceFixtures(){
+  G.fixtures.forEach(f=>{
+    if(!f.announced && f.day===dayOf(G.clock)+1){
+      f.announced=true;
+      addLog(`📅 Reminder: ${f.label} tomorrow ~${String(Math.floor(f.hour)).padStart(2,'0')}:${f.hour%1?'30':'00'} — expect a demand spike around ${areaLabel(f.area)}.`,'warn');
+    }
+  });
+}
+
+function tick(dt){
+  const prevDay=dayOf(G.clock);
+  G.clock+=dt;
+  const newDay=dayOf(G.clock);
+  if(newDay>prevDay){
+    for(let i=prevDay;i<newDay;i++){
+      endOfDay();
+    }
+  }
+  if(G.clock>=G.nextWeatherCheck){rollWeather();G.nextWeatherCheck=G.clock+rndInt(120,240);}
+  if(G.clock>=G.nextIncidentCheck){maybeAreaIncident();G.nextIncidentCheck=G.clock+rndInt(240,420);}
+  announceFixtures();
+  trySpawnJobs(dt);
+  spawnMatchdayJobs();
+  progressJobs(dt);
+  tickDrivers(dt);
+  tickVehicles();
+  if(G.autoDispatch) runAutoDispatch();
+  checkGameOver();
+  if(Math.random()<0.002*dt) addLog('📻 '+rndPick(RADIO_QUIPS));
+}
+function shouldFreezeSim(){
+  if(G.pendingEvent) return true;
+  if(G.uiModal && G.uiModal.type==='jobdetail'){
+    const job=G.jobs.find(j=>j.id===G.uiModal.jobId);
+    return !!job && job.status==='incoming';
+  }
+  return false;
+}
+function checkGameOver(){
+  if(G.pendingEvent) return;
+  if(G.cash<=G.bankruptcyFloor){
+    G.pendingEvent={type:'gameOver',result:'bankrupt',day:dayOf(G.clock)};
+  } else if(dayOf(G.clock)>G.seasonDays){
+    G.pendingEvent={type:'gameOver',result:G.cash>=G.targetCash?'win':'lose',day:dayOf(G.clock)-1};
+  }
+}
+function tickVehicles(){
+  G.vehicles.forEach(v=>{
+    if(v.status==='repair' && G.clock>=v.repairUntil){
+      v.status='active';
+      addLog(`✅ ${vehicleModel(v.kind).label} (${v.reg}) is back from the garage and ready to go.`,'money');
+    }
+  });
+}
+
+/* ══════════════════════════ ACTIONS ══════════════════════════ */
+function hireCandidate(cid){
+  const c=G.candidates.find(x=>x.id===cid);
+  if(!c) return;
+  const fee=Math.round(c.askWage*2);
+  if(G.cash<fee){addLog('⚠ Not enough cash to cover the signing/badge fee.','warn');return;}
+  G.cash-=fee;
+  const d=makeDriver('day',rndPick(AREA_KEYS));
+  d.name=c.name;d.trait=c.trait;d.dailyWage=c.askWage;d.morale=rndInt(65,80);
+  G.drivers.push(d);
+  G.candidates=G.candidates.filter(x=>x.id!==cid);
+  addLog(`🆕 Hired ${d.name} (${d.trait}) — signing/badge fee ${fmtMoney0(fee)}.`,'money');
+  save();render();
+}
+function fireDriver(id){
+  const d=G.drivers.find(x=>x.id===id);
+  if(!d) return;
+  G.drivers=G.drivers.filter(x=>x.id!==id);
+  G.rating=clamp(round1(G.rating-0.05),1,5);
+  addLog(`${d.name} has been let go.`,'warn');
+  save();render();
+}
+function setShift(id,shift){
+  const d=G.drivers.find(x=>x.id===id);
+  if(!d) return;
+  d.shift=shift;
+  save();render();
+}
+function restNow(id){
+  const d=G.drivers.find(x=>x.id===id);
+  if(!d||d.currentJobId) return;
+  d.forceRestUntil=G.clock+rndInt(360,480);
+  d.status='resting';
+  addLog(`😴 ${d.name} sent home to rest up before they hurt someone.`,'warn');
+  save();render();
+}
+function assignVehicle(driverId,vehId){
+  const d=G.drivers.find(x=>x.id===driverId);
+  if(!d) return;
+  G.vehicles.forEach(v=>{if(v.id===d.vehicleId) {}});
+  const takenBy=G.drivers.find(x=>x.vehicleId===Number(vehId));
+  if(takenBy) takenBy.vehicleId=null;
+  d.vehicleId=vehId?Number(vehId):null;
+  save();render();
+}
+function resolveRequest(accept){
+  const ev=G.pendingEvent;
+  if(!ev||ev.type!=='request') return;
+  const d=G.drivers.find(x=>x.id===ev.driverId);
+  if(d){
+    d.pendingRequest=null;
+    if(ev.kind==='raise'){
+      if(accept){d.dailyWage+=ev.amount;d.morale=clamp(d.morale+12,0,100);addLog(`💷 Gave ${d.name} a raise to ${fmtMoney0(d.dailyWage)}/day.`,'money');}
+      else{d.morale=clamp(d.morale-Math.round(10*sev(d,'raiseDeclined')),0,100);addLog(`${d.name}'s raise request was turned down.`,'warn');}
+    } else {
+      if(accept){d.onHoliday=true;d.holidayDaysLeft=ev.days;d.status='holiday';addLog(`🏖 ${d.name} is off on holiday for ${ev.days} days.`);}
+      else{d.morale=clamp(d.morale-Math.round(10*sev(d,'holidayDeclined')),0,100);addLog(`${d.name}'s holiday request was turned down.`,'warn');}
+    }
+  }
+  G.pendingEvent=null;save();render();
+}
+function ackCompliance(){
+  const ev=G.pendingEvent;
+  if(!ev) return;
+  G.cash-=ev.totalFine;
+  G.pendingEvent=null;
+  save();render();
+}
+function resolveWarningEscalation(fire){
+  const ev=G.pendingEvent;
+  if(!ev||ev.type!=='warningEscalation') return;
+  const d=G.drivers.find(x=>x.id===ev.driverId);
+  if(d){
+    if(fire){G.drivers=G.drivers.filter(x=>x.id!==d.id);addLog(`${d.name} has been dismissed for repeated dishonesty.`,'bad');}
+    else{d.morale=clamp(d.morale-5,0,100);addLog(`${d.name} has been given a final warning.`,'warn');}
+  }
+  G.pendingEvent=null;save();render();
+}
+function fitDashcam(vid){
+  const v=G.vehicles.find(x=>x.id===vid);
+  if(!v||v.dashcam) return;
+  const cost=250;
+  if(G.cash<cost){addLog('⚠ Not enough cash to fit a dashcam.','warn');return;}
+  G.cash-=cost;v.dashcam=true;
+  addLog(`📷 Dashcam fitted to ${vehicleModel(v.kind).label} (${v.reg}).`,'money');
+  save();render();
+}
+function fitLivery(vid){
+  const v=G.vehicles.find(x=>x.id===vid);
+  if(!v||v.livery) return;
+  const cost=180;
+  if(G.cash<cost){addLog('⚠ Not enough cash for a livery wrap.','warn');return;}
+  G.cash-=cost;v.livery=true;
+  addLog(`🪧 Wrapped ${vehicleModel(v.kind).label} (${v.reg}) in ad livery — steady passive income from here on.`,'money');
+  save();render();
+}
+
+/* ── BANK LOANS ── */
+function takeLoan(tierIdx){
+  if(G.loan){addLog('⚠ Already got a loan running — clear it before taking another.','warn');return;}
+  const idx=Number(tierIdx);
+  if(idx>maxLoanTierIdx()){addLog('⚠ The bank won’t extend that much credit at your current rating.','warn');return;}
+  const t=LOAN_TIERS[idx];
+  if(!t) return;
+  G.loan={tierIdx:idx,principal:t.amount,dailyPayment:t.dailyPayment,daysLeft:t.days,totalDays:t.days};
+  G.cash+=t.amount;
+  addLog(`🏦 Took out a bank loan of ${fmtMoney0(t.amount)} — ${fmtMoney0(t.dailyPayment)}/day for ${t.days} days.`,'money');
+  save();render();
+}
+function repayLoanEarly(){
+  if(!G.loan) return;
+  const remaining=round1(G.loan.dailyPayment*G.loan.daysLeft);
+  if(G.cash<remaining){addLog('⚠ Not enough cash to clear the loan early.','warn');return;}
+  G.cash-=remaining;
+  addLog(`🏦 Cleared the remaining loan balance of ${fmtMoney0(remaining)} early.`,'money');
+  G.loan=null;
+  save();render();
+}
+
+/* ── SIDE HUSTLES ── */
+function setHustle(driverId,key){
+  const d=G.drivers.find(x=>x.id===driverId);
+  if(!d||!SIDE_HUSTLES.find(h=>h.key===key)) return;
+  d.sideHustle=key;
+  addLog(`${d.name}'s side hustle set to: ${hustleOf(key).label}.`);
+  save();render();
+}
+function resolveSideHustles(){
+  G.drivers.forEach(d=>{
+    if(!d.sideHustle||d.sideHustle==='none'||d.noticeDaysLeft>0) return;
+    const veh=vehicleOf(d);
+    if(d.sideHustle==='delivery'){
+      if(veh) veh.condition=clamp(round1(veh.condition-rnd(0.2,0.6)),0,100);
+      if(Math.random()<0.3) d.morale=clamp(d.morale+1,0,100);
+    } else if(d.sideHustle==='moonlight'){
+      if(Math.random()<0.05){
+        d.honesty=clamp(d.honesty-rndInt(2,5),0,100);
+        addLog(`👀 ${d.name} has been quietly picking up moonlighting fares instead of yours.`,'warn');
+      }
+      if(Math.random()<0.02){
+        addLog(`${d.name} has left to drive full-time for a rival firm.`,'bad');
+        if(d.vehicleId){const v=vehicleOf(d);}
+        G.drivers=G.drivers.filter(x=>x.id!==d.id);
+        return;
+      }
+    } else if(d.sideHustle==='boot'){
+      if(!G.pendingEvent && veh && Math.random()<0.06){
+        G.pendingEvent={type:'policeStop',driverId:d.id,item:rndPick(BOOT_ITEMS),fine:rndInt(120,320)};
+      }
+    }
+  });
+}
+function resolvePoliceStop(pay){
+  const ev=G.pendingEvent;
+  if(!ev||ev.type!=='policeStop') return;
+  const d=G.drivers.find(x=>x.id===ev.driverId);
+  if(pay){
+    G.cash-=ev.fine;
+    G.rating=clamp(round1(G.rating-0.03),1,5);
+    addLog(`👮 Paid a ${fmtMoney0(ev.fine)} fine after ${d?d.name:'a driver'} was stopped with ${ev.item} in the boot.`,'bad');
+  } else {
+    const worse=Math.random()<0.5;
+    if(worse){
+      const veh=d?vehicleOf(d):null;
+      if(veh){veh.status='repair';veh.repairUntil=G.clock+rndInt(200,400);}
+      G.rating=clamp(round1(G.rating-0.1),1,5);
+      if(d) d.sideHustle='none';
+      addLog(`👮 Refused to pay — the car's impounded pending court and ${d?d.name:'the driver'}'s side hustle days are over.`,'bad');
+    } else {
+      addLog(`👮 Refused to pay and got away with a caution this time.`,'warn');
+    }
+  }
+  G.pendingEvent=null;save();render();
+}
+
+/* ── MARKETING ── */
+function runMarketing(key){
+  const camp=MARKETING_CAMPAIGNS.find(c=>c.key===key);
+  if(!camp) return;
+  const readyDay=G.marketingCooldowns[key]||0;
+  if(dayOf(G.clock)<readyDay){addLog('⚠ That campaign is still cooling down.','warn');return;}
+  if(G.cash<camp.cost){addLog('⚠ Not enough cash for that campaign.','warn');return;}
+  G.cash-=camp.cost;
+  G.rating=clamp(round1(G.rating+camp.ratingBoost),1,5);
+  G.marketingBoostUntil=Math.max(G.marketingBoostUntil,G.clock+camp.demandDays*1440);
+  G.marketingCooldowns[key]=dayOf(G.clock)+camp.cooldownDays;
+  addLog(`📣 Ran a "${camp.label}" campaign for ${fmtMoney0(camp.cost)} — demand's up for the next few days.`,'money');
+  save();render();
+}
+function serviceVehicle(vid){
+  const v=G.vehicles.find(x=>x.id===vid);
+  if(!v) return;
+  const cost=Math.round((100-v.condition)*3.2);
+  if(G.cash<cost){addLog('⚠ Not enough cash to service that vehicle.','warn');return;}
+  G.cash-=cost;v.condition=100;
+  addLog(`🔧 Serviced ${vehicleModel(v.kind).label} (${v.reg}) for ${fmtMoney0(cost)}.`,'money');
+  save();render();
+}
+function renewMot(vid){
+  const v=G.vehicles.find(x=>x.id===vid);
+  if(!v) return;
+  const cost=55;
+  if(G.cash<cost){addLog('⚠ Not enough cash to renew the test.','warn');return;}
+  G.cash-=cost;v.motDueDay=dayOf(G.clock)+rndInt(75,100);
+  addLog(`📋 Vehicle test renewed for ${v.reg}.`,'money');
+  save();render();
+}
+function renewBadge(did){
+  const d=G.drivers.find(x=>x.id===did);
+  if(!d) return;
+  const cost=70;
+  if(G.cash<cost){addLog('⚠ Not enough cash to renew that badge.','warn');return;}
+  G.cash-=cost;d.badgeExpiryDay=dayOf(G.clock)+rndInt(60,90);
+  addLog(`🪪 Private hire badge renewed for ${d.name}.`,'money');
+  save();render();
+}
+function sellVehicle(vid){
+  const v=G.vehicles.find(x=>x.id===vid);
+  if(!v) return;
+  const price=Math.round(vehicleModel(v.kind).cost*0.35*(v.condition/100));
+  G.cash+=price;
+  G.drivers.forEach(d=>{if(d.vehicleId===vid) d.vehicleId=null;});
+  G.vehicles=G.vehicles.filter(x=>x.id!==vid);
+  addLog(`💰 Sold ${vehicleModel(v.kind).label} (${v.reg}) for ${fmtMoney0(price)}.`,'money');
+  save();render();
+}
+function decommissionVehicle(vid){
+  G.vehicles=G.vehicles.filter(x=>x.id!==vid);
+  save();render();
+}
+function buyVehicle(kind){
+  const m=vehicleModel(kind);
+  if(G.cash<m.cost){addLog('⚠ Not enough cash for that vehicle.','warn');return;}
+  G.cash-=m.cost;
+  G.vehicles.push(makeVehicle(kind));
+  addLog(`🚗 Bought a new ${m.label} for ${fmtMoney0(m.cost)}.`,'money');
+  save();render();
+}
+
+/* ══════════════════════════ UI STATE ══════════════════════════ */
+let uiPointerDown=false;
+let uiSelectOpen=false;
+let fireConfirmId=null;
+
+function closeUiModal(){G.uiModal=null;save();render();}
+function openJobModal(jobId){G.uiModal={type:'jobdetail',jobId};render();}
+function openAreaModal(areaKey){G.uiModal={type:'areadetail',areaKey};render();}
+
+/* ══════════════════════════ RENDER ══════════════════════════ */
+function render(){
+  renderTopbar();
+  renderNav();
+  const tab=G.view;
+  if(tab==='overview') renderOverview();
+  else if(tab==='board') renderBoard();
+  else if(tab==='drivers') renderDrivers();
+  else if(tab==='fleet') renderFleet();
+  else if(tab==='areas') renderAreas();
+  else if(tab==='finances') renderFinances();
+  else if(tab==='log') renderLog();
+  renderModal();
+}
+
+function renderTopbar(){
+  document.getElementById('hdCompany').textContent=G.company.toUpperCase();
+  document.getElementById('hdDay').textContent=dayOf(G.clock)+' ('+DOW_NAMES[dowOf(G.clock)]+')';
+  document.getElementById('hdTime').textContent=fmtClock(G.clock%1440);
+  const cashEl=document.getElementById('hdCash');
+  cashEl.textContent=fmtMoney0(G.cash);
+  cashEl.className='stat-v '+(G.cash<0?'bad':'money');
+  document.getElementById('hdRating').textContent='★'+G.rating.toFixed(1);
+  document.getElementById('hdJobs').textContent=G.jobsCompletedToday+'/'+(G.jobsCompletedToday+G.jobsMissedToday);
+  document.getElementById('hdActive').textContent=G.jobs.filter(j=>['incoming','enroute','waiting','onhire'].includes(j.status)).length;
+  const wEl=document.getElementById('hdWeather');
+  wEl.textContent=(G.weather==='rain'?'🌧 ':G.weather==='fog'?'🌫 ':'☀ ')+WEATHER_LABELS[G.weather];
+  document.querySelectorAll('.sbtn[data-speed]').forEach(b=>b.classList.toggle('on',Number(b.dataset.speed)===G.speed));
+  const autoBtn=document.getElementById('autoDispatchBtn');
+  autoBtn.textContent='AUTO-DISPATCH: '+(G.autoDispatch?'ON':'OFF');
+  autoBtn.classList.toggle('on',G.autoDispatch);
+  const incoming=G.jobs.filter(j=>j.status==='incoming').length;
+  const bd=document.getElementById('bdIncoming');
+  if(incoming>0){bd.style.display='inline-block';bd.textContent=incoming;} else bd.style.display='none';
+}
+function renderNav(){
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.toggle('on',b.dataset.tab===G.view));
+  document.querySelectorAll('.tpanel').forEach(p=>p.classList.toggle('on',p.id==='tab-'+G.view));
+}
+
+/* ── OVERVIEW ── */
+function renderOverview(){
+  const el=document.getElementById('tab-overview');
+  const onShift=G.drivers.filter(d=>['available','enroute','waiting','onhire'].includes(d.status)).length;
+  const availVeh=G.vehicles.filter(v=>v.status!=='written-off').length;
+  const upcomingFx=G.fixtures.filter(f=>!f.resolved).sort((a,b)=>a.day-b.day).slice(0,3);
+  el.innerHTML=`
+  <div class="fingrid">
+    <div class="fincard"><div class="fl">CASH</div><div class="fv" style="color:${G.cash<0?'var(--red)':'var(--green)'}">${fmtMoney0(G.cash)}</div></div>
+    <div class="fincard"><div class="fl">RATING</div><div class="fv" style="color:var(--amber)">★ ${G.rating.toFixed(1)}</div></div>
+    <div class="fincard"><div class="fl">DRIVERS ON SHIFT</div><div class="fv">${onShift} / ${G.drivers.length}</div></div>
+    <div class="fincard"><div class="fl">FLEET AVAILABLE</div><div class="fv">${availVeh} / ${G.vehicles.length}</div></div>
+    <div class="fincard"><div class="fl">JOBS TODAY</div><div class="fv">${G.jobsCompletedToday} done · ${G.jobsMissedToday} missed</div></div>
+    <div class="fincard"><div class="fl">TOTAL JOBS</div><div class="fv">${G.jobsCompletedTotal}</div></div>
+    <div class="fincard"><div class="fl">SEASON TARGET</div><div class="fv">${fmtMoney0(G.targetCash)} by day ${G.seasonDays}</div></div>
+  </div>
+  <div class="map-wrap">
+    <div class="sec-hd" style="margin-top:0">GLASGOW — LIVE DEMAND</div>
+    ${areaMapSvg()}
+  </div>
+  <div class="fingrid">
+    <div class="chart-wrap"><div class="sec-hd" style="margin-top:0">CASH TREND</div>${lineChart(G.history.map(h=>h.cash),'var(--green)')}</div>
+    <div class="chart-wrap"><div class="sec-hd" style="margin-top:0">JOBS COMPLETED / DAY</div>${lineChart(G.history.map(h=>h.jobsCompleted),'var(--accent)')}</div>
+  </div>
+  <div class="sec-hd">MARKETING</div>
+  <div class="catalog-grid">
+    ${MARKETING_CAMPAIGNS.map(c=>{
+      const readyDay=G.marketingCooldowns[c.key]||0;
+      const onCooldown=dayOf(G.clock)<readyDay;
+      return `<div class="cat-card">
+        <div class="cat-name">${c.label}</div>
+        <div class="cat-meta">Cost: ${fmtMoney0(c.cost)}<br>+${c.ratingBoost.toFixed(2)}★ rating, demand up ~${c.demandDays}d<br>${onCooldown?`Cooldown: ${readyDay-dayOf(G.clock)}d left`:'Ready'}</div>
+        <button class="buy-btn" data-action="runMarketing" data-key="${c.key}" ${onCooldown||G.cash<c.cost?'disabled':''}>RUN CAMPAIGN</button>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="sec-hd">UPCOMING EVENTS</div>
+  ${upcomingFx.length? upcomingFx.map(f=>`<div class="fix-item ${f.big?'big':''}">📅 Day ${f.day} ~${String(Math.floor(f.hour)).padStart(2,'0')}:${f.hour%1?'30':'00'} — <b>${esc(f.label)}</b> at ${areaLabel(f.area)}</div>`).join(''):'<div class="mrow" style="color:var(--sub)">Nothing scheduled.</div>'}
+  <div class="sec-hd">MILESTONES</div>
+  ${G.achievements.length? G.achievements.slice(-5).reverse().map(a=>`<div class="fix-item">Day ${a.day} — ${esc(a.text)}</div>`).join(''):'<div class="mrow" style="color:var(--sub)">Nothing yet — get some fares in.</div>'}
+  <div class="sec-hd">RECENT ACTIVITY</div>
+  <div id="ovLog">${G.log.slice(-8).reverse().map(l=>`<div class="logline ${l.cls}"><span class="lt">${l.t}</span>${esc(l.msg)}</div>`).join('')}</div>
+  `;
+}
+function areaMapSvg(){
+  const pts=AREA_KEYS.map(k=>{
+    const a=AREAS[k];const lvl=areaDemandLevel(k);
+    const color=lvl>=4?'#ef233c':lvl===3?'#ff6b35':lvl===2?'#ffd60a':'#5d7690';
+    const r=lvl>=4?7:lvl===3?6:5;
+    return `<circle cx="${a.x*3.4}" cy="${a.y*2.2+10}" r="${r}" fill="${color}" opacity="0.85"><title>${esc(a.label)} — ${demandLabel(lvl)}</title></circle>
+    <text x="${a.x*3.4}" y="${a.y*2.2+10-r-3}" font-size="6" fill="#5d7690" text-anchor="middle">${esc(a.label.split(' ')[0].split('&')[0])}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 340 240" style="width:100%;height:auto;max-height:260px">
+    <rect x="0" y="0" width="340" height="240" fill="#0d1520"/>
+    <path d="M 0 130 Q 100 110 170 125 T 340 140" stroke="#1a3050" stroke-width="10" fill="none" opacity="0.6"/>
+    ${pts}
+  </svg>`;
+}
+function lineChart(vals,color){
+  if(!vals.length) return '<div style="color:var(--sub);font-size:10px">Not enough history yet.</div>';
+  const w=280,h=70,pad=6;
+  const min=Math.min(...vals,0),max=Math.max(...vals,1);
+  const range=(max-min)||1;
+  const step=vals.length>1? (w-pad*2)/(vals.length-1):0;
+  const pts=vals.map((v,i)=>`${pad+i*step},${h-pad-((v-min)/range)*(h-pad*2)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6"/>
+  </svg>`;
+}
+
+/* ── BOARD ── */
+const COLS=[
+  {key:'incoming',label:'INCOMING CALLS'},
+  {key:'enroute',label:'EN ROUTE'},
+  {key:'waiting',label:'AT PICKUP'},
+  {key:'onhire',label:'ON HIRE'},
+  {key:'complete',label:'DONE / RECENT'},
+];
+function renderBoard(){
+  const kan=document.getElementById('kanban');
+  kan.innerHTML=COLS.map(col=>{
+    const items=G.jobs.filter(j=>{
+      if(col.key==='complete') return ['complete','noshow','missed','subbed'].includes(j.status);
+      return j.status===col.key;
+    }).sort((a,b)=>b.createdAt-a.createdAt);
+    return `<div class="pcol">
+      <div class="pcol-hd"><span>${col.label}</span><span class="cnt">${items.length}</span></div>
+      <div class="pitems">${items.map(j=>jobCardHtml(j,col.key)).join('')||'<div style="color:var(--sub);font-size:10px;padding:6px">— none —</div>'}</div>
+    </div>`;
+  }).join('');
+}
+function jobCardHtml(j,colKey){
+  const cls=j.wavRequired?'wav':(j.account?'acct':(colKey==='incoming'&&j.holdElapsed/j.holdPatience>0.7?'urg':''));
+  let progress=0,eta='';
+  if(j.status==='incoming'){progress=100*(j.holdElapsed/j.holdPatience);eta=`Waiting on a driver — ${Math.max(0,Math.ceil(j.holdPatience-j.holdElapsed))} min patience left`;}
+  else if(j.status==='enroute'){progress=100*(1-j.etaPickup/j.etaPickupTotal);eta=`ETA to pickup: ${Math.max(0,Math.ceil(j.etaPickup))} min`;}
+  else if(j.status==='waiting'){progress=100*(j.waitTimer/j.waitActual);eta='Waiting for passenger…';}
+  else if(j.status==='onhire'){progress=100*(1-j.etaDropoff/j.etaDropoffTotal);eta=`ETA to drop-off: ${Math.max(0,Math.ceil(j.etaDropoff))} min`;}
+  else if(j.status==='complete') eta='Fare '+fmtMoney(j.fare);
+  else if(j.status==='noshow') eta='No-show';
+  else if(j.status==='missed') eta='Missed';
+  else if(j.status==='subbed') eta='Subbed out';
+  const drv=j.driverId?G.drivers.find(d=>d.id===j.driverId):null;
+  return `<div class="jobc ${cls}" data-action="jobdetail" data-id="${j.id}">
+    <div class="jobc-top"><span class="jobc-id">#${j.id}</span><span class="jobc-fare">${fmtMoney(j.fare)}</span></div>
+    <div class="jobc-lbl">${esc(j.label)}${j.account?' <span class="jobc-tag acct">ACCT</span>':''}${j.wavRequired?' <span class="jobc-tag wav">WAV</span>':''}${j.passengers>1?` <span class="jobc-tag grp">${j.passengers}px</span>`:''}</div>
+    <div class="jobc-route">${venueStr(j.pickupArea,j.pickupVenue)} → ${venueStr(j.dropArea,j.dropVenue)}</div>
+    ${drv?`<div class="jobc-who">${esc(drv.name)}</div>`:''}
+    <div class="progwrap"><div class="progbar" style="width:${clamp(progress,0,100)}%"></div></div>
+    <div class="jobc-eta">${esc(eta)}</div>
+  </div>`;
+}
+
+/* ── DRIVERS ── */
+function renderDrivers(){
+  const el=document.getElementById('tab-drivers');
+  const rows=G.drivers.map(d=>driverCardHtml(d)).join('');
+  const cands=G.candidates.map(c=>`
+    <div class="cand-card">
+      <div class="cand-name">${esc(c.name)}</div>
+      <div class="cand-meta">Trait: <span class="trait-badge ${c.trait}">${c.trait}</span> · Asking ${fmtMoney0(c.askWage)}/day<br>${c.badgeReady?'PH badge ready':'Badge pending — processes on hire'}</div>
+      <button class="hire-btn" data-action="hire" data-id="${c.id}">HIRE — sign-on fee ${fmtMoney0(c.askWage*2)}</button>
+    </div>`).join('');
+  el.innerHTML=`
+    <div class="sec-hd" style="margin-top:0">CURRENT DRIVERS (${G.drivers.length})</div>
+    <div class="stfgrid">${rows||'<div style="color:var(--sub);font-size:11px">No drivers left — hire someone below.</div>'}</div>
+    <div class="sec-hd">CANDIDATE POOL</div>
+    <div class="cand-grid">${cands||'<div style="color:var(--sub);font-size:11px">Nobody on the books right now.</div>'}</div>
+  `;
+}
+function driverCardHtml(d){
+  const veh=vehicleOf(d);
+  const moraleCls=d.morale>=70?'happy':d.morale>=45?'content':d.morale>=20?'unhappy':'miserable';
+  const moraleLbl=d.morale>=70?'Happy':d.morale>=45?'Content':d.morale>=20?'Unhappy':'Miserable';
+  const honestyCls=d.honesty>=70?'happy':d.honesty>=45?'content':d.honesty>=20?'unhappy':'miserable';
+  const fatigueCls=d.fatigue<=30?'happy':d.fatigue<=55?'content':d.fatigue<=75?'unhappy':'miserable';
+  const fatigueLbl=d.fatigue<=30?'Fresh':d.fatigue<=55?'Tiring':d.fatigue<=75?'Tired':'Exhausted';
+  let statusCls='off',statusTxt='Off shift';
+  if(d.status==='available'){statusCls='avail';statusTxt='Available';}
+  else if(['enroute','waiting','onhire'].includes(d.status)){statusCls='busy';statusTxt='Busy — '+d.status;}
+  else if(d.status==='holiday'){statusCls='hol';statusTxt=`On holiday (${Math.ceil(d.holidayDaysLeft)}d left)`;}
+  else if(d.status==='injured'){statusCls='notice';statusTxt=`Recovering from a crash (${Math.ceil(d.injuredDaysLeft)}d left)`;}
+  else if(d.status==='resting'){statusCls='hol';statusTxt='Resting up';}
+  else if(d.status==='notice'){statusCls='notice';statusTxt=`Leaving in ${d.noticeDaysLeft} shift(s)`;}
+  else if(d.status==='no-vehicle'){statusCls='lock';statusTxt='No vehicle assigned';}
+  else if(d.status==='lock-mot'){statusCls='lock';statusTxt='Vehicle test overdue';}
+  else if(d.status==='lock-badge'){statusCls='lock';statusTxt='PH badge expired';}
+  else if(d.status==='lock-repair'){statusCls='lock';statusTxt='Vehicle in for repair';}
+  else statusTxt='Off shift';
+  const shiftCls=d.shift==='day'?'day':'night';
+  return `<div class="drvc ${shiftCls} ${d.status==='notice'?'notice':''}">
+    <div class="drvc-head"><div><div class="drvc-name">${esc(d.name)}</div><div class="drvc-role">DRIVER · ★${driverAvgRating(d)}</div></div><span class="trait-badge ${d.trait}">${d.trait}</span></div>
+    <div class="morale-row"><span class="morale-lbl" style="min-width:38px">Morale</span><div class="morale-bar-wrap"><div class="morale-bar ${moraleCls}" style="width:${d.morale}%"></div></div><span class="morale-lbl">${moraleLbl}</span></div>
+    <div class="morale-row" title="${d.dodgyCount?d.dodgyCount+' dodgy incident(s) on record':'Clean record so far'}"><span class="morale-lbl" style="min-width:38px">Honesty</span><div class="morale-bar-wrap"><div class="morale-bar ${honestyCls}" style="width:${d.honesty}%"></div></div><span class="morale-lbl">${honestyLabel(d.honesty)}</span></div>
+    <div class="morale-row" title="Tired drivers are more likely to crash"><span class="morale-lbl" style="min-width:38px">Fatigue</span><div class="morale-bar-wrap"><div class="morale-bar ${fatigueCls}" style="width:${d.fatigue}%"></div></div><span class="morale-lbl">${fatigueLbl}</span></div>
+    <div class="drvc-meta"><span>Wage ${fmtMoney0(d.dailyWage)}/day</span><span>Today +${fmtMoney(d.earningsToday)}</span><span>${d.jobsToday} jobs</span></div>
+    ${d.fatigue>=70 && ['available','no-vehicle','lock-mot','lock-badge','lock-repair'].includes(d.status)?`<div class="req-box" style="border-color:var(--urgent);background:#ff6b3511"><div class="req-label" style="color:var(--urgent)">RUNNING ON EMPTY</div>${esc(d.name)} is worn out and at real risk of a crash. <button class="req-btn accept" data-action="restnow" data-id="${d.id}" style="width:100%;margin-top:4px">SEND HOME TO REST</button></div>`:''}
+    ${d.warnings>0?`<div class="drvc-meta" style="color:var(--red)">⚠ ${d.warnings} written warning${d.warnings>1?'s':''} on file</div>`:''}
+    <div class="drvc-status ${statusCls}">${statusTxt}</div>
+    <div class="shift-toggle">
+      <button class="shift-btn ${d.shift==='day'?'on':''}" data-action="shift" data-id="${d.id}" data-shift="day">DAY 07-19</button>
+      <button class="shift-btn ${d.shift==='night'?'on':''}" data-action="shift" data-id="${d.id}" data-shift="night">NIGHT 19-07</button>
+    </div>
+    <select class="veh-select" data-action="assignveh" data-id="${d.id}">
+      <option value="">— no vehicle —</option>
+      ${G.vehicles.filter(v=>v.status!=='written-off').map(v=>`<option value="${v.id}" ${v.id===d.vehicleId?'selected':''} ${G.drivers.find(x=>x.vehicleId===v.id&&x.id!==d.id)?'disabled':''}>${vehicleModel(v.kind).label} (${v.reg})${G.drivers.find(x=>x.vehicleId===v.id&&x.id!==d.id)?' — taken':''}</option>`).join('')}
+    </select>
+    <select class="veh-select hustle-${d.sideHustle}" data-action="sethustle" data-id="${d.id}" title="${esc(hustleOf(d.sideHustle).desc||'')}">
+      ${SIDE_HUSTLES.map(h=>`<option value="${h.key}" ${d.sideHustle===h.key?'selected':''}>Side hustle: ${h.label}</option>`).join('')}
+    </select>
+    ${d.badgeExpiryDay-dayOf(G.clock)<10?`<div class="req-box" style="border-color:var(--red);background:#ef233c11"><div class="req-label" style="color:var(--red)">BADGE EXPIRES IN ${Math.max(0,d.badgeExpiryDay-dayOf(G.clock))}D</div><button class="req-btn accept" data-action="renewbadge" data-id="${d.id}" style="width:100%">RENEW — £70</button></div>`:''}
+    ${d.pendingRequest?requestBoxHtml(d):''}
+    ${fireConfirmId===d.id?`<div class="fire-confirm"><button class="fire-yes" data-action="fireYes" data-id="${d.id}">CONFIRM FIRE</button><button class="fire-no" data-action="fireNo">CANCEL</button></div>`:`<div class="drvc-actions"><button class="fire-btn" data-action="fireAsk" data-id="${d.id}">LET GO</button></div>`}
+  </div>`;
+}
+function requestBoxHtml(d){
+  const r=d.pendingRequest;
+  if(r.kind==='raise') return `<div class="req-box"><div class="req-label">RAISE REQUEST</div>${esc(d.name)} wants +${fmtMoney0(r.amount)}/day (${TRAIT_DESC[d.trait]}).</div>`;
+  return `<div class="req-box"><div class="req-label">HOLIDAY REQUEST</div>${esc(d.name)} wants ${r.days} days off.</div>`;
+}
+
+/* ── FLEET ── */
+function renderFleet(){
+  const el=document.getElementById('tab-fleet');
+  const rows=G.vehicles.map(v=>vehicleCardHtml(v)).join('');
+  el.innerHTML=`
+    <div class="sec-hd" style="margin-top:0">FLEET (${G.vehicles.length})</div>
+    <div class="vgrid">${rows}</div>
+    <div class="sec-hd">BUY A VEHICLE</div>
+    <div class="catalog-grid">${VEHICLE_MODELS.map(m=>`
+      <div class="cat-card">
+        <div class="cat-name">${m.label}</div>
+        <div class="cat-meta">Seats: ${m.seats}${m.wav?' · Wheelchair accessible':''}<br>Running cost: ${m.runCostPerKm.toFixed(2)}/km<br>Price: ${fmtMoney0(m.cost)}</div>
+        <button class="buy-btn" data-action="buyveh" data-kind="${m.key}" ${G.cash<m.cost?'disabled':''}>BUY</button>
+      </div>`).join('')}</div>
+  `;
+}
+function vehicleCardHtml(v){
+  const m=vehicleModel(v.kind);
+  const driver=G.drivers.find(d=>d.vehicleId===v.id);
+  const condCls=v.condition>=60?'ok':v.condition>=30?'low':'crit';
+  const motDaysLeft=v.motDueDay-dayOf(G.clock);
+  const writtenOff=v.status==='written-off';
+  const inRepair=v.status==='repair';
+  if(inRepair){
+    const minsLeft=Math.max(0,Math.ceil(v.repairUntil-G.clock));
+    const backIn=minsLeft>=60?Math.ceil(minsLeft/60)+'h':minsLeft+'min';
+    return `<div class="vehc">
+      <div class="vehc-name">${m.label}</div>
+      <div class="vehc-reg">${v.reg} · ${v.mileage.toLocaleString()} mi</div>
+      <div class="vehc-warn">🔧 IN FOR REPAIR — back in ~${backIn}</div>
+      <div class="vehc-nums"><span>Driver: ${driver?esc(driver.name):'unassigned'}</span></div>
+    </div>`;
+  }
+  return `<div class="vehc ${writtenOff?'written-off':''}">
+    <div class="vehc-name">${m.label}${v.dashcam?' 📷':''}${v.livery?' 🪧':''}</div>
+    <div class="vehc-reg">${v.reg} · ${v.mileage.toLocaleString()} mi ${writtenOff?'· WRITTEN OFF':''}</div>
+    ${!writtenOff?`
+    <div class="sb-wrap"><div class="sb ${condCls}" style="width:${v.condition}%"></div></div>
+    <div class="vehc-nums"><span>Condition ${Math.round(v.condition)}%</span><span>MOT in ${motDaysLeft}d</span></div>
+    <div class="vehc-nums"><span>Driver: ${driver?esc(driver.name):'unassigned'}</span></div>
+    ${v.dashcam?`<div class="vehc-nums"><span style="color:var(--green)">📷 Dashcam fitted</span></div>`:''}
+    ${v.livery?`<div class="vehc-nums"><span style="color:var(--green)">🪧 Ad livery — earning passively</span></div>`:''}
+    ${motDaysLeft<=10?`<div class="vehc-warn">⚠ Test overdue soon</div>`:''}
+    <div class="vrow">
+      <button class="vbtn" data-action="service" data-id="${v.id}">SERVICE ${fmtMoney0(Math.round((100-v.condition)*3.2))}</button>
+      <button class="vbtn" data-action="mot" data-id="${v.id}">RENEW TEST £55</button>
+    </div>
+    <div class="vrow">
+      ${!v.dashcam?`<button class="vbtn" data-action="dashcam" data-id="${v.id}">FIT DASHCAM £250</button>`:''}
+      ${!v.livery?`<button class="vbtn" data-action="livery" data-id="${v.id}">WRAP IN ADS £180</button>`:''}
+    </div>
+    <div class="vrow"><button class="vbtn" data-action="sellveh" data-id="${v.id}">SELL (${fmtMoney0(Math.round(m.cost*0.35*(v.condition/100)))})</button></div>
+    `:`<div class="vrow"><button class="vbtn" data-action="scrapveh" data-id="${v.id}">REMOVE FROM FLEET</button></div>`}
+  </div>`;
+}
+
+/* ── AREAS ── */
+function renderAreas(){
+  const el=document.getElementById('tab-areas');
+  const upcoming=G.fixtures.filter(f=>!f.resolved).sort((a,b)=>a.day-b.day);
+  const weatherNote=G.weather==='rain'?'🌧 Rain across the city — demand is up and journeys are slower.':G.weather==='fog'?'🌫 Fog off the Clyde — journeys are running noticeably slower.':'☀ Clear skies — no weather delays.';
+  el.innerHTML=`
+    <div class="map-wrap">${areaMapSvg()}</div>
+    <div class="fix-item">${weatherNote}</div>
+    ${G.incidents.map(inc=>`<div class="fix-item big">${inc.icon} ${esc(inc.label)} around <b>${areaLabel(inc.area)}</b> — journeys there running ~${inc.delayMin} min slower.</div>`).join('')}
+    <div class="sec-hd">DEMAND BY AREA <span style="font-weight:normal;color:var(--sub);text-transform:none;letter-spacing:0">(click an area for local detail)</span></div>
+    <div class="areagrid">${AREA_KEYS.map(k=>{
+      const lvl=areaDemandLevel(k);
+      const v=VENUES[k]||{};
+      const venList=Object.values(v).flat().slice(0,3).join(', ');
+      const hasIncident=G.incidents.some(i=>i.area===k);
+      return `<div class="areac" data-action="areadetail" data-area="${k}"><div class="areac-name">${areaLabel(k)}${hasIncident?' ⚠':''}</div><div class="demand-pill ${demandClass(lvl)}">${demandLabel(lvl)}</div><div class="areac-venues">${venList?esc(venList):'Residential streets'}</div></div>`;
+    }).join('')}</div>
+    <div class="sec-hd">UPCOMING FIXTURES & EVENTS</div>
+    ${upcoming.length?upcoming.map(f=>`<div class="fix-item ${f.big?'big':''}">Day ${f.day} ~${String(Math.floor(f.hour)).padStart(2,'0')}:${f.hour%1?'30':'00'} — <b>${esc(f.label)}</b> (${areaLabel(f.area)})${f.big?' — big demand spike expected':''}</div>`).join(''):'<div style="color:var(--sub);font-size:11px">Nothing on the calendar.</div>'}
+  `;
+}
+
+/* ── FINANCES ── */
+function renderFinances(){
+  const el=document.getElementById('tab-finances');
+  const revByType=Object.entries(G.dailyRevenueByType).sort((a,b)=>b[1]-a[1]);
+  const net=G.todayRevenue+G.todayAdIncome-G.todayDriverPay-G.todayRunCost-G.todayFixed-G.todayLoanPayment;
+  const availTier=maxLoanTierIdx();
+  el.innerHTML=`
+    <div class="fingrid">
+      <div class="fincard"><div class="fl">CASH</div><div class="fv" style="color:${G.cash<0?'var(--red)':'var(--green)'}">${fmtMoney0(G.cash)}</div></div>
+      <div class="fincard"><div class="fl">ACCOUNTS RECEIVABLE</div><div class="fv" style="color:var(--amber)">${fmtMoney0(G.accountsReceivable)}</div></div>
+      <div class="fincard"><div class="fl">TODAY'S REVENUE</div><div class="fv">${fmtMoney0(G.todayRevenue)}</div></div>
+      <div class="fincard"><div class="fl">TODAY'S NET</div><div class="fv" style="color:${net<0?'var(--red)':'var(--green)'}">${fmtMoney0(net)}</div></div>
+    </div>
+    <div class="sec-hd" style="margin-top:0">TODAY'S REVENUE BY JOB TYPE</div>
+    <table class="fintab"><tr><th>Type</th><th class="num">Revenue</th></tr>
+    ${revByType.length?revByType.map(([k,v])=>`<tr><td>${esc((JOB_TYPES.find(t=>t.key===k)||{label:k}).label)}</td><td class="num">${fmtMoney(v)}</td></tr>`).join(''):'<tr><td colspan="2" style="color:var(--sub)">No completed jobs yet today.</td></tr>'}
+    ${G.todayAdIncome>0?`<tr><td>Ad livery income</td><td class="num">${fmtMoney(G.todayAdIncome)}</td></tr>`:''}
+    </table>
+    <div class="sec-hd">TODAY'S COSTS</div>
+    <table class="fintab">
+      <tr><td>Driver pay (commission)</td><td class="num">${fmtMoney(G.todayDriverPay)}</td></tr>
+      <tr><td>Vehicle running costs</td><td class="num">${fmtMoney(G.todayRunCost)}</td></tr>
+      <tr><td>Fixed overheads (est.)</td><td class="num">${fmtMoney(G.todayFixed)}</td></tr>
+      ${G.todayLoanPayment>0?`<tr><td>Loan repayment</td><td class="num">${fmtMoney(G.todayLoanPayment)}</td></tr>`:''}
+    </table>
+    <div class="sec-hd">BANK</div>
+    ${G.loan?`
+    <div class="fincard" style="margin-bottom:8px">
+      <div class="fl">ACTIVE LOAN</div>
+      <div class="fv">${fmtMoney0(G.loan.dailyPayment*G.loan.daysLeft)} remaining</div>
+      <div style="font-size:10px;color:var(--sub);margin-top:4px">${fmtMoney0(G.loan.dailyPayment)}/day · ${G.loan.daysLeft} of ${G.loan.totalDays} days left</div>
+      <div class="vrow" style="margin-top:6px"><button class="vbtn" data-action="repayLoan">CLEAR EARLY</button></div>
+    </div>
+    `:`
+    <div style="font-size:10px;color:var(--sub);margin-bottom:6px">No active loan. Borrowing limit scales with your rating (★${G.rating.toFixed(1)}).</div>
+    <div class="catalog-grid">
+      ${LOAN_TIERS.map((t,i)=>`
+      <div class="cat-card">
+        <div class="cat-name">${fmtMoney0(t.amount)}</div>
+        <div class="cat-meta">${fmtMoney0(t.dailyPayment)}/day for ${t.days} days<br>Total repaid: ${fmtMoney0(t.dailyPayment*t.days)}</div>
+        <button class="buy-btn" data-action="takeLoan" data-tier="${i}" ${i>availTier?'disabled':''}>${i>availTier?'RATING TOO LOW':'BORROW'}</button>
+      </div>`).join('')}
+    </div>
+    `}
+    <div class="chart-wrap"><div class="sec-hd" style="margin-top:0">CASH HISTORY</div>${lineChart(G.history.map(h=>h.cash),'var(--green)')}</div>
+    <div style="font-size:10px;color:var(--sub);margin-top:4px">Account jobs are invoiced, not paid same-day — they land in Accounts Receivable and settle weekly. Fixed overheads cover hire-&amp;-reward insurance, the radio/dispatch circuit fee and the council operator's licence.</div>
+  `;
+}
+
+/* ── LOG ── */
+function renderLog(){
+  const el=document.getElementById('logfeed');
+  el.innerHTML=G.log.slice().reverse().map(l=>`<div class="logline ${l.cls}"><span class="lt">${l.t}</span>${esc(l.msg)}</div>`).join('');
+}
+
+/* ── MODAL ── */
+function renderModal(){
+  const overlay=document.getElementById('modalOverlay');
+  const box=document.getElementById('modalBox');
+  if(G.pendingEvent){
+    overlay.classList.add('on');
+    box.innerHTML=pendingEventHtml(G.pendingEvent);
+    return;
+  }
+  if(G.uiModal&&G.uiModal.type==='jobdetail'){
+    const job=G.jobs.find(j=>j.id===G.uiModal.jobId);
+    if(!job){G.uiModal=null;overlay.classList.remove('on');return;}
+    overlay.classList.add('on');
+    box.innerHTML=jobDetailModalHtml(job);
+    return;
+  }
+  if(G.uiModal&&G.uiModal.type==='areadetail'){
+    overlay.classList.add('on');
+    box.innerHTML=areaDetailModalHtml(G.uiModal.areaKey);
+    return;
+  }
+  overlay.classList.remove('on');
+}
+function areaDetailModalHtml(areaKey){
+  const lvl=areaDemandLevel(areaKey);
+  const v=VENUES[areaKey]||{};
+  const venList=Object.entries(v).map(([kind,list])=>`<div class="mrow"><b>${esc(kind)}</b>: ${esc(list.join(', '))}</div>`).join('');
+  const incidents=G.incidents.filter(i=>i.area===areaKey);
+  const fx=G.fixtures.filter(f=>!f.resolved&&f.area===areaKey);
+  const incidentsHtml=incidents.length
+    ? incidents.map(i=>`<div class="fix-item big">${i.icon} <b>${esc(i.label)}</b> — journeys here running ~${i.delayMin} min slower. Clears in ~${Math.max(0,Math.ceil((i.endClock-G.clock)/60))}h.</div>`).join('')
+    : '<div class="mrow" style="color:var(--sub)">No local disruption reported.</div>';
+  const fxHtml=fx.length
+    ? `<div class="sec-hd">UPCOMING EVENTS HERE</div>${fx.map(f=>`<div class="fix-item ${f.big?'big':''}">Day ${f.day} — ${esc(f.label)}</div>`).join('')}`
+    : '';
+  return `<h3>📍 ${esc(areaLabel(areaKey))}</h3>
+    <div class="mrow">Current demand: <span class="demand-pill ${demandClass(lvl)}">${demandLabel(lvl)}</span></div>
+    <div class="sec-hd" style="margin-top:10px">LOCAL INCIDENTS</div>
+    ${incidentsHtml}
+    ${fxHtml}
+    <div class="sec-hd">KNOWN VENUES</div>
+    ${venList||'<div class="mrow" style="color:var(--sub)">Residential streets only.</div>'}
+    <div class="modal-close"><button data-action="closeModal">CLOSE</button></div>`;
+}
+function pendingEventHtml(ev){
+  if(ev.type==='compliance'){
+    return `<h3>🏛 GLASGOW CITY COUNCIL — COMPLIANCE CHECK</h3>
+    ${ev.results.map(r=>`<div class="mrow"><b>${esc(r.driver)}</b>: ${r.issues.length?esc(r.issues.join(', ')):'All clear.'} ${r.fine?`<span style="color:var(--red)">Fine ${fmtMoney0(r.fine)}</span>`:''}</div>`).join('')}
+    <div class="mrow" style="color:var(--text)">Total fine: <b>${fmtMoney0(ev.totalFine)}</b></div>
+    <div class="modal-actions"><button class="primary" data-action="ackCompliance">ACKNOWLEDGE & PAY</button></div>`;
+  }
+  if(ev.type==='request'){
+    const d=G.drivers.find(x=>x.id===ev.driverId);
+    const name=d?d.name:'A driver';
+    if(ev.kind==='raise') return `<h3>💷 RAISE REQUEST</h3><div class="mrow"><b>${esc(name)}</b> is asking for a raise of ${fmtMoney0(ev.amount)}/day. ${d?TRAIT_DESC[d.trait]:''}.</div>
+      <div class="modal-actions"><button class="primary" data-action="reqAccept">GIVE RAISE</button><button class="danger" data-action="reqDecline">DECLINE</button></div>`;
+    return `<h3>🏖 HOLIDAY REQUEST</h3><div class="mrow"><b>${esc(name)}</b> wants ${ev.days} days off. ${d?TRAIT_DESC[d.trait]:''}.</div>
+      <div class="modal-actions"><button class="primary" data-action="reqAccept">APPROVE</button><button class="danger" data-action="reqDecline">DECLINE</button></div>`;
+  }
+  if(ev.type==='confirmNewGame'){
+    return `<h3>⟲ START A NEW GAME?</h3>
+      <div class="mrow">This will permanently clear the saved game for <b>${esc(G.company)}</b> (Day ${dayOf(G.clock)}, ${fmtMoney0(G.cash)} cash) and take you back to setup.</div>
+      <div class="modal-actions"><button class="danger" data-action="confirmNewGame">CLEAR SAVE & START NEW</button><button data-action="cancelNewGame">CANCEL</button></div>`;
+  }
+  if(ev.type==='warningEscalation'){
+    const d=G.drivers.find(x=>x.id===ev.driverId);
+    const name=d?d.name:'This driver';
+    return `<h3>⚠ REPEAT OFFENDER</h3>
+      <div class="mrow"><b>${esc(name)}</b> has now been caught being dishonest with a fare more than once (${d?d.warnings:'?'} written warning${d&&d.warnings!==1?'s':''} on file). What do you want to do?</div>
+      <div class="modal-actions"><button data-action="warnFinal">FINAL WARNING</button><button class="danger" data-action="warnFire">FIRE THEM</button></div>`;
+  }
+  if(ev.type==='gameOver'){
+    const win=ev.result==='win',bust=ev.result==='bankrupt';
+    const title=bust?'💥 GONE BUST':(win?'🏆 SEASON COMPLETE':'📉 SEASON COMPLETE');
+    const body=bust
+      ? `Kelvin Cars has run out of road — the debts caught up with you on day ${ev.day}. Final balance: ${fmtMoney0(G.cash)}.`
+      : win
+        ? `Day ${ev.day} — you hit the target of ${fmtMoney0(G.targetCash)} with ${fmtMoney0(G.cash)} in the bank. ${esc(G.company)} is a proper Glasgow institution now.`
+        : `Day ${ev.day} — the season's over and you fell short of the ${fmtMoney0(G.targetCash)} target, finishing on ${fmtMoney0(G.cash)}. Better luck next time.`;
+    return `<h3>${title}</h3><div class="mrow">${body}</div><div class="mrow">Jobs completed: <b>${G.jobsCompletedTotal}</b> · Final rating: <b>★${G.rating.toFixed(1)}</b></div>
+      <div class="modal-actions"><button class="primary" data-action="gameOverNewGame">START A NEW GAME</button></div>`;
+  }
+  if(ev.type==='policeStop'){
+    const d=G.drivers.find(x=>x.id===ev.driverId);
+    const name=d?d.name:'Your driver';
+    return `<h3>👮 PULLED OVER</h3>
+      <div class="mrow"><b>${esc(name)}</b> has been stopped by the police — ${esc(ev.item)} found in the boot. What do you want to do?</div>
+      <div class="modal-actions"><button class="primary" data-action="policePay">PAY THE FINE (${fmtMoney0(ev.fine)})</button><button class="danger" data-action="policeRefuse">REFUSE — RISK IT</button></div>`;
+  }
+  return '';
+}
+function jobDetailModalHtml(job){
+  const drv=job.driverId?G.drivers.find(d=>d.id===job.driverId):null;
+  const header=`<h3>📞 BOOKING #${job.id} — ${esc(job.label)}</h3>
+    <div class="mrow">Pickup: <b>${esc(venueStr(job.pickupArea,job.pickupVenue))}</b></div>
+    <div class="mrow">Drop-off: <b>${esc(venueStr(job.dropArea,job.dropVenue))}</b></div>
+    <div class="mrow">Passenger: <b>${esc(job.passengerName)}</b>${job.passengers>1?` (party of ${job.passengers})`:''}${job.wavRequired?' — needs a wheelchair-accessible vehicle':''}</div>
+    <div class="mrow">Fare: <b style="color:var(--green)">${fmtMoney(job.fare)}</b>${job.account?' (invoiced)':''}</div>`;
+  if(job.status==='incoming'){
+    const candidates=G.drivers.filter(d=>d.status==='available').map(d=>{
+      const veh=vehicleOf(d);
+      const eta=travelMinutesBetween(d.currentArea,job.pickupArea);
+      const ok=(!job.wavRequired||(veh&&vehicleModel(veh.kind).wav)) && (job.minSeats<=1||(veh&&vehicleModel(veh.kind).seats>=job.minSeats));
+      return {d,veh,eta,ok};
+    }).sort((a,b)=>a.eta-b.eta);
+    return header+`
+    <div class="sec-hd" style="margin-top:10px">AVAILABLE DRIVERS</div>
+    ${candidates.length?candidates.map(c=>`<div class="drv-opt"><span>${esc(c.d.name)} — ${c.veh?vehicleModel(c.veh.kind).label:'no vehicle'} — ETA ${Math.ceil(c.eta)}min${!c.ok?' — wrong vehicle':''}${c.d.fatigue>=70?' — <span style="color:var(--urgent)">exhausted, risky</span>':c.d.fatigue>=55?' — <span style="color:var(--amber)">getting tired</span>':''}</span><button data-action="dispatch" data-job="${job.id}" data-driver="${c.d.id}" ${!c.ok?'disabled':''}>DISPATCH</button></div>`).join(''):'<div class="mrow">No drivers available right now.</div>'}
+    <div class="modal-actions">
+      <button data-action="suboutJob" data-job="${job.id}">SUB OUT (£${Math.round(5+job.distanceKm*0.4)})</button>
+      <button class="danger" data-action="declineJob" data-job="${job.id}">DECLINE</button>
+      <button data-action="closeModal">CLOSE</button>
+    </div>`;
+  }
+  if(['enroute','waiting','onhire'].includes(job.status)){
+    const phase=job.status==='enroute'?`En route to pickup — ETA ${Math.max(0,Math.ceil(job.etaPickup))} min`
+      :job.status==='waiting'?`Arrived at pickup, waiting for the passenger…`
+      :`On hire — ETA to drop-off ${Math.max(0,Math.ceil(job.etaDropoff))} min`;
+    const radioRow=`<div class="mrow">Radio: <b>${job.radioOn?'On':'Off'}</b><button class="mini-btn" data-action="toggleRadio" data-job="${job.id}">${job.radioOn?'TURN OFF':'TURN ON'}</button></div>`;
+    const cabRow=job.status==='onhire'?(!job.cabActionUsed?`
+    <div class="sec-hd" style="margin-top:10px">IN THE CAB</div>
+    <div class="modal-actions">
+      <button data-action="cabAction" data-job="${job.id}" data-cab="chat">CHAT</button>
+      <button data-action="cabAction" data-job="${job.id}" data-cab="diversion">TAKE A DIVERSION</button>
+      <button data-action="cabAction" data-job="${job.id}" data-cab="flirt">GIVE IT THE PATTER</button>
+    </div>`:`<div class="mrow" style="color:var(--sub)">Already made a move on this fare — nothing more to try.</div>`):'';
+    return header+`
+    <div class="mrow">Driver: <b>${drv?esc(drv.name):'—'}</b></div>
+    <div class="mrow">Status: <b style="color:var(--amber)">${phase}</b></div>
+    ${radioRow}
+    ${cabRow}
+    <div class="modal-actions">
+      <button class="danger" data-action="recall" data-job="${job.id}">RECALL DRIVER</button>
+      <button data-action="closeModal">CLOSE</button>
+    </div>`;
+  }
+  const outcomeLabel={complete:'Completed ✅',noshow:'No-show 👻',missed:'Missed ✖',subbed:'Subbed out 📤'}[job.status]||job.status;
+  return header+`
+    <div class="mrow">Driver: <b>${drv?esc(drv.name):'—'}</b></div>
+    <div class="mrow">Outcome: <b>${outcomeLabel}</b></div>
+    <div class="modal-close"><button data-action="closeModal">CLOSE</button></div>`;
+}
+
+/* ══════════════════════════ EVENTS (delegated) ══════════════════════════ */
+document.addEventListener('mousedown',()=>{uiPointerDown=true;},true);
+document.addEventListener('mouseup',()=>{uiPointerDown=false;},true);
+document.addEventListener('touchstart',()=>{uiPointerDown=true;},true);
+document.addEventListener('touchend',()=>{uiPointerDown=false;},true);
+document.addEventListener('focusin',e=>{if(e.target.tagName==='SELECT') uiSelectOpen=true;},true);
+document.addEventListener('focusout',e=>{if(e.target.tagName==='SELECT') uiSelectOpen=false;},true);
+
+document.getElementById('nav').addEventListener('click',e=>{
+  const b=e.target.closest('.ntab');
+  if(!b) return;
+  G.view=b.dataset.tab;
+  render();
+});
+document.getElementById('spd').addEventListener('click',e=>{
+  if(e.target.closest('#autoDispatchBtn')){G.autoDispatch=!G.autoDispatch;save();renderTopbar();return;}
+  if(e.target.closest('#newGameBtn')){G.pendingEvent={type:'confirmNewGame'};render();return;}
+  const b=e.target.closest('.sbtn[data-speed]');
+  if(!b) return;
+  G.speed=Number(b.dataset.speed);
+  renderTopbar();
+});
+document.getElementById('content').addEventListener('click',e=>{
+  const card=e.target.closest('[data-action="jobdetail"]');
+  if(card){openJobModal(Number(card.dataset.id));return;}
+  const areaCard=e.target.closest('[data-action="areadetail"]');
+  if(areaCard){openAreaModal(areaCard.dataset.area);return;}
+  const btn=e.target.closest('[data-action]');
+  if(!btn) return;
+  const act=btn.dataset.action;
+  if(act==='hire') hireCandidate(btn.dataset.id);
+  else if(act==='fireAsk'){fireConfirmId=Number(btn.dataset.id);render();}
+  else if(act==='fireYes'){fireDriver(Number(btn.dataset.id));fireConfirmId=null;}
+  else if(act==='fireNo'){fireConfirmId=null;render();}
+  else if(act==='shift') setShift(Number(btn.dataset.id),btn.dataset.shift);
+  else if(act==='restnow') restNow(Number(btn.dataset.id));
+  else if(act==='renewbadge') renewBadge(Number(btn.dataset.id));
+  else if(act==='service') serviceVehicle(Number(btn.dataset.id));
+  else if(act==='mot') renewMot(Number(btn.dataset.id));
+  else if(act==='dashcam') fitDashcam(Number(btn.dataset.id));
+  else if(act==='livery') fitLivery(Number(btn.dataset.id));
+  else if(act==='takeLoan') takeLoan(btn.dataset.tier);
+  else if(act==='repayLoan') repayLoanEarly();
+  else if(act==='runMarketing') runMarketing(btn.dataset.key);
+  else if(act==='sellveh') sellVehicle(Number(btn.dataset.id));
+  else if(act==='scrapveh') decommissionVehicle(Number(btn.dataset.id));
+  else if(act==='buyveh') buyVehicle(btn.dataset.kind);
+});
+document.getElementById('content').addEventListener('change',e=>{
+  const assignSel=e.target.closest('[data-action="assignveh"]');
+  if(assignSel){assignVehicle(Number(assignSel.dataset.id),assignSel.value);return;}
+  const hustleSel=e.target.closest('[data-action="sethustle"]');
+  if(hustleSel){setHustle(Number(hustleSel.dataset.id),hustleSel.value);return;}
+});
+document.getElementById('modalOverlay').addEventListener('click',e=>{
+  if(e.target.id==='modalOverlay') return;
+  const btn=e.target.closest('[data-action]');
+  if(!btn) return;
+  const act=btn.dataset.action;
+  if(act==='dispatch'){allocateJob(Number(btn.dataset.job),Number(btn.dataset.driver));closeUiModal();}
+  else if(act==='suboutJob') subOutJob(Number(btn.dataset.job));
+  else if(act==='declineJob') declineJob(Number(btn.dataset.job));
+  else if(act==='recall') recallJob(Number(btn.dataset.job));
+  else if(act==='closeModal') closeUiModal();
+  else if(act==='ackCompliance') ackCompliance();
+  else if(act==='reqAccept') resolveRequest(true);
+  else if(act==='reqDecline') resolveRequest(false);
+  else if(act==='confirmNewGame'){localStorage.removeItem('kelvinCarsSave');G.pendingEvent=null;backToSetup();}
+  else if(act==='cancelNewGame'){G.pendingEvent=null;render();}
+  else if(act==='toggleRadio') toggleRadio(Number(btn.dataset.job));
+  else if(act==='cabAction') cabAction(Number(btn.dataset.job),btn.dataset.cab);
+  else if(act==='warnFinal') resolveWarningEscalation(false);
+  else if(act==='warnFire') resolveWarningEscalation(true);
+  else if(act==='gameOverNewGame'){localStorage.removeItem('kelvinCarsSave');backToSetup();}
+  else if(act==='policePay') resolvePoliceStop(true);
+  else if(act==='policeRefuse') resolvePoliceStop(false);
+});
+
+/* ══════════════════════════ SETUP / BOOT ══════════════════════════ */
+let selectedDiff='normal';
+function buildDiffGrid(){
+  const grid=document.getElementById('diffGrid');
+  grid.innerHTML=Object.entries(DIFFICULTIES).map(([k,d])=>`
+    <div class="diff-card ${k===selectedDiff?'sel':''}" data-diff="${k}">
+      <div class="diff-name">${d.label}</div>
+      <div class="diff-desc">${d.desc.replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+  grid.querySelectorAll('.diff-card').forEach(c=>c.addEventListener('click',()=>{selectedDiff=c.dataset.diff;buildDiffGrid();}));
+}
+document.getElementById('startBtn').addEventListener('click',()=>{
+  const name=document.getElementById('companyName').value.trim()||'Kelvin Cars';
+  newGame(name,selectedDiff);
+  showGame();
+});
+function showGame(){
+  document.getElementById('setup').classList.remove('on');
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('nav').style.display='flex';
+  document.getElementById('content').style.display='flex';
+  G.view='overview';
+  render();
+  startLoop();
+}
+let loopHandle=null;
+function startLoop(){
+  if(loopHandle) return;
+  loopHandle=setInterval(()=>{
+    if(!shouldFreezeSim() && G.speed>0) tick(G.speed);
+    if(!uiPointerDown) render();
+  },1000);
+}
+function backToSetup(){
+  if(loopHandle){clearInterval(loopHandle);loopHandle=null;}
+  G=null;
+  document.getElementById('topbar').style.display='none';
+  document.getElementById('nav').style.display='none';
+  document.getElementById('content').style.display='none';
+  document.getElementById('modalOverlay').classList.remove('on');
+  document.getElementById('setup').classList.add('on');
+}
+
+function boot(){
+  buildDiffGrid();
+  const loaded=tryLoad();
+  if(loaded){
+    G=loaded;
+    showGame();
+  } else {
+    document.getElementById('setup').classList.add('on');
+  }
+}
+boot();
+</script>
+</body>
+</html>
