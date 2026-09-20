@@ -139,6 +139,7 @@ table tr:hover td{background:#1c1c22;}
     <div class="stat"><span class="lbl">Reputation</span><span class="val" id="statRep">0</span></div>
     <div class="stat"><span class="lbl">Heat</span><div class="heatbar"><div id="heatFill" style="width:0%"></div></div></div>
     <div class="spacer"></div>
+    <button class="btn small" onclick="openResetConfirmModal()" title="Wipe your save and start a new empire">New Empire</button>
     <button class="btn primary" onclick="advanceDay()">END NIGHT ▶</button>
   </div>
   <div id="body">
@@ -1953,6 +1954,16 @@ function render(){
 function restartGame(){
   localStorage.removeItem('empireSave');
   location.reload();
+}
+function openResetConfirmModal(){
+  openModal(`
+    <h3>Wipe This Save?</h3>
+    <p style="color:var(--dim);">${G.crew ? `Day ${G.day}, ${fmt(G.cash)} clean, ${playerAreaCount()}/16 areas.` : ''} This clears your save for good and starts a brand new empire from scratch. There's no undo.</p>
+    <div class="choices">
+      <button onclick="restartGame()">Wipe It — Start Fresh</button>
+      <button onclick="closeModal()">Cancel, Keep Playing</button>
+    </div>
+  `);
 }
 
 function renderOverview(){
