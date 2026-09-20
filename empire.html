@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empire — Glasgow</title>
+<style>
+:root{
+  --bg:#0c0c0e; --panel:#17171b; --panel2:#1e1e24; --border:#2c2c34;
+  --gold:#d4af37; --red:#b3271e; --red2:#e74c3c; --green:#2ecc71; --blue:#3498db;
+  --text:#e8e6df; --dim:#9a9aa2; --dimmer:#6b6b73;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;}
+h1,h2,h3,h4{font-family:Georgia,'Times New Roman',serif;margin:0 0 8px 0;color:var(--gold);}
+a{color:var(--gold);}
+button,.btn{font-family:inherit;cursor:pointer;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:6px 12px;font-size:13px;}
+button:hover,.btn:hover{border-color:var(--gold);}
+.btn.primary{background:var(--red);border-color:#7a1a14;color:#fff;}
+.btn.primary:hover{background:var(--red2);}
+.btn.gold{background:var(--gold);color:#1a1a1a;border-color:#a8841f;font-weight:bold;}
+.btn.small{padding:3px 8px;font-size:12px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+input,select{font-family:inherit;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:6px 8px;font-size:13px;}
+
+#setupScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.setupBox{max-width:520px;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:32px;}
+.setupBox h1{font-size:32px;text-align:center;}
+.setupBox .sub{text-align:center;color:var(--dim);margin-bottom:24px;}
+.setupBox label{display:block;margin:14px 0 4px;color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.5px;}
+.setupBox input,.setupBox select{width:100%;}
+
+#app{display:none;min-height:100vh;flex-direction:column;}
+#topbar{display:flex;align-items:center;gap:18px;padding:10px 18px;background:linear-gradient(180deg,#1a1a1f,#141417);border-bottom:2px solid var(--gold);flex-wrap:wrap;}
+#topbar .brand{font-family:Georgia,serif;color:var(--gold);font-size:18px;font-weight:bold;margin-right:8px;}
+.stat{display:flex;flex-direction:column;line-height:1.1;}
+.stat .lbl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;}
+.stat .val{font-size:15px;font-weight:bold;}
+.heatbar{width:90px;height:8px;background:#000;border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.heatbar > div{height:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--red));}
+#topbar .spacer{flex:1;}
+
+#body{display:flex;flex:1;min-height:0;}
+#nav{width:170px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:10px 0;}
+#nav button{background:none;border:none;text-align:left;padding:11px 18px;color:var(--dim);border-left:3px solid transparent;border-radius:0;font-size:13px;}
+#nav button:hover{color:var(--text);background:var(--panel2);}
+#nav button.active{color:var(--gold);border-left-color:var(--gold);background:var(--panel2);font-weight:bold;}
+
+#content{flex:1;padding:18px;overflow-y:auto;overflow-x:hidden;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px;overflow-x:auto;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.tile{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:12px;}
+.tile .n{font-size:22px;font-weight:bold;color:var(--gold);}
+.tile .l{font-size:11px;color:var(--dim);text-transform:uppercase;}
+.tile.clickable{cursor:pointer;}
+.tile.clickable:hover{border-color:var(--gold);}
+
+table{width:100%;min-width:620px;border-collapse:collapse;font-size:13px;}
+table th{text-align:left;color:var(--dim);font-size:11px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--border);}
+table td{padding:7px 8px;border-bottom:1px solid #232328;vertical-align:middle;}
+table tr.clickable{cursor:pointer;}
+table tr:hover td{background:#1c1c22;}
+.statusline{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;}
+.pill.player{background:#1e4d2b;color:#7be29a;}
+.pill.rival{background:#4d1e1e;color:#e29a9a;}
+.pill.neutral{background:#3a3a3a;color:#bbb;}
+.pill.good{background:#1e4d2b;color:#7be29a;}
+.pill.bad{background:#4d1e1e;color:#e29a9a;}
+.pill.mid{background:#4d461e;color:#e2d69a;}
+
+#kanban{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;}
+.kcol{flex:1;min-width:170px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px;max-height:520px;overflow-y:auto;}
+.kcol h4{font-size:12px;text-transform:uppercase;color:var(--dim);margin:2px 4px 10px;display:flex;justify-content:space-between;}
+.kcard{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:5px;padding:8px 10px;margin-bottom:8px;font-size:12.5px;cursor:pointer;}
+.kcard:hover{border-color:var(--gold);}
+.kcard .t{font-weight:bold;margin-bottom:3px;}
+.kcard .m{color:var(--dim);font-size:11px;}
+
+.map{position:relative;width:100%;height:420px;background:#0f1a14;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.mapdot{position:absolute;width:38px;height:38px;border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;cursor:pointer;border:2px solid #000;text-align:center;color:#fff;}
+.maplabel{position:absolute;transform:translate(-50%,4px);font-size:10px;color:var(--dim);white-space:nowrap;}
+
+.modalWrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);align-items:center;justify-content:center;z-index:100;padding:16px;}
+.modalWrap.show{display:flex;}
+.modalBox{background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:22px;max-width:520px;width:100%;max-height:86vh;overflow-y:auto;}
+.modalBox h3{margin-bottom:10px;}
+.modalBox .close{float:right;}
+.choices{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.choices button{width:100%;text-align:left;padding:10px 12px;}
+
+.logline{padding:5px 0;border-bottom:1px solid #232328;font-size:12.5px;}
+.logline .d{color:var(--dim);margin-right:6px;}
+
+.barwrap{background:#000;border-radius:4px;overflow:hidden;border:1px solid var(--border);height:10px;width:100%;}
+.barwrap>div{height:100%;}
+
+@media(max-width:760px){
+  #body{flex-direction:column;}
+  #nav{width:100%;flex-direction:row;flex-wrap:wrap;padding:4px;}
+  #nav button{border-left:none;border-bottom:3px solid transparent;padding:8px 10px;}
+  #nav button.active{border-left:none;border-bottom-color:var(--gold);}
+  .grid2,.grid3{grid-template-columns:1fr;}
+  #kanban{flex-direction:column;}
+  .kcol{max-height:none;}
+}
+</style>
+</head>
+<body>
+
+<div id="setupScreen">
+  <div class="setupBox">
+    <h1>EMPIRE</h1>
+    <div class="sub">Glasgow, present day. Run the city from the shadows.</div>
+    <label>Your name (the Boss)</label>
+    <input id="setupBoss" placeholder="e.g. Danny Cairns" maxlength="24">
+    <label>Your crew's name</label>
+    <input id="setupCrew" placeholder="e.g. The Anderston Firm" maxlength="30">
+    <label>Starting turf</label>
+    <select id="setupTurf">
+      <option value="merchant">Merchant City (high-spend, high heat)</option>
+      <option value="anderston">Anderston (balanced, riverside)</option>
+      <option value="partick">Partick / West End (quieter, lower heat)</option>
+    </select>
+    <div style="margin-top:22px;text-align:center;">
+      <button class="btn gold" style="width:100%;padding:12px;" onclick="beginGame()">TAKE OVER THE CITY</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <div class="brand">EMPIRE</div>
+    <div class="stat"><span class="lbl">Day</span><span class="val" id="statDay">1</span></div>
+    <div class="stat"><span class="lbl">Clean Cash</span><span class="val" id="statCash">£0</span></div>
+    <div class="stat"><span class="lbl">Dirty Cash</span><span class="val" id="statDirty">£0</span></div>
+    <div class="stat"><span class="lbl">Reputation</span><span class="val" id="statRep">0</span></div>
+    <div class="stat"><span class="lbl">Heat</span><div class="heatbar"><div id="heatFill" style="width:0%"></div></div></div>
+    <div class="spacer"></div>
+    <button class="btn primary" onclick="advanceDay()">END NIGHT ▶</button>
+  </div>
+  <div id="body">
+    <div id="nav"></div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div class="modalWrap" id="modalWrap"><div class="modalBox" id="modalBox"></div></div>
+
+<script>
+// ============================= DATA =============================
+const NAME_POOLS = {
+  male:['Davie','Rab','Tam','Jimmy','Billy','Frankie','Stevie','Kenny','Gary','Alan','Colin','Paul','Mark','Scott','Barry','Gordon','Craig','Ian','Robbie','Chic','Alec','Dougie','Eddie','Wullie'],
+  female:['Shona','Karen','Tracy','Linda','Michelle','Donna','Kirsty','Alison','Lorraine','Debbie','Jackie','Fiona','Angela','Lisa','Yvonne','Carol','Denise','Sharon','Paula','Gail','Nicola','Amy'],
+  surnames:['McLeod','Docherty','Boyle','Kelly','Sweeney','Gallagher','Connolly','Reilly','Fraser','Burns','Sim','Hutchison','Cairns','Meechan','Quinn','Lafferty','McStay','Rooney','Devine','灣','Nesbitt','Kerrigan','Brogan','Sloan','Cassidy']
+};
+NAME_POOLS.surnames = NAME_POOLS.surnames.filter(s=>s!=='灣');
+
+const LOCATIONS = [
+  {id:'merchant',    name:'Merchant City',x:50,y:40,wealth:3},
+  {id:'anderston',   name:'Anderston',    x:38,y:44,wealth:2},
+  {id:'finnieston',  name:'Finnieston',   x:31,y:42,wealth:2},
+  {id:'partick',     name:'Partick',      x:22,y:38,wealth:2},
+  {id:'gorbals',     name:'Gorbals',      x:46,y:60,wealth:1},
+  {id:'govan',       name:'Govan',        x:26,y:56,wealth:1},
+  {id:'ibrox',       name:'Ibrox',        x:24,y:50,wealth:2},
+  {id:'castlemilk',  name:'Castlemilk',   x:56,y:84,wealth:1},
+  {id:'possilpark',  name:'Possilpark',   x:46,y:14,wealth:1},
+  {id:'maryhill',    name:'Maryhill',     x:38,y:20,wealth:1},
+  {id:'springburn',  name:'Springburn',   x:56,y:16,wealth:1},
+  {id:'drumchapel',  name:'Drumchapel',   x:10,y:22,wealth:1},
+  {id:'easterhouse', name:'Easterhouse',  x:78,y:30,wealth:1},
+  {id:'dennistoun',  name:'Dennistoun',   x:64,y:32,wealth:2},
+  {id:'bridgeton',   name:'Bridgeton',    x:60,y:50,wealth:1},
+  {id:'calton',      name:'Calton',       x:57,y:44,wealth:2},
+];
+
+const GANG_DEFS = [
+  {id:'southside',  name:'Southside Syndicate', color:'#c0392b', areas:['gorbals','govan','ibrox','castlemilk']},
+  {id:'northkelvin', name:'North Kelvin Mob',   color:'#8e44ad', areas:['possilpark','maryhill','springburn','drumchapel']},
+  {id:'eastend',    name:'East End Crew',       color:'#16a085', areas:['easterhouse','dennistoun','bridgeton','calton']},
+];
+const PLAYER_START_AREAS = ['merchant','anderston','finnieston','partick'];
+
+const BUSINESS_TYPES = {
+  sunbed:   {label:'Sunbed Shop',     cost:15000,  income:180,  launder:300,  heat:1, hasGirls:false, max:2, category:'front'},
+  pub:      {label:'Pub',             cost:40000,  income:450,  launder:800,  heat:2, hasGirls:false, max:2, category:'front'},
+  massage:  {label:'Massage Parlour', cost:60000,  income:500,  launder:1000, heat:4, hasGirls:true,  max:1, category:'front'},
+  strip:    {label:'Strip Club',      cost:120000, income:900,  launder:1800, heat:5, hasGirls:true,  max:1, category:'front'},
+  nightclub:{label:'Nightclub',       cost:180000, income:1600, launder:3000, heat:6, hasGirls:false, max:2, category:'front'},
+  casino:   {label:'Casino',          cost:250000, income:2200, launder:4000, heat:8, hasGirls:false, max:1, category:'front'},
+  flat:     {label:'Buy-to-Let Flat',   cost:40000,  income:60,  launder:600,  heat:0.3, hasGirls:false, max:3, category:'investment', repReq:28},
+  retail:   {label:'Retail Unit Lease', cost:90000,  income:120, launder:1400, heat:0.5, hasGirls:false, max:2, category:'investment', repReq:38},
+  office:   {label:'Office Block Share',cost:180000, income:200, launder:2800, heat:0.8, hasGirls:false, max:2, category:'investment', repReq:50},
+  offshore: {label:'Offshore Portfolio',cost:400000, income:400, launder:6500, heat:1.2, hasGirls:false, max:1, category:'investment', repReq:65},
+};
+
+const DEPUTY_ROLES = {
+  enforcer:   {label:'Enforcer',   desc:'Muscle. Runs shakedowns and hits, defends turf, leads territory attacks and big scores.'},
+  runner:     {label:'Runner Boss',desc:'Manages product — bigger batches, fewer busts.'},
+  fixer:      {label:'Fixer',      desc:'Bent coppers. Cheaper, safer bribes; slows heat build-up; gets more out of every Police Contact.'},
+  madam:      {label:'Manager',    desc:'Looks after the girls — safety, earnings, recruitment.'},
+  accountant: {label:'Accountant', desc:'Cooks the books — more laundering capacity, lower fees.'},
+  lawyer:     {label:'Lawyer',     desc:"Works the courts — cuts bail costs and sentence lengths for anyone lifted, and can try to get a case thrown out entirely."},
+};
+
+const TASK_TYPES = {
+  collect:  {label:'Collect Protection Money', role:'enforcer', hours:6,  cashMin:300, cashMax:900,  heat:1,  rep:[0,2]},
+  shakedown:{label:'Shake Down Rival Turf',     role:'enforcer', hours:9,  cashMin:800, cashMax:2200, heat:3,  rep:[1,3], relation:-6},
+  scout:    {label:'Scout Rival Territory',     role:'enforcer', hours:10, cashMin:0,   cashMax:0,    heat:0,  rep:[0,0], scout:true},
+  hit:      {label:'Order a Hit',               role:'enforcer', hours:14, cashMin:0,   cashMax:0,    heat:22, rep:[4,10], hitJob:true},
+  quiet:    {label:'Keep a Witness Quiet',      role:'enforcer', hours:7,  cashMin:0,   cashMax:0,    heat:-8, rep:[-1,1]},
+  grease:   {label:'Grease a Police Contact',   role:'fixer',    hours:5,  cashMin:0,   cashMax:0,    heat:-10,rep:[0,0]},
+  push:     {label:'Push Cash Through the Books',role:'accountant',hours:6, cashMin:0,  cashMax:0,    heat:0,  rep:[0,0], launderBoost:true},
+  recruit:  {label:'Scout New Talent',          role:'madam',    hours:8,  cashMin:0,   cashMax:0,    heat:0,  rep:[0,0], recruit:true},
+};
+
+const STAGE_LABELS = {sourcing:'Sourcing',cooking:'Cooking',packaged:'Packaged',dealing:'Out With Dealers',sold:'Sold (Recent)'};
+
+const HEIST_TARGETS = {
+  bookies:    {label:"The Bookies' Safe",        crew:1, planCost:2000,  planDays:1, payoutMin:5000,  payoutMax:12000,  heat:8,  riskLoss:0.06},
+  wagesrun:   {label:'Cash-and-Carry Wages Run',  crew:1, planCost:3500,  planDays:1, payoutMin:8000,  payoutMax:16000,  heat:10, riskLoss:0.08},
+  jewellers:  {label:'Argyle Street Jewellers',   crew:2, planCost:8000,  planDays:2, payoutMin:20000, payoutMax:42000,  heat:18, riskLoss:0.14},
+  securityvan:{label:'Security Van',              crew:2, planCost:10000, planDays:2, payoutMin:25000, payoutMax:55000,  heat:22, riskLoss:0.16},
+  bank:       {label:'Clydeside Bank Branch',      crew:3, planCost:18000, planDays:3, payoutMin:60000, payoutMax:150000, heat:32, riskLoss:0.22},
+};
+
+const GAMBLE_TIERS = {
+  small: {label:'A Few Quiet Bets',        amount:5000,   fee:0.10, heat:3,  risk:0.04},
+  medium:{label:'A Big Night at the Tables',amount:20000, fee:0.14, heat:8,  risk:0.08},
+  large: {label:'Going All In',            amount:60000,  fee:0.18, heat:16, risk:0.14},
+  max:   {label:'Breaking the Bank',       amount:150000, fee:0.22, heat:26, risk:0.22},
+};
+
+const CONTACT_RANKS = {
+  beatcop:   {label:'Beat Cop',        cost:8000,  retainer:150, heatDecay:1,   bribeDiscount:0.05, bailDiscount:0.08},
+  sergeant:  {label:'Desk Sergeant',   cost:16000, retainer:280, heatDecay:1.8, bribeDiscount:0.10, bailDiscount:0.18},
+  detective: {label:'Detective',       cost:28000, retainer:450, heatDecay:2.6, bribeDiscount:0.16, bailDiscount:0.28},
+  inspector: {label:'Chief Inspector', cost:55000, retainer:800, heatDecay:4,   bribeDiscount:0.28, bailDiscount:0.45},
+};
+
+const ACHIEVEMENTS_INFO = {
+  kingpin:        {label:'Kingpin of Glasgow', desc:'Every area in the city answers to you.'},
+  millionaire:    {label:'Millionaire',        desc:'The Firm topped seven figures.'},
+  untouchable:    {label:'Untouchable',        desc:'Reputation hit 80+.'},
+  retire_eligible:{label:'Made Man',           desc:'Enough put away, enough respect, to walk away clean.'},
+};
+
+const CITY_EVENTS = {
+  derby:   {label:'Old Firm Derby',         venue:'Ibrox & Celtic Park', days:1, boost:{nightclub:1.6, casino:1.4, strip:1.3, pub:1.3}, heatMult:1.3},
+  concert: {label:'Big Gig at the Hydro',   venue:'The OVO Hydro',       days:1, boost:{nightclub:1.8, pub:1.3}, heatMult:1.15},
+  festival:{label:'Merchant City Festival', venue:'Merchant City',      days:2, boost:{pub:1.4, sunbed:1.1, nightclub:1.2}, heatMult:1.1},
+  raceday: {label:'Race Day at Hampden',    venue:'Hampden Park',       days:1, boost:{casino:1.3, nightclub:1.2}, heatMult:1.2},
+};
+
+// ============================= STATE =============================
+let G = null;
+let uidCounter = 1;
+function uid(){ return 'id'+(uidCounter++); }
+function rrange(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function clamp(n,a,b){ return Math.max(a,Math.min(b,n)); }
+function fmt(n){ return '£'+Math.round(n).toLocaleString(); }
+function randomName(g){ return pick(g==='f'?NAME_POOLS.female:NAME_POOLS.male)+' '+pick(NAME_POOLS.surnames); }
+
+function log(msg, cls){
+  G.log.unshift({day:G.day, msg, cls:cls||''});
+  if(G.log.length>250) G.log.length=250;
+}
+
+function newGame(bossName, crewName, turf){
+  G = {
+    boss: bossName || 'The Boss',
+    crew: crewName || 'The Firm',
+    day: 1,
+    cash: 45000,
+    dirtyCash: 0,
+    heat: 8,
+    reputation: 20,
+    gameOver: null,
+    areas: {},
+    gangs: {},
+    businesses: [],
+    deputies: [],
+    girls: [],
+    batches: [],
+    tasks: [],
+    heists: [],
+    deputyCandidates: [],
+    girlCandidates: [],
+    jailed: [],
+    prisonBreak: null,
+    policeContacts: [],
+    contactCandidates: [],
+    achievements: [],
+    cityEvent: null,
+    nextCityEventDay: rrange(8,16),
+    log: [],
+    history: [],
+    pendingEvent: null,
+    nextCandidateRefresh: 10,
+    view: 'overview',
+  };
+  LOCATIONS.forEach(l=>{
+    let controller = 'neutral';
+    if(PLAYER_START_AREAS.includes(l.id)) controller='player';
+    GANG_DEFS.forEach(g=>{ if(g.areas.includes(l.id)) controller=g.id; });
+    G.areas[l.id] = {controller};
+  });
+  GANG_DEFS.forEach(g=>{
+    G.gangs[g.id] = {id:g.id, name:g.name, color:g.color, strength:rrange(40,65), aggression:rrange(35,70), relation:rrange(-20,10)};
+  });
+  G.businesses.push(mkBusiness('sunbed', turf==='partick'?'partick':'partick', 1));
+  G.businesses.push(mkBusiness('pub', turf==='anderston'?'anderston':'anderston', 1));
+  for(let i=0;i<3;i++) G.deputyCandidates.push(genDeputyCandidate());
+  for(let i=0;i<2;i++) G.girlCandidates.push(genGirlCandidate());
+  for(let i=0;i<2;i++) G.contactCandidates.push(genContactCandidate());
+  log(`${G.boss} takes control of ${G.crew}. First job: don't get lifted.`, 'good');
+  save();
+}
+
+function mkBusiness(typeKey, areaId, level){
+  return {id:uid(), typeKey, area:areaId, level:level||1, name: genBizName(typeKey, areaId)};
+}
+const BIZ_NAME_PARTS = {
+  sunbed:['Bronze Goddess','Sun Kissed','Tan Lines','Costa Tan'],
+  pub:['The Thistle','The Clyde Bar','The Crown','The Anchor','The Iron Horse'],
+  massage:['Serenity Spa','Orchid Rooms','Silk Massage'],
+  strip:['The Velvet Lounge','Foxes','Diamonds'],
+  nightclub:['Neon','The Vault','Cathouse Nights','Republic'],
+  casino:['The Royal Flush','Ace High'],
+  flat:['Riverside Court','Clydeview Apartments','Merchant Heights','Kelvin Gate'],
+  retail:['Argyle Retail Park unit','Buchanan Galleries unit','a Sauchiehall Street unit'],
+  office:['a share in Lomond House','a share in Anderston Tower','a share in Kelvin Business Centre'],
+  offshore:['a Cayman holding company','a Jersey trust','an Isle of Man shell'],
+};
+function genBizName(typeKey, areaId){
+  const area = LOCATIONS.find(l=>l.id===areaId);
+  return pick(BIZ_NAME_PARTS[typeKey]) + (Math.random()<0.4?(' '+area.name):'');
+}
+function genDeputyCandidate(){
+  const role = pick(Object.keys(DEPUTY_ROLES));
+  const gender = Math.random()<0.75?'m':'f';
+  const skill = rrange(35,80);
+  return {id:uid(), name:randomName(gender), role, skill, loyalty:rrange(50,75), salary: 250+skill*4};
+}
+function genGirlCandidate(){
+  return {id:uid(), name:randomName('f'), skill:rrange(40,75), safety:rrange(55,75)};
+}
+function genContactCandidate(){
+  const rankKey = pick(Object.keys(CONTACT_RANKS));
+  return {id:uid(), name:randomName(Math.random()<0.7?'m':'f'), rankKey, loyalty:rrange(50,70)};
+}
+
+// ============================= SAVE/LOAD =============================
+function save(){ try{ localStorage.setItem('empireSave', JSON.stringify(G)); }catch(e){} }
+function tryLoad(){
+  try{
+    const raw = localStorage.getItem('empireSave');
+    if(!raw) return false;
+    G = JSON.parse(raw);
+    if(!G.heists) G.heists = [];
+    if(!G.jailed) G.jailed = [];
+    if(G.prisonBreak === undefined) G.prisonBreak = null;
+    if(!G.policeContacts) G.policeContacts = [];
+    if(!G.contactCandidates) G.contactCandidates = [];
+    if(!G.achievements) G.achievements = [];
+    if(G.cityEvent === undefined) G.cityEvent = null;
+    if(!G.nextCityEventDay) G.nextCityEventDay = G.day + rrange(8,16);
+    return true;
+  }catch(e){ return false; }
+}
+
+function beginGame(){
+  const boss = document.getElementById('setupBoss').value.trim() || 'The Boss';
+  const crew = document.getElementById('setupCrew').value.trim() || 'The Firm';
+  const turf = document.getElementById('setupTurf').value;
+  newGame(boss, crew, turf);
+  document.getElementById('setupScreen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  buildNav();
+  render();
+}
+
+// ============================= CORE LOOP =============================
+function totalLaunderCapacity(){
+  let cap = 0;
+  G.businesses.forEach(b=>{
+    const t = BUSINESS_TYPES[b.typeKey];
+    cap += t.launder * (1 + (b.level-1)*0.6);
+  });
+  const acct = activeDeputy('accountant');
+  if(acct) cap *= (1 + acct.skill/200);
+  return cap;
+}
+function launderFee(){
+  const acct = activeDeputy('accountant');
+  let fee = 0.13;
+  if(acct) fee -= acct.skill*0.0007;
+  return clamp(fee, 0.04, 0.13);
+}
+function playerAreaCount(){ return Object.values(G.areas).filter(a=>a.controller==='player').length; }
+function gangHomeAreas(gid){ return GANG_DEFS.find(gd=>gd.id===gid).areas; }
+function gangAreasHeld(gid){ return gangHomeAreas(gid).filter(a=>G.areas[a].controller===gid).length; }
+function isGangStronghold(gid, areaId){
+  if(G.areas[areaId].controller !== gid) return false;
+  return gangAreasHeld(gid) <= 1;
+}
+function attackCost(gid, areaId){
+  const stronghold = isGangStronghold(gid, areaId);
+  const scaleFactor = 1 + playerAreaCount()*0.15;
+  return Math.round(8000 * scaleFactor * (stronghold?2.5:1));
+}
+function deputyBusy(d){
+  if(d.trainingUntil && d.trainingUntil>G.day) return true;
+  if(G.heists.some(h=>h.stage==='planning' && h.crewIds.includes(d.id))) return true;
+  if(G.prisonBreak && G.prisonBreak.stage==='planning' && G.prisonBreak.crewIds.includes(d.id)) return true;
+  return false;
+}
+function activeDeputy(role){ return G.deputies.find(d=>d.role===role && !deputyBusy(d)); }
+function activeDeputies(role){ return G.deputies.filter(d=>d.role===role && !deputyBusy(d)); }
+function anyPatrolActive(){ return Object.values(G.areas).some(a=>a.patrolUntil && a.patrolUntil>=G.day); }
+
+function fixerContactMultiplier(){
+  const fixer = activeDeputy('fixer');
+  return fixer ? (1 + fixer.skill/200) : 1;
+}
+function totalContactHeatDecay(){
+  const mult = fixerContactMultiplier();
+  return G.policeContacts.reduce((s,c)=>s + CONTACT_RANKS[c.rankKey].heatDecay*(c.loyalty/100)*mult, 0);
+}
+function totalContactBribeDiscount(){
+  const mult = fixerContactMultiplier();
+  return clamp(G.policeContacts.reduce((s,c)=>s + CONTACT_RANKS[c.rankKey].bribeDiscount*(c.loyalty/100)*mult, 0), 0, 0.65);
+}
+function totalContactBailDiscount(){
+  const mult = fixerContactMultiplier();
+  return clamp(G.policeContacts.reduce((s,c)=>s + CONTACT_RANKS[c.rankKey].bailDiscount*(c.loyalty/100)*mult, 0), 0, 0.7);
+}
+
+function advanceDay(){
+  if(G.gameOver) return;
+  // 0. training completions
+  G.deputies.forEach(d=>{
+    if(d.trainingUntil && G.day>=d.trainingUntil){
+      const gain = rrange(6,12);
+      d.skill = clamp(d.skill+gain,0,99);
+      d.trainingUntil = null;
+      log(`${d.name} is back from training — skill up to ${d.skill}.`, 'good');
+    }
+  });
+  G.girls.forEach(g=>{
+    if(g.trainingUntil && G.day>=g.trainingUntil){
+      const gain = rrange(6,12);
+      g.skill = clamp(g.skill+gain,0,99);
+      g.trainingUntil = null;
+      log(`${g.name} is back and sharper for it — skill up to ${g.skill}.`, 'good');
+    }
+  });
+
+  // 0.5 city events
+  updateCityEvent();
+
+  // 1. business income
+  let dayIncome = 0, dayHeat = 0;
+  const eventDef = G.cityEvent ? CITY_EVENTS[G.cityEvent.key] : null;
+  G.businesses.forEach(b=>{
+    const t = BUSINESS_TYPES[b.typeKey];
+    let inc = t.income * (1 + (b.level-1)*0.5);
+    if(b.marketingUntil && G.day<=b.marketingUntil) inc *= 1.5;
+    let heatAdd = t.heat * 0.25;
+    if(b.security) heatAdd *= (1 - b.security*0.25);
+    if(eventDef && eventDef.boost[b.typeKey]){
+      inc *= eventDef.boost[b.typeKey];
+      heatAdd *= eventDef.heatMult;
+    }
+    dayIncome += inc;
+    dayHeat += heatAdd;
+  });
+  G.cash += dayIncome;
+
+  // 2. girls earnings
+  let girlIncome = 0;
+  G.girls.forEach(g=>{
+    if(g.trainingUntil){ return; }
+    const onVenue = g.location!=='street';
+    const madam = activeDeputy('madam');
+    let base = onVenue ? 320 : 180;
+    base *= (0.7 + g.skill/150);
+    if(madam) base *= (1+madam.skill/300);
+    girlIncome += base;
+    dayHeat += onVenue?0.15:0.5;
+    // safety drift
+    g.safety = clamp(g.safety + (onVenue?1:-1) + (madam?1:0) + rrange(-2,2), 0, 100);
+  });
+  G.dirtyCash += girlIncome;
+
+  // 3. batches progress
+  processBatches();
+
+  // 4. tasks progress
+  processTasks();
+
+  // 4b. heists in motion
+  processHeists();
+
+  // 4c. anyone doing time
+  processJail();
+  processPrisonBreak();
+
+  // 5. laundering
+  const cap = totalLaunderCapacity();
+  const launderAmt = Math.min(G.dirtyCash, cap);
+  if(launderAmt>0){
+    const fee = launderFee();
+    G.cash += launderAmt*(1-fee);
+    G.dirtyCash -= launderAmt;
+  }
+  // idle dirty cash risk
+  if(G.dirtyCash > cap*2 && G.dirtyCash>2000){ dayHeat += 1.5; }
+
+  // 6. heat decay / fixer / police contacts
+  const fixer = activeDeputy('fixer');
+  let decay = 2 + (fixer?fixer.skill/25:0) + totalContactHeatDecay();
+  G.heat = clamp(G.heat + dayHeat - decay, 0, 100);
+
+  // 7. police raid check
+  maybeRaid();
+
+  // 8. rival gang drift & attacks
+  driftGangs();
+
+  // 9. payroll (weekly)
+  if(G.day % 7 === 0) payroll();
+
+  // 10. candidate refresh — tops up if there's room, otherwise rotates the
+  // longest-standing candidate out for a fresh roll so the market never
+  // freezes solid on a run of the same one or two roles
+  G.nextCandidateRefresh--;
+  if(G.nextCandidateRefresh<=0){
+    G.nextCandidateRefresh = 10;
+    if(G.deputyCandidates.length<4) G.deputyCandidates.push(genDeputyCandidate());
+    else { G.deputyCandidates.shift(); G.deputyCandidates.push(genDeputyCandidate()); }
+    if(G.girlCandidates.length<3) G.girlCandidates.push(genGirlCandidate());
+    else { G.girlCandidates.shift(); G.girlCandidates.push(genGirlCandidate()); }
+    if(G.contactCandidates.length<3) G.contactCandidates.push(genContactCandidate());
+    else { G.contactCandidates.shift(); G.contactCandidates.push(genContactCandidate()); }
+  }
+
+  // 11. random event
+  if(!G.pendingEvent && Math.random()<0.35) rollRandomEvent();
+
+  // 12. history snapshot
+  G.history.push({day:G.day, cash:G.cash, dirty:G.dirtyCash, heat:G.heat, rep:G.reputation});
+  if(G.history.length>200) G.history.shift();
+
+  // 12b. achievements / milestones
+  checkAchievements();
+
+  // 13. bankruptcy check
+  if(G.cash + G.dirtyCash < -40000 && !G.pendingEvent){
+    gameOver('bankrupt', `${G.crew} can't cover its debts. The banks — and worse, your creditors — come calling. ${G.boss}'s empire collapses.`);
+  }
+
+  G.day++;
+  save();
+  render();
+}
+
+function processBatches(){
+  const runner = activeDeputy('runner');
+  const cookCapacity = 2 + (runner?1:0);
+  let cooking = G.batches.filter(b=>b.stage==='cooking').length;
+  G.batches.forEach(b=>{
+    b.timer -= 1;
+    if(b.timer>0) return;
+    if(b.stage==='sourcing'){
+      if(cooking<cookCapacity){
+        b.stage='cooking'; b.timer=2; cooking++;
+        const qBoost = runner? runner.skill/100 : 0;
+        b.quality = clamp(b.quality + qBoost, 1, 3);
+      } else { b.timer=1; }
+    } else if(b.stage==='cooking'){
+      b.stage='packaged'; b.timer=0;
+      log(`A batch of product finishes cooking (${b.units} units, quality ${b.quality.toFixed(1)}).`);
+    } else if(b.stage==='dealing'){
+      // bust check
+      const bustChance = clamp((G.heat-20)*0.006 - (runner?runner.skill*0.002:0), 0.01, 0.5);
+      if(Math.random()<bustChance){
+        b.stage='seized';
+        G.heat = clamp(G.heat+14,0,100);
+        log(`Police seized a shipment out with the dealers. ${b.units} units gone.`, 'bad');
+      } else {
+        const price = 55 + b.quality*35;
+        const revenue = b.units*price;
+        G.dirtyCash += revenue;
+        b.stage='sold'; b.timer=0; b.revenue=revenue;
+        log(`Dealers moved ${b.units} units. ${fmt(revenue)} in dirty cash.`, 'good');
+      }
+    }
+  });
+  G.batches = G.batches.filter(b=> b.stage!=='seized' && !(b.stage==='sold' && G.day - b.soldDay > 3));
+  G.batches.forEach(b=>{ if(b.stage==='sold' && b.soldDay===undefined) b.soldDay=G.day; });
+}
+
+function processTasks(){
+  G.tasks.forEach(t=>{
+    if(t.status!=='assigned') return;
+    t.timer -= 1;
+    if(t.timer>0) return;
+    resolveTask(t);
+  });
+  G.tasks = G.tasks.filter(t=>t.status!=='done' || G.day - (t.doneDay||G.day) < 3);
+}
+
+function resolveTask(t){
+  const def = TASK_TYPES[t.key];
+  const dep = G.deputies.find(d=>d.id===t.deputyId);
+  t.status='done'; t.doneDay=G.day;
+  if(def.hitJob){ resolveHitTask(t, def, dep); return; }
+  const skillMod = dep? dep.skill/100 : 0.4;
+  if(def.cashMax>0){
+    const cash = Math.round((def.cashMin + Math.random()*(def.cashMax-def.cashMin)) * (0.6+skillMod));
+    G.dirtyCash += cash;
+    t.result = `Brought back ${fmt(cash)}.`;
+  } else { t.result = 'Done.'; }
+  G.heat = clamp(G.heat + def.heat, 0, 100);
+  const rep = rrange(def.rep[0], def.rep[1]);
+  G.reputation = clamp(G.reputation + rep, -50, 100);
+  if(def.relation && t.gangId){
+    G.gangs[t.gangId].relation = clamp(G.gangs[t.gangId].relation + def.relation, -100, 100);
+  }
+  if(def.scout && t.gangId){
+    G.gangs[t.gangId].scouted = G.day;
+    t.result = `Scouted ${G.gangs[t.gangId].name}'s turf. Their weak points are known for a while.`;
+  }
+  if(def.launderBoost){
+    G.cash += G.dirtyCash*0.15;
+    G.dirtyCash *= 0.85;
+    t.result = 'Pushed extra dirty cash through the books.';
+  }
+  if(def.recruit){
+    G.girlCandidates.push(genGirlCandidate());
+    t.result = 'Found someone new looking for work.';
+  }
+  if(dep){
+    dep.loyalty = clamp(dep.loyalty + rrange(-1,3), 0, 100);
+  }
+  log(`${dep?dep.name:'Someone'} finished "${def.label}". ${t.result}`, def.heat<0?'good':'');
+}
+
+function resolveHitTask(t, def, dep){
+  const gang = t.gangId ? G.gangs[t.gangId] : null;
+  if(!gang){ t.result='No target — called it off.'; log('Hit called off — no target picked.'); return; }
+  const skill = dep ? dep.skill : 30;
+  let chance = 35 + skill*0.6 - gang.strength*0.35 + G.reputation*0.1;
+  if(gang.scouted && G.day-gang.scouted<8) chance += 15;
+  chance = clamp(chance, 8, 80);
+  if(Math.random()*100 < chance){
+    const drop = rrange(15,28);
+    gang.strength = clamp(gang.strength-drop,10,95);
+    gang.relation = clamp(gang.relation-40,-100,100);
+    G.heat = clamp(G.heat+def.heat,0,100);
+    G.reputation = clamp(G.reputation+rrange(def.rep[0],def.rep[1]),-50,100);
+    if(dep) dep.loyalty = clamp(dep.loyalty+rrange(2,6),0,100);
+    t.result = `A name inside ${gang.name} won't be causing any more bother. Their strength took a big hit (-${drop}) — but they'll never forget who sent the message.`;
+    log(`${dep?dep.name:'Someone'} finished "${def.label}" on ${gang.name}. ${t.result}`, 'good');
+  } else {
+    gang.relation = clamp(gang.relation-25,-100,100);
+    G.heat = clamp(G.heat + Math.round(def.heat*1.5), 0, 100);
+    if(dep && Math.random()<0.22){
+      t.result = `It went wrong — ${dep.name} got lifted trying to get clear.`;
+      jailDeputy(dep, `a botched hit on ${gang.name}`);
+    } else {
+      if(dep) dep.loyalty = clamp(dep.loyalty-rrange(8,15),0,100);
+      t.result = `Botched. ${gang.name} knows exactly who sent them, and it's put the fear up the crew.`;
+      log(`${dep?dep.name:'The crew'} muffed the job on ${gang.name}. ${t.result}`, 'bad');
+    }
+  }
+}
+
+function processHeists(){
+  G.heists.forEach(h=>{
+    if(h.stage!=='planning') return;
+    h.timer -= 1;
+    if(h.timer>0) return;
+    resolveHeist(h);
+  });
+  G.heists = G.heists.filter(h=> h.stage!=='done' || G.day-(h.doneDay||G.day) < 4);
+}
+
+function resolveHeist(h){
+  const t = HEIST_TARGETS[h.targetKey];
+  const crew = h.crewIds.map(id=>G.deputies.find(d=>d.id===id)).filter(Boolean);
+  const avgSkill = crew.length ? crew.reduce((s,d)=>s+d.skill,0)/crew.length : 30;
+  const hasEnforcer = crew.some(d=>d.role==='enforcer');
+  let chance = 35 + avgSkill*0.55 + (hasEnforcer?10:0) - G.heat*0.25 + G.reputation*0.1;
+  chance = clamp(chance, 8, 88);
+  h.stage = 'done'; h.doneDay = G.day;
+  if(Math.random()*100 < chance){
+    const payout = Math.round(rrange(t.payoutMin, t.payoutMax) * (0.85+avgSkill/200));
+    G.dirtyCash += payout;
+    G.heat = clamp(G.heat+t.heat, 0, 100);
+    G.reputation = clamp(G.reputation+rrange(3,8), -50,100);
+    crew.forEach(d=> d.loyalty = clamp(d.loyalty+rrange(3,8),0,100));
+    h.success = true;
+    h.result = `Pulled it off clean. ${fmt(payout)} in dirty cash.`;
+    log(`${t.label}: ${h.result}`, 'good');
+  } else {
+    G.heat = clamp(G.heat + Math.round(t.heat*1.4), 0, 100);
+    G.reputation = clamp(G.reputation - rrange(2,5), -50,100);
+    const lost = [];
+    crew.forEach(d=>{
+      if(Math.random() < t.riskLoss){
+        lost.push(d.name);
+        jailDeputy(d, `pinched coming out of ${t.label}`);
+      } else {
+        d.loyalty = clamp(d.loyalty - rrange(5,12), 0, 100);
+      }
+    });
+    h.success = false;
+    h.result = lost.length ? `Went wrong. ${lost.join(', ')} didn't get away — lifted by the police.` : `Went wrong. Everyone got out, but empty-handed and hot.`;
+    log(`${t.label}: ${h.result}`, 'bad');
+  }
+}
+
+function updateCityEvent(){
+  if(G.cityEvent){
+    if(G.day > G.cityEvent.endDay){
+      log(`${G.cityEvent.label} wraps up. Things get back to normal.`);
+      G.cityEvent = null;
+      G.nextCityEventDay = G.day + rrange(10,18);
+    }
+  } else if(G.day >= G.nextCityEventDay){
+    const key = pick(Object.keys(CITY_EVENTS));
+    const def = CITY_EVENTS[key];
+    G.cityEvent = {key, label:def.label, venue:def.venue, startDay:G.day, endDay:G.day+def.days-1};
+    log(`${def.label} is on at ${def.venue} — nightlife's about to get busy (and busier for the polis too).`, 'good');
+  }
+}
+
+function maybeRaid(){
+  if(G.heat < 45) return;
+  const chance = (G.heat-45)*0.012;
+  if(Math.random()>chance) return;
+  // pick target
+  const targets = [];
+  if(G.businesses.length) targets.push('business');
+  if(G.batches.some(b=>b.stage==='dealing'||b.stage==='packaged')) targets.push('batch');
+  if(G.girls.some(g=>g.location==='street')) targets.push('street');
+  if(!targets.length) targets.push('nothing');
+  const t = pick(targets);
+  const bossRaidChance = clamp(0.22 - totalContactBribeDiscount()*0.25, 0.06, 0.22);
+  if(G.heat>=90 && Math.random()<bossRaidChance){
+    gameOver('arrested', `A Major Crime Squad task force, weeks in the planning, kicks the door in. ${G.boss} is nicked, and this time nobody on the force can make it disappear. Game over.`);
+    return;
+  }
+  if(t==='business'){
+    const b = pick(G.businesses);
+    let loss = Math.round(G.cash*0.05)+2000;
+    if(b.security) loss = Math.round(loss*(1-b.security*0.3));
+    G.cash = Math.max(0, G.cash-loss);
+    log(`Police raid ${b.name} in ${areaName(b.area)}. ${fmt(loss)} seized, business shut for the day.${b.security?' Security kept it from being worse.':''}`, 'bad');
+  } else if(t==='batch'){
+    const b = pick(G.batches.filter(x=>x.stage==='dealing'||x.stage==='packaged'));
+    if(b){ b.stage='seized'; log(`Police intercept a shipment before it hits the street. Gone.`, 'bad'); }
+  } else if(t==='street'){
+    const g = pick(G.girls.filter(x=>x.location==='street'));
+    if(g){ g.safety = clamp(g.safety-25,0,100); log(`A street sweep catches ${g.name} working. She's shaken, safety's down.`, 'bad'); }
+  } else {
+    log(`Word is the polis were sniffing around, but they came up empty.`);
+  }
+  G.heat = clamp(G.heat-25, 0, 100);
+}
+
+function jailDeputy(dep, context){
+  const idx = G.deputies.findIndex(d=>d.id===dep.id);
+  if(idx<0) return;
+  G.deputies.splice(idx,1);
+  const lawyer = activeDeputy('lawyer');
+  const lawyerBailCut = lawyer ? clamp(lawyer.skill/180, 0, 0.4) : 0;
+  const lawyerSentenceCut = lawyer ? rrange(1,3) : 0;
+  const bailBase = 3000 + dep.skill*120;
+  const bail = Math.round(bailBase * (1-clamp(totalContactBailDiscount()+lawyerBailCut,0,0.8)));
+  const sentence = Math.max(2, rrange(4,10) - lawyerSentenceCut);
+  G.jailed.push({...dep, jailDay:G.day, sentenceDay:G.day+sentence, bail});
+  log(`${dep.name} got lifted${context?(' — '+context):''}.${lawyer?` ${lawyer.name}'s already on it.`:''} In the cells, bail set at ${fmt(bail)}.`, 'bad');
+}
+function processJail(){
+  const stillIn = [];
+  G.jailed.forEach(j=>{
+    if(G.day >= j.sentenceDay){
+      const {jailDay, sentenceDay, bail, ...dep} = j;
+      dep.loyalty = clamp(dep.loyalty - rrange(5,15), 0, 100);
+      G.deputies.push(dep);
+      log(`${dep.name} is out — did their time, no thanks to you. Loyalty took a hit.`, 'good');
+    } else {
+      stillIn.push(j);
+    }
+  });
+  G.jailed = stillIn;
+}
+function processPrisonBreak(){
+  if(!G.prisonBreak || G.prisonBreak.stage!=='planning') return;
+  G.prisonBreak.timer -= 1;
+  if(G.prisonBreak.timer>0) return;
+  resolvePrisonBreak();
+}
+function resolvePrisonBreak(){
+  const pb = G.prisonBreak;
+  const crew = pb.crewIds.map(id=>G.deputies.find(d=>d.id===id)).filter(Boolean);
+  const avgSkill = crew.length ? crew.reduce((s,d)=>s+d.skill,0)/crew.length : 30;
+  const hasEnforcer = crew.some(d=>d.role==='enforcer');
+  let chance = 30 + avgSkill*0.5 + (hasEnforcer?15:0) - G.heat*0.2;
+  chance = clamp(chance, 10, 75);
+  if(Math.random()*100 < chance){
+    const freed = G.jailed.map(j=>j.name);
+    G.jailed.forEach(j=>{
+      const {jailDay, sentenceDay, bail, ...dep} = j;
+      dep.loyalty = clamp(dep.loyalty + rrange(10,20), 0, 100);
+      G.deputies.push(dep);
+    });
+    G.jailed = [];
+    G.heat = clamp(G.heat + 30, 0, 100);
+    G.reputation = clamp(G.reputation + rrange(5,12), -50, 100);
+    crew.forEach(d=>d.loyalty = clamp(d.loyalty+rrange(5,10),0,100));
+    log(`Barlinnie breach goes off clean. ${freed.join(', ')||'everyone'} walk out the gates with the crew. It's the talk of the city.`, 'good');
+  } else {
+    G.heat = clamp(G.heat + 40, 0, 100);
+    const casualties = [];
+    crew.forEach(d=>{
+      if(Math.random() < 0.35){
+        casualties.push(d.name);
+        jailDeputy(d, 'caught trying to break into Barlinnie');
+      } else {
+        d.loyalty = clamp(d.loyalty - rrange(10,20), 0, 100);
+      }
+    });
+    G.reputation = clamp(G.reputation - rrange(5,12), -50, 100);
+    log(`It all goes wrong at Barlinnie.${casualties.length?(' '+casualties.join(', ')+' end up inside too.'):' Nobody got out, and the polis are furious.'}`, 'bad');
+  }
+  G.prisonBreak = null;
+}
+function openPrisonBreakModal(){
+  if(!G.jailed.length){ openModal(`<h3>Barlinnie</h3><p>Nobody in there to break out right now.</p><button class="btn" onclick="closeModal()">Close</button>`); return; }
+  if(G.prisonBreak){ openModal(`<h3>Barlinnie</h3><p>Already got something in motion — ${Math.max(G.prisonBreak.timer,0)} day(s) out.</p><button class="btn" onclick="closeModal()">Close</button>`); return; }
+  const avail = G.deputies.filter(d=>!deputyBusy(d));
+  if(avail.length<2){ openModal(`<h3>Barlinnie</h3><p>Need at least 2 free deputies for a job like this.</p><button class="btn" onclick="closeModal()">Close</button>`); return; }
+  const checks = avail.map(d=>`<label style="display:flex;align-items:center;gap:8px;padding:5px 0;"><input type="checkbox" value="${d.id}" class="breakCrewPick"> ${d.name} — ${DEPUTY_ROLES[d.role].label}, skill ${d.skill}${d.role==='enforcer'?' (muscle bonus)':''}</label>`).join('');
+  openModal(`
+    <h3>Break Into Barlinnie</h3>
+    <p style="color:var(--dim);">Everyone currently in the cells (${G.jailed.length}) gets out together if it works — no bail, no court, straight over the wall. Needs at least 2 on the crew, 2 days to plan, and it's not cheap. Heavy heat either way, and anyone caught goes straight back inside.</p>
+    <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;margin:10px 0;">${checks}</div>
+    <div style="margin-top:10px;"><button class="btn primary" onclick="planPrisonBreak()">Commit the Crew — £25,000</button> <button class="btn" onclick="closeModal()">Cancel</button></div>
+  `);
+}
+function planPrisonBreak(){
+  const ids = [...document.querySelectorAll('.breakCrewPick:checked')].map(el=>el.value);
+  if(ids.length < 2){ alert('Need at least 2 on the crew.'); return; }
+  const cost = 25000;
+  if(G.cash < cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  G.prisonBreak = {crewIds:ids, timer:2, stage:'planning'};
+  log(`Started planning something at Barlinnie. ${ids.length} on the crew.`);
+  closeModal(); save(); render();
+}
+function bailOutDeputy(id){
+  const idx = G.jailed.findIndex(j=>j.id===id);
+  if(idx<0) return;
+  const j = G.jailed[idx];
+  if(G.cash < j.bail){ alert('Not enough clean cash to post bail.'); return; }
+  G.cash -= j.bail;
+  const {jailDay, sentenceDay, bail, ...dep} = j;
+  dep.loyalty = clamp(dep.loyalty + rrange(2,8), 0, 100);
+  G.deputies.push(dep);
+  G.jailed.splice(idx,1);
+  log(`Paid ${fmt(bail)} to get ${dep.name} out early. They owe you one.`, 'good');
+  closeModal(); save(); render();
+}
+function abandonDeputy(id){
+  const idx = G.jailed.findIndex(j=>j.id===id);
+  if(idx<0) return;
+  const j = G.jailed[idx];
+  G.jailed.splice(idx,1);
+  G.reputation = clamp(G.reputation-4,-50,100);
+  log(`Left ${j.name} to do their time alone. Word gets round — not a great look.`, 'bad');
+  closeModal(); save(); render();
+}
+function fightCase(jailedId, method){
+  const j = G.jailed.find(x=>x.id===jailedId);
+  if(!j) return;
+  const lawyer = activeDeputy('lawyer');
+  if(!lawyer){ alert('You need a Lawyer on the books to fight a case in court.'); return; }
+  const enf = activeDeputy('enforcer');
+  if(method==='threaten' && !enf){ alert('Threatening a jury takes muscle — you need a free Enforcer too.'); return; }
+  let cost = 0;
+  if(method==='bribe'){
+    cost = Math.round(8000 + j.bail*0.8);
+    if(G.cash < cost){ alert('Not enough clean cash to bribe a jury.'); return; }
+    G.cash -= cost;
+  }
+  const chance = method==='bribe'
+    ? clamp(38 + lawyer.skill*0.5 - G.heat*0.2, 10, 78)
+    : clamp(28 + lawyer.skill*0.4 + enf.skill*0.15 - G.heat*0.25, 8, 70);
+  if(Math.random()*100 < chance){
+    G.jailed = G.jailed.filter(x=>x.id!==jailedId);
+    const {jailDay, sentenceDay, bail, ...dep} = j;
+    dep.loyalty = clamp(dep.loyalty + rrange(5,12), 0, 100);
+    G.deputies.push(dep);
+    lawyer.loyalty = clamp(lawyer.loyalty + rrange(2,6), 0, 100);
+    log(`${lawyer.name} ${method==='bribe'?'got to the jury quietly':'made sure the jury saw sense'} — the case against ${dep.name} falls apart. Walked, clean.`, 'good');
+  } else {
+    G.heat = clamp(G.heat + (method==='bribe'?18:28), 0, 100);
+    j.sentenceDay += rrange(3,7);
+    j.bail = Math.round(j.bail*1.3);
+    lawyer.loyalty = clamp(lawyer.loyalty - rrange(3,8), 0, 100);
+    if(method==='threaten' && enf) enf.loyalty = clamp(enf.loyalty - rrange(2,6), 0, 100);
+    log(`${method==='bribe'?'The bribe':'The threat'} gets noticed. ${j.name}'s looking at more time now, and there's heat on everyone involved.`, 'bad');
+  }
+  closeModal(); save(); render();
+}
+function hireContact(id){
+  const idx = G.contactCandidates.findIndex(c=>c.id===id);
+  if(idx<0) return;
+  const c = G.contactCandidates[idx];
+  const rank = CONTACT_RANKS[c.rankKey];
+  if(G.cash < rank.cost){ alert('Not enough clean cash to bring them onside.'); return; }
+  G.cash -= rank.cost;
+  G.contactCandidates.splice(idx,1);
+  G.policeContacts.push(c);
+  log(`${c.name} (${rank.label}) is on the payroll now — quietly.`, 'good');
+  closeModal(); save(); render();
+}
+function dropContact(id){
+  const idx = G.policeContacts.findIndex(c=>c.id===id);
+  if(idx<0) return;
+  const c = G.policeContacts[idx];
+  G.policeContacts.splice(idx,1);
+  log(`Cut ${c.name} loose — one less mouth to feed.`);
+  closeModal(); save(); render();
+}
+
+function driftGangs(){
+  Object.values(G.gangs).forEach(g=>{
+    const truced = g.truceUntil && G.day<g.truceUntil;
+    if(!truced && g.relation < 20) g.relation -= (g.aggression/100)*rrange(0,2);
+    g.relation = clamp(g.relation,-100,100);
+    const areasHeld = gangAreasHeld(g.id);
+    const baseline = 40 + areasHeld*12;
+    if(g.strength < baseline && Math.random()<0.35){
+      g.strength = clamp(g.strength + rrange(1,3), 15, 95);
+    } else {
+      g.strength = clamp(g.strength + rrange(-1,1), 15, 95);
+    }
+    const attackChance = (g.aggression/700) * (g.war?1.8:1);
+    if(!truced && g.relation < -50 && Math.random() < attackChance){
+      gangAttack(g);
+    }
+  });
+  maybeGangReconquest();
+}
+function maybeGangReconquest(){
+  Object.entries(G.gangs).forEach(([gid,g])=>{
+    const truced = g.truceUntil && G.day<g.truceUntil;
+    if(truced) return;
+    const targets = gangHomeAreas(gid).filter(a=>G.areas[a].controller==='player');
+    if(!targets.length) return;
+    const attemptRoll = (g.aggression/100) * (g.strength/100) * 0.05;
+    if(Math.random() > attemptRoll) return;
+    const areaId = pick(targets);
+    const patrolled = G.areas[areaId].patrolUntil && G.areas[areaId].patrolUntil>=G.day;
+    const enforcer = activeDeputy('enforcer');
+    const defendPower = (enforcer?enforcer.skill:10) + (patrolled?25:0) + G.reputation*0.15;
+    let chance = 20 + (g.strength - defendPower)*0.6 + (g.war?15:0);
+    chance = clamp(chance, 3, 65);
+    if(Math.random()*100 < chance){
+      G.areas[areaId].controller = gid;
+      g.strength = clamp(g.strength+5,10,95);
+      G.reputation = clamp(G.reputation-5,-50,100);
+      log(`${g.name} moves back into ${areaName(areaId)} while your attention was elsewhere. Turf lost.`, 'bad');
+    } else {
+      log(`${g.name} tried to push back into ${areaName(areaId)} — ${enforcer?enforcer.name+' and the crew':'your people'} held the line.`, 'good');
+      if(enforcer) enforcer.loyalty = clamp(enforcer.loyalty+rrange(1,3),0,100);
+      g.strength = clamp(g.strength-3,10,95);
+    }
+  });
+}
+function gangAttack(g){
+  const areas = LOCATIONS.filter(l=>G.areas[l.id].controller==='player');
+  const bizInPlayerAreas = G.businesses.filter(b=>areas.some(a=>a.id===b.area));
+  const target = bizInPlayerAreas.length ? pick(bizInPlayerAreas) : null;
+  const enforcer = activeDeputy('enforcer');
+  const defendRoll = (enforcer?enforcer.skill:15) + (anyPatrolActive()?15:0);
+  const defended = Math.random()*100 < defendRoll;
+  if(defended){
+    log(`${g.name} tried to hit ${target?target.name:'your turf'} — your Enforcer saw them off.`, 'good');
+    G.reputation = clamp(G.reputation+2,-50,100);
+  } else {
+    let loss = rrange(2000,7000);
+    if(target && target.security) loss = Math.round(loss*(1-target.security*0.3));
+    G.cash = Math.max(0,G.cash-loss);
+    log(`${g.name} raid ${target?target.name:'one of your spots'}. ${fmt(loss)} in damage and stolen takings.`, 'bad');
+    G.reputation = clamp(G.reputation-3,-50,100);
+  }
+}
+
+function payroll(){
+  const contactTotal = G.policeContacts.reduce((s,c)=>s+CONTACT_RANKS[c.rankKey].retainer,0);
+  const total = G.deputies.reduce((s,d)=>s+d.salary,0) + G.girls.length*150 + contactTotal;
+  if(G.cash >= total){
+    G.cash -= total;
+    log(`Payday. ${fmt(total)} out the door to the crew${contactTotal?' and contacts on the force':''}.`);
+  } else {
+    G.cash = Math.max(0, G.cash-total);
+    log(`Couldn't cover payroll in full. The crew's not happy.`, 'bad');
+    G.deputies.forEach(d=>d.loyalty=clamp(d.loyalty-8,0,100));
+    G.girls.forEach(g=>g.safety=clamp(g.safety-3,0,100));
+    G.policeContacts.forEach(c=>c.loyalty=clamp(c.loyalty-10,0,100));
+  }
+  // loyalty defection check
+  G.deputies = G.deputies.filter(d=>{
+    if(d.loyalty<=5 && Math.random()<0.4){
+      log(`${d.name} (${DEPUTY_ROLES[d.role].label}) has had enough and walks — straight to a rival, by the sound of it.`, 'bad');
+      return false;
+    }
+    return true;
+  });
+  G.policeContacts = G.policeContacts.filter(c=>{
+    if(c.loyalty<=5 && Math.random()<0.4){
+      log(`${c.name} stops taking your calls. One less friend on the force.`, 'bad');
+      return false;
+    }
+    return true;
+  });
+}
+
+function gameOver(kind, text){
+  G.gameOver = {kind, text, day:G.day};
+  log(text.split('\n')[0], (kind==='retired'||kind==='takeover')?'good':'bad');
+  save();
+  render();
+}
+function canRetire(){ return playerAreaCount()>=8 && G.cash>=750000 && G.reputation>=50; }
+function retireGame(){
+  if(!canRetire()) return;
+  gameOver('retired', `${G.boss} steps back from ${G.crew} for good. The money's clean enough to matter, the territory's real, and nobody's kicking the door in at 4am. Not the worst way for a career like this to end.\n\nFinal tally — Day ${G.day}: ${fmt(G.cash)} clean cash, ${playerAreaCount()}/16 areas controlled, reputation ${G.reputation}.`);
+}
+function checkAchievements(){
+  const has = key => G.achievements.includes(key);
+  function unlock(key, text){
+    if(has(key)) return;
+    G.achievements.push(key);
+    log(`🏆 ${text}`, 'good');
+  }
+  if(playerAreaCount()>=16) unlock('kingpin', 'Kingpin of Glasgow — every area in the city answers to you now.');
+  if(G.cash+G.dirtyCash >= 1000000) unlock('millionaire', 'Seven figures. The Firm is worth over a million, on paper or off it.');
+  if(G.reputation >= 80) unlock('untouchable', "Untouchable — your name carries weight all over the city.");
+  if(canRetire()) unlock('retire_eligible', "You've got enough put away and enough respect behind you to walk away clean, any time you like. See the Overview tab.");
+}
+
+function areaName(id){ return LOCATIONS.find(l=>l.id===id).name; }
+
+// ============================= EVENTS =============================
+const EVENT_DEFS = {
+  rival_demand:{
+    title:'Tribute Demanded',
+    text:d=>`${G.gangs[d.gangId].name} say one of your spots near their turf owes them "protection money." ${fmt(d.amount)} or there'll be trouble.`,
+    choices:[
+      {label:'Pay up', apply(d){ G.cash=Math.max(0,G.cash-d.amount); G.gangs[d.gangId].relation=clamp(G.gangs[d.gangId].relation+8,-100,100); log(`Paid off ${G.gangs[d.gangId].name} to keep the peace.`);} },
+      {label:'Tell them where to go', apply(d){ G.gangs[d.gangId].relation=clamp(G.gangs[d.gangId].relation-15,-100,100); G.reputation=clamp(G.reputation+3,-50,100); log(`Refused to pay ${G.gangs[d.gangId].name}. Word gets round you don't bend.`);} },
+      {label:'Send the Enforcer to sort it', apply(d){
+        const enf=activeDeputy('enforcer');
+        if(!enf){ G.cash=Math.max(0,G.cash-d.amount); log(`No Enforcer on the books — had to pay after all.`); return; }
+        if(Math.random()*100<enf.skill+20){ G.gangs[d.gangId].relation=clamp(G.gangs[d.gangId].relation-10,-100,100); G.reputation=clamp(G.reputation+6,-50,100); log(`${enf.name} sent ${G.gangs[d.gangId].name}'s boys packing.`,'good'); }
+        else { G.cash=Math.max(0,G.cash-d.amount*1.5); G.heat=clamp(G.heat+8,0,100); log(`It went badly — ended up paying more and drawing attention.`,'bad'); }
+      }},
+    ]
+  },
+  police_tip:{
+    title:'A Tip-Off',
+    text:()=>`A contact reckons there's a raid planned for tonight. Lay low, or carry on regardless?`,
+    choices:[
+      {label:'Lay low tonight (lose a night\'s takings)', apply(){ G.heat=clamp(G.heat-18,0,100); log('Kept everything quiet for the night. Heat drops.','good'); }},
+      {label:'Business as usual', apply(){ if(Math.random()<0.4){ G.heat=clamp(G.heat+10,0,100); log('Ignored the tip. Should\'ve listened.','bad'); } else { log('Ignored the tip. Nothing came of it.'); } }},
+    ]
+  },
+  opportunity:{
+    title:'A Business Going Cheap',
+    text:d=>`An owner in ${areaName(d.areaId)} wants out fast — a ${BUSINESS_TYPES[d.typeKey].label.toLowerCase()} at ${fmt(d.price)}, well under the going rate.`,
+    choices:[
+      {label:'Buy it now', apply(d){
+        if(G.cash<d.price){ log('Couldn\'t raise the cash in time — opportunity missed.'); return; }
+        if(G.businesses.filter(b=>b.typeKey===d.typeKey).length >= BUSINESS_TYPES[d.typeKey].max){ log('Already run the max of that kind — opportunity missed.'); return; }
+        G.cash-=d.price;
+        G.businesses.push(mkBusiness(d.typeKey,d.areaId,1));
+        log(`Snapped up a cheap ${BUSINESS_TYPES[d.typeKey].label.toLowerCase()} in ${areaName(d.areaId)}.`,'good');
+      }},
+      {label:'Pass', apply(){ log('Passed on the deal.'); }},
+    ]
+  },
+  informant:{
+    title:'Loose Lips',
+    text:()=>`Word is someone close to the operation has been talking to the police.`,
+    choices:[
+      {label:'Send the Enforcer to handle it', apply(){
+        const enf=activeDeputy('enforcer');
+        if(!enf){ G.heat=clamp(G.heat+12,0,100); log('No Enforcer to deal with it. Heat climbs.','bad'); return; }
+        G.heat=clamp(G.heat-14,0,100); G.cash=Math.max(0,G.cash-1500);
+        log(`${enf.name} made sure the problem went away quietly.`);
+      }},
+      {label:'Pay them off', apply(){ G.cash=Math.max(0,G.cash-3500); log('Paid the informant to stay quiet — for now.'); }},
+      {label:'Ignore it', apply(){ G.heat=clamp(G.heat+15,0,100); log('Did nothing. Heat rises sharply.','bad'); }},
+    ]
+  },
+  girl_incident:{
+    title:'Trouble on the Street',
+    text:d=>`${d.name} had a bad night out on the street — a punter turned nasty and the polis showed up.`,
+    choices:[
+      {label:'Send backup / pull her in for the night', apply(d){ const g=G.girls.find(x=>x.id===d.girlId); if(g){ g.safety=clamp(g.safety+10,0,100);} log(`${d.name} pulled off the street for the night, safety recovering.`); }},
+      {label:'Pay off the attending officer', apply(d){ G.cash=Math.max(0,G.cash-1200); G.heat=clamp(G.heat-6,0,100); log(`Paid to make the paperwork disappear.`); }},
+      {label:'Leave her to it', apply(d){ const g=G.girls.find(x=>x.id===d.girlId); if(g) g.safety=clamp(g.safety-20,0,100); G.heat=clamp(G.heat+4,0,100); log(`Left ${d.name} to sort it herself.`,'bad'); }},
+    ]
+  },
+  charity:{
+    title:'Community Gala',
+    text:()=>`One of your pubs could sponsor a local community event — good for the image, costs a bit.`,
+    choices:[
+      {label:'Sponsor it', apply(){ G.cash=Math.max(0,G.cash-4000); G.reputation=clamp(G.reputation+8,-50,100); G.heat=clamp(G.heat-6,0,100); log('The gala goes down well. Reputation up, a bit less heat.','good'); }},
+      {label:'Skip it', apply(){ log('Didn\'t bother.'); }},
+    ]
+  },
+  staff_dispute:{
+    title:'Bad Blood in the Crew',
+    text:d=>`${d.a} and ${d.b} are at each other's throats over a botched job. Someone has to back down.`,
+    choices:[
+      {label:d=>`Back ${d.a}`, apply(d){ const a=G.deputies.find(x=>x.id===d.aId), b=G.deputies.find(x=>x.id===d.bId); if(a)a.loyalty=clamp(a.loyalty+8,0,100); if(b)b.loyalty=clamp(b.loyalty-12,0,100); log(`Backed ${d.a}. ${d.b} isn't happy.`); }},
+      {label:d=>`Back ${d.b}`, apply(d){ const a=G.deputies.find(x=>x.id===d.aId), b=G.deputies.find(x=>x.id===d.bId); if(b)b.loyalty=clamp(b.loyalty+8,0,100); if(a)a.loyalty=clamp(a.loyalty-12,0,100); log(`Backed ${d.b}. ${d.a} isn't happy.`); }},
+      {label:'Stay out of it', apply(d){ const a=G.deputies.find(x=>x.id===d.aId), b=G.deputies.find(x=>x.id===d.bId); if(a)a.loyalty=clamp(a.loyalty-4,0,100); if(b)b.loyalty=clamp(b.loyalty-4,0,100); log('Stayed neutral. Neither is fully happy, but no one is furious.'); }},
+    ]
+  },
+};
+
+function rollRandomEvent(){
+  const keys = Object.keys(EVENT_DEFS);
+  const key = pick(keys);
+  let data = {};
+  if(key==='rival_demand'){
+    const playerBiz = G.businesses;
+    if(!playerBiz.length) return;
+    const gangIds = Object.keys(G.gangs);
+    data.gangId = pick(gangIds);
+    data.amount = rrange(1000,4000);
+  } else if(key==='opportunity'){
+    const availAreas = LOCATIONS.filter(l=>G.areas[l.id].controller==='player'||G.areas[l.id].controller==='neutral');
+    if(!availAreas.length) return;
+    const availTypes = Object.keys(BUSINESS_TYPES).filter(t=>G.businesses.filter(b=>b.typeKey===t).length < BUSINESS_TYPES[t].max && !(BUSINESS_TYPES[t].repReq && G.reputation<BUSINESS_TYPES[t].repReq));
+    if(!availTypes.length) return;
+    data.typeKey = pick(availTypes);
+    data.areaId = pick(availAreas).id;
+    data.price = Math.round(BUSINESS_TYPES[data.typeKey].cost * (0.45+Math.random()*0.25));
+  } else if(key==='girl_incident'){
+    const streetGirls = G.girls.filter(g=>g.location==='street');
+    if(!streetGirls.length) return;
+    const g = pick(streetGirls);
+    data.girlId = g.id; data.name = g.name;
+  } else if(key==='staff_dispute'){
+    if(G.deputies.length<2) return;
+    const shuffled = [...G.deputies].sort(()=>Math.random()-0.5);
+    data.aId = shuffled[0].id; data.a = shuffled[0].name;
+    data.bId = shuffled[1].id; data.b = shuffled[1].name;
+  } else if(key==='informant' || key==='police_tip' || key==='charity'){
+    // no extra data
+  }
+  G.pendingEvent = {key, data};
+}
+
+function resolveEventChoice(idx){
+  if(!G.pendingEvent) return;
+  const def = EVENT_DEFS[G.pendingEvent.key];
+  def.choices[idx].apply(G.pendingEvent.data);
+  G.pendingEvent = null;
+  closeModal();
+  save();
+  render();
+}
+
+// ============================= ACTIONS =============================
+function buyBusiness(typeKey, areaId){
+  const t = BUSINESS_TYPES[typeKey];
+  if(t.repReq && G.reputation < t.repReq){ alert(`Needs Reputation ${t.repReq}+ (you're at ${G.reputation}).`); return; }
+  if(G.businesses.filter(b=>b.typeKey===typeKey).length >= t.max){ alert('Already at the max for that type.'); return; }
+  if(G.cash < t.cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= t.cost;
+  G.businesses.push(mkBusiness(typeKey, areaId, 1));
+  log(`Opened a new ${t.label.toLowerCase()} in ${areaName(areaId)}.`, 'good');
+  closeModal(); save(); render();
+}
+function upgradeBusiness(id){
+  const b = G.businesses.find(x=>x.id===id);
+  if(!b || b.level>=3) return;
+  const t = BUSINESS_TYPES[b.typeKey];
+  const cost = Math.round(t.cost*0.6*b.level);
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  b.level++;
+  log(`Upgraded ${b.name} to level ${b.level}.`, 'good');
+  closeModal(); save(); render();
+}
+function marketingPush(id){
+  const b = G.businesses.find(x=>x.id===id);
+  if(!b) return;
+  const t = BUSINESS_TYPES[b.typeKey];
+  if(b.marketingUntil && b.marketingUntil>G.day){ alert('Promotion is already running.'); return; }
+  const cost = Math.round(t.cost*0.12);
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  b.marketingUntil = G.day+3;
+  log(`Ran a promotion at ${b.name} — takings up for a few days.`, 'good');
+  closeModal(); save(); render();
+}
+function upgradeSecurity(id){
+  const b = G.businesses.find(x=>x.id===id);
+  if(!b) return;
+  const level = b.security||0;
+  if(level>=2){ alert('Already fully secured.'); return; }
+  const t = BUSINESS_TYPES[b.typeKey];
+  const cost = Math.round(t.cost*0.25*(level+1));
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  b.security = level+1;
+  log(`Beefed up security at ${b.name}.`, 'good');
+  closeModal(); save(); render();
+}
+function sellBusiness(id){
+  const idx = G.businesses.findIndex(x=>x.id===id);
+  if(idx<0) return;
+  const b = G.businesses[idx];
+  const t = BUSINESS_TYPES[b.typeKey];
+  const refund = Math.round(t.cost*0.4*b.level);
+  G.cash += refund;
+  G.girls.forEach(g=>{ if(g.location===id) g.location='street'; });
+  G.businesses.splice(idx,1);
+  log(`Sold ${b.name} for ${fmt(refund)}.`);
+  closeModal(); save(); render();
+}
+
+function hireDeputy(id){
+  const idx = G.deputyCandidates.findIndex(c=>c.id===id);
+  if(idx<0) return;
+  const c = G.deputyCandidates[idx];
+  const fee = c.salary*2;
+  if(G.cash<fee){ alert('Not enough clean cash for the signing fee.'); return; }
+  G.cash -= fee;
+  G.deputyCandidates.splice(idx,1);
+  G.deputies.push(c);
+  log(`${c.name} joins as ${DEPUTY_ROLES[c.role].label}.`, 'good');
+  closeModal(); save(); render();
+}
+function hireDeputyLowball(id){
+  const idx = G.deputyCandidates.findIndex(c=>c.id===id);
+  if(idx<0) return;
+  const c = G.deputyCandidates[idx];
+  const fee = Math.round(c.salary*1.1);
+  if(G.cash<fee){ alert('Not enough clean cash.'); return; }
+  if(Math.random()<0.25){
+    G.deputyCandidates.splice(idx,1);
+    log(`${c.name} took the lowball as an insult and walked.`, 'bad');
+    closeModal(); save(); render(); return;
+  }
+  G.cash -= fee;
+  c.loyalty = clamp(c.loyalty-15,0,100);
+  G.deputyCandidates.splice(idx,1);
+  G.deputies.push(c);
+  log(`${c.name} joins on the cheap as ${DEPUTY_ROLES[c.role].label} — not thrilled about it.`, 'good');
+  closeModal(); save(); render();
+}
+function trainDeputy(id){
+  const d = G.deputies.find(x=>x.id===id);
+  if(!d) return;
+  if(d.trainingUntil){ alert('Already off training.'); return; }
+  const cost = Math.round(300*(1+d.skill/60));
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  d.trainingUntil = G.day+3;
+  log(`${d.name} sent off for training — back to work in 3 days.`);
+  closeModal(); save(); render();
+}
+function giveRaise(id){
+  const d = G.deputies.find(x=>x.id===id);
+  if(!d) return;
+  const bonus = Math.round(d.salary*0.8);
+  if(G.cash<bonus){ alert('Not enough clean cash for a bonus like that.'); return; }
+  G.cash -= bonus;
+  d.salary = Math.round(d.salary*1.12);
+  d.loyalty = clamp(d.loyalty+rrange(8,15),0,100);
+  log(`Gave ${d.name} a raise and a bonus. Loyalty up, wage bill up too.`, 'good');
+  closeModal(); save(); render();
+}
+function pepTalkDeputy(id){
+  const d = G.deputies.find(x=>x.id===id);
+  if(!d) return;
+  if(d.lastPepTalk!==undefined && G.day-d.lastPepTalk<3){ alert('Already had a word with them recently.'); return; }
+  d.lastPepTalk = G.day;
+  d.loyalty = clamp(d.loyalty+rrange(5,10),0,100);
+  log(`Had a quiet word with ${d.name}. Loyalty up a touch.`, 'good');
+  closeModal(); save(); render();
+}
+function fireDeputy(id){
+  const idx = G.deputies.findIndex(d=>d.id===id);
+  if(idx<0) return;
+  const d = G.deputies[idx];
+  G.deputies.splice(idx,1);
+  G.reputation = clamp(G.reputation-2,-50,100);
+  log(`Cut ${d.name} loose.`);
+  closeModal(); save(); render();
+}
+
+function hireGirl(id){
+  const idx = G.girlCandidates.findIndex(c=>c.id===id);
+  if(idx<0) return;
+  const c = G.girlCandidates[idx];
+  G.girlCandidates.splice(idx,1);
+  c.location='street';
+  G.girls.push(c);
+  log(`${c.name} starts working for the crew.`);
+  closeModal(); save(); render();
+}
+function assignGirlLocation(girlId, loc){
+  const g = G.girls.find(x=>x.id===girlId);
+  if(!g) return;
+  g.location = loc;
+  save(); render();
+}
+function releaseGirl(id){
+  const idx = G.girls.findIndex(x=>x.id===id);
+  if(idx<0) return;
+  G.girls.splice(idx,1);
+  save(); render(); closeModal();
+}
+function venueCapacity(biz){ return 3 + biz.level*2; }
+function trainGirl(id){
+  const g = G.girls.find(x=>x.id===id);
+  if(!g) return;
+  if(g.trainingUntil){ alert('Already off training.'); return; }
+  const cost = Math.round(250*(1+g.skill/60));
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  g.trainingUntil = G.day+3;
+  log(`${g.name} taking a few days for training.`);
+  closeModal(); save(); render();
+}
+function pepTalkGirl(id){
+  const g = G.girls.find(x=>x.id===id);
+  if(!g) return;
+  const cost = 800;
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  g.safety = clamp(g.safety+rrange(8,15),0,100);
+  log(`Looked after ${g.name} — safety's up.`, 'good');
+  closeModal(); save(); render();
+}
+
+function buySupply(){
+  const units = 40;
+  const cost = units*45;
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  G.batches.push({id:uid(), stage:'sourcing', units, quality:1, timer:2});
+  log(`Bought in ${units} units of raw product.`);
+  save(); render();
+}
+function sendToDealers(batchId){
+  const b = G.batches.find(x=>x.id===batchId);
+  if(!b || b.stage!=='packaged') return;
+  b.stage='dealing'; b.timer=2;
+  log(`Batch sent out with the dealers.`);
+  closeModal(); save(); render();
+}
+function recallBatch(batchId){
+  const b = G.batches.find(x=>x.id===batchId);
+  if(!b || b.stage!=='dealing') return;
+  b.stage='packaged'; b.timer=0;
+  log(`Pulled a shipment back off the street before it got risky.`);
+  closeModal(); save(); render();
+}
+function recallTask(id){
+  const idx = G.tasks.findIndex(t=>t.id===id && t.status==='assigned');
+  if(idx<0) return;
+  const t = G.tasks[idx];
+  const dep = G.deputies.find(d=>d.id===t.deputyId);
+  if(dep) dep.loyalty = clamp(dep.loyalty-3,0,100);
+  G.tasks.splice(idx,1);
+  log(`Called off a job partway through.`);
+  closeModal(); save(); render();
+}
+
+function planHeist(targetKey){
+  const t = HEIST_TARGETS[targetKey];
+  const ids = [...document.querySelectorAll('.heistCrewPick:checked')].map(el=>el.value);
+  if(ids.length < t.crew){ alert(`Need at least ${t.crew} on the crew.`); return; }
+  if(G.cash < t.planCost){ alert('Not enough clean cash.'); return; }
+  G.cash -= t.planCost;
+  G.heists.push({id:uid(), targetKey, crewIds:ids, timer:t.planDays, stage:'planning'});
+  log(`Started planning a job: ${t.label}. ${ids.length} on the crew.`);
+  closeModal(); save(); render();
+}
+function cancelHeist(id){
+  const idx = G.heists.findIndex(x=>x.id===id && x.stage==='planning');
+  if(idx<0) return;
+  const h = G.heists[idx];
+  const t = HEIST_TARGETS[h.targetKey];
+  G.cash += Math.round(t.planCost*0.5);
+  G.heists.splice(idx,1);
+  log(`Called off the job on ${t.label} — crew stood down.`);
+  closeModal(); save(); render();
+}
+
+function gambleOdds(gangId, tierKey){
+  const gang = G.gangs[gangId];
+  const t = GAMBLE_TIERS[tierKey];
+  const acct = activeDeputy('accountant');
+  const fixer = activeDeputy('fixer');
+  const relationFactor = clamp((50 - gang.relation)/100, 0, 1.5);
+  let fee = t.fee + relationFactor*0.12;
+  if(acct) fee -= acct.skill*0.0006;
+  fee = clamp(fee, 0.05, 0.4);
+  let risk = t.risk + relationFactor*0.10;
+  if(fixer) risk -= fixer.skill*0.0009;
+  risk = clamp(risk, 0.02, 0.5);
+  const amount = Math.min(t.amount, G.dirtyCash);
+  return {amount, fee, risk};
+}
+function gambleAtRivalCasino(gangId, tierKey){
+  const gang = G.gangs[gangId];
+  const t = GAMBLE_TIERS[tierKey];
+  const {amount, fee, risk} = gambleOdds(gangId, tierKey);
+  if(amount < 500){ alert('Not enough dirty cash to bother with.'); return; }
+  G.dirtyCash -= amount;
+  if(Math.random() < risk){
+    G.heat = clamp(G.heat + Math.round(t.heat*1.8), 0, 100);
+    gang.relation = clamp(gang.relation - 20, -100, 100);
+    log(`${gang.name} clocked what you were doing at the tables — ${fmt(amount)} gone, and they're furious.`, 'bad');
+  } else {
+    const clean = Math.round(amount*(1-fee));
+    G.cash += clean;
+    G.heat = clamp(G.heat + t.heat, 0, 100);
+    gang.relation = clamp(gang.relation + 3, -100, 100);
+    log(`Pushed ${fmt(amount)} through ${gang.name}'s tables — ${fmt(clean)} comes back clean.`, 'good');
+  }
+  closeModal(); save(); render();
+}
+
+function openTaskAssignModal(taskKey){
+  const def = TASK_TYPES[taskKey];
+  const eligible = activeDeputies(def.role);
+  let gangOptions = '';
+  if(taskKey==='shakedown'||taskKey==='scout'||taskKey==='hit'){
+    gangOptions = `<label>Target Gang</label><select id="taskGang">${Object.values(G.gangs).map(g=>`<option value="${g.id}">${g.name}</option>`).join('')}</select>`;
+  }
+  const roleLabel = DEPUTY_ROLES[def.role].label;
+  const article = /^[aeiou]/i.test(roleLabel) ? 'an' : 'a';
+  if(!eligible.length){
+    openModal(`<h3>${def.label}</h3><p>You need ${article} ${roleLabel} on the books for this job (free, not off training or on a job).</p><button class="btn" onclick="closeModal()">Close</button>`);
+    return;
+  }
+  const warning = taskKey==='hit' ? `<p style="color:var(--red2);">This is permanent — it'll gut relations with whoever you pick, and if it goes wrong the Enforcer might not come back.</p>` : '';
+  openModal(`
+    <h3>${def.label}</h3>
+    <p style="color:var(--dim);">Takes about ${def.hours}h. Needs ${article} ${roleLabel}.</p>
+    ${warning}
+    <label>Assign</label>
+    <select id="taskDeputy">${eligible.map(d=>`<option value="${d.id}">${d.name} (skill ${d.skill}, loyalty ${d.loyalty})</option>`).join('')}</select>
+    ${gangOptions}
+    <div style="margin-top:14px;"><button class="btn gold" onclick="assignTask('${taskKey}')">Assign</button> <button class="btn" onclick="closeModal()">Cancel</button></div>
+  `);
+}
+function assignTask(taskKey){
+  const def = TASK_TYPES[taskKey];
+  const depId = document.getElementById('taskDeputy').value;
+  const gangSel = document.getElementById('taskGang');
+  const task = {id:uid(), key:taskKey, deputyId:depId, status:'assigned', timer:2, gangId: gangSel?gangSel.value:null};
+  G.tasks.push(task);
+  log(`${G.deputies.find(d=>d.id===depId).name} sent out to: ${def.label}.`);
+  closeModal(); save(); render();
+}
+
+function attackTerritory(areaId){
+  const gangEntry = Object.entries(G.gangs).find(([gid,g])=> GANG_DEFS.find(gd=>gd.id===gid).areas.includes(areaId));
+  if(!gangEntry) return;
+  const [gid, gang] = gangEntry;
+  const enf = activeDeputy('enforcer');
+  if(!enf){ alert('You need an Enforcer to lead an attack.'); return; }
+  const stronghold = isGangStronghold(gid, areaId);
+  const cost = attackCost(gid, areaId);
+  if(G.cash<cost){ alert('Not enough clean cash to fund an attack.'); return; }
+  G.cash -= cost;
+  const effectiveStrength = gang.strength * (stronghold?1.6:1);
+  let chance = 30 + (enf.skill-effectiveStrength)*0.6 + G.reputation*0.2;
+  if(gang.scouted && G.day-gang.scouted < 8) chance += 15;
+  if(gang.war) chance += 10;
+  chance = clamp(chance,3,85);
+  if(Math.random()*100 < chance){
+    G.areas[areaId].controller='player';
+    gang.strength = clamp(gang.strength-10,10,95);
+    G.reputation = clamp(G.reputation+(stronghold?12:6),-50,100);
+    G.heat = clamp(G.heat+(stronghold?9:5),0,100);
+    log(`${enf.name} leads the crew and takes ${areaName(areaId)} off ${gang.name}!${stronghold?` Their last stronghold falls — ${gang.name} is finished as a real force in the city.`:''}`, 'good');
+  } else {
+    G.heat = clamp(G.heat+(stronghold?12:7),0,100);
+    enf.loyalty = clamp(enf.loyalty-(stronghold?10:6),0,100);
+    log(`The move on ${areaName(areaId)} goes wrong.${stronghold?` They threw everything at defending it.`:''} ${enf.name}'s shaken and the polis are asking questions.`, 'bad');
+  }
+  closeModal(); save(); render();
+}
+function negotiateTruce(gangId){
+  const cost = 6000;
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  G.gangs[gangId].relation = clamp(G.gangs[gangId].relation+25,-100,100);
+  G.gangs[gangId].aggression = clamp(G.gangs[gangId].aggression-10,10,90);
+  G.gangs[gangId].war = false;
+  G.gangs[gangId].truceUntil = G.day+10;
+  log(`Paid ${G.gangs[gangId].name} for a bit of peace and quiet. Should hold for a while.`, 'good');
+  closeModal(); save(); render();
+}
+function sabotageGang(gangId){
+  const gang = G.gangs[gangId];
+  const enf = activeDeputy('enforcer');
+  if(!enf){ alert('You need an Enforcer on the books for a job like that.'); return; }
+  const cost = 5000;
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  let chance = 35 + (enf.skill - gang.strength*0.5);
+  if(gang.scouted && G.day-gang.scouted<8) chance += 15;
+  chance = clamp(chance,10,80);
+  if(Math.random()*100 < chance){
+    gang.strength = clamp(gang.strength-rrange(10,18),10,95);
+    G.heat = clamp(G.heat+6,0,100);
+    log(`${enf.name} hits ${gang.name} where it hurts — a shipment gone missing, a safehouse turned over. Their strength takes a real knock.`, 'good');
+  } else {
+    G.heat = clamp(G.heat+12,0,100);
+    gang.relation = clamp(gang.relation-20,-100,100);
+    enf.loyalty = clamp(enf.loyalty-5,0,100);
+    log(`The move on ${gang.name} falls apart. They know it was you, and the polis are asking questions.`, 'bad');
+  }
+  closeModal(); save(); render();
+}
+function declareWar(gangId){
+  const gang = G.gangs[gangId];
+  gang.war = true;
+  gang.truceUntil = 0;
+  gang.aggression = clamp(gang.aggression+20,10,95);
+  gang.relation = clamp(gang.relation-25,-100,100);
+  log(`Word goes out: it's open war with ${gang.name} now. No going back quietly.`, 'bad');
+  closeModal(); save(); render();
+}
+function extortArea(areaId){
+  const enf = activeDeputy('enforcer');
+  const amt = rrange(1500,4000) * (enf? (1+enf.skill/200):1);
+  G.dirtyCash += amt;
+  G.heat = clamp(G.heat+4,0,100);
+  const gang = Object.entries(G.gangs).find(([gid])=>GANG_DEFS.find(gd=>gd.id===gid).areas.includes(areaId));
+  if(gang) gang[1].relation = clamp(gang[1].relation-8,-100,100);
+  log(`Squeezed ${fmt(amt)} out of ${areaName(areaId)}.`);
+  closeModal(); save(); render();
+}
+function patrolArea(areaId){
+  const cost = 3000;
+  if(G.areas[areaId].controller!=='player') return;
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  G.areas[areaId].patrolUntil = G.day+5;
+  log(`Stepped up patrols around ${areaName(areaId)} — 5 days of extra cover.`);
+  closeModal(); save(); render();
+}
+function moveInArea(areaId){
+  const cost = 5000;
+  if(G.areas[areaId].controller!=='neutral'){ alert('That patch already belongs to someone.'); return; }
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  G.areas[areaId].controller='player';
+  G.reputation = clamp(G.reputation+2,-50,100);
+  log(`Quietly moved in on ${areaName(areaId)} — nobody important to fight for it.`, 'good');
+  closeModal(); save(); render();
+}
+
+function payBribe(){
+  const fixer = activeDeputy('fixer');
+  const discount = totalContactBribeDiscount();
+  const cost = Math.round(3500 * (1-discount*0.6));
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  let reduction = 20 + (fixer?fixer.skill/4:0) + discount*30;
+  G.heat = clamp(G.heat-reduction,0,100);
+  log(`Paid off a contact on the force. Heat down.${G.policeContacts.length?' Your people on the inside help it go smoother.':''}`, 'good');
+  save(); render();
+}
+function layLow(){
+  let inc = 0;
+  G.businesses.forEach(b=>{ const t=BUSINESS_TYPES[b.typeKey]; inc += t.income*(1+(b.level-1)*0.5); });
+  const loss = Math.round(inc*0.5);
+  G.cash = Math.max(0, G.cash-loss);
+  G.heat = clamp(G.heat-16,0,100);
+  log(`Kept everything quiet for the night — lost ${fmt(loss)} in takings but heat's right down.`, 'good');
+  save(); render();
+}
+function throwParty(){
+  const cost = 5000;
+  if(G.cash<cost){ alert('Not enough clean cash.'); return; }
+  G.cash -= cost;
+  G.reputation = clamp(G.reputation+rrange(6,10),-50,100);
+  G.heat = clamp(G.heat-4,0,100);
+  log('Threw a lavish do for the neighbourhood. Good for business, good for the image.', 'good');
+  save(); render();
+}
+
+// ============================= DETAIL MODALS =============================
+function openBusinessModal(id){
+  const b = G.businesses.find(x=>x.id===id);
+  if(!b) return;
+  const t = BUSINESS_TYPES[b.typeKey];
+  const promoActive = b.marketingUntil && G.day<=b.marketingUntil;
+  const inc = t.income*(1+(b.level-1)*0.5) * (promoActive?1.5:1);
+  const launders = t.launder*(1+(b.level-1)*0.6);
+  const secLevel = b.security||0;
+  const upgradeCost = b.level<3 ? Math.round(t.cost*0.6*b.level) : null;
+  const secCost = secLevel<2 ? Math.round(t.cost*0.25*(secLevel+1)) : null;
+  const marketingCost = Math.round(t.cost*0.12);
+  let staffHtml = '';
+  if(t.hasGirls){
+    const here = G.girls.filter(g=>g.location===b.id);
+    staffHtml = `<p style="color:var(--dim);font-size:12.5px;">Staff here: ${here.length}/${venueCapacity(b)}${here.length?(' — '+here.map(g=>g.name).join(', ')):''}</p>`;
+  }
+  openModal(`
+    <h3>${b.name}</h3>
+    <p style="color:var(--dim);">${t.label} · ${areaName(b.area)} · Level ${b.level}${secLevel?(' · Security '+secLevel):''}</p>
+    <p>Income: ${fmt(inc)}/day ${promoActive?'<span class="pill good">promo active</span>':''}<br>Laundering: ${fmt(launders)}/day</p>
+    ${staffHtml}
+    <div class="choices">
+      ${upgradeCost!==null?`<button onclick="upgradeBusiness('${b.id}')">Upgrade to Level ${b.level+1} — ${fmt(upgradeCost)}</button>`:'<div style="color:var(--dim);font-size:12px;">Already fully upgraded.</div>'}
+      <button onclick="marketingPush('${b.id}')" ${promoActive?'disabled':''}>Run a Promotion (+50% income, 3 days) — ${fmt(marketingCost)}</button>
+      ${secCost!==null?`<button onclick="upgradeSecurity('${b.id}')">Beef Up Security (less heat, safer from raids) — ${fmt(secCost)}</button>`:'<div style="color:var(--dim);font-size:12px;">Security maxed out.</div>'}
+      <button onclick="sellBusiness('${b.id}')">Sell — refund ${fmt(Math.round(t.cost*0.4*b.level))}</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+function openBuyModalForArea(areaId){
+  const avail = Object.entries(BUSINESS_TYPES).filter(([k,t])=>G.businesses.filter(b=>b.typeKey===k).length<t.max && !(t.repReq && G.reputation<t.repReq));
+  if(!avail.length){ openModal(`<h3>Nothing to Open</h3><p>Either you're running the max of everything, or your reputation's not high enough yet for the investment options.</p><button class="btn" onclick="closeModal()">Close</button>`); return; }
+  openModal(`
+    <h3>Open a Business in ${areaName(areaId)}</h3>
+    <label>Type</label>
+    <select id="buyTypeForArea">${avail.map(([k,t])=>`<option value="${k}">${t.label} — ${fmt(t.cost)}</option>`).join('')}</select>
+    <div style="margin-top:14px;"><button class="btn gold" onclick="buyBusiness(document.getElementById('buyTypeForArea').value, '${areaId}')">Confirm</button> <button class="btn" onclick="closeModal()">Cancel</button></div>
+  `);
+}
+function openDeputyModal(id){
+  const d = G.deputies.find(x=>x.id===id);
+  if(!d) return;
+  const training = d.trainingUntil && d.trainingUntil>G.day;
+  const pepReady = d.lastPepTalk===undefined || G.day-d.lastPepTalk>=3;
+  openModal(`
+    <h3>${d.name}</h3>
+    <p style="color:var(--dim);">${DEPUTY_ROLES[d.role].label} · Skill ${d.skill} · ${fmt(d.salary)}/wk</p>
+    <p>Loyalty:</p><div class="barwrap" style="margin-bottom:8px;"><div style="width:${d.loyalty}%;background:${d.loyalty>60?'var(--green)':d.loyalty>30?'var(--gold)':'var(--red)'};"></div></div>
+    ${training?`<p><span class="pill mid">In training — back day ${d.trainingUntil}</span></p>`:''}
+    <div class="choices">
+      <button onclick="pepTalkDeputy('${d.id}')" ${pepReady?'':'disabled'}>Have a Word (loyalty +) — free</button>
+      <button onclick="giveRaise('${d.id}')">Give a Raise (loyalty ++, wages up) — ${fmt(Math.round(d.salary*0.8))}</button>
+      <button onclick="trainDeputy('${d.id}')" ${training?'disabled':''}>Send to Training (skill +, 3 days) — ${fmt(Math.round(300*(1+d.skill/60)))}</button>
+      <button onclick="fireDeputy('${d.id}')">Cut Loose</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+function openDeputyCandidateModal(id){
+  const c = G.deputyCandidates.find(x=>x.id===id);
+  if(!c) return;
+  openModal(`
+    <h3>${c.name}</h3>
+    <p style="color:var(--gold);">${DEPUTY_ROLES[c.role].label}</p>
+    <p style="color:var(--dim);">${DEPUTY_ROLES[c.role].desc}</p>
+    <p>Skill ${c.skill} · Asking ${fmt(c.salary)}/wk</p>
+    <div class="choices">
+      <button onclick="hireDeputy('${c.id}')">Hire — signing fee ${fmt(c.salary*2)}</button>
+      <button onclick="hireDeputyLowball('${c.id}')">Lowball Offer (cheaper, less loyal to start) — ${fmt(Math.round(c.salary*1.1))}</button>
+      <button onclick="closeModal()">Pass</button>
+    </div>
+  `);
+}
+function openGirlModal(id){
+  const g = G.girls.find(x=>x.id===id);
+  if(!g) return;
+  const venues = G.businesses.filter(b=>BUSINESS_TYPES[b.typeKey].hasGirls);
+  const options = ['street',...venues.map(v=>v.id)].map(loc=>{
+    const label = loc==='street'?'Street':venues.find(v=>v.id===loc).name;
+    const full = loc!=='street' && G.girls.filter(x=>x.location===loc).length >= venueCapacity(venues.find(v=>v.id===loc)) && g.location!==loc;
+    return `<option value="${loc}" ${g.location===loc?'selected':''} ${full?'disabled':''}>${label}${full?' (full)':''}</option>`;
+  }).join('');
+  const training = g.trainingUntil && g.trainingUntil>G.day;
+  openModal(`
+    <h3>${g.name}</h3>
+    <p style="color:var(--dim);">Skill ${g.skill}</p>
+    <p>Safety:</p><div class="barwrap" style="margin-bottom:8px;"><div style="width:${g.safety}%;background:${g.safety>60?'var(--green)':g.safety>30?'var(--gold)':'var(--red)'};"></div></div>
+    ${training?`<p><span class="pill mid">In training — back day ${g.trainingUntil}</span></p>`:''}
+    <label>Assigned To</label>
+    <select onchange="assignGirlLocation('${g.id}', this.value)">${options}</select>
+    <div class="choices" style="margin-top:10px;">
+      <button onclick="pepTalkGirl('${g.id}')">Look After Her (safety +) — £800</button>
+      <button onclick="trainGirl('${g.id}')" ${training?'disabled':''}>Send to Training (skill +, 3 days) — ${fmt(Math.round(250*(1+g.skill/60)))}</button>
+      <button onclick="releaseGirl('${g.id}')">Let Go</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+function openGirlCandidateModal(id){
+  const c = G.girlCandidates.find(x=>x.id===id);
+  if(!c) return;
+  openModal(`
+    <h3>${c.name}</h3>
+    <p>Skill ${c.skill} · Safety instinct ${c.safety}</p>
+    <div class="choices">
+      <button onclick="hireGirl('${c.id}')">Take Her On</button>
+      <button onclick="closeModal()">Pass</button>
+    </div>
+  `);
+}
+function openGangModal(gangId){
+  const g = G.gangs[gangId];
+  if(!g) return;
+  const truced = g.truceUntil && G.day<g.truceUntil;
+  openModal(`
+    <h3 style="color:${g.color};">${g.name}</h3>
+    <p style="color:var(--dim);">Strength ${Math.round(g.strength)} · Aggression ${g.aggression} · Holds ${gangAreasHeld(gangId)}/${gangHomeAreas(gangId).length} areas</p>
+    <p>Relation: <span class="pill ${g.relation>20?'good':g.relation<-20?'bad':'mid'}">${g.relation}</span> ${g.war?'<span class="pill bad">AT WAR</span>':''}${truced?` <span class="pill good">Truce until day ${g.truceUntil}</span>`:''}</p>
+    <p style="color:var(--dim);font-size:12px;">Controls: ${gangHomeAreas(gangId).filter(a=>G.areas[a].controller===gangId).map(a=>areaName(a)).join(', ')||'nothing left'}</p>
+    ${gangAreasHeld(gangId)<=1 && gangAreasHeld(gangId)>0 ? `<p style="color:var(--red2);font-size:12px;">Backed into their last stronghold — expect them to fight hard for it, and to keep trying to reclaim what they've lost.</p>` : ''}
+    <div class="choices">
+      <button onclick="closeModal(); openLaunderRivalModal('${gangId}')">Launder Cash Through Their Books</button>
+      <button onclick="negotiateTruce('${gangId}')">Offer Truce — £6,000</button>
+      <button onclick="sabotageGang('${gangId}')">Sabotage Their Operation — £5,000</button>
+      <button onclick="declareWar('${gangId}')" ${g.war?'disabled':''}>Declare War</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+function openLaunderRivalModal(gangId){
+  const gang = G.gangs[gangId];
+  if(!gang) return;
+  const tiles = Object.entries(GAMBLE_TIERS).map(([key,t])=>{
+    const {amount, fee, risk} = gambleOdds(gangId, key);
+    const disabled = amount < 500;
+    return `<div class="tile ${disabled?'':'clickable'}" ${disabled?'':`onclick="gambleAtRivalCasino('${gangId}','${key}')"`}>
+      <div style="font-weight:bold;color:var(--gold);">${t.label}</div>
+      <div style="color:var(--dim);font-size:12px;">Wager ${fmt(amount)} of your dirty cash</div>
+      <div style="color:var(--dim);font-size:12px;">House cut ~${Math.round(fee*100)}% · Heat +${t.heat} · ~${Math.round(risk*100)}% chance it goes bad</div>
+    </div>`;
+  }).join('');
+  openModal(`
+    <h3>Launder Through ${gang.name}</h3>
+    <p style="color:var(--dim);">Push dirty cash through their casino and bookies tables — faster than your own books, but they take a cut, and a bad relationship means a bigger cut and a real chance they burn you instead.</p>
+    <p>Relation: <span class="pill ${gang.relation>20?'good':gang.relation<-20?'bad':'mid'}">${gang.relation}</span> · Dirty cash on hand: ${fmt(G.dirtyCash)}</p>
+    <div class="grid2">${tiles}</div>
+    <div class="choices" style="margin-top:12px;"><button onclick="closeModal(); openGangModal('${gangId}')">Back</button><button onclick="closeModal()">Close</button></div>
+  `);
+}
+function openRetireModal(){
+  if(!canRetire()) return;
+  openModal(`
+    <h3>Walk Away?</h3>
+    <p style="color:var(--dim);">This ends the game, right now, on your terms. ${fmt(G.cash)} clean, ${playerAreaCount()}/16 areas, reputation ${G.reputation}. There's no coming back from this one.</p>
+    <div class="choices"><button onclick="retireGame()">Retire — End the Game</button><button onclick="closeModal()">Not Yet</button></div>
+  `);
+}
+function openContactModal(id){
+  const c = G.policeContacts.find(x=>x.id===id);
+  if(!c) return;
+  const rank = CONTACT_RANKS[c.rankKey];
+  openModal(`
+    <h3>${c.name}</h3>
+    <p style="color:var(--dim);">${rank.label} · ${fmt(rank.retainer)}/wk retainer</p>
+    <p>Loyalty:</p><div class="barwrap" style="margin-bottom:8px;"><div style="width:${c.loyalty}%;background:${c.loyalty>60?'var(--green)':c.loyalty>30?'var(--gold)':'var(--red)'};"></div></div>
+    <p style="color:var(--dim);font-size:12px;">Heat decay +${rank.heatDecay} · Bribe discount ${Math.round(rank.bribeDiscount*100)}% · Bail discount ${Math.round(rank.bailDiscount*100)}% (scaled by loyalty, boosted by a Fixer)</p>
+    <div class="choices"><button onclick="dropContact('${c.id}')">Cut Loose</button><button onclick="closeModal()">Close</button></div>
+  `);
+}
+function openContactCandidateModal(id){
+  const c = G.contactCandidates.find(x=>x.id===id);
+  if(!c) return;
+  const rank = CONTACT_RANKS[c.rankKey];
+  openModal(`
+    <h3>${c.name}</h3>
+    <p style="color:var(--gold);">${rank.label}</p>
+    <p style="color:var(--dim);">${fmt(rank.cost)} to bring onside, then ${fmt(rank.retainer)}/wk retainer.</p>
+    <p style="color:var(--dim);font-size:12px;">Heat decay +${rank.heatDecay} · Bribe discount ${Math.round(rank.bribeDiscount*100)}% · Bail discount ${Math.round(rank.bailDiscount*100)}%</p>
+    <div class="choices"><button onclick="hireContact('${c.id}')">Bring Onside — ${fmt(rank.cost)}</button><button onclick="closeModal()">Pass</button></div>
+  `);
+}
+function openJailModal(id){
+  const j = G.jailed.find(x=>x.id===id);
+  if(!j) return;
+  const lawyer = activeDeputy('lawyer');
+  const enf = activeDeputy('enforcer');
+  const bribeCost = Math.round(8000 + j.bail*0.8);
+  openModal(`
+    <h3>${j.name}</h3>
+    <p style="color:var(--dim);">${DEPUTY_ROLES[j.role].label} · Skill ${j.skill}</p>
+    <p>In the cells since day ${j.jailDay}. Due out day ${j.sentenceDay} (it's day ${G.day} now) — released automatically if you don't do something about it.</p>
+    <p>Bail: ${fmt(j.bail)}</p>
+    <div class="choices">
+      <button onclick="bailOutDeputy('${j.id}')">Post Bail — ${fmt(j.bail)}</button>
+      <button onclick="fightCase('${j.id}','bribe')" ${lawyer?'':'disabled'}>${lawyer?'Bribe the Jury':'Bribe the Jury (needs a Lawyer)'} — ~${fmt(bribeCost)}</button>
+      <button onclick="fightCase('${j.id}','threaten')" ${(lawyer&&enf)?'':'disabled'}>${(lawyer&&enf)?'Threaten the Jury':'Threaten the Jury (needs a Lawyer + Enforcer)'} — free, riskier</button>
+      <button onclick="abandonDeputy('${j.id}')">Leave Them (reputation hit)</button>
+      <button onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+function openAreaModal(areaId){
+  const l = LOCATIONS.find(x=>x.id===areaId);
+  const ctrl = G.areas[areaId].controller;
+  const bizHere = G.businesses.filter(b=>b.area===areaId);
+  const patrolled = G.areas[areaId].patrolUntil && G.areas[areaId].patrolUntil>=G.day;
+  const homeGangEntry = Object.entries(G.gangs).find(([gid])=>gangHomeAreas(gid).includes(areaId));
+  const stronghold = ctrl!=='player' && ctrl!=='neutral' && isGangStronghold(ctrl, areaId);
+  let actions = '';
+  if(ctrl==='player'){
+    actions = `
+      <button onclick="extortArea('${areaId}')">Squeeze It for Cash</button>
+      <button onclick="patrolArea('${areaId}')" ${patrolled?'disabled':''}>Step Up Patrols (5 days) — £3,000</button>
+      <button onclick="closeModal(); openBuyModalForArea('${areaId}')">Open a Business Here</button>
+    `;
+  } else if(ctrl==='neutral'){
+    actions = `<button onclick="moveInArea('${areaId}')">Move In — £5,000</button>`;
+  } else {
+    actions = `<button onclick="attackTerritory('${areaId}')">Attack — ${fmt(attackCost(ctrl, areaId))}</button>
+      <button onclick="closeModal(); openGangModal('${ctrl}')">View ${G.gangs[ctrl].name}</button>`;
+  }
+  openModal(`
+    <h3>${l.name}${stronghold?' <span class="pill bad">🏰 stronghold</span>':''}</h3>
+    <p style="color:var(--dim);">Wealth: ${'★'.repeat(l.wealth)} · Controlled by: ${ctrl==='player'?'You':(ctrl==='neutral'?'Nobody':G.gangs[ctrl].name)}</p>
+    ${patrolled?'<p><span class="pill good">Under extra patrol</span></p>':''}
+    ${ctrl==='player' && homeGangEntry ? `<p style="color:var(--dim);font-size:12px;">Used to be ${homeGangEntry[1].name} turf — leave it undefended too long and they may try to take it back.</p>` : ''}
+    ${stronghold?`<p style="color:var(--red2);font-size:12px;">Their last area left. They'll defend it hard.</p>`:''}
+    ${bizHere.length?`<p style="color:var(--dim);font-size:12px;">Your businesses here: ${bizHere.map(b=>b.name).join(', ')}</p>`:''}
+    <div class="choices">${actions}<button onclick="closeModal()">Close</button></div>
+  `);
+}
+function openBatchModal(id){
+  const b = G.batches.find(x=>x.id===id);
+  if(!b) return;
+  let actions = '';
+  if(b.stage==='packaged') actions = `<button onclick="sendToDealers('${b.id}')">Send to Dealers</button>`;
+  if(b.stage==='dealing') actions = `<button onclick="recallBatch('${b.id}')">Recall (play it safe)</button>`;
+  openModal(`
+    <h3>Batch — ${b.units} units</h3>
+    <p style="color:var(--dim);">Stage: ${STAGE_LABELS[b.stage]} · Quality ${b.quality.toFixed(1)}</p>
+    ${b.stage==='sold'?`<p>Sold for ${fmt(b.revenue||0)}</p>`:''}
+    <div class="choices">${actions}<button onclick="closeModal()">Close</button></div>
+  `);
+}
+function openTaskDetailModal(id){
+  const t = G.tasks.find(x=>x.id===id);
+  if(!t) return;
+  const def = TASK_TYPES[t.key];
+  const dep = G.deputies.find(d=>d.id===t.deputyId);
+  const actions = t.status==='assigned' ? `<button onclick="recallTask('${t.id}')">Call It Off</button>` : '';
+  openModal(`
+    <h3>${def.label}</h3>
+    <p style="color:var(--dim);">${dep?dep.name:'Unknown'} · ${t.status==='assigned'?(Math.max(t.timer,0)+' tick(s) left'):(t.result||'Done')}</p>
+    <div class="choices">${actions}<button onclick="closeModal()">Close</button></div>
+  `);
+}
+function openHeistPlanModal(targetKey){
+  const t = HEIST_TARGETS[targetKey];
+  const avail = G.deputies.filter(d=>!deputyBusy(d));
+  if(avail.length < t.crew){
+    openModal(`<h3>${t.label}</h3><p>Need at least ${t.crew} free deputies for a job like this — you've got ${avail.length} free right now.</p><button class="btn" onclick="closeModal()">Close</button>`);
+    return;
+  }
+  const checks = avail.map(d=>`<label style="display:flex;align-items:center;gap:8px;padding:5px 0;"><input type="checkbox" value="${d.id}" class="heistCrewPick"> ${d.name} — ${DEPUTY_ROLES[d.role].label}, skill ${d.skill}${d.role==='enforcer'?' (muscle bonus)':''}</label>`).join('');
+  openModal(`
+    <h3>Plan: ${t.label}</h3>
+    <p style="color:var(--dim);">Needs at least ${t.crew} on the crew. Planning takes ${t.planDays} day(s) — the crew you pick can't be sent on anything else meantime.</p>
+    <p style="color:var(--dim);">Payout if it goes clean: ${fmt(t.payoutMin)}–${fmt(t.payoutMax)} (dirty cash). Heat on the job: +${t.heat} (worse if it goes wrong). Each crew member risks getting lifted if it goes bad.</p>
+    <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;margin:10px 0;">${checks}</div>
+    <div style="margin-top:10px;"><button class="btn gold" onclick="planHeist('${targetKey}')">Commit the Crew — ${fmt(t.planCost)}</button> <button class="btn" onclick="closeModal()">Cancel</button></div>
+  `);
+}
+function openHeistModal(id){
+  const h = G.heists.find(x=>x.id===id);
+  if(!h) return;
+  const t = HEIST_TARGETS[h.targetKey];
+  const crew = h.crewIds.map(cid=>G.deputies.find(d=>d.id===cid)).filter(Boolean);
+  const actions = h.stage==='planning' ? `<button onclick="cancelHeist('${h.id}')">Call It Off (half refund)</button>` : '';
+  openModal(`
+    <h3>${t.label}</h3>
+    <p style="color:var(--dim);">Crew: ${crew.map(d=>d.name).join(', ')||'nobody left'}</p>
+    <p>${h.stage==='planning'?(Math.max(h.timer,0)+' day(s) until go time'):h.result}</p>
+    <div class="choices">${actions}<button onclick="closeModal()">Close</button></div>
+  `);
+}
+
+// ============================= UI =============================
+const TABS = [
+  {id:'overview', label:'Overview'},
+  {id:'businesses', label:'Businesses'},
+  {id:'rackets', label:'Rackets'},
+  {id:'personal', label:'Personal Services'},
+  {id:'deputies', label:'Deputies'},
+  {id:'territory', label:'Territory'},
+  {id:'police', label:'Police'},
+  {id:'log', label:'Log'},
+];
+function buildNav(){
+  const nav = document.getElementById('nav');
+  nav.innerHTML = TABS.map(t=>`<button data-tab="${t.id}" onclick="setView('${t.id}')">${t.label}</button>`).join('');
+}
+function setView(v){ G.view=v; render(); }
+
+function render(){
+  if(!G) return;
+  document.getElementById('statDay').textContent = G.day;
+  document.getElementById('statCash').textContent = fmt(G.cash);
+  document.getElementById('statDirty').textContent = fmt(G.dirtyCash);
+  document.getElementById('statRep').textContent = G.reputation;
+  document.getElementById('heatFill').style.width = G.heat+'%';
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===G.view));
+
+  const c = document.getElementById('content');
+  switch(G.view){
+    case 'overview': c.innerHTML = renderOverview(); break;
+    case 'businesses': c.innerHTML = renderBusinesses(); break;
+    case 'rackets': c.innerHTML = renderRackets(); break;
+    case 'personal': c.innerHTML = renderPersonal(); break;
+    case 'deputies': c.innerHTML = renderDeputies(); break;
+    case 'territory': c.innerHTML = renderTerritory(); break;
+    case 'police': c.innerHTML = renderPolice(); break;
+    case 'log': c.innerHTML = renderLog(); break;
+  }
+
+  if(G.gameOver && !document.getElementById('gameOverShown')){
+    const won = G.gameOver.kind==='retired' || G.gameOver.kind==='takeover';
+    openModal(`<h3 id="gameOverShown" style="color:${won?'var(--gold)':'var(--red2)'};">${won?'RETIRED':'GAME OVER'} — Day ${G.gameOver.day}</h3><p style="white-space:pre-line;">${G.gameOver.text}</p>
+      <div style="margin-top:14px;"><button class="btn gold" onclick="restartGame()">Start a New Empire</button></div>`);
+  } else if(G.pendingEvent && !document.getElementById('modalWrap').classList.contains('show')){
+    openEventModal();
+  }
+}
+function restartGame(){
+  localStorage.removeItem('empireSave');
+  location.reload();
+}
+
+function renderOverview(){
+  const capacity = totalLaunderCapacity();
+  return `
+  <div class="grid3">
+    <div class="tile"><div class="n">${playerAreaCount()}/16</div><div class="l">Areas Controlled</div></div>
+    <div class="tile"><div class="n">${G.businesses.length}</div><div class="l">Businesses</div></div>
+    <div class="tile"><div class="n">${fmt(capacity)}/day</div><div class="l">Laundering Capacity</div></div>
+  </div>
+  <div class="card">
+    <h3>${G.crew}</h3>
+    <p style="color:var(--dim);">Run by ${G.boss}. Day ${G.day}. ${G.heat>=70?'The heat is on — lay low or pay it off.':(G.heat>=40?'Police attention is building.':'Things are quiet, for now.')}</p>
+    ${G.cityEvent ? `<p><span class="pill good">${G.cityEvent.label}</span> on at ${G.cityEvent.venue} through day ${G.cityEvent.endDay} — nightlife businesses are booming, but drawing more heat.</p>` : ''}
+    <div class="choices">
+      <button onclick="throwParty()">Throw a Lavish Do (reputation +, heat -) — £5,000</button>
+      <button onclick="layLow()">Lay Low for the Night (heat -16, lose some takings)</button>
+      <button onclick="payBribe()">Pay Off a Contact (heat down) — £3,500</button>
+    </div>
+  </div>
+  ${canRetire() ? `
+  <div class="card" style="border-color:var(--gold);">
+    <h3>Ready to Walk Away</h3>
+    <p style="color:var(--dim);">${fmt(G.cash)} clean, ${playerAreaCount()}/16 areas, reputation ${G.reputation}. You could hang it up right now and call it a win — or keep pushing for more.</p>
+    <button class="btn gold" onclick="openRetireModal()">Retire</button>
+  </div>` : ''}
+  <div class="card">
+    <h3>Glasgow Territory</h3>
+    ${renderMap()}
+    <p style="color:var(--dim);font-size:12px;margin-top:6px;">Click any area on the map for details and options.</p>
+  </div>
+  ${G.achievements.length ? `
+  <div class="card">
+    <h3>Reputation Earned</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      ${G.achievements.map(k=>`<span class="pill good" title="${ACHIEVEMENTS_INFO[k].desc}">🏆 ${ACHIEVEMENTS_INFO[k].label}</span>`).join('')}
+    </div>
+  </div>` : ''}
+  <div class="card">
+    <h3>Recent Word on the Street</h3>
+    ${G.log.slice(0,8).map(l=>`<div class="logline"><span class="d">Day ${l.day}</span>${l.msg}</div>`).join('') || '<p style="color:var(--dim)">Nothing yet.</p>'}
+  </div>
+  `;
+}
+
+function renderMap(){
+  const dots = LOCATIONS.map(l=>{
+    const ctrl = G.areas[l.id].controller;
+    let color = '#555';
+    if(ctrl==='player') color='#d4af37';
+    else if(ctrl!=='neutral') color = G.gangs[ctrl].color;
+    return `<div class="mapdot" style="left:${l.x}%;top:${l.y}%;background:${color};" title="${l.name}" onclick="openAreaModal('${l.id}')">${l.name.slice(0,3)}</div>
+            <div class="maplabel" style="left:${l.x}%;top:${l.y}%;">${l.name}</div>`;
+  }).join('');
+  return `<div class="map">${dots}</div>
+  <div style="margin-top:8px;display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--dim);">
+    <span><span style="display:inline-block;width:10px;height:10px;background:#d4af37;border-radius:50%;margin-right:4px;"></span>You</span>
+    ${Object.values(G.gangs).map(g=>`<span><span style="display:inline-block;width:10px;height:10px;background:${g.color};border-radius:50%;margin-right:4px;"></span>${g.name}</span>`).join('')}
+    <span><span style="display:inline-block;width:10px;height:10px;background:#555;border-radius:50%;margin-right:4px;"></span>Neutral</span>
+  </div>`;
+}
+
+function renderBusinesses(){
+  const rows = G.businesses.map(b=>{
+    const t = BUSINESS_TYPES[b.typeKey];
+    const promoActive = b.marketingUntil && G.day<=b.marketingUntil;
+    const inc = t.income*(1+(b.level-1)*0.5)*(promoActive?1.5:1);
+    return `<tr class="clickable" onclick="openBusinessModal('${b.id}')">
+      <td>${b.name}${b.security?` <span class="pill good">sec ${b.security}</span>`:''}</td><td>${t.label}</td><td>${areaName(b.area)}</td><td>Lvl ${b.level}</td>
+      <td>${fmt(inc)}/day${promoActive?' <span class="pill good">promo</span>':''}</td><td>${fmt(t.launder*(1+(b.level-1)*0.6))}/day</td>
+      <td><button class="btn small" onclick="event.stopPropagation(); upgradeBusiness('${b.id}')" ${b.level>=3?'disabled':''}>Upgrade</button>
+          <button class="btn small" onclick="event.stopPropagation(); sellBusiness('${b.id}')">Sell</button></td>
+    </tr>`;
+  }).join('');
+  function shopTile(key, t){
+    const owned = G.businesses.filter(b=>b.typeKey===key).length;
+    const locked = t.repReq && G.reputation < t.repReq;
+    const maxed = owned>=t.max;
+    const disabled = maxed || locked;
+    return `<div class="tile ${disabled?'':'clickable'}" ${disabled?'':`onclick="openBuyModal('${key}')"`}>
+      <div style="font-weight:bold;color:var(--gold);">${t.label}</div>
+      <div style="color:var(--dim);font-size:12px;">Cost ${fmt(t.cost)} · Income ${fmt(t.income)}/day · Launders ${fmt(t.launder)}/day · Heat +${t.heat}</div>
+      <div style="color:var(--dim);font-size:12px;">${owned}/${t.max} owned ${t.hasGirls?'· venue for staff':''}</div>
+      ${locked?`<div style="color:var(--red2);font-size:12px;margin-top:4px;">Needs Reputation ${t.repReq}+ (you're at ${G.reputation})</div>`:''}
+      <button class="btn small gold" style="margin-top:6px;" ${disabled?'disabled':''} onclick="event.stopPropagation(); openBuyModal('${key}')">Open New</button>
+    </div>`;
+  }
+  const fronts = Object.entries(BUSINESS_TYPES).filter(([k,t])=>t.category==='front').map(([k,t])=>shopTile(k,t)).join('');
+  const investments = Object.entries(BUSINESS_TYPES).filter(([k,t])=>t.category==='investment').map(([k,t])=>shopTile(k,t)).join('');
+  return `
+  <div class="card">
+    <h3>Your Businesses</h3>
+    <table><tr><th>Name</th><th>Type</th><th>Area</th><th>Level</th><th>Income</th><th>Launders</th><th></th></tr>${rows || '<tr><td colspan="7" style="color:var(--dim)">None yet.</td></tr>'}</table>
+  </div>
+  <div class="card">
+    <h3>Expand the Empire</h3>
+    <div class="grid3">${fronts}</div>
+  </div>
+  <div class="card">
+    <h3>Legit Investments</h3>
+    <p style="color:var(--dim);">Almost no income, but they launder heavily and barely register as heat — property and paper that a respectable name can hold. Needs reputation to get in the door.</p>
+    <div class="grid3">${investments}</div>
+  </div>`;
+}
+function openBuyModal(typeKey){
+  const t = BUSINESS_TYPES[typeKey];
+  const areas = LOCATIONS.filter(l=>G.areas[l.id].controller==='player');
+  openModal(`
+    <h3>Open a ${t.label}</h3>
+    <p style="color:var(--dim);">Cost: ${fmt(t.cost)}. Must be in an area you control.${t.repReq?` Needs Reputation ${t.repReq}+.`:''}</p>
+    <label>Area</label>
+    <select id="buyArea">${areas.map(a=>`<option value="${a.id}">${a.name}</option>`).join('')}</select>
+    <div style="margin-top:14px;"><button class="btn gold" onclick="buyBusiness('${typeKey}', document.getElementById('buyArea').value)">Confirm — ${fmt(t.cost)}</button> <button class="btn" onclick="closeModal()">Cancel</button></div>
+  `);
+}
+
+function renderRackets(){
+  const cols = ['sourcing','cooking','packaged','dealing','sold'];
+  const kanban = cols.map(stage=>{
+    const items = G.batches.filter(b=>b.stage===stage);
+    const cards = items.map(b=>{
+      return `<div class="kcard" onclick="openBatchModal('${b.id}')">
+        <div class="t">${b.units} units — quality ${b.quality.toFixed(1)}</div>
+        <div class="m">${stage==='sold'?('Sold for '+fmt(b.revenue||0)):('ETA: '+Math.max(b.timer,0)+' tick(s)')}</div>
+      </div>`;
+    }).join('');
+    return `<div class="kcol"><h4>${STAGE_LABELS[stage]} <span>${items.length}</span></h4>${cards || '<div style="color:var(--dimmer);font-size:12px;">Empty</div>'}</div>`;
+  }).join('');
+  const runner = activeDeputy('runner');
+
+  const heistTiles = Object.entries(HEIST_TARGETS).map(([key,t])=>`
+    <div class="tile clickable" onclick="openHeistPlanModal('${key}')">
+      <div style="font-weight:bold;color:var(--gold);">${t.label}</div>
+      <div style="color:var(--dim);font-size:12px;">Needs ${t.crew}+ crew · ${t.planDays} day(s) to plan · ${fmt(t.planCost)} upfront</div>
+      <div style="color:var(--dim);font-size:12px;">Payout ${fmt(t.payoutMin)}–${fmt(t.payoutMax)} · Heat +${t.heat}</div>
+    </div>`).join('');
+  const heistCards = G.heists.map(h=>{
+    const t = HEIST_TARGETS[h.targetKey];
+    return `<div class="kcard" onclick="openHeistModal('${h.id}')">
+      <div class="t">${t.label}</div>
+      <div class="m">${h.stage==='planning'?(Math.max(h.timer,0)+' day(s) to go'):(h.result||'')}</div>
+    </div>`;
+  }).join('');
+
+  const gangLaunderTiles = Object.values(G.gangs).map(g=>`
+    <div class="tile clickable" onclick="openLaunderRivalModal('${g.id}')">
+      <div style="font-weight:bold;color:${g.color};">${g.name}</div>
+      <div style="color:var(--dim);font-size:12px;">Relation: <span class="pill ${g.relation>20?'good':g.relation<-20?'bad':'mid'}">${g.relation}</span></div>
+      <div style="color:var(--dim);font-size:12px;">Gamble dirty cash through their tables</div>
+    </div>`).join('');
+
+  return `
+  <div class="card">
+    <h3>The Product Pipeline</h3>
+    <p style="color:var(--dim);">${runner?`${runner.name} runs this side of things (skill ${runner.skill}).`:'No Runner Boss — bigger risk of a bust, smaller batches processed at once.'}</p>
+    <button class="btn primary" onclick="buySupply()">Buy Supply — £1,800 (40 units)</button>
+  </div>
+  <div id="kanban">${kanban}</div>
+  <div class="card">
+    <h3>Big Scores</h3>
+    <p style="color:var(--dim);">One-off jobs — bank branches, security vans, jewellers. Commit some of the crew for a few days and they're off the books for anything else meantime.</p>
+    <div class="grid3">${heistTiles}</div>
+  </div>
+  ${G.heists.length ? `<div class="card"><h3>Jobs in Motion</h3><div id="kanban"><div class="kcol" style="flex:1 0 220px;"><h4>Status</h4>${heistCards}</div></div></div>` : ''}
+  <div class="card">
+    <h3>Launder Through the Opposition</h3>
+    <p style="color:var(--dim);">Gamble large sums of dirty cash through a rival's casino or bookies — much faster than waiting on your own businesses' laundering capacity, but they take a cut, and it can go bad if they don't like you.</p>
+    <div class="grid3">${gangLaunderTiles}</div>
+  </div>
+  `;
+}
+
+function renderPersonal(){
+  const venues = G.businesses.filter(b=>BUSINESS_TYPES[b.typeKey].hasGirls);
+  const rows = G.girls.map(g=>{
+    const venue = venues.find(v=>v.id===g.location);
+    const training = g.trainingUntil && g.trainingUntil>G.day;
+    const options = ['street',...venues.map(v=>v.id)].map(loc=>{
+      const label = loc==='street'?'Street':venues.find(v=>v.id===loc).name;
+      const full = loc!=='street' && G.girls.filter(x=>x.location===loc).length >= venueCapacity(venues.find(v=>v.id===loc)) && g.location!==loc;
+      return `<option value="${loc}" ${g.location===loc?'selected':''} ${full?'disabled':''}>${label}${full?' (full)':''}</option>`;
+    }).join('');
+    return `<tr class="clickable" onclick="openGirlModal('${g.id}')">
+      <td>${g.name}${training?' <span class="pill mid">training</span>':''}</td>
+      <td><select onclick="event.stopPropagation()" onchange="assignGirlLocation('${g.id}', this.value)">${options}</select></td>
+      <td>${g.skill}</td>
+      <td><div class="barwrap"><div style="width:${g.safety}%;background:${g.safety>60?'var(--green)':g.safety>30?'var(--gold)':'var(--red)'};"></div></div></td>
+      <td><button class="btn small" onclick="event.stopPropagation(); releaseGirl('${g.id}')">Let Go</button></td>
+    </tr>`;
+  }).join('');
+  const madam = activeDeputy('madam');
+  const candidates = G.girlCandidates.map(c=>`
+    <div class="tile clickable" onclick="openGirlCandidateModal('${c.id}')"><div style="font-weight:bold;">${c.name}</div><div style="color:var(--dim);font-size:12px;">Skill ${c.skill} · Safety instinct ${c.safety}</div>
+    <button class="btn small gold" style="margin-top:6px;" onclick="event.stopPropagation(); hireGirl('${c.id}')">Take Her On</button></div>`).join('');
+  return `
+  <div class="card">
+    <h3>Personal Services</h3>
+    <p style="color:var(--dim);">${madam?`${madam.name} looks after this side of the business (skill ${madam.skill}).`:'No Manager assigned — safety and earnings suffer without one.'} Venue work (parlour/club) pays better and is safer than the street, but capacity is limited.</p>
+    <table><tr><th>Name</th><th>Assigned To</th><th>Skill</th><th>Safety</th><th></th></tr>${rows || '<tr><td colspan="5" style="color:var(--dim)">Nobody on the books.</td></tr>'}</table>
+  </div>
+  <div class="card">
+    <h3>Available</h3>
+    <div class="grid3">${candidates || '<p style="color:var(--dim)">Nobody looking for work right now.</p>'}</div>
+  </div>`;
+}
+
+function renderDeputies(){
+  const rows = G.deputies.map(d=>{
+    const training = d.trainingUntil && d.trainingUntil>G.day;
+    return `<tr class="clickable" onclick="openDeputyModal('${d.id}')">
+    <td>${d.name}${training?' <span class="pill mid">training</span>':''}</td><td>${DEPUTY_ROLES[d.role].label}</td><td>${d.skill}</td>
+    <td><div class="barwrap"><div style="width:${d.loyalty}%;background:${d.loyalty>60?'var(--green)':d.loyalty>30?'var(--gold)':'var(--red)'};"></div></div></td>
+    <td>${fmt(d.salary)}/wk</td>
+    <td><button class="btn small" onclick="event.stopPropagation(); fireDeputy('${d.id}')">Cut Loose</button></td>
+  </tr>`;
+  }).join('');
+  const candidates = G.deputyCandidates.map(c=>`
+    <div class="tile clickable" onclick="openDeputyCandidateModal('${c.id}')"><div style="font-weight:bold;">${c.name}</div>
+    <div style="color:var(--gold);font-size:12px;">${DEPUTY_ROLES[c.role].label}</div>
+    <div style="color:var(--dim);font-size:11px;">${DEPUTY_ROLES[c.role].desc}</div>
+    <div style="color:var(--dim);font-size:12px;margin-top:4px;">Skill ${c.skill} · ${fmt(c.salary)}/wk</div>
+    <button class="btn small gold" style="margin-top:6px;" onclick="event.stopPropagation(); hireDeputy('${c.id}')">Hire — signing fee ${fmt(c.salary*2)}</button></div>`).join('');
+  const taskCols = ['available','assigned','done'];
+  const availableTasks = Object.entries(TASK_TYPES).map(([key,def])=>`
+    <div class="kcard" onclick="openTaskAssignModal('${key}')">
+      <div class="t">${def.label}</div><div class="m">Needs: ${DEPUTY_ROLES[def.role].label} · ~${def.hours}h</div>
+    </div>`).join('');
+  const assignedTasks = G.tasks.filter(t=>t.status==='assigned').map(t=>{
+    const dep = G.deputies.find(d=>d.id===t.deputyId);
+    return `<div class="kcard" onclick="openTaskDetailModal('${t.id}')"><div class="t">${TASK_TYPES[t.key].label}</div><div class="m">${dep?dep.name:'?'} · ${Math.max(t.timer,0)} tick(s) left</div></div>`;
+  }).join('');
+  const doneTasks = G.tasks.filter(t=>t.status==='done').map(t=>{
+    const dep = G.deputies.find(d=>d.id===t.deputyId);
+    return `<div class="kcard" onclick="openTaskDetailModal('${t.id}')"><div class="t">${TASK_TYPES[t.key].label}</div><div class="m">${dep?dep.name:'?'} · ${t.result||''}</div></div>`;
+  }).join('');
+  return `
+  <div class="card">
+    <h3>The Crew</h3>
+    <table><tr><th>Name</th><th>Role</th><th>Skill</th><th>Loyalty</th><th>Salary</th><th></th></tr>${rows || '<tr><td colspan="6" style="color:var(--dim)">No deputies yet.</td></tr>'}</table>
+  </div>
+  <div class="card">
+    <h3>Available for Hire</h3>
+    <div class="grid3">${candidates || '<p style="color:var(--dim)">Nobody available right now.</p>'}</div>
+  </div>
+  <div class="card">
+    <h3>Street Jobs</h3>
+    <div id="kanban">
+      <div class="kcol"><h4>Available</h4>${availableTasks}</div>
+      <div class="kcol"><h4>In Progress <span>${assignedTasks?G.tasks.filter(t=>t.status==='assigned').length:0}</span></h4>${assignedTasks || '<div style="color:var(--dimmer);font-size:12px;">Nothing running</div>'}</div>
+      <div class="kcol"><h4>Done</h4>${doneTasks || '<div style="color:var(--dimmer);font-size:12px;">Nothing yet</div>'}</div>
+    </div>
+  </div>`;
+}
+
+function renderTerritory(){
+  const rows = LOCATIONS.map(l=>{
+    const ctrl = G.areas[l.id].controller;
+    const gangEntry = Object.entries(G.gangs).find(([gid])=>GANG_DEFS.find(gd=>gd.id===gid).areas.includes(l.id));
+    let pillClass = ctrl==='player'?'player':(ctrl==='neutral'?'neutral':'rival');
+    let ctrlLabel = ctrl==='player'?'You':(ctrl==='neutral'?'Neutral':G.gangs[ctrl].name);
+    const stronghold = gangEntry && isGangStronghold(gangEntry[0], l.id);
+    let actions = '';
+    if(ctrl==='player'){
+      actions = `<button class="btn small" onclick="event.stopPropagation(); extortArea('${l.id}')">Squeeze It</button>`;
+    } else if(ctrl==='neutral'){
+      actions = `<button class="btn small gold" onclick="event.stopPropagation(); moveInArea('${l.id}')">Move In — £5,000</button>`;
+    } else if(gangEntry){
+      actions = `<button class="btn small primary" onclick="event.stopPropagation(); attackTerritory('${l.id}')">Attack — ${fmt(attackCost(gangEntry[0], l.id))}</button>`;
+    }
+    return `<tr class="clickable" onclick="openAreaModal('${l.id}')"><td>${l.name}${stronghold?' <span class="pill bad">🏰 stronghold</span>':''}</td><td><span class="pill ${pillClass}">${ctrlLabel}</span></td><td>${'★'.repeat(l.wealth)}</td><td>${actions}</td></tr>`;
+  }).join('');
+  const gangCards = Object.values(G.gangs).map(g=>`
+    <div class="tile clickable" onclick="openGangModal('${g.id}')">
+      <div style="font-weight:bold;color:${g.color};">${g.name}${g.war?' <span class="pill bad">WAR</span>':''}</div>
+      <div style="font-size:12px;color:var(--dim);">Strength ${Math.round(g.strength)} · Aggression ${g.aggression} · Holds ${gangAreasHeld(g.id)}/${gangHomeAreas(g.id).length} areas</div>
+      <div style="margin-top:4px;">Relation: <span class="pill ${g.relation>20?'good':g.relation<-20?'bad':'mid'}">${g.relation}</span></div>
+      <button class="btn small gold" style="margin-top:6px;" onclick="event.stopPropagation(); negotiateTruce('${g.id}')">Offer Truce — £6,000</button>
+    </div>`).join('');
+  return `
+  <div class="card"><h3>The City</h3>${renderMap()}</div>
+  <div class="card">
+    <h3>Areas</h3>
+    <table><tr><th>Area</th><th>Controlled By</th><th>Wealth</th><th></th></tr>${rows}</table>
+  </div>
+  <div class="card">
+    <h3>Rival Gangs</h3>
+    <div class="grid3">${gangCards}</div>
+  </div>`;
+}
+
+function renderPolice(){
+  const fixer = activeDeputy('fixer');
+  const lawyer = activeDeputy('lawyer');
+  const contactRows = G.policeContacts.map(c=>{
+    const rank = CONTACT_RANKS[c.rankKey];
+    return `<tr class="clickable" onclick="openContactModal('${c.id}')">
+      <td>${c.name}</td><td>${rank.label}</td>
+      <td><div class="barwrap"><div style="width:${c.loyalty}%;background:${c.loyalty>60?'var(--green)':c.loyalty>30?'var(--gold)':'var(--red)'};"></div></div></td>
+      <td>${fmt(rank.retainer)}/wk</td>
+      <td><button class="btn small" onclick="event.stopPropagation(); dropContact('${c.id}')">Cut Loose</button></td>
+    </tr>`;
+  }).join('');
+  const contactCandidates = G.contactCandidates.map(c=>{
+    const rank = CONTACT_RANKS[c.rankKey];
+    return `<div class="tile clickable" onclick="openContactCandidateModal('${c.id}')">
+      <div style="font-weight:bold;">${c.name}</div>
+      <div style="color:var(--gold);font-size:12px;">${rank.label}</div>
+      <div style="color:var(--dim);font-size:12px;margin-top:4px;">${fmt(rank.retainer)}/wk retainer</div>
+      <button class="btn small gold" style="margin-top:6px;" onclick="event.stopPropagation(); hireContact('${c.id}')">Bring Onside — ${fmt(rank.cost)}</button>
+    </div>`;
+  }).join('');
+  const jailedCards = G.jailed.map(j=>`
+    <div class="tile clickable" onclick="openJailModal('${j.id}')">
+      <div style="font-weight:bold;">${j.name}</div>
+      <div style="color:var(--dim);font-size:12px;">${DEPUTY_ROLES[j.role].label} · out day ${j.sentenceDay} (day ${G.day} now)</div>
+      <div style="color:var(--dim);font-size:12px;">Bail: ${fmt(j.bail)}</div>
+      <button class="btn small gold" style="margin-top:6px;" onclick="event.stopPropagation(); bailOutDeputy('${j.id}')">Post Bail</button>
+    </div>`).join('');
+  return `
+  <div class="card">
+    <h3>Heat: ${Math.round(G.heat)}/100</h3>
+    <div class="barwrap" style="height:16px;"><div style="width:${G.heat}%;background:linear-gradient(90deg,var(--green),var(--gold),var(--red));"></div></div>
+    <p style="color:var(--dim);margin-top:10px;">${G.heat>=90?'Red alert — a raid on you personally could happen any day.':G.heat>=60?'Heavy attention. Raids are a real risk.':G.heat>=30?'Manageable, but climbing.':'Quiet.'}</p>
+    <div class="choices">
+      <button onclick="payBribe()">Pay Off a Contact — ~£${Math.round(3500*(1-totalContactBribeDiscount()*0.6)).toLocaleString()} (heat -20 to -45+)</button>
+      <button onclick="layLow()">Lay Low for the Night (lose ~half a night's takings, heat -16)</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Fixer</h3>
+    ${fixer ? `<p>${fixer.name} keeps a lid on things — reduces daily heat build-up, improves bribe results, and gets more out of every Police Contact below.</p>` : `<p style="color:var(--dim)">No Fixer on the books. Hire one from the Deputies tab to slow heat build-up and get more out of Police Contacts.</p>`}
+    ${lawyer ? `<p>${lawyer.name} works the courts — cuts bail and sentences for anyone lifted, and can try to get a case thrown out entirely (see The Cells, below).</p>` : `<p style="color:var(--dim)">No Lawyer on the books. Hire one from the Deputies tab to cut bail/sentences and unlock fighting a case in court.</p>`}
+  </div>
+  <div class="card">
+    <h3>Police Contacts</h3>
+    <p style="color:var(--dim);">A standing roster of bent coppers, paid a weekly retainer. Between them they slow heat build-up, cheapen bribes, and cut bail costs if anyone gets lifted.</p>
+    <table><tr><th>Name</th><th>Rank</th><th>Loyalty</th><th>Retainer</th><th></th></tr>${contactRows || '<tr><td colspan="5" style="color:var(--dim)">Nobody on the inside yet.</td></tr>'}</table>
+    <h4 style="margin-top:14px;color:var(--dim);text-transform:uppercase;font-size:11px;">Available</h4>
+    <div class="grid3">${contactCandidates || '<p style="color:var(--dim)">Nobody available right now.</p>'}</div>
+  </div>
+  ${G.jailed.length ? `<div class="card">
+    <h3>The Cells — Barlinnie</h3>
+    <p style="color:var(--dim);">Anyone lifted on a job does their time here unless you bail them out, fight the case, or break them out — they'll be released on their own eventually, but it costs loyalty.</p>
+    ${G.prisonBreak ? `<p><span class="pill mid">Something's already in motion — ${Math.max(G.prisonBreak.timer,0)} day(s) out.</span></p>` : `<button class="btn primary" onclick="openPrisonBreakModal()">Break Them All Out — £25,000</button>`}
+    <div class="grid3" style="margin-top:10px;">${jailedCards}</div>
+  </div>` : ''}
+  <div class="card">
+    <h3>What's Driving Heat</h3>
+    <ul style="color:var(--dim);line-height:1.8;">
+      <li>Every business generates a little heat per day — casinos and clubs more than sunbed shops (security upgrades cut this down).</li>
+      <li>Drug batches out with dealers can get seized — the risk rises with your heat level.</li>
+      <li>Street-based personal services generate more heat than venue-based work.</li>
+      <li>Sitting on a lot of unlaundered dirty cash draws attention.</li>
+      <li>Territory attacks, shakedowns and sabotage jobs spike heat immediately.</li>
+      <li>Big scores (Rackets tab) and ordering a hit (Deputies tab) are the worst offenders — huge heat if they go wrong, and can get someone lifted.</li>
+      <li>Gambling large sums through a rival's casino or bookies (Rackets tab) launders fast, but adds heat every time — more if they turn on you.</li>
+      <li>Bribing or threatening a jury, and breaking into Barlinnie (The Cells, below), are the biggest single heat spikes in the game — but they're the only way out for someone who won't survive their sentence.</li>
+    </ul>
+  </div>`;
+}
+
+function renderLog(){
+  return `<div class="card"><h3>Full Log</h3>${G.log.map(l=>`<div class="logline"><span class="d">Day ${l.day}</span>${l.msg}</div>`).join('') || '<p style="color:var(--dim)">Nothing logged yet.</p>'}</div>`;
+}
+
+// ============================= MODAL =============================
+function openModal(html){
+  document.getElementById('modalBox').innerHTML = html + '<div style="margin-top:14px;"></div>';
+  document.getElementById('modalWrap').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modalWrap').classList.remove('show');
+  const goShown = document.getElementById('gameOverShown');
+  if(goShown) return; // don't allow closing game over
+}
+document.getElementById('modalWrap').addEventListener('click', e=>{
+  if(e.target.id==='modalWrap' && !document.getElementById('gameOverShown')) closeModal();
+});
+function openEventModal(){
+  const ev = G.pendingEvent;
+  const def = EVENT_DEFS[ev.key];
+  const html = `<h3>${def.title}</h3><p>${def.text(ev.data)}</p>
+    <div class="choices">${def.choices.map((c,i)=>`<button onclick="resolveEventChoice(${i})">${typeof c.label==='function'?c.label(ev.data):c.label}</button>`).join('')}</div>`;
+  openModal(html);
+}
+
+// ============================= BOOT =============================
+(function boot(){
+  if(tryLoad()){
+    document.getElementById('setupScreen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    buildNav();
+    render();
+  }
+})();
+</script>
+</body>
+</html>
