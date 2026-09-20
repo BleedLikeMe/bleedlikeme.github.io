@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SINK THE BISMARCK!</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -245,6 +246,38 @@ button.dc:active:not(:disabled) { box-shadow:0 1px 2px rgba(0,0,0,.85),0 1px 3px
 #overlay button { margin-top:20px; padding:10px 32px; font-size:14px; }
 @keyframes flicker { 0%,100%{opacity:1} 50%{opacity:.4} }
 .fire-flicker { animation:flicker .6s infinite; }
+
+/* ── MOBILE ── everything above assumes a wide desktop screen (fixed 548px
+   radar, 480px periscope, a 3-column main panel, a one-row control bar);
+   without this, a phone viewport has no way to reach #controls at all. */
+@media (max-width:760px){
+  body { overflow-y:auto; overflow-x:hidden; height:auto; min-height:100vh; }
+  #title-bar { padding:4px 8px; }
+  #title-bar .title { font-size:13px; letter-spacing:1px; }
+  #title-bar .subtitle { display:none; }
+  #sea-view { height:90px; }
+
+  #main-panel { flex-direction:column; overflow-y:visible; }
+  #left-section, #right-section { border:none; padding:4px; flex:none; }
+  #log-panel { max-height:110px; overflow-y:auto; }
+
+  #radar-section { padding:6px; }
+  #radar-canvas { width:min(82vw,320px); height:min(82vw,320px); }
+
+  #controls { flex-wrap:wrap; padding:6px; gap:6px; }
+  .ctrl-panel.weapons { flex:1 1 100%; order:3; }
+  .ctrl-panel:not(.weapons) { flex:1 1 auto; }
+  .ctrl-panel-body { flex-wrap:wrap; justify-content:center; }
+  #controls button { min-height:44px; min-width:44px; }
+  .wpn-slot { min-width:44px; }
+
+  #periscope-canvas { width:min(85vw,340px); height:min(85vw,340px); }
+  #scope-caption { position:static; margin-top:10px; }
+  #periscope-wrap { flex-direction:column; }
+
+  #overlay h1 { font-size:28px; letter-spacing:3px; }
+  #overlay { padding:16px; }
+}
 </style>
 </head>
 <body>
