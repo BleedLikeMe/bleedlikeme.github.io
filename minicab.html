@@ -2174,7 +2174,7 @@ function startLoop(){
   if(loopHandle) return;
   loopHandle=setInterval(()=>{
     if(!shouldFreezeSim() && G.speed>0) tick(G.speed);
-    if(!uiPointerDown) render();
+    if(!uiPointerDown && !uiSelectOpen) render();
   },1000);
 }
 function backToSetup(){
