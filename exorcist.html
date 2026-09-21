@@ -269,7 +269,7 @@
     </div>
   </div>
 
-  <footer>GHOSTS WERE BANISHED. READINGS ARE ENTIRELY FACTUAL.</footer>
+  <footer>NO GHOSTS WERE HARMED. READINGS ARE ENTIRELY FICTIONAL.</footer>
 </div>
 
 <script>
@@ -315,6 +315,8 @@ const TYPES = {
     desc:"Physically active and volatile. Moves things — best to clear the area." },
   demonic:    { label:"Demonic Entity",    icon:"👹", color:"#ff4d4d", weight:6,  activeMs:[2000,3200], emf:9.0, tempDrop:7,
     desc:"Hostile and dangerous. Do not engage — leave immediately." },
+  regan:      { label:"Regan (Possessed)", icon:"👧", color:"#8aff5c", weight:3,  activeMs:[2200,3400], emf:8.5, tempDrop:6,
+    desc:"A young girl, possessed and venomous. Foul-mouthed and vicious — brace yourself." },
 };
 
 const ADVICE = {
@@ -353,10 +355,29 @@ const ADVICE = {
     "Never speak its name. Leave now.",
     "This is not a welcoming spirit — evacuate."
   ],
+  regan:[
+    "\"Your mother sucks cocks in HELL!\"",
+    "\"The sow is mine.\"",
+    "She hisses your own secrets back at you in a voice that isn't hers.",
+    "\"Let Jesus fuck you!\" she screams, and laughs.",
+    "She spits and thrashes, snarling your name.",
+    "\"I'll take you all down with me.\"",
+    "Do not engage. Get a priest. Now."
+  ],
 };
 
-const EVP_PHRASES = ["...help...","...leave...","...cold...","...behind you...","...run...",
-  "...stay...","...goodbye...","...home...","...why...","...here...","...listen...","...closer..."];
+const EVP_PHRASES = [
+  "...help...","...leave...","...cold...","...behind you...","...run...",
+  "...stay...","...goodbye...","...home...","...why...","...here...","...listen...","...closer...",
+  "...mine...","...always...","...watching...","...soon...","...don't look...","...under the bed...",
+  "...they lied...","...three days...","...turn around...","...still here...","...you invited me...",
+  "...I remember you...","...it's too late...","...can you hear me...","...so cold...","...don't sleep...",
+  "...I see you...","...not alone...","...it hurts...","...come closer...","...let me in...",
+  "...fuck off...","...get out...","...burn...","...you're all going to hell...","...shut your mouth...",
+  "...you disgust me...","...pathetic...","...I'll gut you...","...die...","...worthless...",
+  "...cunt...","...bitch...","...rot in hell...","...fuck you...","...piss off...",
+  "...screw yourself...","...your mother...","...I'll kill you...","...get fucked..."
+];
 const SCAN_CHARS = "░▒▓█▚▞#@%*+=-·~^".split("");
 const SWEEP_SPEEDS = { slow:36, normal:80, fast:150 };
 const SWEEP_ORDER = ["slow","normal","fast"];
@@ -417,7 +438,7 @@ function weightedType(){
   const tierBoost = clamp(elapsedMin()/10, 0, 1);
   const weights = keys.map(k=>{
     const base = TYPES[k].weight;
-    const isHigherTier = (k==="shadow"||k==="poltergeist"||k==="demonic");
+    const isHigherTier = (k==="shadow"||k==="poltergeist"||k==="demonic"||k==="regan");
     return isHigherTier ? base*(1+tierBoost*1.2) : base*(1-tierBoost*0.3);
   });
   const total = weights.reduce((s,w)=>s+w,0);
@@ -977,7 +998,7 @@ function banish(h){
   if(G.banished > SAVE.bestSession) SAVE.bestSession = G.banished;
   saveSave();
   playSound("banish");
-  haptic(h.type==="demonic" ? [15,40,15,40,25] : 30);
+  haptic((h.type==="demonic"||h.type==="regan") ? [15,40,15,40,25] : 30);
 }
 
 canvas.addEventListener("contextmenu", e=>e.preventDefault());
@@ -1067,12 +1088,13 @@ el("cleanseBtn").addEventListener("click", ()=>{
 el("exorcistBtn").addEventListener("click", ()=>{
   const t = now();
   if(t<G.exorcistCooldownUntil) return;
-  let cleared = 0, hadDemonic = false;
+  let cleared = 0, hadDemonic = false, hadRegan = false;
   for(const h of G.hotspots){
     if(h.state==="active" && h._sx!=null){
       spawnParticles(h._sx, h._sy, "#ffe9b3");
       cleared++;
       if(h.type==="demonic") hadDemonic = true;
+      if(h.type==="regan") hadRegan = true;
     }
     h.state = "gone";
   }
@@ -1086,7 +1108,11 @@ el("exorcistBtn").addEventListener("click", ()=>{
   G.emfTarget = 0.3;
   G.temp = 68; G.tempTarget = 68;
   saveSave();
-  if(hadDemonic){
+  if(hadRegan){
+    const taunt = ADVICE.regan[Math.floor(Math.random()*ADVICE.regan.length)];
+    showAdvice({icon:"👧", label:"Regan screams"}, taunt);
+    addLog(`👧 Regan screams: ${taunt}`);
+  } else if(hadDemonic){
     const taunt = DEMON_TAUNTS[Math.floor(Math.random()*DEMON_TAUNTS.length)];
     showAdvice({icon:"👹", label:"It screams"}, taunt);
     addLog(`👹 It screams back: ${taunt}`);
@@ -1095,7 +1121,7 @@ el("exorcistBtn").addEventListener("click", ()=>{
     showAdvice({icon:"☦", label:"The Exorcist"}, line);
   }
   addLog(cleared>0
-    ? `☦ Father Doyle performs a full exorcism — ${cleared} ${cleared===1?"entity":"entities"} cast out${hadDemonic?", defiant to the last":""}.`
+    ? `☦ Father Doyle performs a full exorcism — ${cleared} ${cleared===1?"entity":"entities"} cast out${(hadDemonic||hadRegan)?", defiant to the last":""}.`
     : "☦ Father Doyle arrives and prays over the room — nothing was there to banish.");
   document.body.classList.add("holyFlash");
   setTimeout(()=>document.body.classList.remove("holyFlash"),650);
