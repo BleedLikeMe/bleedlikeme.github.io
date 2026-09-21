@@ -100,9 +100,14 @@
   #locNav{display:flex; flex-direction:column; gap:8px;}
   #locNav button{text-align:left;}
   @media (max-width:880px){
+    /* horizontal-scroll-only nav (overflow-x:auto, nowrap) let buttons run
+       off the right edge with only a faint scrollbar as a hint — on the mall
+       screen even the active "Sunnydale Mall" button itself was truncated,
+       and the other locations (i.e. any way out) were entirely offscreen.
+       Wrapping onto multiple rows instead guarantees every location button
+       is always fully visible with no scroll gesture required to find it. */
     #locNav{
-      flex-direction:row; flex-wrap:nowrap; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch;
-      padding-bottom:4px; scrollbar-width:thin;
+      flex-direction:row; flex-wrap:wrap; gap:8px;
     }
     #locNav button{text-align:center; white-space:nowrap; flex:0 0 auto;}
   }
