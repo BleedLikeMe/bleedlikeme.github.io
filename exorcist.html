@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spectre-9">
+<meta name="theme-color" content="#02110a">
+<link id="manifestLink" rel="manifest" href="">
+<link id="faviconLink" rel="icon" href="">
+<link id="appleIconLink" rel="apple-touch-icon" href="">
+<title>EXORCIST // Ghost Radar</title>
+<style>
+  :root{
+    --bg:#020a06;
+    --panel:#06150d;
+    --panel-line:#0e3322;
+    --green:#3dffa0;
+    --green-dim:#1c7a51;
+    --amber:#ffcf5c;
+    --red:#ff5c5c;
+    --text:#c9ffe4;
+    --muted:#5c9c80;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:"Courier New", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    min-height:100dvh; min-height:100vh;
+    overflow-x:hidden;
+    -webkit-user-select:none; user-select:none;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:50;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.12) 3px);
+    mix-blend-mode:multiply;
+  }
+  body.flicker{ animation:flickerAnim .35s steps(6,end); }
+  @keyframes flickerAnim{
+    0%{filter:brightness(1)} 15%{filter:brightness(2.2)} 30%{filter:brightness(.4)}
+    45%{filter:brightness(1.8)} 60%{filter:brightness(.5)} 100%{filter:brightness(1)}
+  }
+  .app{ max-width:1150px; margin:0 auto; padding:10px 10px 24px; display:flex; flex-direction:column; gap:10px; }
+
+  header{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; padding:6px 4px;}
+  header h1{ font-size:clamp(15px,4.4vw,20px); letter-spacing:2px; margin:0; color:var(--green); text-shadow:0 0 8px rgba(61,255,160,.55);}
+  header h1 span{color:var(--muted); font-weight:normal; font-size:.6em; display:block; letter-spacing:1px;}
+  .headerRight{display:flex; align-items:center; gap:8px;}
+  .pill{
+    border:1px solid var(--panel-line); background:var(--panel); border-radius:20px;
+    padding:5px 10px; font-size:12px; display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .battIcon{width:20px;height:11px;border:1.5px solid var(--muted);border-radius:2px;position:relative;display:inline-block;}
+  .battIcon::after{content:"";position:absolute;right:-4px;top:2px;width:2px;height:5px;background:var(--muted);}
+  .battFill{position:absolute;inset:1.5px;left:1.5px;background:var(--green);border-radius:1px;}
+
+  .layout{ display:flex; flex-direction:column; gap:10px; }
+  @media (min-width:860px){
+    .layout{ flex-direction:row; align-items:flex-start; }
+    .radarCol{ flex:0 0 auto; width:min(50vw,540px); position:sticky; top:8px; }
+    .sideCol{ flex:1 1 320px; min-width:300px; }
+  }
+
+  .radarWrap{
+    position:relative; width:100%; max-width:540px; margin:0 auto;
+    aspect-ratio:1/1; border-radius:50%;
+    background:radial-gradient(circle at 50% 45%, #04160c 0%, #010a05 70%, #000502 100%);
+    box-shadow:0 0 0 2px var(--panel-line), 0 0 40px rgba(61,255,160,.15) inset, 0 0 30px rgba(0,0,0,.6);
+  }
+  #radar{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; display:block; border-radius:50%; }
+  .bearing{
+    position:absolute; top:8px; left:50%; transform:translateX(-50%);
+    font-size:11px; color:var(--green-dim); letter-spacing:2px; pointer-events:none;
+  }
+  .adviceBar{
+    position:absolute; left:4%; right:4%; bottom:3%;
+    background:rgba(2,10,6,.86); border:1px solid var(--panel-line); border-radius:8px;
+    padding:8px 10px; font-size:12.5px; line-height:1.4; min-height:2.6em;
+    display:flex; align-items:center; gap:8px; pointer-events:none;
+    opacity:0; transition:opacity .25s;
+  }
+  .adviceBar.show{opacity:1;}
+  .adviceBar .icon{font-size:20px; flex:0 0 auto;}
+  .adviceBar b{color:var(--amber);}
+
+  .card{
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:10px; padding:10px 12px;
+  }
+  .cardTitle{font-size:11px; letter-spacing:2px; color:var(--muted); margin:0 0 8px;}
+
+  .instrRow{display:flex; gap:10px; flex-wrap:wrap;}
+  .instrRow .card{flex:1 1 150px;}
+
+  #emfCanvas{width:100%; max-width:220px; display:block; margin:0 auto;}
+  .emfLabel{text-align:center; font-size:11px; color:var(--muted); margin-top:2px;}
+  .emfLabel b{color:var(--green); font-size:15px;}
+
+  .tempBig{font-size:clamp(26px,7vw,34px); font-weight:bold; text-align:center; color:var(--green); text-shadow:0 0 8px rgba(61,255,160,.4);}
+  .tempBig.cold{color:#7fd4ff; text-shadow:0 0 10px rgba(127,212,255,.6);}
+  .tempSub{text-align:center; font-size:11px; color:var(--muted);}
+  .unitBtn{display:block; margin:6px auto 0; font-size:11px;}
+
+  .spiritBoxText{
+    font-size:15px; letter-spacing:3px; text-align:center; padding:8px 4px; min-height:1.4em;
+    color:var(--green-dim); word-break:break-all;
+  }
+  .spiritBoxText.locked{color:var(--amber); text-shadow:0 0 8px rgba(255,207,92,.6); letter-spacing:1px;}
+
+  button{
+    font-family:inherit; background:#0a2416; color:var(--text); border:1px solid var(--panel-line);
+    border-radius:8px; padding:10px 8px; font-size:12px; letter-spacing:1px; cursor:pointer;
+    min-height:44px; touch-action:manipulation;
+  }
+  button:active{transform:translateY(1px);}
+  button:disabled{opacity:.45;}
+  button.on{ background:#123d24; border-color:var(--green-dim); color:var(--green); }
+  button.warn{ border-color:#5c3a1c; }
+  button.danger{ border-color:#5c1c1c; }
+  button.holy{ background:#241d0a; border-color:#8a7a3a; color:#ffe9b3; }
+
+  body.holyFlash{ animation:holyFlashAnim .6s ease-out; }
+  @keyframes holyFlashAnim{
+    0%{filter:brightness(1) saturate(1)}
+    20%{filter:brightness(3.2) saturate(0)}
+    55%{filter:brightness(1.7) saturate(0.3)}
+    100%{filter:brightness(1) saturate(1)}
+  }
+  .btnGrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .btnGrid button{width:100%;}
+  .fullBtn{grid-column:1/-1;}
+
+  .sliderRow{display:flex; flex-direction:column; gap:4px; margin-bottom:10px;}
+  .sliderRow label{font-size:11px; color:var(--muted); display:flex; justify-content:space-between;}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:28px; background:transparent; margin:0;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:6px; background:linear-gradient(90deg,var(--green-dim),var(--green)); border-radius:3px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:22px; height:22px; margin-top:-8px; border-radius:50%;
+    background:var(--green); box-shadow:0 0 8px rgba(61,255,160,.7); border:2px solid #04160c;
+  }
+  input[type=range]::-moz-range-track{ height:6px; background:linear-gradient(90deg,var(--green-dim),var(--green)); border-radius:3px;}
+  input[type=range]::-moz-range-thumb{ width:22px; height:22px; border-radius:50%; background:var(--green); border:2px solid #04160c;}
+
+  .statsRow{display:flex; gap:8px; flex-wrap:wrap;}
+  .statChip{
+    flex:1 1 80px; background:#04160c; border:1px solid var(--panel-line); border-radius:8px;
+    padding:6px 8px; text-align:center;
+  }
+  .statChip .n{font-size:18px; color:var(--green); display:block;}
+  .statChip .l{font-size:9.5px; color:var(--muted); letter-spacing:1px;}
+  .career{text-align:center; font-size:11px; color:var(--muted); margin-top:8px;}
+  .career b{color:var(--green);}
+
+  .cardHeadRow{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .cardHeadRow .cardTitle{margin:0;}
+  .legendToggle{min-height:30px; padding:5px 10px; font-size:11px;}
+  #legendList{ display:none; flex-direction:column; gap:8px; }
+  #legendList.open{ display:flex; }
+  .legendItem{ display:flex; align-items:center; gap:10px; }
+  .legendSwatch{
+    flex:0 0 auto; width:34px; height:34px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:17px; background:rgba(255,255,255,0.04);
+  }
+  .legendCopy{font-size:11.5px; line-height:1.35;}
+  .legendCopy b{display:block; font-size:12.5px; margin-bottom:1px;}
+
+  #logList{ height:180px; overflow-y:auto; font-size:11.5px; line-height:1.5; }
+  #logList div{ border-bottom:1px dashed rgba(61,255,160,.08); padding:2px 0; }
+  #logList .ts{color:var(--muted); margin-right:6px;}
+  #logList::-webkit-scrollbar{width:6px;}
+  #logList::-webkit-scrollbar-thumb{background:var(--panel-line); border-radius:3px;}
+
+  footer{ text-align:center; font-size:10px; color:var(--muted); padding:8px 0 2px; letter-spacing:1px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>EXORCIST<span>PARANORMAL RADAR &amp; EVP UNIT</span></h1>
+    <div class="headerRight">
+      <div class="pill">👻 <span id="banishedHead">0</span></div>
+      <div class="pill" id="intensityPill">🌙 CALM</div>
+      <div class="pill">
+        <span class="battIcon"><span class="battFill" id="battFill" style="width:100%"></span></span>
+        <span id="battText">100%</span>
+      </div>
+      <button id="soundBtn" class="on" style="min-height:34px;padding:6px 10px;">🔊</button>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <div class="radarCol">
+      <div class="radarWrap">
+        <canvas id="radar"></canvas>
+        <div class="bearing" id="bearingText">BEARING 000°</div>
+        <div class="adviceBar" id="adviceBar"><span class="icon" id="adviceIcon">👻</span><span id="adviceText">Tap a signal when it appears.</span></div>
+      </div>
+    </div>
+
+    <div class="sideCol">
+
+      <div class="instrRow">
+        <div class="card">
+          <p class="cardTitle">EMF METER</p>
+          <canvas id="emfCanvas" width="220" height="130"></canvas>
+          <div class="emfLabel">FIELD STRENGTH <b id="emfValue">0.0</b> mG</div>
+        </div>
+        <div class="card">
+          <p class="cardTitle">AMBIENT TEMP</p>
+          <div class="tempBig" id="tempBig">20°C</div>
+          <div class="tempSub" id="tempSub">steady</div>
+          <button class="unitBtn" id="unitBtn">°F / °C</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="cardTitle">SPIRIT BOX — SCANNING</p>
+        <div class="spiritBoxText" id="spiritBoxText">— — —</div>
+        <div class="btnGrid">
+          <button id="spiritBoxBtn" class="on fullBtn">SPIRIT BOX: ON</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardHeadRow">
+          <p class="cardTitle">FIELD GUIDE</p>
+          <button class="legendToggle" id="legendToggle">SHOW ▾</button>
+        </div>
+        <div id="legendList"></div>
+      </div>
+
+      <div class="card">
+        <p class="cardTitle">CONTROLS</p>
+        <div class="sliderRow">
+          <label>SENSITIVITY <span id="sensVal">1</span>/10</label>
+          <input type="range" id="sensitivitySlider" min="1" max="10" value="1">
+        </div>
+        <div class="btnGrid">
+          <button id="sweepBtn">SWEEP: SLOW</button>
+          <button id="boostBtn" class="warn">⚡ BOOST SIGNAL</button>
+          <button id="cleanseBtn" class="danger fullBtn">🪶 SAGE / CLEANSE AREA</button>
+          <button id="exorcistBtn" class="holy fullBtn">☦ CALL THE EXORCIST</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="cardTitle">READINGS</p>
+        <div class="statsRow">
+          <div class="statChip"><span class="n" id="statActive">0</span><span class="l">ACTIVE</span></div>
+          <div class="statChip"><span class="n" id="statBanished">0</span><span class="l">BANISHED</span></div>
+          <div class="statChip"><span class="n" id="statMissed">0</span><span class="l">MISSED</span></div>
+          <div class="statChip"><span class="n" id="statBest">0</span><span class="l">BEST HUNT</span></div>
+        </div>
+        <div class="career" id="careerLine">Lifetime: 0 banished across 0 hunts</div>
+      </div>
+
+      <div class="card">
+        <p class="cardTitle">EVENT LOG</p>
+        <div id="logList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>NO GHOSTS WERE HARMED. READINGS ARE ENTIRELY FICTIONAL.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- PWA MANIFEST / ICON (inlined, no external files) ---------------- */
+
+(function setupPWA(){
+  const iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+    +'<rect width="100" height="100" rx="18" fill="#02110a"/>'
+    +'<circle cx="50" cy="50" r="38" fill="none" stroke="#3dffa0" stroke-width="4" opacity="0.5"/>'
+    +'<circle cx="50" cy="50" r="24" fill="none" stroke="#3dffa0" stroke-width="3" opacity="0.35"/>'
+    +'<text x="50" y="66" font-size="46" text-anchor="middle">👻</text></svg>';
+  const iconUri = "data:image/svg+xml," + encodeURIComponent(iconSvg);
+  const manifest = {
+    name:"Spectre-9 Ghost Radar", short_name:"Spectre-9",
+    start_url:".", display:"standalone",
+    background_color:"#020a06", theme_color:"#02110a",
+    icons:[
+      {src:iconUri, sizes:"192x192", type:"image/svg+xml"},
+      {src:iconUri, sizes:"512x512", type:"image/svg+xml"}
+    ]
+  };
+  const manifestUri = "data:application/manifest+json," + encodeURIComponent(JSON.stringify(manifest));
+  try{
+    document.getElementById("manifestLink").setAttribute("href", manifestUri);
+    document.getElementById("faviconLink").setAttribute("href", iconUri);
+    document.getElementById("appleIconLink").setAttribute("href", iconUri);
+  }catch(e){}
+})();
+
+/* ---------------- DATA ---------------- */
+
+const TYPES = {
+  residual:   { label:"Residual Energy",  icon:"🌫️", color:"#7fffd4", weight:34, activeMs:[3400,5400], emf:2.0, tempDrop:1,
+    desc:"An echo of the past on repeat. It can't see or react to you — no danger, just observe." },
+  orb:        { label:"Orb Presence",      icon:"✨", color:"#ffe066", weight:27, activeMs:[3000,4800], emf:2.6, tempDrop:1,
+    desc:"Curious and usually friendly. Safe to greet — it may even respond." },
+  shadow:     { label:"Shadow Figure",     icon:"👤", color:"#9d8bff", weight:20, activeMs:[2600,4200], emf:4.4, tempDrop:3,
+    desc:"Watchful and unpredictable. Keep a light on it and don't turn your back." },
+  poltergeist:{ label:"Poltergeist",       icon:"⚡", color:"#ff9a42", weight:13, activeMs:[2300,3800], emf:6.2, tempDrop:4,
+    desc:"Physically active and volatile. Moves things — best to clear the area." },
+  demonic:    { label:"Demonic Entity",    icon:"👹", color:"#ff4d4d", weight:6,  activeMs:[2000,3200], emf:9.0, tempDrop:7,
+    desc:"Hostile and dangerous. Do not engage — leave immediately." },
+};
+
+const ADVICE = {
+  residual:[
+    "It's just an echo replaying. Stay calm, it can't see you.",
+    "Residual haunting — no consciousness here. Observe quietly.",
+    "This one repeats itself. Snap a reading and move on.",
+    "Nothing to fear — it doesn't know you exist.",
+    "Old energy, no threat. Carry on with the sweep."
+  ],
+  orb:[
+    "Friendly. Say hello — it may respond.",
+    "Try asking a simple yes or no question.",
+    "It seems curious about you. Stay a moment.",
+    "Harmless. A smile and a wave will do.",
+    "Offer it kindness — some just want to be seen."
+  ],
+  shadow:[
+    "Don't turn your back on this one.",
+    "Keep a light source on it at all times.",
+    "Back away slowly. Do not run.",
+    "It doesn't like being watched — watch it anyway.",
+    "Leave this room and shut the door behind you."
+  ],
+  poltergeist:[
+    "Leave the house now.",
+    "It throws things — get clear immediately!",
+    "Go away! Don't linger here!",
+    "Grab what you need and get out.",
+    "Active and unstable — evacuate the area."
+  ],
+  demonic:[
+    "Leave the house immediately.",
+    "Do not engage. Get out now.",
+    "Say a prayer and go.",
+    "Never speak its name. Leave now.",
+    "This is not a welcoming spirit — evacuate."
+  ],
+};
+
+const EVP_PHRASES = ["...help...","...leave...","...cold...","...behind you...","...run...",
+  "...stay...","...goodbye...","...home...","...why...","...here...","...listen...","...closer..."];
+const SCAN_CHARS = "░▒▓█▚▞#@%*+=-·~^".split("");
+const SWEEP_SPEEDS = { slow:36, normal:80, fast:150 };
+const SWEEP_ORDER = ["slow","normal","fast"];
+const EXORCIST_COOLDOWN_MS = 30*1000;
+const EXORCIST_LINES = [
+  "\"The power of Christ compels you!\" — and just like that, it's gone.",
+  "Father Doyle recites the rite. The room falls silent.",
+  "A splash of holy water, a steady voice — nothing remains.",
+  "\"In this house, you are not welcome.\" The presence lifts at once.",
+  "The prayer ends. Whatever was here has been cast out.",
+];
+const DEMON_TAUNTS = [
+  "\"Your mother sucks cocks in HELL!\"",
+  "\"The sow is mine.\"",
+  "It hisses your own secrets back at you in a voice that isn't its own.",
+  "\"Let Jesus fuck you!\" it screams, and laughs.",
+  "It spits and thrashes, snarling your name.",
+  "\"I'll take you all down with me.\"",
+];
+
+/* ---------------- STATE ---------------- */
+
+const G = {
+  sweepAngle:0,
+  sweepMode:"slow",
+  hotspots:[],
+  particles:[],
+  nextId:1,
+  spawnTimer:5000,
+  sensitivity:1,
+  boostUntil:0,
+  boostCooldownUntil:0,
+  cleanseCooldownUntil:0,
+  exorcistCooldownUntil:0,
+  emf:0.4, emfTarget:0.4,
+  temp:68, tempTarget:68, tempUnitC:true,
+  battery:100,
+  soundOn:true,
+  spiritBoxOn:true,
+  spiritBoxTimer:600,
+  spiritBoxText:"— — —",
+  spiritBoxLockUntil:0,
+  banished:0, missed:0,
+  uiTimer:0,
+};
+
+/* ---------------- HELPERS ---------------- */
+
+const now = ()=>performance.now();
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=>a+(b-a)*t;
+const rand = (a,b)=>a+Math.random()*(b-a);
+const rad = d=>d*Math.PI/180;
+function angleDiff(a,b){ let d=((a-b)%360+540)%360-180; return Math.abs(d); }
+
+function weightedType(){
+  const keys = Object.keys(TYPES);
+  const tierBoost = clamp(elapsedMin()/10, 0, 1);
+  const weights = keys.map(k=>{
+    const base = TYPES[k].weight;
+    const isHigherTier = (k==="shadow"||k==="poltergeist"||k==="demonic");
+    return isHigherTier ? base*(1+tierBoost*1.2) : base*(1-tierBoost*0.3);
+  });
+  const total = weights.reduce((s,w)=>s+w,0);
+  let r = Math.random()*total;
+  for(let i=0;i<keys.length;i++){ r -= weights[i]; if(r<=0) return keys[i]; }
+  return keys[0];
+}
+
+/* ---------------- SESSION DIFFICULTY ---------------- */
+
+const SESSION_START = now();
+function elapsedMin(){ return (now()-SESSION_START)/60000; }
+function intensityLabel(){
+  const m = elapsedMin();
+  if(m<2) return {text:"CALM", icon:"🌙", color:"var(--green)"};
+  if(m<5) return {text:"ACTIVE", icon:"🌫️", color:"var(--green)"};
+  if(m<8) return {text:"SEVERE", icon:"⚡", color:"var(--amber)"};
+  return {text:"EXTREME", icon:"👹", color:"var(--red)"};
+}
+
+/* ---------------- HAPTICS ---------------- */
+
+function haptic(pattern){
+  try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){}
+}
+
+/* ---------------- SESSION SAVE ---------------- */
+
+const SAVE_KEY = "spectre9Save";
+function loadSave(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    const d = raw ? JSON.parse(raw) : {};
+    return {
+      lifetimeBanished: d.lifetimeBanished||0,
+      lifetimeMissed: d.lifetimeMissed||0,
+      bestSession: d.bestSession||0,
+      sessions: (d.sessions||0)+1,
+    };
+  }catch(e){
+    return {lifetimeBanished:0, lifetimeMissed:0, bestSession:0, sessions:1};
+  }
+}
+const SAVE = loadSave();
+function saveSave(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); }catch(e){}
+}
+saveSave();
+
+/* ---------------- LOG ---------------- */
+
+const logListEl = document.getElementById("logList");
+const logEntries = [];
+function addLog(text){
+  const t = new Date().toLocaleTimeString([], {hour12:false});
+  logEntries.unshift({t,text});
+  if(logEntries.length>60) logEntries.length = 60;
+  logListEl.innerHTML = logEntries.map(e=>`<div><span class="ts">${e.t}</span>${e.text}</div>`).join("");
+}
+
+/* ---------------- AUDIO ---------------- */
+
+let audioCtx=null, masterGain=null;
+function ensureAudio(){
+  if(audioCtx) return;
+  try{
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = G.soundOn?0.35:0;
+    masterGain.connect(audioCtx.destination);
+  }catch(e){ audioCtx=null; }
+}
+function beep(freq, dur, opts={}){
+  if(!audioCtx || !G.soundOn) return;
+  const t0 = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = opts.type||"sine";
+  osc.frequency.setValueAtTime(freq, t0);
+  if(opts.to) osc.frequency.exponentialRampToValueAtTime(Math.max(30,opts.to), t0+dur);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(opts.peak||0.5, t0+0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  osc.connect(gain); gain.connect(masterGain);
+  osc.start(t0); osc.stop(t0+dur+0.02);
+}
+function playSound(kind){
+  if(!audioCtx) return;
+  if(kind==="ping") beep(920,0.09,{type:"sine",peak:0.3});
+  else if(kind==="banish") beep(700,0.22,{type:"triangle",to:260,peak:0.4});
+  else if(kind==="missed") beep(180,0.18,{type:"sine",to:90,peak:0.25});
+  else if(kind==="boost") beep(400,0.3,{type:"sawtooth",to:900,peak:0.25});
+  else if(kind==="cleanse") beep(300,0.5,{type:"square",to:1200,peak:0.2});
+  else if(kind==="evp") beep(550,0.12,{type:"square",peak:0.15});
+  else if(kind==="exorcist"){
+    beep(220,0.45,{type:"sine",to:440,peak:0.32});
+    setTimeout(()=>beep(660,0.55,{type:"triangle",peak:0.26}),160);
+  }
+}
+
+/* ---------------- CANVAS SETUP ---------------- */
+
+const canvas = document.getElementById("radar");
+const ctx = canvas.getContext("2d");
+let dpr = Math.max(1, window.devicePixelRatio||1);
+let size=0, CX=0, CY=0, R=0;
+
+function resizeCanvas(){
+  const wrap = canvas.parentElement;
+  size = wrap.clientWidth;
+  dpr = Math.max(1, window.devicePixelRatio||1);
+  canvas.width = Math.round(size*dpr);
+  canvas.height = Math.round(size*dpr);
+  canvas.style.width = size+"px";
+  canvas.style.height = size+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  CX = size/2; CY = size/2; R = size/2 - 6;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+function posAt(angleDeg, radiusPx){
+  const a = rad(angleDeg-90);
+  return { x: CX+Math.cos(a)*radiusPx, y: CY+Math.sin(a)*radiusPx };
+}
+
+/* ---------------- SPAWN / LIFECYCLE ---------------- */
+
+const SPAWN_INTERVAL_SCALE = 6;
+function computeSpawnInterval(){
+  const s = (G.sensitivity-1)/9;
+  let minMs = lerp(1900,500,s), maxMs = minMs*1.7;
+  minMs *= SPAWN_INTERVAL_SCALE; maxMs *= SPAWN_INTERVAL_SCALE;
+  const ramp = lerp(1, 0.72, clamp(elapsedMin()/8,0,1));
+  minMs*=ramp; maxMs*=ramp;
+  if(now()<G.boostUntil){ minMs*=0.5; maxMs*=0.5; }
+  return rand(minMs,maxMs);
+}
+
+function detectionThreshold(){
+  const s = (G.sensitivity-1)/9;
+  let t = lerp(3.5,9,s);
+  if(now()<G.boostUntil) t*=1.6;
+  return t;
+}
+
+function maxConcurrent(){
+  const rampBonus = Math.min(1, Math.floor(elapsedMin()/4));
+  return 2 + Math.round(G.sensitivity/4) + rampBonus + (now()<G.boostUntil?1:0);
+}
+
+function spawnHotspot(){
+  const type = weightedType();
+  const def = TYPES[type];
+  G.hotspots.push({
+    id:G.nextId++, type,
+    angle: Math.random()*360,
+    radiusFrac: rand(0.18,0.94),
+    state:"dormant",
+    timer:0, vanishTimer:0, born:now(),
+  });
+}
+
+function activeMsFor(type){
+  const def = TYPES[type];
+  const s=(G.sensitivity-1)/9;
+  let factor = lerp(1.15,0.85,s);
+  if(now()<G.boostUntil) factor*=1.45;
+  return rand(def.activeMs[0],def.activeMs[1])*factor;
+}
+
+/* ---------------- UPDATE ---------------- */
+
+let lastT = now();
+function update(dt){
+  const t = now();
+
+  // sweep
+  G.sweepAngle = (G.sweepAngle + SWEEP_SPEEDS[G.sweepMode]*dt) % 360;
+
+  // spawn
+  G.spawnTimer -= dt*1000;
+  const total = G.hotspots.filter(h=>h.state!=="gone").length;
+  if(G.spawnTimer<=0 && total<maxConcurrent()){
+    spawnHotspot();
+    G.spawnTimer = computeSpawnInterval();
+  }
+
+  const threshold = detectionThreshold();
+
+  for(const h of G.hotspots){
+    if(h.state==="dormant"){
+      if(angleDiff(G.sweepAngle,h.angle) < threshold){
+        h.state="active";
+        h.timer = activeMsFor(h.type);
+        h.pulseSeed = Math.random()*1000;
+        const def = TYPES[h.type];
+        addLog(`Detected <b style="color:${def.color}">${def.label}</b> at bearing ${Math.round(h.angle)}°`);
+        playSound("ping");
+      }
+    } else if(h.state==="active"){
+      h.timer -= dt*1000;
+      if(h.timer<=0){
+        h.state="vanishing"; h.vanishTimer=500;
+        G.missed++;
+        SAVE.lifetimeMissed++;
+        addLog("Signal lost — it slipped away before contact.");
+        playSound("missed");
+      }
+    } else if(h.state==="vanishing"){
+      h.vanishTimer -= dt*1000;
+      if(h.vanishTimer<=0) h.state="gone";
+    }
+  }
+  G.hotspots = G.hotspots.filter(h=>h.state!=="gone");
+
+  // EMF target
+  let emfSum = 0.3 + Math.random()*0.25;
+  for(const h of G.hotspots) if(h.state==="active") emfSum += TYPES[h.type].emf;
+  if(t<G.boostUntil) emfSum += 1.2;
+  G.emfTarget = clamp(emfSum, 0, 10);
+  G.emf = lerp(G.emf, G.emfTarget, 1-Math.pow(0.001,dt));
+
+  if(G.emf>7.2 && Math.random()<dt*1.2 && !document.body.classList.contains("flicker")){
+    document.body.classList.add("flicker");
+    setTimeout(()=>document.body.classList.remove("flicker"),400);
+    addLog("⚠ Lights flickered.");
+  }
+
+  // Temp target
+  let tempTarget = 68;
+  for(const h of G.hotspots) if(h.state==="active") tempTarget -= TYPES[h.type].tempDrop;
+  tempTarget = clamp(tempTarget, 28, 70) + Math.sin(t/4000)*0.6;
+  G.tempTarget = tempTarget;
+  G.temp = lerp(G.temp, G.tempTarget, 1-Math.pow(0.01,dt));
+
+  // Battery
+  let drain = 0.25 + G.hotspots.filter(h=>h.state==="active").length*0.15;
+  if(t<G.boostUntil) drain*=1.8;
+  if(G.spiritBoxOn) drain*=1.15;
+  G.battery = clamp(G.battery - drain*dt, 8, 100);
+
+  // Spirit box
+  G.spiritBoxTimer -= dt*1000;
+  if(G.spiritBoxOn && G.spiritBoxTimer<=0){
+    if(t < G.spiritBoxLockUntil){
+      // hold phrase
+    } else {
+      const activeCount = G.hotspots.filter(h=>h.state==="active").length;
+      const lockChance = 0.10 + activeCount*0.16;
+      if(Math.random()<lockChance){
+        G.spiritBoxText = EVP_PHRASES[Math.floor(Math.random()*EVP_PHRASES.length)];
+        G.spiritBoxLockUntil = t+1700;
+        addLog(`Spirit box: "${G.spiritBoxText}"`);
+        playSound("evp");
+      } else {
+        let s="";
+        for(let i=0;i<9;i++) s+=SCAN_CHARS[Math.floor(Math.random()*SCAN_CHARS.length)];
+        G.spiritBoxText = s;
+      }
+    }
+    G.spiritBoxTimer = 90+Math.random()*90;
+  } else if(!G.spiritBoxOn){
+    G.spiritBoxText = "— OFF —";
+  }
+
+  // particles
+  for(const p of G.particles){
+    p.life -= dt;
+    p.r += p.vr*dt;
+    p.x += p.vx*dt; p.y += p.vy*dt;
+  }
+  G.particles = G.particles.filter(p=>p.life>0);
+
+  // periodic save flush
+  G.saveTimer = (G.saveTimer||0) - dt*1000;
+  if(G.saveTimer<=0){ saveSave(); G.saveTimer = 8000; }
+}
+
+/* ---------------- DRAW ---------------- */
+
+function drawGrid(){
+  ctx.clearRect(0,0,size,size);
+  ctx.save();
+  ctx.translate(CX,CY);
+
+  ctx.strokeStyle = "rgba(61,255,160,0.16)";
+  ctx.lineWidth = 1;
+  for(const f of [0.25,0.5,0.75,1]){
+    ctx.beginPath(); ctx.arc(0,0,R*f,0,Math.PI*2); ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.moveTo(-R,0); ctx.lineTo(R,0);
+  ctx.moveTo(0,-R); ctx.lineTo(0,R);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(61,255,160,0.10)";
+  for(let d=0; d<360; d+=30){
+    const a = rad(d-90);
+    const inner = R*0.94, outer=R;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*inner, Math.sin(a)*inner);
+    ctx.lineTo(Math.cos(a)*outer, Math.sin(a)*outer);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSweep(){
+  ctx.save();
+  ctx.translate(CX,CY);
+  const steps=44;
+  for(let i=0;i<steps;i++){
+    const a = rad(G.sweepAngle - i*0.9 - 90);
+    const alpha = (1-i/steps)*0.22;
+    ctx.strokeStyle = `rgba(61,255,160,${alpha})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(Math.cos(a)*R, Math.sin(a)*R);
+    ctx.stroke();
+  }
+  const a0 = rad(G.sweepAngle-90);
+  ctx.strokeStyle = "rgba(120,255,190,0.9)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.lineTo(Math.cos(a0)*R, Math.sin(a0)*R);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawHotspots(){
+  const t = now();
+  for(const h of G.hotspots){
+    if(h.state==="dormant") continue;
+    const def = TYPES[h.type];
+    const p = posAt(h.angle, h.radiusFrac*R);
+    let alpha = 1;
+    if(h.state==="vanishing") alpha = clamp(h.vanishTimer/500,0,1);
+
+    const age = t - h.born;
+    const pulse = 1 + Math.sin((t+ (h.pulseSeed||0))/220)*0.12;
+    const baseR = clamp(size*0.028, 12, 26);
+
+    // ping rings while freshly active
+    const ringAge = age%1200;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y, baseR + ringAge*0.02, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(${hexToRgb(def.color)},${alpha*(1-ringAge/1200)*0.5})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // glow
+    const grad = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,baseR*2.4*pulse);
+    grad.addColorStop(0, `rgba(${hexToRgb(def.color)},${0.55*alpha})`);
+    grad.addColorStop(1, `rgba(${hexToRgb(def.color)},0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y, baseR*2.4*pulse, 0, Math.PI*2);
+    ctx.fill();
+
+    // core
+    ctx.beginPath();
+    ctx.arc(p.x,p.y, baseR*0.62*pulse, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(${hexToRgb(def.color)},${0.85*alpha})`;
+    ctx.fill();
+
+    // icon
+    ctx.globalAlpha = alpha;
+    ctx.font = `${Math.round(baseR*1.15)}px serif`;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(def.icon, p.x, p.y-1);
+    ctx.globalAlpha = 1;
+
+    h._sx = p.x; h._sy = p.y; h._r = baseR;
+  }
+}
+
+function drawParticles(){
+  for(const pt of G.particles){
+    const a = clamp(pt.life/pt.maxLife,0,1);
+    ctx.beginPath();
+    ctx.arc(pt.x,pt.y,Math.max(0,pt.r),0,Math.PI*2);
+    ctx.fillStyle = `rgba(${pt.rgb},${a*0.8})`;
+    ctx.fill();
+  }
+}
+
+function drawCenter(){
+  ctx.beginPath();
+  ctx.arc(CX,CY,3,0,Math.PI*2);
+  ctx.fillStyle = "rgba(61,255,160,0.8)";
+  ctx.fill();
+}
+
+function hexToRgb(hex){
+  const v = hex.replace("#","");
+  const r = parseInt(v.substring(0,2),16), g=parseInt(v.substring(2,4),16), b=parseInt(v.substring(4,6),16);
+  return `${r},${g},${b}`;
+}
+
+function draw(){
+  drawGrid();
+  drawSweep();
+  drawHotspots();
+  drawParticles();
+  drawCenter();
+}
+
+/* ---------------- EMF GAUGE ---------------- */
+
+const emfCanvas = document.getElementById("emfCanvas");
+const emfCtx = emfCanvas.getContext("2d");
+function drawEmfGauge(){
+  const w=emfCanvas.width, h=emfCanvas.height;
+  emfCtx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h-14, rad0=w/2-14;
+
+  const zones = [[0,3,"#3dffa0"],[3,6.5,"#ffcf5c"],[6.5,10,"#ff5c5c"]];
+  for(const [a,b,color] of zones){
+    emfCtx.beginPath();
+    emfCtx.strokeStyle=color; emfCtx.lineWidth=10; emfCtx.lineCap="butt";
+    emfCtx.arc(cx,cy,rad0, Math.PI+ (a/10)*Math.PI, Math.PI+(b/10)*Math.PI);
+    emfCtx.stroke();
+  }
+  const val = clamp(G.emf,0,10);
+  const angle = Math.PI + (val/10)*Math.PI;
+  emfCtx.save();
+  emfCtx.translate(cx,cy);
+  emfCtx.rotate(angle);
+  emfCtx.strokeStyle="#eafff5"; emfCtx.lineWidth=3;
+  emfCtx.beginPath(); emfCtx.moveTo(0,0); emfCtx.lineTo(rad0-6,0); emfCtx.stroke();
+  emfCtx.restore();
+  emfCtx.beginPath();
+  emfCtx.arc(cx,cy,4,0,Math.PI*2);
+  emfCtx.fillStyle="#eafff5"; emfCtx.fill();
+}
+
+/* ---------------- UI (throttled) ---------------- */
+
+const el = id=>document.getElementById(id);
+const bearingText = el("bearingText");
+const adviceBar = el("adviceBar");
+const adviceIcon = el("adviceIcon");
+const adviceText = el("adviceText");
+const emfValueEl = el("emfValue");
+const tempBigEl = el("tempBig");
+const tempSubEl = el("tempSub");
+const spiritBoxTextEl = el("spiritBoxText");
+const battFillEl = el("battFill");
+const battTextEl = el("battText");
+const statActiveEl = el("statActive");
+const statBanishedEl = el("statBanished");
+const statMissedEl = el("statMissed");
+const statBestEl = el("statBest");
+const careerLineEl = el("careerLine");
+const intensityPillEl = el("intensityPill");
+const banishedHeadEl = el("banishedHead");
+const boostBtn = el("boostBtn");
+const cleanseBtn = el("cleanseBtn");
+const exorcistBtn = el("exorcistBtn");
+
+let adviceHideAt = 0;
+
+function updateUI(){
+  bearingText.textContent = "BEARING " + String(Math.round(G.sweepAngle)).padStart(3,"0") + "°";
+
+  emfValueEl.textContent = G.emf.toFixed(1);
+
+  const displayTemp = G.tempUnitC ? (G.temp-32)*5/9 : G.temp;
+  tempBigEl.textContent = Math.round(displayTemp) + "°" + (G.tempUnitC?"C":"F");
+  tempBigEl.classList.toggle("cold", G.temp<50);
+  tempSubEl.textContent = G.temp<45 ? "cold spot detected" : (G.temp<58?"dropping":"steady");
+
+  spiritBoxTextEl.textContent = G.spiritBoxText;
+  spiritBoxTextEl.classList.toggle("locked", now()<G.spiritBoxLockUntil && G.spiritBoxOn);
+
+  battFillEl.style.width = G.battery.toFixed(0)+"%";
+  battTextEl.textContent = Math.round(G.battery)+"%";
+  battFillEl.style.background = G.battery<20 ? "var(--red)" : (G.battery<45 ? "var(--amber)" : "var(--green)");
+
+  const activeCount = G.hotspots.filter(h=>h.state==="active").length;
+  statActiveEl.textContent = activeCount;
+  statBanishedEl.textContent = G.banished;
+  statMissedEl.textContent = G.missed;
+  statBestEl.textContent = SAVE.bestSession;
+  banishedHeadEl.textContent = G.banished;
+  careerLineEl.innerHTML = `Lifetime: <b>${SAVE.lifetimeBanished}</b> banished across <b>${SAVE.sessions}</b> hunts`;
+
+  const intensity = intensityLabel();
+  intensityPillEl.innerHTML = `${intensity.icon} <span style="color:${intensity.color}">${intensity.text}</span>`;
+
+  const t = now();
+  if(t<G.boostUntil){
+    boostBtn.textContent = "⚡ BOOSTING…";
+    boostBtn.disabled = true;
+  } else if(t<G.boostCooldownUntil){
+    boostBtn.textContent = "RECHARGING " + Math.ceil((G.boostCooldownUntil-t)/1000)+"s";
+    boostBtn.disabled = true;
+  } else {
+    boostBtn.textContent = "⚡ BOOST SIGNAL";
+    boostBtn.disabled = false;
+  }
+  if(t<G.cleanseCooldownUntil){
+    cleanseBtn.textContent = "CLEANSING " + Math.ceil((G.cleanseCooldownUntil-t)/1000)+"s";
+    cleanseBtn.disabled = true;
+  } else {
+    cleanseBtn.textContent = "🪶 SAGE / CLEANSE AREA";
+    cleanseBtn.disabled = false;
+  }
+
+  if(t<G.exorcistCooldownUntil){
+    const remain = Math.ceil((G.exorcistCooldownUntil-t)/1000);
+    const mm = Math.floor(remain/60), ss = remain%60;
+    exorcistBtn.textContent = "☦ RESTING " + mm + ":" + String(ss).padStart(2,"0");
+    exorcistBtn.disabled = true;
+  } else {
+    exorcistBtn.textContent = "☦ CALL THE EXORCIST";
+    exorcistBtn.disabled = false;
+  }
+
+  if(t>adviceHideAt) adviceBar.classList.remove("show");
+}
+
+/* ---------------- INTERACTION ---------------- */
+
+function spawnParticles(x,y,color){
+  const rgb = hexToRgb(color);
+  for(let i=0;i<16;i++){
+    const ang = Math.random()*Math.PI*2;
+    const speed = rand(30,120);
+    G.particles.push({
+      x,y, vx:Math.cos(ang)*speed, vy:Math.sin(ang)*speed,
+      r:rand(2,5), vr:rand(-3,3), life:rand(0.4,0.9), maxLife:0.9, rgb
+    });
+  }
+}
+
+function showAdvice(def, message){
+  adviceIcon.textContent = def.icon;
+  adviceText.innerHTML = `<b>${def.label}:</b> ${message}`;
+  adviceBar.classList.add("show");
+  adviceHideAt = now()+4200;
+}
+
+function banish(h){
+  const def = TYPES[h.type];
+  const msgs = ADVICE[h.type];
+  const message = msgs[Math.floor(Math.random()*msgs.length)];
+  showAdvice(def, message);
+  addLog(`Banished <b style="color:${def.color}">${def.label}</b> — "${message}"`);
+  if(h._sx!=null) spawnParticles(h._sx, h._sy, def.color);
+  h.state = "gone";
+  G.banished++;
+  SAVE.lifetimeBanished++;
+  if(G.banished > SAVE.bestSession) SAVE.bestSession = G.banished;
+  saveSave();
+  playSound("banish");
+  haptic(h.type==="demonic" ? [15,40,15,40,25] : 30);
+}
+
+canvas.addEventListener("contextmenu", e=>e.preventDefault());
+canvas.addEventListener("pointerdown", e=>{
+  ensureAudio();
+  if(audioCtx && audioCtx.state==="suspended") audioCtx.resume();
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX-rect.left, y = e.clientY-rect.top;
+  let best=null, bestDist=Infinity;
+  for(const h of G.hotspots){
+    if(h.state!=="active" || h._sx==null) continue;
+    const d = Math.hypot(x-h._sx, y-h._sy);
+    const tol = Math.max(30, h._r*1.9);
+    if(d<tol && d<bestDist){ bestDist=d; best=h; }
+  }
+  if(best) banish(best);
+});
+
+/* ---------------- WAKE LOCK ---------------- */
+
+let wakeLock = null;
+async function requestWakeLock(){
+  try{
+    if("wakeLock" in navigator){
+      wakeLock = await navigator.wakeLock.request("screen");
+    }
+  }catch(e){ /* not supported / denied — ignore, purely cosmetic */ }
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState==="visible" && !wakeLock){
+    requestWakeLock();
+  }
+  if(document.visibilityState==="hidden"){
+    saveSave();
+  }
+});
+window.addEventListener("pagehide", saveSave);
+
+/* ---------------- CONTROLS ---------------- */
+
+document.body.addEventListener("pointerdown", ()=>{
+  ensureAudio();
+  if(audioCtx && audioCtx.state==="suspended") audioCtx.resume();
+  requestWakeLock();
+}, {once:true});
+
+el("sensitivitySlider").addEventListener("input", e=>{
+  G.sensitivity = +e.target.value;
+  el("sensVal").textContent = G.sensitivity;
+});
+
+el("sweepBtn").addEventListener("click", ()=>{
+  const idx = SWEEP_ORDER.indexOf(G.sweepMode);
+  G.sweepMode = SWEEP_ORDER[(idx+1)%SWEEP_ORDER.length];
+  el("sweepBtn").textContent = "SWEEP: " + G.sweepMode.toUpperCase();
+});
+
+el("boostBtn").addEventListener("click", ()=>{
+  const t = now();
+  if(t<G.boostCooldownUntil || t<G.boostUntil) return;
+  G.boostUntil = t+9000;
+  G.boostCooldownUntil = t+22000;
+  addLog("⚡ Signal booster engaged — expect a spike.");
+  playSound("boost");
+  haptic(20);
+});
+
+el("cleanseBtn").addEventListener("click", ()=>{
+  const t = now();
+  if(t<G.cleanseCooldownUntil) return;
+  for(const h of G.hotspots){
+    if(h.state==="active" && h._sx!=null){
+      spawnParticles(h._sx, h._sy, TYPES[h.type].color);
+    }
+    h.state="gone";
+  }
+  G.hotspots = [];
+  G.emf = 0.3; G.emfTarget = 0.3;
+  G.temp = 68; G.tempTarget = 68;
+  G.battery = 100;
+  G.cleanseCooldownUntil = t+18000;
+  addLog("🪶 Sage cleanse performed — area cleared, batteries swapped.");
+  playSound("cleanse");
+  haptic([20,30,20,30,40]);
+});
+
+el("exorcistBtn").addEventListener("click", ()=>{
+  const t = now();
+  if(t<G.exorcistCooldownUntil) return;
+  let cleared = 0, hadDemonic = false;
+  for(const h of G.hotspots){
+    if(h.state==="active" && h._sx!=null){
+      spawnParticles(h._sx, h._sy, "#ffe9b3");
+      cleared++;
+      if(h.type==="demonic") hadDemonic = true;
+    }
+    h.state = "gone";
+  }
+  G.hotspots = [];
+  if(cleared>0){
+    G.banished += cleared;
+    SAVE.lifetimeBanished += cleared;
+    if(G.banished > SAVE.bestSession) SAVE.bestSession = G.banished;
+  }
+  G.emf = clamp(G.emf+2, 0, 10);
+  G.emfTarget = 0.3;
+  G.temp = 68; G.tempTarget = 68;
+  saveSave();
+  if(hadDemonic){
+    const taunt = DEMON_TAUNTS[Math.floor(Math.random()*DEMON_TAUNTS.length)];
+    showAdvice({icon:"👹", label:"It screams"}, taunt);
+    addLog(`👹 It screams back: ${taunt}`);
+  } else {
+    const line = EXORCIST_LINES[Math.floor(Math.random()*EXORCIST_LINES.length)];
+    showAdvice({icon:"☦", label:"The Exorcist"}, line);
+  }
+  addLog(cleared>0
+    ? `☦ Father Doyle performs a full exorcism — ${cleared} ${cleared===1?"entity":"entities"} cast out${hadDemonic?", defiant to the last":""}.`
+    : "☦ Father Doyle arrives and prays over the room — nothing was there to banish.");
+  document.body.classList.add("holyFlash");
+  setTimeout(()=>document.body.classList.remove("holyFlash"),650);
+  G.exorcistCooldownUntil = t + EXORCIST_COOLDOWN_MS;
+  playSound("exorcist");
+  haptic([25,60,25,60,25,120]);
+});
+
+el("soundBtn").addEventListener("click", ()=>{
+  G.soundOn = !G.soundOn;
+  const btn = el("soundBtn");
+  btn.textContent = G.soundOn?"🔊":"🔇";
+  btn.classList.toggle("on", G.soundOn);
+  if(masterGain) masterGain.gain.value = G.soundOn?0.35:0;
+});
+
+el("spiritBoxBtn").addEventListener("click", ()=>{
+  G.spiritBoxOn = !G.spiritBoxOn;
+  const btn = el("spiritBoxBtn");
+  btn.textContent = "SPIRIT BOX: " + (G.spiritBoxOn?"ON":"OFF");
+  btn.classList.toggle("on", G.spiritBoxOn);
+});
+
+el("unitBtn").addEventListener("click", ()=>{ G.tempUnitC = !G.tempUnitC; });
+
+/* ---------------- FIELD GUIDE (LEGEND) ---------------- */
+
+(function buildLegend(){
+  const list = el("legendList");
+  list.innerHTML = Object.keys(TYPES).map(k=>{
+    const d = TYPES[k];
+    return `<div class="legendItem">
+        <span class="legendSwatch" style="box-shadow:0 0 0 2px ${d.color} inset;">${d.icon}</span>
+        <span class="legendCopy"><b style="color:${d.color}">${d.label}</b>${d.desc}</span>
+      </div>`;
+  }).join("");
+})();
+el("legendToggle").addEventListener("click", ()=>{
+  const list = el("legendList");
+  const open = list.classList.toggle("open");
+  el("legendToggle").textContent = open ? "HIDE ▴" : "SHOW ▾";
+});
+
+/* ---------------- MAIN LOOP ---------------- */
+
+function frame(){
+  const t = now();
+  let dt = (t-lastT)/1000;
+  dt = clamp(dt,0,0.05);
+  lastT = t;
+
+  update(dt);
+  draw();
+  drawEmfGauge();
+
+  G.uiTimer -= dt*1000;
+  if(G.uiTimer<=0){ updateUI(); G.uiTimer = 130; }
+
+  requestAnimationFrame(frame);
+}
+
+addLog("System online. Radar sweep initiated.");
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
