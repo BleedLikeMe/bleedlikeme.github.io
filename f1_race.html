@@ -11,7 +11,16 @@
   --yellow:#f2c94c; --blue:#2d9cdb; --border:#2a3140;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden;max-width:100%;}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:100%;}
+/* overflow-x:hidden on this combined selector alone would put it on BOTH html and body — and per the CSS
+   spec, an element with one overflow axis non-visible and the other left unset gets that axis forced to
+   auto, so both independently become overflow-y:auto. Two nested "scrollable" containers is an ambiguous
+   setup that silently breaks native touch-drag scrolling on mobile (found on buffy.html with the same
+   pattern, confirmed here too — a real finger-drag moved scrollY 0 -> 0 despite 1996px of content below
+   the fold): document.scrollingElement/scrollTo() resolve it fine for JS, so it looks correct in any
+   programmatic check, but a real finger-drag scrolls nothing. Keeping the horizontal clamp on html only
+   leaves a single, unambiguous scroller. */
+html{overflow-x:hidden;}
 h1{margin:0 0 6px 0;letter-spacing:2px;}
 .screen{width:100%;min-height:100vh;}
 #setup,#end{display:flex;align-items:center;justify-content:center;padding:32px 16px;}
