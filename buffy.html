@@ -12,7 +12,15 @@
     --gold:#d4af37; --gold2:#f0cf5f; --text:#e8dfee; --dim:#a894ba; --line:#3a2450;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{overflow-x:hidden;}
+  /* overflow-x:hidden on BOTH html and body (not just one) made both independently compute
+     overflow-y:auto too — per the CSS spec, an element with one axis non-visible and the other
+     left visible has that visible axis forced to auto. Two nested auto-scrolling containers
+     (html wrapping body, both "scrollable") is an ambiguous setup that native touch/gesture
+     scroll recognition on mobile silently gives up on, even though document.scrollingElement
+     still resolves to html for JS purposes — which is why programmatic scrollTo() always
+     worked fine while an actual finger-drag scrolled nothing at all. Only html needs the
+     horizontal clamp; leaving body's overflow unset keeps it a single, unambiguous scroller. */
+  html{overflow-x:hidden;}
   body{overscroll-behavior-y:contain;}
   body{
     margin:0; min-height:100vh; background:
