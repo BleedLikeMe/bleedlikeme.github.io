@@ -1591,8 +1591,30 @@ addEventListener('touchstart', ()=>{ uiPointerDown=true; }, true);
 addEventListener('touchend', ()=>{ uiPointerDown=false; }, true);
 addEventListener('touchcancel', ()=>{ uiPointerDown=false; }, true);
 
+// uiPointerDown alone covers the active drag (touchstart→touchend) but not what comes after: lifting your
+// finger to flick-scroll leaves momentum/inertial scrolling running on the compositor for a second or more,
+// entirely outside JS's control, *after* touchend has already fired and uiPointerDown has gone back to
+// false. Rendering resumed immediately into that momentum scroll — tearing down and rebuilding the kanban/
+// mgmt DOM 60x/sec while the browser was still physically scrolling it — which is what read as the list
+// "bouncing back" and made taps unreliable right after a scroll (heaviest on the Fleet tab, whose rows are
+// the most expensive to rebuild: a meter() bar, upgrade buttons and a relocate <select> per asset). A
+// 'scroll' listener doesn't bubble, but it does fire on ancestors during the capture phase, so one listener
+// here catches scrolling from #mgmtContent, #sidebar or any individual kanban column without needing to be
+// wired to each separately. uiScrolling stays true until 200ms after the *last* scroll event, which is long
+// enough to span a momentum scroll's trailing deceleration.
+let uiScrolling=false, scrollIdleTimer=null;
+addEventListener('scroll', ()=>{
+  uiScrolling=true;
+  clearTimeout(scrollIdleTimer);
+  scrollIdleTimer=setTimeout(()=>{ uiScrolling=false; }, 200);
+}, true);
+
 // ── MAIN LOOP ──────────────────────────────────────────────────────────
 let lastT = performance.now();
+let lastMgmtRender=0, lastSidebarRender=0;
+const UI_RENDER_INTERVAL=300; // ms — mgmt/sidebar show slow-changing data (condition, fuel, incident age),
+// not something that needs 60fps; every action button already calls renderMgmt()/renderSidebar() itself
+// right after mutating state, so this only throttles the frame loop's passive catch-up render, not clicks.
 function frame(now){
   requestAnimationFrame(frame);
   let dt = (now-lastT)/1000; lastT=now; dt=Math.min(dt,0.1);
@@ -1606,8 +1628,13 @@ function frame(now){
 
   if(G){
     renderTopbar();
-    if(G.view==='ops'){ bindRadarClicks(); bindKanbanClicks(); drawRadar(); if(!uiPointerDown) renderSidebar(); }
-    if(G.view==='mgmt' && !uiPointerDown){ renderMgmt(); }
+    if(G.view==='ops'){
+      bindRadarClicks(); bindKanbanClicks(); drawRadar();
+      if(!uiPointerDown && !uiScrolling && now-lastSidebarRender>=UI_RENDER_INTERVAL){ renderSidebar(); lastSidebarRender=now; }
+    }
+    if(G.view==='mgmt' && !uiPointerDown && !uiScrolling && now-lastMgmtRender>=UI_RENDER_INTERVAL){
+      renderMgmt(); lastMgmtRender=now;
+    }
   }
 }
 
