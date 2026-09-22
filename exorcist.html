@@ -317,6 +317,14 @@ const TYPES = {
     desc:"Hostile and dangerous. Do not engage — leave immediately." },
   regan:      { label:"Regan (Possessed)", icon:"👧", color:"#8aff5c", weight:3,  activeMs:[2200,3400], emf:8.5, tempDrop:6,
     desc:"A young girl, possessed and venomous. Foul-mouthed and vicious — brace yourself." },
+  pazuzu:     { label:"Pazuzu",            icon:"👺", color:"#c21807", weight:1,  activeMs:[1800,2800], emf:9.8, tempDrop:8,
+    desc:"The ancient demon behind it all — older, colder, and far more dangerous than anything else on this radar." },
+  valak:      { label:"Valak",             icon:"🌚", color:"#6a3fa0", weight:2,  activeMs:[2000,3000], emf:8.0, tempDrop:5,
+    desc:"A demonic nun wearing a human soul like a habit. Desecrates anything holy nearby." },
+  samara:     { label:"Samara",            icon:"📼", color:"#9fb8c2", weight:3,  activeMs:[3000,4500], emf:5.0, tempDrop:4,
+    desc:"A drowned girl crawls from static and shadow. She doesn't shout — the silence is worse." },
+  pinhead:    { label:"Pinhead",           icon:"📌", color:"#d4af37", weight:2,  activeMs:[2000,3200], emf:8.7, tempDrop:5,
+    desc:"A Cenobite from beyond. Pain and pleasure are the same doctrine to him." },
 };
 
 const ADVICE = {
@@ -364,6 +372,38 @@ const ADVICE = {
     "\"I'll take you all down with me.\"",
     "Do not engage. Get a priest. Now."
   ],
+  pazuzu:[
+    "\"I am the demon of the southwest wind. Bringer of famine.\"",
+    "A voice older than scripture rasps through the static.",
+    "\"You cannot banish what you do not understand.\"",
+    "The air turns to ash in your lungs.",
+    "\"Every house falls, in time.\"",
+    "It does not scream. It simply is — and it is ancient."
+  ],
+  valak:[
+    "\"God will not save you here.\"",
+    "It mocks the sign of the cross with a broken smile.",
+    "A rosary snaps to pieces in your hand.",
+    "\"I've worn better skins than yours.\"",
+    "The scent of rotting incense fills the room.",
+    "\"Ave Maria...\" it hisses, and laughs."
+  ],
+  samara:[
+    "Seven days.",
+    "She doesn't speak. She just... crawls closer.",
+    "Wet footsteps cross the ceiling above you.",
+    "The television in the other room turns itself on.",
+    "Her hair covers her face. You're glad you can't see it.",
+    "She only ever asks one question: \"Did you watch it?\""
+  ],
+  pinhead:[
+    "\"We have such sights to show you.\"",
+    "\"Your suffering will be legendary, even in hell.\"",
+    "\"No tears, please. It's a waste of good suffering.\"",
+    "Chains rattle somewhere just out of sight.",
+    "\"Angels to some. Demons to others.\"",
+    "It smiles with a face full of pins."
+  ],
 };
 
 const EVP_PHRASES = [
@@ -397,6 +437,7 @@ const DEMON_TAUNTS = [
   "It spits and thrashes, snarling your name.",
   "\"I'll take you all down with me.\"",
 ];
+const TAUNT_PRIORITY = ["pazuzu","valak","pinhead","regan"];
 
 /* ---------------- STATE ---------------- */
 
@@ -438,7 +479,7 @@ function weightedType(){
   const tierBoost = clamp(elapsedMin()/10, 0, 1);
   const weights = keys.map(k=>{
     const base = TYPES[k].weight;
-    const isHigherTier = (k==="shadow"||k==="poltergeist"||k==="demonic"||k==="regan");
+    const isHigherTier = (k==="shadow"||k==="poltergeist"||k==="demonic"||k==="regan"||k==="pazuzu"||k==="valak"||k==="samara"||k==="pinhead");
     return isHigherTier ? base*(1+tierBoost*1.2) : base*(1-tierBoost*0.3);
   });
   const total = weights.reduce((s,w)=>s+w,0);
@@ -998,7 +1039,8 @@ function banish(h){
   if(G.banished > SAVE.bestSession) SAVE.bestSession = G.banished;
   saveSave();
   playSound("banish");
-  haptic((h.type==="demonic"||h.type==="regan") ? [15,40,15,40,25] : 30);
+  const strongTypes = ["demonic","regan","pazuzu","valak","pinhead"];
+  haptic(strongTypes.includes(h.type) ? [15,40,15,40,25] : (h.type==="samara" ? 90 : 30));
 }
 
 canvas.addEventListener("contextmenu", e=>e.preventDefault());
@@ -1088,13 +1130,13 @@ el("cleanseBtn").addEventListener("click", ()=>{
 el("exorcistBtn").addEventListener("click", ()=>{
   const t = now();
   if(t<G.exorcistCooldownUntil) return;
-  let cleared = 0, hadDemonic = false, hadRegan = false;
+  let cleared = 0;
+  const clearedTypes = new Set();
   for(const h of G.hotspots){
     if(h.state==="active" && h._sx!=null){
       spawnParticles(h._sx, h._sy, "#ffe9b3");
       cleared++;
-      if(h.type==="demonic") hadDemonic = true;
-      if(h.type==="regan") hadRegan = true;
+      clearedTypes.add(h.type);
     }
     h.state = "gone";
   }
@@ -1108,20 +1150,29 @@ el("exorcistBtn").addEventListener("click", ()=>{
   G.emfTarget = 0.3;
   G.temp = 68; G.tempTarget = 68;
   saveSave();
-  if(hadRegan){
-    const taunt = ADVICE.regan[Math.floor(Math.random()*ADVICE.regan.length)];
-    showAdvice({icon:"👧", label:"Regan screams"}, taunt);
-    addLog(`👧 Regan screams: ${taunt}`);
-  } else if(hadDemonic){
+
+  const namedType = TAUNT_PRIORITY.find(k=>clearedTypes.has(k));
+  let defiant = false;
+  if(namedType){
+    const def = TYPES[namedType];
+    const taunt = ADVICE[namedType][Math.floor(Math.random()*ADVICE[namedType].length)];
+    showAdvice({icon:def.icon, label:def.label+" screams"}, taunt);
+    addLog(`${def.icon} ${def.label} screams back: ${taunt}`);
+    defiant = true;
+  } else if(clearedTypes.has("demonic")){
     const taunt = DEMON_TAUNTS[Math.floor(Math.random()*DEMON_TAUNTS.length)];
     showAdvice({icon:"👹", label:"It screams"}, taunt);
     addLog(`👹 It screams back: ${taunt}`);
+    defiant = true;
+  } else if(clearedTypes.has("samara")){
+    showAdvice({icon:"📼", label:"Samara"}, "She doesn't scream. She just stops moving, and is gone.");
+    addLog("📼 Samara falls still, then vanishes without a sound.");
   } else {
     const line = EXORCIST_LINES[Math.floor(Math.random()*EXORCIST_LINES.length)];
     showAdvice({icon:"☦", label:"The Exorcist"}, line);
   }
   addLog(cleared>0
-    ? `☦ Father Doyle performs a full exorcism — ${cleared} ${cleared===1?"entity":"entities"} cast out${(hadDemonic||hadRegan)?", defiant to the last":""}.`
+    ? `☦ Father Doyle performs a full exorcism — ${cleared} ${cleared===1?"entity":"entities"} cast out${defiant?", defiant to the last":""}.`
     : "☦ Father Doyle arrives and prays over the room — nothing was there to banish.");
   document.body.classList.add("holyFlash");
   setTimeout(()=>document.body.classList.remove("holyFlash"),650);
