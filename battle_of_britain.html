@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Their Finest Hour — The Northern Sectors, 1940</title>
+<style>
+:root{--bg:#0d1014;--panel:#161b22;--panel2:#1d242d;--line:#2d3743;--ink:#e8dfc8;--dim:#978f7c;--gold:#d8b25a;--raf:#5a9be8;--lw:#e2553f;--ok:#6cbf6a;--warn:#e3a83c;--bad:#e2553f}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:Georgia,'Times New Roman',serif;overflow:hidden;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+#app{display:flex;flex-direction:column;height:100vh}
+#topbar{display:flex;align-items:center;gap:14px;padding:6px 12px;background:linear-gradient(#222a33,#161b22);border-bottom:2px solid var(--gold);flex-wrap:wrap;flex-shrink:0}
+.brand{font-size:17px;letter-spacing:3px;color:var(--gold);font-weight:bold;line-height:1.05}
+.brand span{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);font-weight:normal}
+.tb{line-height:1.25;font-size:12px}
+.tb .big{font-size:15px;color:var(--ink)}
+.dim{color:var(--dim)}
+.gauge{position:relative;width:150px;height:11px;background:#0a0d10;border:1px solid var(--line);border-radius:2px;overflow:hidden;margin-top:2px}
+.gauge i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#7a5a20,var(--bad));display:block}
+.gauge.good i{background:linear-gradient(90deg,#355e8e,var(--raf))}
+.speeds{display:flex;gap:2px}
+.speeds button,.tools button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);padding:4px 8px;font-size:12px;border-radius:2px}
+.speeds button.on{background:var(--gold);color:#111;border-color:var(--gold)}
+.tools{display:flex;gap:3px;margin-left:auto}
+.tools button.on{border-color:var(--raf);color:var(--raf)}
+#main{flex:1;display:flex;min-height:0}
+#mapWrap{flex:1;position:relative;min-width:0;background:#0e2230;overflow:hidden}
+#map{display:block;cursor:crosshair;touch-action:none}
+#toast{position:absolute;right:8px;bottom:8px;max-width:340px;background:rgba(22,27,34,.96);border:1px solid var(--gold);border-radius:3px;padding:7px 10px;font-size:12px;cursor:pointer;display:none;line-height:1.4}
+#toast.show{display:block}
+#mapHint{position:absolute;left:8px;bottom:8px;background:rgba(10,13,16,.82);border:1px solid var(--line);padding:5px 9px;font-size:12px;border-radius:3px;pointer-events:none;max-width:70%}
+#side{width:410px;flex-shrink:0;background:var(--panel);border-left:2px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+#tabs button{flex:1;background:none;border:none;color:var(--dim);padding:7px 4px;font-size:12px;letter-spacing:.5px;border-bottom:2px solid transparent}
+#tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
+#sideContent{flex:1;overflow-y:auto;padding:8px 10px 20px}
+h3{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:12px 0 6px;border-bottom:1px solid var(--line);padding-bottom:3px}
+h3:first-child{margin-top:2px}
+.hint{font-size:12px;color:var(--dim);padding:6px 8px;background:var(--panel2);border-radius:3px;border-left:3px solid var(--raf)}
+.order{background:#18263a;border:1px solid #2f4a6e;border-radius:3px;padding:8px;font-size:12.5px}
+.order .row{display:flex;align-items:center;gap:4px;margin-top:6px;flex-wrap:wrap}
+.btn{background:var(--panel2);color:var(--ink);border:1px solid var(--line);padding:3px 8px;font-size:12px;border-radius:2px}
+.btn:hover{border-color:var(--gold)}
+.btn.on{background:var(--raf);color:#08121e;border-color:var(--raf)}
+.btn.gold{background:var(--gold);color:#111;border-color:var(--gold)}
+.btn.red{border-color:var(--bad);color:#f3a595}
+.btn[disabled]{opacity:.4;cursor:default}
+.card{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--lw);border-radius:3px;padding:6px 8px;margin-bottom:5px;font-size:12px;cursor:pointer}
+.card.sel{border-color:var(--gold);border-left-color:var(--gold)}
+.card.lost{opacity:.6}
+.card .top{font-size:13px}
+.rlabel{background:var(--lw);color:#fff;padding:0 4px;border-radius:2px;font-weight:bold;margin-right:4px}
+.sqrow{display:grid;grid-template-columns:40px 50px 1fr 42px 46px 66px;align-items:center;gap:4px;padding:4px 5px;border-radius:2px;font-size:12px;cursor:pointer;border:1px solid transparent}
+.sqrow:hover{background:var(--panel2)}
+.sqrow.sel{border-color:var(--raf);background:#18263a}
+.sqrow .n{font-weight:bold;color:var(--raf)}
+.link{color:var(--raf);cursor:pointer;text-decoration:underline dotted}
+.stat label{display:flex;align-items:center;gap:5px}
+.bar{height:6px;background:#0a0d10;border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%}
+.chip{font-size:10.5px;padding:1px 4px;border-radius:2px;background:#2a323c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.ready{background:#244a2a;color:#a8e0a2}
+.chip.avail{background:#3d3a22;color:#e6d38c}
+.chip.rel{background:#2a2a2a;color:#9a9a9a}
+.chip.air{background:#1d3858;color:#9fcaff}
+.chip.eng{background:#5a2a1e;color:#ffb39f}
+.chip.train{background:#34294a;color:#cbb3f0}
+.sectorhd{font-size:11px;color:var(--dim);margin:8px 0 2px;letter-spacing:1px;text-transform:uppercase}
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th{text-align:left;color:var(--dim);font-weight:normal;border-bottom:1px solid var(--line);padding:3px 3px;font-size:11px}
+table.t td{border-bottom:1px solid #222a33;padding:4px 3px;vertical-align:middle}
+select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);font-family:inherit;font-size:11.5px;padding:2px}
+.logline{font-size:12px;padding:3px 0;border-bottom:1px solid #20262e;line-height:1.35}
+.logline .tm{color:var(--dim);font-size:11px;margin-right:6px}
+.logline.loss{color:#ff9d8a;font-weight:bold}.logline.raf{color:#bcd8ff}.logline.lw{color:#ffc2b6}.logline.warn{color:#f2cf86}.logline.good{color:#b8e7b2}.logline.hist{color:var(--gold);font-style:italic}
+.stat{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0}
+.works{background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:7px 8px;margin-bottom:6px;font-size:12px}
+.works.active{border-color:var(--gold)}
+.works.done{opacity:.55}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modal.show{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--gold);border-radius:4px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:18px 22px;box-shadow:0 10px 50px #000}
+.mbox h2{color:var(--gold);font-size:20px;margin-bottom:4px;letter-spacing:1px}
+.mbox .sub{color:var(--dim);font-size:12px;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase}
+.mbox p{line-height:1.5;margin-bottom:10px}
+.mbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.mbtns .btn{padding:7px 14px;font-size:13px}
+.rep{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:13px;margin:6px 0 10px}
+.rep div{display:flex;justify-content:space-between;border-bottom:1px dotted #2d3743;padding:2px 0}
+.pick{display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:3px;margin-bottom:4px;cursor:pointer;font-size:12.5px}
+.pick.on{border-color:var(--gold);background:#2a2618}
+#title{position:fixed;inset:0;z-index:60;background:radial-gradient(ellipse at 50% 30%,#1c2c3c,#07090c 75%);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+#title.hide{display:none}
+.tbox{max-width:680px;width:100%;text-align:center}
+.tbox h1{font-size:42px;letter-spacing:6px;color:var(--gold);font-weight:normal;margin-bottom:4px}
+.tbox .tag{letter-spacing:3px;color:var(--dim);font-size:13px;margin-bottom:22px;text-transform:uppercase}
+.tbox p{line-height:1.6;margin-bottom:14px;text-align:left}
+.starts{display:flex;flex-direction:column;gap:8px;margin:18px 0}
+.starts button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:11px 14px;text-align:left;font-size:14px;border-radius:3px}
+.starts button:hover{border-color:var(--gold)}
+.starts button b{color:var(--gold)}
+.starts button span{display:block;color:var(--dim);font-size:12px;margin-top:2px}
+@media (max-width:760px){
+  body{overflow:auto}
+  #app{height:auto;min-height:100vh}
+  #main{flex-direction:column}
+  #mapWrap{height:58vh;flex:0 0 auto}
+  #side{width:100%;border-left:none;border-top:2px solid var(--line);min-height:50vh}
+  #sideContent{overflow:visible}
+  .tools{margin-left:0}
+  .brand{font-size:14px}
+  .gauge{width:110px}
+  .rep{grid-template-columns:1fr}
+  .tbox h1{font-size:28px;letter-spacing:3px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="brand">THEIR FINEST HOUR<span>Northern Sectors · HQ Glasgow</span></div>
+    <canvas id="clock" width="46" height="46" title="Sector clock"></canvas>
+    <div class="tb"><div class="big" id="tbDate"></div><div class="dim" id="tbTime"></div></div>
+    <div class="tb"><div id="tbPhase"></div><div class="dim" id="tbWeather"></div></div>
+    <div class="tb"><div class="dim">Invasion threat <b id="tbGaugeN"></b></div><div class="gauge" title="Luftwaffe air superiority in the south. At 100, Operation Sealion is launched."><i id="tbGauge"></i></div></div>
+    <div class="tb"><div class="dim">Air Ministry confidence <b id="tbStandN"></b></div><div class="gauge good" title="If this reaches 0 you are relieved of command."><i id="tbStand"></i></div></div>
+    <div class="speeds" id="speeds"><button data-speed="0" title="Pause (Space)">❚❚</button><button data-speed="1">1×</button><button data-speed="2">2×</button><button data-speed="3">4×</button><button data-speed="4">8×</button></div>
+    <div class="tools"><button id="btnFF" title="Fast-forward while no hostiles are plotted">Quiet ⏩</button><button id="btnRadar" title="Show radar cover (R)">Radar</button><button id="btnSound">Sound</button><button id="btnHelp">?</button><button id="btnMenu">Menu</button></div>
+  </div>
+  <div id="main">
+    <div id="mapWrap"><canvas id="map"></canvas><div id="mapHint"></div><div id="toast"></div></div>
+    <div id="side">
+      <div id="tabs">
+        <button data-tab="ops">Ops</button><button data-tab="sqn">Squadrons</button><button data-tab="south">The South</button><button data-tab="works">Works</button><button data-tab="stn">Stations</button><button data-tab="log">Log</button>
+      </div>
+      <div id="sideContent"></div>
+    </div>
+  </div>
+</div>
+<div id="modal"><div class="mbox" id="modalBody"></div></div>
+<div id="title">
+  <div class="tbox">
+    <h1>THEIR FINEST HOUR</h1>
+    <div class="tag">The Northern Sectors · 1940</div>
+    <p>France is falling. The last of the army is coming home from Dunkirk, and Norway will soon be in German hands. That puts Luftflotte 5's bombers at Stavanger, three hundred miles across the North Sea from your coast.</p>
+    <p>You are the Air Officer Commanding the northern fighter sectors, with your headquarters in <b>Glasgow</b>. Your squadrons guard Scapa Flow and the Home Fleet, the Forth and Rosyth, the Clyde shipyards, Rolls-Royce at Hillington, and the ports and airfields from Tyneside to Orkney.</p>
+    <p>The battle for Britain will be decided in the south, and Dowding knows it. When 11 Group starts to bleed, he will ask for your best squadrons. Send too few and the Luftwaffe wins air superiority over Kent, and the invasion comes. Send too many and the raiders from Norway get through to the Clyde. Your job is to hold both.</p>
+    <div class="starts" id="starts">
+      <button data-start="jun"><b>1 June 1940: The lead-up</b><span>Dunkirk ends. Build your defences, train your squadrons and get ready. (Full campaign, to 31 October)</span></button>
+      <button data-start="jul"><b>10 July 1940: The battle opens</b><span>The Channel battles begin, and Dowding will soon want squadrons.</span></button>
+      <button data-start="aug"><b>13 August 1940: Adlertag</b><span>Eagle Day. The crisis in the south is close, and Luftflotte 5 is about to try its luck.</span></button>
+      <button id="btnContinue" style="display:none"><b>Continue campaign</b><span id="contInfo"></span></button>
+    </div>
+    <p class="dim" style="text-align:center;font-size:12px">Squadron dispositions, radar sites and dates are researched but simplified. The Glasgow command is a slight fictionalisation, since the real 13 Group was run from Newcastle.</p>
+  </div>
+</div>
+<script>
+'use strict';
+const HEADLESS = typeof document==='undefined';
+const SAVE_KEY='bobNorthSave';
+
+// ── UTIL ──
+const rnd=Math.random;
+const rrange=(a,b)=>a+rnd()*(b-a);
+const rint=(a,b)=>Math.floor(a+rnd()*(b-a+1));
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const pad2=n=>String(n).padStart(2,'0');
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const round5=n=>Math.max(5,Math.round(n/5)*5);
+function gauss(){return Math.sqrt(-2*Math.log(1-rnd()))*Math.cos(2*Math.PI*rnd());}
+function poisson(l){if(!(l>0))return 0;if(l>30)return Math.max(0,Math.round(l+Math.sqrt(l)*gauss()));const L=Math.exp(-l);let k=0,p=1;do{k++;p*=rnd();}while(p>L);return k-1;}
+function wpick(obj){let tot=0;for(const k in obj)tot+=obj[k];if(tot<=0)return null;let r=rnd()*tot;for(const k in obj){r-=obj[k];if(r<=0)return k;}return Object.keys(obj)[0];}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ── GEOGRAPHY (world units are statute miles; x east, y south) ──
+const LON0=-6.4, LON1=-0.3, LAT0=54.55, LAT1=59.25;
+const MX=37.8, MY=69.0;
+const WORLD_W=(LON1-LON0)*MX, WORLD_H=(LAT1-LAT0)*MY;
+function W(lon,lat){return {x:(lon-LON0)*MX,y:(LAT1-lat)*MY};}
+const polyLL=a=>a.map(p=>W(p[0],p[1]));
+const MAINLAND=polyLL([[-1.05,54.40],[-1.18,54.62],[-1.30,54.78],[-1.37,54.91],[-1.42,55.02],[-1.50,55.13],[-1.57,55.33],[-1.62,55.50],[-1.80,55.66],[-2.00,55.77],[-2.14,55.91],[-2.52,56.00],[-2.72,56.06],[-2.83,56.04],[-3.05,55.95],[-3.17,55.98],[-3.30,55.98],[-3.40,55.99],[-3.60,56.02],[-3.72,56.02],[-3.76,56.07],[-3.63,56.055],[-3.43,56.025],[-3.23,56.06],[-3.15,56.11],[-3.00,56.19],[-2.82,56.19],[-2.58,56.28],[-2.80,56.34],[-2.82,56.43],[-2.88,56.45],[-3.20,56.37],[-3.22,56.39],[-3.06,56.45],[-2.97,56.46],[-2.87,56.47],[-2.73,56.47],[-2.71,56.50],[-2.58,56.56],[-2.47,56.71],[-2.21,56.96],[-2.08,57.14],[-1.95,57.30],[-1.78,57.51],[-2.00,57.69],[-2.52,57.67],[-2.90,57.69],[-3.28,57.72],[-3.49,57.70],[-3.87,57.59],[-4.04,57.57],[-4.22,57.49],[-4.24,57.51],[-4.13,57.58],[-4.04,57.68],[-4.30,57.66],[-4.25,57.70],[-4.00,57.72],[-3.78,57.86],[-4.05,57.82],[-4.03,57.88],[-3.97,57.97],[-3.85,58.01],[-3.65,58.12],[-3.42,58.25],[-3.29,58.30],[-3.09,58.44],[-3.12,58.53],[-3.03,58.64],[-3.37,58.67],[-3.52,58.60],[-4.00,58.57],[-4.42,58.53],[-4.75,58.57],[-5.00,58.62],[-5.05,58.46],[-5.18,58.38],[-5.35,58.24],[-5.24,58.15],[-5.35,58.02],[-5.16,57.90],[-5.45,57.88],[-5.82,57.86],[-5.70,57.72],[-5.80,57.60],[-5.82,57.43],[-5.71,57.28],[-5.62,57.20],[-5.75,57.05],[-5.83,57.00],[-5.85,56.90],[-5.90,56.76],[-6.22,56.73],[-6.10,56.69],[-5.78,56.54],[-5.60,56.48],[-5.47,56.41],[-5.52,56.33],[-5.58,56.15],[-5.55,56.09],[-5.70,55.90],[-5.66,55.65],[-5.73,55.42],[-5.80,55.30],[-5.63,55.31],[-5.58,55.42],[-5.47,55.59],[-5.34,55.77],[-5.18,55.82],[-4.98,55.86],[-4.93,55.95],[-4.90,55.99],[-4.82,55.98],[-4.73,56.00],[-4.65,55.96],[-4.57,55.94],[-4.45,55.91],[-4.29,55.862],[-4.29,55.855],[-4.39,55.885],[-4.69,55.935],[-4.76,55.948],[-4.82,55.955],[-4.88,55.94],[-4.89,55.87],[-4.87,55.79],[-4.82,55.64],[-4.68,55.61],[-4.66,55.54],[-4.63,55.46],[-4.86,55.24],[-5.00,55.10],[-5.03,54.91],[-5.16,55.00],[-5.12,54.84],[-4.86,54.64],[-4.83,54.86],[-4.39,54.68],[-4.43,54.87],[-4.05,54.78],[-3.60,54.87],[-3.26,54.98],[-3.05,54.96],[-3.39,54.87],[-3.50,54.72],[-3.57,54.64],[-3.60,54.55],[-3.65,54.40]]);
+const ULSTER=polyLL([[-6.6,55.25],[-6.15,55.22],[-6.00,55.06],[-5.80,54.85],[-5.68,54.72],[-5.53,54.60],[-5.50,54.40],[-6.6,54.40]]);
+const ARRAN=polyLL([[-5.37,55.70],[-5.13,55.70],[-5.08,55.55],[-5.15,55.44],[-5.35,55.45],[-5.40,55.55]]);
+const BUTE=polyLL([[-5.10,55.93],[-5.02,55.90],[-5.03,55.76],[-5.12,55.78]]);
+const ISLAY=polyLL([[-6.50,55.85],[-6.10,55.93],[-6.05,55.70],[-6.20,55.62],[-6.35,55.68],[-6.50,55.70]]);
+const JURA=polyLL([[-5.95,56.15],[-5.75,56.10],[-5.85,55.85],[-6.05,55.85],[-5.98,56.00]]);
+const MULL=polyLL([[-6.35,56.55],[-6.10,56.62],[-5.85,56.55],[-5.65,56.45],[-5.80,56.32],[-6.40,56.30]]);
+const SKYE=polyLL([[-6.45,57.70],[-6.15,57.70],[-5.90,57.45],[-5.65,57.25],[-5.95,57.05],[-6.15,57.20],[-6.40,57.30],[-6.45,57.50]]);
+const ORKNEY=polyLL([[-3.40,59.10],[-3.00,59.15],[-2.70,59.00],[-2.85,58.93],[-3.10,58.97],[-3.35,58.95]]);
+const HOY=polyLL([[-3.45,58.92],[-3.20,58.92],[-3.15,58.78],[-3.30,58.77],[-3.40,58.83]]);
+const SRONALDSAY=polyLL([[-3.00,58.84],[-2.88,58.84],[-2.90,58.73],[-3.00,58.75]]);
+const LAND=[MAINLAND,ULSTER,ARRAN,BUTE,ISLAY,JURA,MULL,SKYE,ORKNEY,HOY,SRONALDSAY];
+function pointInPoly(p,poly){let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if(((a.y>p.y)!==(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x))inside=!inside;}return inside;}
+function overLand(x,y){const p={x,y};for(const poly of LAND)if(pointInPoly(p,poly))return true;return false;}
+
+const PLACES=[['Glasgow',-4.25,55.86,1],['Edinburgh',-3.19,55.95,1],['Aberdeen',-2.10,57.15,1],['Dundee',-2.97,56.46],['Inverness',-4.22,57.48],['Perth',-3.43,56.40],['Stirling',-3.94,56.12],['Thurso',-3.52,58.59],['Kirkwall',-2.96,58.98],['Stranraer',-5.03,54.90],['Ayr',-4.63,55.46],['Oban',-5.47,56.41],['Fort William',-5.11,56.82],['Newcastle',-1.61,54.98],['Carlisle',-2.93,54.89],['Berwick',-2.00,55.77],['Peterhead',-1.78,57.51],['Belfast',-5.93,54.60],
+ ['NORTH SEA',-1.3,57.9,2],['HIGHLANDS',-4.6,57.15,2],['MORAY FIRTH',-3.4,57.85,3],['FIRTH OF FORTH',-2.75,56.13,3],['FIRTH OF CLYDE',-5.02,55.55,3],['ORKNEY',-3.05,59.16,3],['SOUTHERN UPLANDS',-3.6,55.4,2],['ATLANTIC',-6.1,58.6,2]];
+const ORIGINS={stavanger:{name:'Stavanger',...W(5.63,58.88)},aalborg:{name:'Aalborg',...W(9.92,57.05)}};
+
+// ── DATES ──
+const DAY_START=360, DAY_END=1200;
+const SPEEDS=[0,2,4,8,16];
+const DAY0=Date.UTC(1940,5,1);
+function dayOf(m,d){return Math.round((Date.UTC(1940,m-1,d)-DAY0)/86400000);}
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WDAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function dateStr(day,long){const dt=new Date(DAY0+day*86400000);return (long?WDAYS[dt.getUTCDay()]+' ':'')+dt.getUTCDate()+' '+MONTHS[dt.getUTCMonth()]+' 1940';}
+function clockStr(min){min=Math.floor(min);return pad2(Math.floor(min/60))+':'+pad2(min%60);}
+const D_KANAL=dayOf(7,10), D_ADLER=dayOf(8,13), D_BLITZ=dayOf(9,7), D_LATE=dayOf(10,1), D_END=dayOf(10,31);
+function phaseOf(day){return day<D_KANAL?'lead':day<D_ADLER?'kanal':day<D_BLITZ?'adler':day<D_LATE?'blitz':'late';}
+const PHASE_NAMES={lead:'The lead-up',kanal:'Channel battles in the south',adler:'Adlerangriff: the airfields',blitz:'The Blitz on London',late:'The autumn fighting'};
+
+// ── DATA ──
+const RAF_TYPES={
+  hurricane:{name:'Hurricane',short:'Hurri',speed:5.0,climb:2300,endurance:85,vsF:0.82,vsB:1.05,lossMult:1.1},
+  spitfire:{name:'Spitfire',short:'Spit',speed:5.6,climb:2800,endurance:80,vsF:1.0,vsB:1.0,lossMult:0.95},
+  defiant:{name:'Defiant',short:'Defiant',speed:4.5,climb:1900,endurance:95,vsF:0.4,vsB:1.15,lossMult:1.6},
+  blenheim:{name:'Blenheim IF',short:'Blen',speed:4.0,climb:1500,endurance:180,vsF:0.35,vsB:0.9,lossMult:1.3,night:true},
+};
+const BOMBER_TYPES={
+  He111:{name:'He 111',vuln:0.9,gun:1.0,acc:1.1,speed:3.2},
+  Ju88:{name:'Ju 88',vuln:0.85,gun:1.1,acc:1.4,speed:3.8},
+  Ju88R:{name:'Ju 88 reconnaissance',vuln:0.8,gun:0.6,acc:0,speed:4.3},
+};
+const POOL_KEY={He111:'bombers',Ju88:'bombers',Ju88R:'recce'};
+const WEATHER={
+  clear:{name:'Clear, good visibility',raidMult:1.0,bombAcc:1.0,idDelay:3,contact:4},
+  cloudy:{name:'Broken cloud',raidMult:0.95,bombAcc:0.85,idDelay:5,contact:3},
+  overcast:{name:'Overcast, low cloud',raidMult:0.75,bombAcc:0.65,idDelay:9,contact:1.8},
+  rain:{name:'Rain and low cloud',raidMult:0.35,bombAcc:0.5,idDelay:12,contact:1.2},
+};
+const KIND_DMG={airfield:1.6,radar:1.4,naval:1.2,shipyard:1.2,factory:1.3,port:1.3,city:0.8};
+const KIND_REPAIR={airfield:13,radar:28,naval:6,shipyard:6,factory:6,port:9,city:6};
+
+const TARGET_DEFS=[
+  {id:'turnhouse',name:'Turnhouse',kind:'airfield',ll:[-3.35,55.95],sector:true,fighter:true},
+  {id:'drem',name:'Drem',kind:'airfield',ll:[-2.79,56.02],fighter:true},
+  {id:'grangemouth',name:'Grangemouth',kind:'airfield',ll:[-3.70,55.995],fighter:true},
+  {id:'abbotsinch',name:'Abbotsinch',kind:'airfield',ll:[-4.43,55.87],sector:true,fighter:true},
+  {id:'prestwick',name:'Prestwick',kind:'airfield',ll:[-4.59,55.51],fighter:true},
+  {id:'dyce',name:'Dyce',kind:'airfield',ll:[-2.20,57.20],sector:true,fighter:true},
+  {id:'montrose',name:'Montrose',kind:'airfield',ll:[-2.50,56.73],fighter:true},
+  {id:'wick',name:'Wick',kind:'airfield',ll:[-3.11,58.45],sector:true,fighter:true},
+  {id:'castletown',name:'Castletown',kind:'airfield',ll:[-3.35,58.58],fighter:true,requires:'castletown'},
+  {id:'skeabrae',name:'Skeabrae',kind:'airfield',ll:[-3.26,59.05],fighter:true,requires:'skeabrae'},
+  {id:'usworth',name:'Usworth',kind:'airfield',ll:[-1.47,54.92],sector:true,fighter:true},
+  {id:'acklington',name:'Acklington',kind:'airfield',ll:[-1.63,55.30],fighter:true},
+  {id:'leuchars',name:'Leuchars (Coastal)',kind:'airfield',ll:[-2.87,56.37]},
+  {id:'lossiemouth',name:'Lossiemouth',kind:'airfield',ll:[-3.34,57.70]},
+  {id:'kinloss',name:'Kinloss',kind:'airfield',ll:[-3.56,57.65]},
+  {id:'r_ottercops',name:'Ottercops Moss CH',kind:'radar',ll:[-2.05,55.14]},
+  {id:'r_drone',name:'Drone Hill CH',kind:'radar',ll:[-2.28,55.86]},
+  {id:'r_douglas',name:'Douglas Wood CH',kind:'radar',ll:[-2.85,56.55]},
+  {id:'r_schoolhill',name:'Schoolhill CH',kind:'radar',ll:[-2.14,57.07]},
+  {id:'r_rosehearty',name:'Rosehearty CH',kind:'radar',ll:[-2.12,57.675]},
+  {id:'r_thrumster',name:'Thrumster CH',kind:'radar',ll:[-3.16,58.40]},
+  {id:'r_netherbutton',name:'Netherbutton CH',kind:'radar',ll:[-2.93,58.96]},
+  {id:'n_scapa',name:'Scapa Flow',kind:'naval',ll:[-3.07,58.88]},
+  {id:'n_rosyth',name:'Rosyth Dockyard',kind:'naval',ll:[-3.44,56.035]},
+  {id:'n_invergordon',name:'Invergordon',kind:'naval',ll:[-4.17,57.69]},
+  {id:'y_clydebank',name:'Clydebank shipyards',kind:'shipyard',ll:[-4.40,55.90],clyde:true},
+  {id:'y_greenock',name:'Greenock & Tail of the Bank',kind:'shipyard',ll:[-4.76,55.945],clyde:true},
+  {id:'y_tyne',name:'Tyneside shipyards',kind:'shipyard',ll:[-1.52,54.97]},
+  {id:'f_hillington',name:'Rolls-Royce, Hillington',kind:'factory',ll:[-4.37,55.855],clyde:true},
+  {id:'p_aberdeen',name:'Aberdeen harbour',kind:'port',ll:[-2.09,57.14]},
+  {id:'p_dundee',name:'Dundee',kind:'port',ll:[-2.97,56.465]},
+  {id:'p_wick',name:'Wick harbour',kind:'port',ll:[-3.09,58.44]},
+  {id:'c_leith',name:'Edinburgh & Leith',kind:'city',ll:[-3.18,55.965]},
+  {id:'c_glasgow',name:'Glasgow',kind:'city',ll:[-4.25,55.86],clyde:true},
+];
+const SECTOR_OF={turnhouse:'turnhouse',drem:'turnhouse',grangemouth:'turnhouse',abbotsinch:'abbotsinch',prestwick:'abbotsinch',dyce:'dyce',montrose:'dyce',wick:'wick',castletown:'wick',skeabrae:'wick',usworth:'usworth',acklington:'usworth'};
+const SECTOR_NAMES={turnhouse:'Turnhouse sector (Forth)',abbotsinch:'Abbotsinch sector (Clyde)',dyce:'Dyce sector (Aberdeen)',wick:'Wick sector (Caithness & Orkney)',usworth:'Usworth sector (Tyne)'};
+
+const SQN_DEFS=[
+  {id:'602',type:'spitfire',base:'drem',exp:0.68,title:'City of Glasgow'},
+  {id:'603',type:'spitfire',base:'turnhouse',exp:0.66,title:'City of Edinburgh'},
+  {id:'605',type:'hurricane',base:'drem',exp:0.55,title:'County of Warwick'},
+  {id:'245',type:'hurricane',base:'turnhouse',exp:0.5},
+  {id:'232',type:'hurricane',base:'abbotsinch',exp:0.4,pilots:17},
+  {id:'263',type:'hurricane',base:'grangemouth',exp:0.3,pilots:14,aircraft:12,from:dayOf(7,1)},
+  {id:'3',type:'hurricane',base:'wick',exp:0.55},
+  {id:'504',type:'hurricane',base:'dyce',exp:0.5,title:'County of Nottingham'},
+  {id:'607',type:'hurricane',base:'usworth',exp:0.5,title:'County of Durham'},
+  {id:'72',type:'spitfire',base:'acklington',exp:0.6},
+  {id:'152',type:'spitfire',base:'acklington',exp:0.4,from:dayOf(7,6)},
+];
+// Squadrons that historically came north to rest from 11 Group
+const SOUTH_SWAPS=[['43','hurricane'],['111','hurricane'],['79','hurricane'],['32','hurricane'],['615','hurricane'],['151','hurricane'],['65','spitfire'],['54','spitfire'],['610','spitfire'],['616','spitfire'],['64','spitfire'],['266','spitfire']];
+
+const WORKS=[
+  {id:'skeabrae',name:'Open RAF Skeabrae, Orkney',days:21,desc:'A fighter station on Orkney itself, so you can guard Scapa Flow directly.'},
+  {id:'castletown',name:'Open RAF Castletown, Caithness',days:12,desc:'A second fighter field for the Wick sector.'},
+  {id:'dispersal',name:'Dispersal pens and blast walls',days:10,desc:'Aircraft caught on the ground when an airfield is bombed suffer far less.'},
+  {id:'roc',name:'Expand the Royal Observer Corps',days:8,desc:'More posts. Overland plots hold through cloud and raids are identified twice as fast.'},
+  {id:'chl',name:'Chain Home Low stations',days:14,desc:'Low-looking radar. Low-level raiders are detected twice as far out.'},
+  {id:'opsroom',name:'New Glasgow operations room',days:10,desc:'Better teleprinter and R/T links. Every scramble is 2 minutes quicker.'},
+  {id:'balloons',name:'Clyde balloon barrage',days:6,desc:'Bombers over the Clyde must stay high. Bombing accuracy there drops by 35%.'},
+  {id:'aa_scapa',name:'Heavy AA guns for Scapa Flow',days:9,desc:'The guns shoot down bombers and spoil their aim over the Fleet anchorage.'},
+  {id:'aa_rosyth',name:'Heavy AA guns for Rosyth and the Forth',days:9,desc:'The guns shoot down bombers and spoil their aim over the dockyard.'},
+  {id:'repair',name:'Mobile repair parties',days:7,desc:'Bombed airfields and radar stations are repaired 60% faster.'},
+  {id:'searchlights',name:'Searchlight belts',days:10,desc:'At night your fighters find bombers more easily over land, and the guns bring some down.'},
+];
+const WORK_SLOTS=2;
+function workSlots(){return (G&&G.workSlots)||WORK_SLOTS;}
+
+// ── PEOPLE ──
+const NAMES={
+  GB:{f:['Alastair','Angus','Archie','Colin','Douglas','Duncan','Euan','Fraser','Gordon','Graham','Hamish','Iain','Ian','James','John','Kenneth','Malcolm','Neil','Robert','Ronald','Stuart','William','Hector','George','Peter','Michael','Richard','Tom','Harry','Arthur','Geoffrey','Brian','Dennis','Eric','Frank','Gerald','Hugh','Jack','Leonard','Norman','Roy','Ted','David','Donald','Alexander','Ewan','Lachlan','Bill','Charles','Jim'],
+      l:['MacDonald','Campbell','Stewart','Robertson','Murray','Fraser','Cameron','Grant','Ross','Mackenzie','MacLeod','Munro','Sinclair','Buchanan','Drummond','Ferguson','Gillies','Henderson','Kerr','Lindsay','Matheson','McIntyre','McLean','Paterson','Reid','Ritchie','Scott','Shaw','Urquhart','Wallace','Watson','Young','Baird','Crawford','Dunlop','Galbraith','Hamilton','Kennedy','Lamont','Maxwell','Ogilvie','Rankin','Thomson','Allan','Bell','Brown','Clarke','Harris','Hughes','Jackson','Mitchell','Palmer','Turner','Walker','Wood','Barker','Carter','Ellis','Fletcher','Hunt','Knight','Marsh','Norris','Price','Sharp','Webb']},
+  PL:{f:['Jan','Stanisław','Witold','Zdzisław','Mirosław','Ludwik','Bolesław','Tadeusz','Wojciech','Kazimierz','Marian','Henryk'],l:['Kowalski','Nowak','Zieliński','Wiśniewski','Wójcik','Kamiński','Lewandowski','Szymański','Dąbrowski','Zawadzki','Grabowski','Pawlak','Sikora','Majewski']},
+  CZ:{f:['Josef','Karel','Václav','Jaroslav','Miroslav','Otakar','Vladimír','Jiří','Stanislav','Bohumil'],l:['Novák','Svoboda','Dvořák','Černý','Procházka','Kučera','Veselý','Horák','Němec','Pokorný','Marek','Pospíšil']},
+};
+const CO_STYLES={
+  thruster:{name:'A thruster',desc:'Leads from the front: more kills, but more losses.',k:1.2,l:1.25,f:1.0},
+  steady:{name:'A steady hand',desc:'Brings his pilots home: fewer losses and less fatigue, slightly fewer kills.',k:0.95,l:0.8,f:0.85},
+  tactician:{name:'A tactician',desc:'Reads the fight well: more often gets above the enemy, and scores a few more.',k:1.1,l:0.95,f:1.0},
+};
+const NO_CO={name:'No CO',k:0.95,l:1.05,f:1.05};
+const ADAPT_TEXT={
+  cloud:'Intelligence: Luftflotte 5 now seems to hold its bombers back until there is cloud cover.',
+  low:'Intelligence: Luftflotte 5 is switching to low-level hit-and-run attacks, under the radar.',
+  dusk:'Intelligence: German raids are being timed for dusk, when your fighters are landing.',
+  lone:'Intelligence: lone Ju 88s are sneaking in under the cloud, hoping to go unseen.',
+  probe:'Intelligence: the Germans are probing for weak spots: thinly defended areas and gaps in the radar.',
+  dogleg:'Intelligence: raids are flying deceptive dog-legs to hide their real targets.',
+};
+const SEG_COLS=['#c0392b','#e6c229','#2e6fc0'];
+
+const STARTS={
+  jun:{day:0,gauge:8,standing:60},
+  jul:{day:D_KANAL,gauge:12,standing:60,works:['roc','opsroom','castletown']},
+  aug:{day:D_ADLER,gauge:8,standing:58,works:['roc','opsroom','castletown','dispersal','balloons'],fatigue:15,sent:['602']},
+};
+
+// Historical raids for scripted days
+const HIST_RAIDS={};
+HIST_RAIDS[dayOf(7,1)]=[{time:rint(700,800),kind:'bomber',targetId:'p_wick',bombers:4}];
+HIST_RAIDS[dayOf(7,12)]=[{time:rint(740,800),kind:'bomber',targetId:'p_aberdeen',bombers:12}];
+HIST_RAIDS[dayOf(8,15)]=[{time:rint(735,760),kind:'big',targetId:'y_tyne'}];
+HIST_RAIDS[dayOf(9,18)]=[{time:rint(620,700),kind:'bomber',targetId:'y_clydebank',bombers:10}];
+HIST_RAIDS[dayOf(10,26)]=[{time:rint(900,960),kind:'lowlevel',targetId:'lossiemouth',bombers:3}];
+HIST_RAIDS[dayOf(10,25)]=[{time:rint(900,1000),kind:'lowlevel',targetId:'montrose',bombers:3}];
+
+const REQUESTS=[[dayOf(7,12),1],[dayOf(8,12),1],[dayOf(8,19),1],[dayOf(8,26),1],[dayOf(9,2),1],[dayOf(9,7),2],[dayOf(9,12),1],[dayOf(9,19),1],[dayOf(10,3),1]];
+
+const EVENTS=[
+  {day:0,id:'start',title:'Air Officer Commanding, Northern Sectors',sub:'Headquarters, Glasgow · 1 June 1940',text:'<p>The evacuation from Dunkirk is nearly over. In Norway the last Allied troops are about to leave Narvik. Once they go, the Luftwaffe will have airfields at Stavanger and Trondheim, within reach of everything you are charged with defending.</p><p>You have eleven squadrons across five sectors. Use this quiet spell. Start works projects (Works tab), put green squadrons on <b>Training</b>, and get your fighters on the right airfields. Dowding will want some of them before the summer is out.</p><p><b>Controls:</b> select a squadron, then click a hostile plot to scramble and vector it, or click open map to send it on a patrol. Scroll to zoom and drag to pan.</p>'},
+  {day:dayOf(6,4),id:'dunkirk',log:'Operation Dynamo ends: 338,000 men are back from Dunkirk. Churchill: "We shall fight on the beaches."'},
+  {day:dayOf(6,10),id:'norway',title:'Norway falls',sub:'10 June 1940',text:'<p>Norway has capitulated, and Italy has declared war. Luftflotte 5 is moving onto Norwegian airfields: He 111s of KG 26 and Ju 88s of KG 30 at Stavanger-Sola, and reconnaissance units working along your whole coast.</p><p>Expect reconnaissance flights, attacks on east-coast convoys, and raids on Scapa Flow and the ports.</p>',fn:function(){G.lf5.active=true;}},
+  {day:dayOf(6,18),id:'finest',log:'Churchill: "Let us therefore brace ourselves to our duties... men will still say, this was their finest hour."'},
+  {day:dayOf(6,22),id:'france',log:'France signs an armistice at Compiègne. Britain stands alone.'},
+  {day:dayOf(7,1),id:'263',log:'No. 263 Squadron is re-formed at Grangemouth after Norway and declared operational. Its pilots are green.'},
+  {day:D_KANAL,id:'battle',title:'The Battle of Britain begins',sub:'10 July 1940',text:'<p>In the south, the Luftwaffe has opened its attacks on Channel convoys. Park\'s 11 Group is fighting every day, and it will need replacements. Dowding will ask you for squadrons. Watch <b>The South</b> tab: the Invasion Threat gauge now depends partly on what you send.</p>'},
+  {day:dayOf(7,19),id:'defiant',log:'In the south, No. 141 Squadron\'s Defiants are massacred off Folkestone. The survivors are to be sent north to you.'},
+  {day:dayOf(7,21),id:'141',log:'No. 141 (Defiant) Squadron arrives at Prestwick, badly shaken. Keep it away from fighters: the turret gun is only any use against bombers.',fn:function(){addSquadron({id:'141',type:'defiant',base:'prestwick',exp:0.3,pilots:14,aircraft:11,fatigue:40});}},
+  {day:D_ADLER,id:'adler',title:'Adlertag: Eagle Day',sub:'13 August 1940',text:'<p>Göring has ordered the destruction of Fighter Command. In the south the attacks have switched from shipping to airfields and radar. 11 Group will be under huge pressure over the coming weeks.</p><p>Up here, intelligence reports that Luftflotte 5 is preparing something big. The Germans believe the north has been stripped of fighters to feed the south.</p>'},
+  {day:dayOf(8,15),id:'greatest',title:'"The Greatest Day"',sub:'15 August 1940',text:'<p>All three Luftflotten are committed at once. A large formation is expected out of Stavanger at around midday, He 111s escorted by long-range Bf 110s and aimed at Tyneside. The Germans believe the north is undefended. Prove them wrong.</p>'},
+  {day:dayOf(8,17),id:'otu',title:'The pilot shortage',sub:'Air Ministry signal',text:'<p>Fighter Command is running out of pilots faster than aircraft. The Air Ministry proposes cutting Operational Training Unit courses from four weeks to two. Your replacements would arrive faster but dangerously green.</p>',choices:[{label:'Cut the course: more pilots, greener',fn:function(){G.otuShort=true;log('OTU courses cut. More replacement pilots, with less training.','warn');}},{label:'Keep full training',fn:function(){G.otuShort=false;log('OTU courses stay at full length.','');}}]},
+  {day:dayOf(8,20),id:'few',log:'Churchill in the Commons: "Never in the field of human conflict was so much owed by so many to so few."'},
+  {day:dayOf(8,21),id:'battles',log:'Pilots from Fairey Battle and Lysander squadrons volunteer for fighters. 8 of them join your replacement pool.',fn:function(){G.pilotPool+=8;}},
+  {day:dayOf(8,25),id:'berlin',log:'After bombs fall on London by accident, Bomber Command raids Berlin. Hitler is enraged.'},
+  {day:D_BLITZ,id:'blitz',title:'Black Saturday: the Blitz begins',sub:'7 September 1940',text:'<p>The Luftwaffe has switched its main effort to London. 11 Group\'s airfields finally get a respite, but only just in time. Dowding has brought in the "stabilising scheme": the north is now his reservoir of fresh squadrons, and his requests will get more urgent.</p><p>Invasion barges are gathering in the Channel ports. The code-word "Cromwell" has been issued.</p>'},
+  {day:dayOf(9,15),id:'bobday',log:'15 September: two huge raids on London are shattered by 11 and 12 Group together. The Luftwaffe\'s "last fifty Spitfires" turn out to be three hundred.'},
+  {day:dayOf(9,17),id:'sealion',log:'Hitler postpones Operation Sealion "until further notice", but the air battle goes on.',fn:function(){G.gauge=Math.max(0,G.gauge-6);}},
+  {day:dayOf(9,18),id:'sussex',log:'Intelligence warns of a daylight raid on the Clyde. HMS Sussex is fitting out at Yorkhill Quay.'},
+  {day:D_LATE,id:'late',log:'October. In the south the Luftwaffe turns to high-altitude fighter-bomber sweeps and night raids. The daylight crisis is passing, if 11 Group can hold on.'},
+  {day:dayOf(6,26),id:'ws1',log:'Convoy WS 1 sails from the Clyde. Troop convoys will keep assembling at the Tail of the Bank all summer.'},
+  {day:dayOf(8,5),id:'poles1',log:'Seven Polish pilots, veterans of Poland and France, arrive in Scotland. They need about ten days of English and R/T procedure before they can fly on operations (Squadrons tab).',fn:function(){foreignArrive('PL',7);}},
+  {day:dayOf(8,20),id:'czechs',log:'Five Czechoslovak pilots report from the depot at Cosford. They will be ready after conversion training.',fn:function(){foreignArrive('CZ',5);}},
+  {day:dayOf(8,24),id:'nights',log:'The Luftwaffe is starting to send bombers by night. Day fighters are nearly useless in the dark.'},
+  {day:dayOf(9,5),id:'poles2',log:'Six more Polish pilots are posted to the northern sectors.',fn:function(){foreignArrive('PL',6);}},
+  {day:dayOf(9,12),id:'141night',log:'No. 141 Squadron\'s Defiants are re-roled as night fighters. The turret is far more useful in the dark.',fn:function(){const s=findSq('141');if(s)s.nightRole=true;}},
+  {day:D_END,id:'last',log:'31 October 1940. This will later be taken as the last day of the Battle of Britain.'},
+];
+
+// ── STATE ──
+let G=null;
+const UI={selSq:null,selRaid:null,angels:null,tab:'ops',showRadar:false,sound:true,ff:true,modal:false,title:true,zoom:1,cx:WORLD_W/2,cy:WORLD_H/2,flashes:[],reqSel:{},hover:null,lastSpeed:1,sideDirty:true};
+
+function blankStats(){return {unopposedNight:0,lwSent:0,troopSunk:0,rafLost:0,rafDamaged:0,pilotsKilled:0,pilotsWounded:0,pilotsSafe:0,lwBombers:0,lwFighters:0,lwRecce:0,claims:0,groundLost:0,raids:0,intercepted:0,bombed:0,unopposed:0,dmgAirfield:0,dmgRadar:0,dmgNaval:0,dmgIndustry:0,dmgCity:0,dmgGlasgow:0,shipsSunk:0,sorties:0,civilians:0,aaKills:0,training:0};}
+
+function T(id){if(id==='convoy')return G.convoy;if(id==='anchorage')return G.anchorage;for(const t of G.targets)if(t.id===id)return t;return null;}
+function fieldUsable(t){return t&&t.fighter&&(!t.requires||G.works.done[t.requires]);}
+
+function makeSquadron(d){
+  const b=T(d.base);
+  const sq={id:d.id,name:'No. '+d.id+' Sqn',title:d.title||'',type:d.type,baseId:d.base,pilots:d.pilots||20,aircraft:d.aircraft||16,exp:d.exp||0.5,fatigue:d.fatigue||8,
+    standby:'readiness',readyAt:0,state:'ground',x:b.x,y:b.y,alt:0,targetAlt:15000,order:null,timer:0,fuel:0,ammo:0,flying:0,combatTimer:0,engagedRaid:null,adv:'level',hdg:0,orbit:0,
+    tactic:'bombers',kills:0,claims:0,losses:0,pilotsLost:0,sorties:0,from:d.from||0,daysSouth:0,southClaims:0,trainedToday:false,roster:[],rep:null,nightRole:false};
+  buildRoster(sq,sq.pilots);
+  return sq;
+}
+function addSquadron(d){if(G.squadrons.some(s=>s.id===d.id))return;const sq=makeSquadron(d);G.squadrons.push(sq);return sq;}
+function findSq(id){return G.squadrons.find(s=>s.id===id)||G.south.squadrons.find(s=>s.id===id)||null;}
+
+// ── PILOTS ──
+function genPilot(nat,rank,taken){
+  nat=nat||'GB';const N=NAMES[nat];let f,l,tries=0;
+  do{f=pick(N.f);l=pick(N.l);tries++;}while(taken&&taken.has(f+' '+l)&&tries<25);
+  return {f,l,nat,r:rank||(rnd()<0.6?(rnd()<0.7?'P/O':'F/O'):'Sgt'),k:0,s:0,st:'a',ret:0,co:false,style:null,up:false};
+}
+function pname(p){return `${p.r} ${p.f} ${p.l}${p.nat==='PL'?' (Polish)':p.nat==='CZ'?' (Czech)':''}`;}
+function pkey(p){return p.f+' '+p.l;}
+function activePilots(sq){return sq.roster.filter(p=>p.st==='a');}
+function syncPilots(sq){sq.pilots=activePilots(sq).length;}
+function sqCO(sq){return sq.roster.find(p=>p.co&&p.st==='a')||null;}
+function coStyle(sq){const c=sqCO(sq);return c&&c.style?CO_STYLES[c.style]:NO_CO;}
+function buildRoster(sq,n){
+  sq.roster=[];const taken=new Set();
+  for(let i=0;i<n;i++){const p=genPilot('GB',null,taken);taken.add(pkey(p));p.s=rint(0,25);sq.roster.push(p);}
+  const co=sq.roster[0];if(co){co.r='S/Ldr';co.co=true;co.style=pick(Object.keys(CO_STYLES));co.s=rint(25,70);co.k=rint(0,3);}
+  syncPilots(sq);
+}
+function addPilots(sq,n,exp,nat,src){
+  if(n<=0)return;const taken=new Set(sq.roster.map(pkey));const before=sq.pilots;
+  for(let i=0;i<n;i++){const p=src&&src[i]?src[i]:genPilot(nat,null,taken);taken.add(pkey(p));p.st='a';p.up=false;sq.roster.push(p);}
+  sq.exp=(sq.exp*before+exp*n)/(before+n);syncPilots(sq);
+}
+function pickPilot(list,wf){let tot=0;const w=list.map(p=>{const v=wf(p);tot+=v;return v;});let x=rnd()*tot;for(let i=0;i<list.length;i++){x-=w[i];if(x<=0)return list[i];}return list[list.length-1];}
+function fliers(sq){const up=sq.roster.filter(p=>p.st==='a'&&p.up);return up.length?up:activePilots(sq);}
+function casualty(sq,how,where){
+  const pool=fliers(sq);if(!pool.length)return null;
+  const p=pickPilot(pool,q=>(q.s<6?2.2:1)*(q.co?0.8:1));
+  if(how==='k'){sq.roster=sq.roster.filter(q=>q!==p);p.st='k';sq.pilotsLost++;G.honour.push({n:pname(p),sq:sq.id,day:G.day,k:p.k,where});log(`Telegram: ${pname(p)} of ${sq.name}, killed ${where}.${p.k?` He had ${p.k} victor${p.k>1?'ies':'y'}.`:''}`,'loss');}
+  else {p.st='w';p.up=false;p.ret=G.day+rint(7,21);}
+  syncPilots(sq);
+  if(p.co){p.co=false;queueCO(sq,how==='k'?'killed':'wounded');}
+  return p;
+}
+function creditKills(sq,n){
+  const out=[];const pool=fliers(sq);if(!pool.length)return out;
+  for(let i=0;i<n;i++){const p=pickPilot(pool,q=>1+q.k*0.4+(q.nat!=='GB'?0.5:0)+(q.co?0.3:0));p.k++;out.push(pname(p));afterKill(sq,p);}
+  return out;
+}
+function afterKill(sq,p){
+  const officer=p.r!=='Sgt'&&p.r!=='F/Sgt';
+  if(p.k===5)log(`${pname(p)} of ${sq.name} is an ace, with five victories, and is awarded the ${officer?'DFC':'DFM'}.`,'good');
+  if(p.r==='P/O'&&p.k>=3)promote(sq,p,'F/O','');
+  else if(p.r==='F/O'&&p.k>=6)promote(sq,p,'F/Lt','');
+  else if(p.r==='Sgt'&&p.k>=4)promote(sq,p,'F/Sgt','');
+  else if(p.r==='F/Sgt'&&p.k>=7)promote(sq,p,'P/O',' He is commissioned from the ranks.');
+}
+function promote(sq,p,to,extra){const old=pname(p);p.r=to;log(`Promotion: ${old} (${sq.name}) becomes ${to}.${extra}`,'good');}
+function queueCO(sq,why){
+  G.coPending=G.coPending||{};if(G.coPending[sq.id])return;
+  const act=activePilots(sq),cands=[];
+  const best=act.slice().sort((a,b)=>b.k-a.k||b.s-a.s)[0];
+  if(best)cands.push({key:pkey(best),style:best.k>=4?'thruster':'tactician',text:`Promote ${pname(best)} from within: ${best.k} victories, ${best.s} sorties.`});
+  const second=act.filter(p=>p!==best&&p.r!=='Sgt'&&p.r!=='F/Sgt').sort((a,b)=>b.s-a.s)[0];
+  if(second)cands.push({key:pkey(second),style:'steady',text:`Promote ${pname(second)}, the senior flight commander: ${second.s} sorties, ${second.k} victories.`});
+  const out=genPilot('GB','S/Ldr',new Set(sq.roster.map(pkey)));out.k=rint(2,9);out.s=rint(40,110);
+  cands.push({out,style:pick(['tactician','thruster','steady']),text:`Bring in ${pname(out)} from Fighter Command HQ: ${out.k} victories, ${out.s} sorties.`});
+  G.coPending[sq.id]={why,cands};G.eventQueue.push('co:'+sq.id);
+  log(`${sq.name} has lost its commanding officer (${why}). A replacement must be chosen.`,'warn');
+}
+function resolveCO(sqId,i){
+  const P=G.coPending&&G.coPending[sqId];if(!P)return;delete G.coPending[sqId];
+  const sq=findSq(sqId);if(!sq)return;
+  const c=P.cands[i]||P.cands[P.cands.length-1];
+  let p=c.out?null:sq.roster.find(q=>pkey(q)===c.key&&q.st==='a');
+  if(!p){const o=c.out||P.cands[P.cands.length-1].out;addPilots(sq,1,0.8,'GB',[o]);p=o;}
+  for(const q of sq.roster)q.co=false;
+  p.co=true;p.style=c.style;p.r='S/Ldr';
+  log(`${pname(p)} takes command of ${sq.name}. ${CO_STYLES[c.style].name}.`,'raf');
+}
+function foreignArrive(nat,n){for(let i=0;i<n;i++){const p=genPilot(nat,rnd()<0.55?'P/O':'Sgt');p.k=rint(0,3);p.s=rint(20,70);p.ready=G.day+rint(8,12);G.foreign.push(p);}}
+function postForeign(i,sqId){const sq=G.squadrons.find(s=>s.id===sqId);const p=G.foreign[i];if(!sq||!p||G.day<p.ready)return;G.foreign.splice(i,1);delete p.ready;addPilots(sq,1,0.8,p.nat,[p]);log(`${pname(p)} joins ${sq.name}.`,'raf');}
+
+// ── WEEKLY CONFERENCE ──
+const CONF=[
+  {id:'spit',label:'Lobby Beaverbrook for Spitfires',cost:6,desc:'+1 Spitfire a day for a week.',fn:()=>{G.bonus.spitUntil=G.day+7;}},
+  {id:'hurri',label:'Draw Hurricanes from the storage units',cost:4,desc:'+5 Hurricanes into your reserve now.',fn:()=>{G.pools.hurricane+=5;}},
+  {id:'works',label:'Ask for another works team',cost:10,desc:'One more works project can run at a time.',ok:()=>workSlots()<4,fn:()=>{G.workSlots=workSlots()+1;}},
+  {id:'pilots',label:'Press the OTUs for pilots',cost:6,desc:'+5 replacement pilots now.',fn:()=>{G.pilotPool+=5;}},
+  {id:'night',label:'Ask for night-fighter priority',cost:8,desc:'No. 600 Squadron\'s Blenheims come north within two days.',ok:()=>G.day>=dayOf(8,20)&&!G.flags.n600done&&G.flags.n600>G.day+2,fn:()=>{G.flags.n600=G.day+2;}},
+  {id:'press',label:'Invite the press to a fighter station',cost:-4,desc:'Good for your standing, but the Germans read the papers too.',fn:()=>{G.lf5.adapt.probe=clamp(G.lf5.adapt.probe+0.1,0,1);}},
+  {id:'back',label:'Ask Dowding to return a squadron early',cost:10,desc:'Your longest-serving squadron in the south comes home. 11 Group will feel it.',ok:()=>G.south.squadrons.length>0,fn:()=>{const s=G.south.squadrons.slice().sort((a,b)=>b.daysSouth-a.daysSouth)[0];if(s){G.south.squadrons=G.south.squadrons.filter(q=>q!==s);G.south.arrivals.push({day:G.day+1,sq:s,base:s.homeBase||'drem'});G.south.wear=clamp(G.south.wear+5,0,95);log(`${s.name} is released by 11 Group and will be back tomorrow.`,'raf');}}},
+  {id:'radar',label:'Demand priority radar repairs',cost:5,desc:'Every radar station is restored to full working order.',ok:()=>G.targets.some(t=>t.kind==='radar'&&t.health<90),fn:()=>{for(const t of G.targets)if(t.kind==='radar')t.health=100;}},
+];
+function pickConf(){const el=CONF.filter(c=>!c.ok||c.ok());const out=[];while(out.length<3&&el.length)out.push(el.splice(Math.floor(rnd()*el.length),1)[0].id);return out;}
+function resolveConf(id){
+  G.pendingConf=null;const c=CONF.find(x=>x.id===id);
+  if(!c){G.standing=clamp(G.standing+2,0,100);log('Monday conference: you keep your head down and ask for nothing.','');return;}
+  G.standing=clamp(G.standing-c.cost,0,100);c.fn();log(`Monday conference: ${c.label}.`,'');
+}
+
+// ── STANDING ORDERS ──
+function onDusk(){
+  log(`Dusk (${clockStr(duskMin(G.day))}). From now on day fighters are close to useless.`,'hist');
+  if(G.orders.duskStand)for(const s of G.squadrons)if(s.state==='ground'&&!nightCapable(s)&&s.standby!=='training')s.standby='released';
+}
+function applyOrders(){
+  const O=G.orders,night=isNight();
+  if(O.autoRest)for(const s of G.squadrons)if(s.state==='ground'&&s.fatigue>=75&&(s.standby==='readiness'||s.standby==='available')){setStandby(s,'released');log(`${s.name} is stood down to rest under standing orders.`,'raf');}
+  if(O.minReady>0&&!night){
+    for(const k of Object.keys(SECTOR_NAMES)){
+      const list=G.squadrons.filter(s=>SECTOR_OF[s.baseId]===k&&s.state==='ground'&&operational(s));
+      let ready=list.filter(s=>s.standby==='readiness').length;
+      const cand=list.filter(s=>s.standby==='available'&&!(O.autoRest&&s.fatigue>=75)&&sqStrength(s)>=4).sort((a,b)=>a.fatigue-b.fatigue);
+      while(ready<O.minReady&&cand.length){setStandby(cand.shift(),'readiness');ready++;}
+    }
+  }
+  if(O.auto){
+    for(const r of G.raids){
+      if(!r.detected||!r.tracked||r.phase==='outbound'||r.estCount<O.autoMin)continue;
+      if(G.squadrons.some(s=>(s.order&&s.order.kind==='raid'&&s.order.raidId===r.id)||s.engagedRaid===r.id))continue;
+      const c=G.squadrons.filter(s=>s.state==='ground'&&scrambleBlock(s)===''&&(!night||!O.duskStand||nightCapable(s))).sort((a,b)=>(night?(nightCapable(b)-nightCapable(a)):0)||dist(a,r)-dist(b,r))[0];
+      if(c&&dist(c,r)<130){const a=UI.angels;UI.angels=null;orderSquadron(c,{kind:'raid',raidId:r.id});UI.angels=a;log(`(Standing orders: ${c.name} scrambled automatically against ${r.label}.)`,'raf');}
+    }
+  }
+}
+function finalizeReport(sq){
+  const R=sq.rep;sq.rep=null;if(!R||R.rounds===0)return;
+  R.end=G.minute;R.prob=poisson(R.kills*0.4+0.3);R.dmgd=poisson(R.kills*0.7+0.4);
+  G.reports.unshift(R);if(G.reports.length>40)G.reports.length=40;
+  if(!HEADLESS)showToast(R);
+}
+
+function newGame(startKey){
+  const st=STARTS[startKey]||STARTS.jun;
+  G={version:2,startKey,day:st.day,minute:DAY_START,speed:1,weather:'clear',phaseState:'day',
+    targets:TARGET_DEFS.map(d=>{const p=W(d.ll[0],d.ll[1]);return {id:d.id,name:d.name,kind:d.kind,x:p.x,y:p.y,health:100,sector:!!d.sector,fighter:!!d.fighter,requires:d.requires||null,clyde:!!d.clyde,recce:-1};}),
+    squadrons:[],raids:[],convoy:null,plan:[],
+    pools:{hurricane:14,spitfire:6,defiant:4,blenheim:3},pilotPool:6,repairs:[],pilotReturns:[],otuShort:false,
+    lf5:{active:st.day>=dayOf(6,10),bombers:130,recce:18,f110:34,morale:1,adapt:{cloud:0,low:0,dusk:0,lone:0,probe:0,dogleg:0.35}},
+    south:{wear:0,squadrons:[],swapsUsed:[],arrivals:[],lastReq:-99,lastKills:0},
+    works:{active:[],done:{}},
+    gauge:st.gauge,standing:st.standing,nextRaidNo:1,
+    today:blankStats(),totals:blankStats(),log:[],history:[],eventQueue:[],pendingRequest:null,reportPending:false,lastReport:null,gameOver:null,
+    honour:[],reports:[],foreign:[],coPending:{},orders:{minReady:0,auto:false,autoMin:10,autoRest:false,duskStand:true},bonus:{spitUntil:-1},flags:{n600:dayOf(10,12)},
+    workSlots:WORK_SLOTS,anchorDays:[],anchorage:null,anchorNo:1,dayEnd:DAY_END,pendingConf:null,duskDone:false};
+  for(let d=dayOf(6,20);d<=D_END;d+=rint(7,11))G.anchorDays.push(d);
+  if(st.day>dayOf(8,5))foreignArrive('PL',7);
+  for(const d of SQN_DEFS)G.squadrons.push(makeSquadron(d));
+  if(st.works)for(const w of st.works)G.works.done[w]=true;
+  if(st.day>=dayOf(7,21))addSquadron({id:'141',type:'defiant',base:'prestwick',exp:0.35,pilots:15,aircraft:12,fatigue:20});
+  if(st.fatigue)for(const s of G.squadrons)s.fatigue=st.fatigue;
+  if(st.day>=dayOf(6,10))G.lf5.active=true;
+  if(st.sent)for(const id of st.sent){const s=G.squadrons.find(q=>q.id===id);if(s)sendSouth(s,true);}
+  beginDay();
+}
+
+// ── DAY CYCLE ──
+function rollWeather(day){
+  const ph=phaseOf(day);
+  const w=ph==='late'?{clear:25,cloudy:33,overcast:27,rain:15}:ph==='lead'||ph==='kanal'?{clear:40,cloudy:32,overcast:18,rain:10}:{clear:38,cloudy:34,overcast:19,rain:9};
+  return wpick(w);
+}
+function beginDay(){
+  G.phaseState='day';G.minute=DAY_START;G.today=blankStats();
+  G.weather=dayOf(8,15)===G.day?'clear':rollWeather(G.day);
+  G.raids=[];G.convoy=null;G.anchorage=null;G.duskDone=false;
+  for(const sq of G.squadrons){
+    for(const p of sq.roster)p.up=false;
+    Object.assign(sq,{state:'ground',order:null,flying:0,alt:0,engagedRaid:null,timer:0,trainedToday:false});
+    let b=T(sq.baseId);
+    if(!fieldUsable(b)||b.health<25){const nb=nearestField(b.x,b.y,sq.baseId);if(nb){log(`${sq.name} moves from ${b.name} to ${nb.name}: the field is unusable.`,'warn');sq.baseId=nb.id;b=nb;}}
+    sq.x=b.x;sq.y=b.y;
+    if(sq.standby==='released'){sq.standby='available';}
+    sq.readyAt=0;
+  }
+  // arrivals from the south
+  const arr=G.south.arrivals.filter(a=>a.day<=G.day);G.south.arrivals=G.south.arrivals.filter(a=>a.day>G.day);
+  for(const a of arr){const sq=a.sq;const b=T(a.base)&&fieldUsable(T(a.base))?T(a.base):T('drem');sq.baseId=b.id;sq.x=b.x;sq.y=b.y;Object.assign(sq,{state:'ground',order:null,flying:0,alt:0,engagedRaid:null,standby:'released'});G.squadrons.push(sq);log(`${sq.name} arrives at ${b.name} from 11 Group: ${sq.pilots} pilots, ${sq.aircraft} aircraft, badly tired. It is stood down to rest.`,'raf');}
+  if(G.lf5.active&&phaseOf(G.day)!=='late'&&rnd()<0.8)spawnConvoy();
+  if(G.anchorDays.includes(G.day)){const n=rint(16,28),p=W(-4.83,55.965);G.anchorNo++;G.anchorage={id:'anchorage',name:`Convoy WS ${G.anchorNo}`,kind:'convoy',ships:n,initShips:n,x:p.x,y:p.y,troop:true};log(`${G.anchorage.name} is assembling at the Tail of the Bank: ${n} ships, many of them troopships. It sails tonight.`,'hist');}
+  if(G.anchorDays.includes(G.day+1))log('Naval signal: a troop convoy will assemble at the Tail of the Bank tomorrow. The Clyde will need cover.','hist');
+  if(G.day>=G.flags.n600&&!G.flags.n600done){G.flags.n600done=true;addSquadron({id:'600',type:'blenheim',base:'drem',exp:0.5,pilots:16,aircraft:12,title:'City of London'});log('No. 600 (City of London) Squadron arrives at Drem with Blenheim IF night fighters, some of them fitted with airborne radar.','hist');}
+  planDay();
+  for(const ev of EVENTS){
+    if(ev.day!==G.day)continue;
+    if(ev.log)log(ev.log,'hist');
+    if(ev.fn&&!ev.choices)ev.fn();
+    if(ev.title)G.eventQueue.push(ev.id);
+  }
+  checkRequests();
+  if(dow(G.day)===1&&G.day>=5&&!G.pendingConf){G.pendingConf=pickConf();G.eventQueue.push('conf');}
+  log(`${dateStr(G.day,true)}: ${WEATHER[G.weather].name}. Dusk at ${clockStr(duskMin(G.day))}.`,'hist');
+  save();
+  processQueue();
+}
+function dow(day){return new Date(DAY0+day*86400000).getUTCDay();}
+function duskMin(day){const a=dayOf(7,15);if(day<=a)return 1290;return Math.round(1290-(day-a)*(250/(D_END-a)));}
+function isNight(){return !!G&&G.phaseState==='day'&&G.minute>=duskMin(G.day);}
+function nightCapable(sq){return !!(RAF_TYPES[sq.type].night||sq.nightRole);}
+function planDay(){
+  G.plan=[];
+  const dusk=duskMin(G.day),lastDay=Math.min(1110,dusk-50);
+  const hist=HIST_RAIDS[G.day];
+  if(hist)for(const h of hist)G.plan.push(Object.assign({},h));
+  let night=0;
+  if(G.lf5.active){
+    const ph=phaseOf(G.day),wx=WEATHER[G.weather],A=G.lf5.adapt;
+    const base={lead:[0,2],kanal:[1,3],adler:[1,3],blitz:[1,3],late:[0,2]}[ph];
+    const cloudMult=G.weather==='clear'?1-0.5*A.cloud:G.weather==='cloudy'?1+0.3*A.cloud:G.weather==='overcast'?1+0.8*A.cloud:1;
+    let n=Math.round(rint(base[0],base[1])*wx.raidMult*cloudMult*clamp(G.lf5.morale,0.35,1.1));
+    if(G.weather==='rain')n=Math.min(n,1);
+    if(dayOf(8,15)===G.day)n=Math.min(n,1);
+    const kinds=Object.assign({},{lead:{bomber:35,shipping:35,lowlevel:15},kanal:{bomber:45,shipping:32,lowlevel:15},adler:{bomber:55,shipping:22,lowlevel:15},blitz:{bomber:55,shipping:20,lowlevel:18},late:{bomber:40,lowlevel:35,shipping:15}}[ph]);
+    kinds.lowlevel+=A.low*40;
+    if(G.weather!=='clear')kinds.lone=5+A.lone*50;
+    for(let i=0;i<n;i++){const k=wpick(kinds);const t=rnd()<A.dusk*0.6?rint(dusk-45,dusk+5):rint(420,lastDay);G.plan.push({time:t,kind:k});}
+    if(rnd()<0.55)G.plan.push({time:rint(400,lastDay),kind:'recce'});
+    if(G.anchorage&&rnd()<0.65)G.plan.push({time:rint(480,lastDay),kind:rnd()<0.5?'shipping':'bomber',targetId:'anchorage'});
+    if(G.day>=dayOf(8,24)&&G.weather!=='rain'&&rnd()<(ph==='adler'?0.3:0.55)){night=rnd()<0.35?2:1;for(let i=0;i<night;i++)G.plan.push({time:rint(dusk+25,dusk+150),kind:'night'});}
+  } else if(G.day>=3&&rnd()<0.35)G.plan.push({time:rint(480,lastDay),kind:'recce'});
+  G.dayEnd=night?Math.min(1435,dusk+185):Math.min(DAY_END,dusk+20);
+  G.plan.sort((a,b)=>a.time-b.time);
+}
+function gapFactor(t){
+  let def=0;for(const s of G.squadrons){if(!operational(s))continue;const b=T(s.baseId);if(b&&Math.hypot(b.x-t.x,b.y-t.y)<45)def+=sqStrength(s)/12;}
+  let nr=null,nd=1e9;for(const r of G.targets){if(r.kind!=='radar')continue;const d=Math.hypot(r.x-t.x,r.y-t.y);if(d<nd){nd=d;nr=r;}}
+  return 1.5/(1+def)+(nr&&nr.health<40?1:0);
+}
+function pickTarget(mode){
+  const w={};const ph=phaseOf(G.day);
+  for(const t of G.targets){
+    let v=0;const k=t.kind;
+    if(mode==='recce'){v=k==='naval'?3:k==='shipyard'||k==='port'?1.5:k==='airfield'?(t.fighter?1.2:0.6):k==='factory'?1:0.3;}
+    else if(mode==='shipping'){v=t.id==='n_scapa'?2:k==='port'?1.2:0;}
+    else if(mode==='lowlevel'){v=k==='airfield'?(t.fighter?1.5:1.2):k==='radar'?1.2:k==='port'?0.8:k==='factory'?0.6:0;}
+    else if(mode==='night'){v=k==='city'?(t.id==='c_glasgow'?3:2):k==='shipyard'?2.5:k==='port'?1.5:k==='naval'?1.5:k==='factory'?1.5:0;}
+    else {
+      const late=ph==='blitz'||ph==='late';
+      v=k==='naval'?(t.id==='n_scapa'?3:t.id==='n_rosyth'?2.5:1.3):k==='shipyard'?(late?2.2:1.4):k==='factory'?(late?1.8:1.2):k==='port'?1.2:k==='city'?(late?1.2:0.4):k==='radar'?0.4:k==='airfield'?(t.sector?(ph==='adler'?2:1.1):t.fighter?(ph==='adler'?1.2:0.7):0.6):0;
+    }
+    if(v>0&&t.fighter&&!fieldUsable(t))v*=0.2;
+    if(v>0&&t.recce>=G.day)v*=2.5;
+    if(v>0&&t.health<10)v*=0.2;
+    if(v>0&&G.lf5.adapt.probe>0)v*=1+G.lf5.adapt.probe*gapFactor(t);
+    if(v>0)w[t.id]=v;
+  }
+  if(G.convoy&&G.convoy.ships>0&&(mode==='shipping'||mode==='bomber'||ph==='lead'))w.convoy=(mode==='shipping'?7:1.5);
+  if(G.anchorage&&G.anchorage.ships>0&&mode!=='lowlevel'&&mode!=='recce')w.anchorage=mode==='shipping'?6:mode==='night'?3:2.5;
+  return wpick(w);
+}
+function buildRaidSpec(p){
+  const L=G.lf5, ph=phaseOf(G.day), m=clamp(L.morale,0.35,1.2);
+  const s={kind:p.kind,bombers:0,f110:0,bomberType:'He111',alt:15000,targetId:p.targetId||null};
+  if(p.kind==='recce'){s.bomberType='Ju88R';s.bombers=rint(1,2);s.alt=rint(21,26)*1000;s.targetId=s.targetId||pickTarget('recce');}
+  else if(p.kind==='shipping'){s.bomberType=pick(['He111','He111','Ju88']);s.bombers=Math.max(2,Math.round(rint(3,8)*m));s.alt=rint(4,9)*1000;s.targetId=s.targetId||pickTarget('shipping');}
+  else if(p.kind==='lowlevel'){s.bomberType='Ju88';s.bombers=p.bombers||rint(2,5);s.alt=rint(1,3)*1000;s.targetId=s.targetId||pickTarget('lowlevel');}
+  else if(p.kind==='lone'){s.bomberType='Ju88';s.bombers=1;s.alt=rint(4,9)*1000;s.targetId=s.targetId||pickTarget(rnd()<0.5?'lowlevel':ph);}
+  else if(p.kind==='night'){s.bomberType='He111';s.bombers=rint(3,9);s.alt=rint(9,14)*1000;s.targetId=s.targetId||pickTarget('night');}
+  else if(p.kind==='big'){s.bomberType='He111';s.bombers=rint(58,66);s.f110=rint(28,34);s.alt=rint(14,17)*1000;}
+  else {s.bomberType=pick(['He111','He111','Ju88']);s.bombers=p.bombers||Math.max(3,Math.round(rint(6,18)*m*clamp(L.bombers/120,0.4,1.15)));if(L.f110>6&&rnd()<(ph==='lead'?0.1:0.3))s.f110=rint(4,10);s.alt=rint(11,17)*1000;s.targetId=s.targetId||pickTarget(ph);}
+  const pk=POOL_KEY[s.bomberType];
+  s.bombers=Math.min(s.bombers,L[pk]);s.f110=Math.min(s.f110,L.f110);
+  if(s.bombers<=0||!s.targetId||!T(s.targetId))return null;
+  s.speed=BOMBER_TYPES[s.bomberType].speed;
+  return s;
+}
+function spawnRaid(spec){
+  const t=T(spec.targetId);
+  const org=(t.y>230&&spec.bomberType==='Ju88'&&rnd()<0.5)?ORIGINS.aalborg:ORIGINS.stavanger;
+  const ex=WORLD_W+4;const k=(ex-org.x)/(t.x-org.x);
+  const ey=clamp(org.y+k*(t.y-org.y)+rrange(-14,14),-8,WORLD_H+8);
+  const no=G.nextRaidNo++;
+  const r={id:no,label:'H'+pad2(((no-1)%99)+1),kind:spec.kind,x:ex,y:ey,homeX:ex+12,homeY:ey+rrange(-10,10),alt:spec.alt,speed:spec.speed,targetId:spec.targetId,phase:'inbound',
+    bombers:spec.bombers,f110:spec.f110,bomberType:spec.bomberType,initBombers:spec.bombers,initTotal:spec.bombers+spec.f110,detected:false,tracked:false,estCount:0,estAlt:0,identified:false,
+    disrupted:0,engagedBy:[],everEngaged:false,overLandMin:0,vx:0,vy:0,lastX:ex,lastY:ey,seenRoll:1,seenRollAt:0,dogleg:null};
+  // low-level and some bomber raids fly a dog-leg to confuse the plot
+  Object.assign(r,{plotX:ex,plotY:ey,plotAt:null,trail:[],landfall:false});
+  if(['bomber','lowlevel','lone','night'].includes(spec.kind)&&rnd()<G.lf5.adapt.dogleg){r.dogleg={x:t.x+(ex-t.x)*0.45+rrange(-30,30),y:t.y+(ey-t.y)*0.45+rrange(-30,30)};}
+  G.lf5[POOL_KEY[r.bomberType]]-=r.bombers;G.lf5.f110-=r.f110;
+  if(r.bomberType!=='Ju88R')G.today.lwSent+=r.bombers;
+  G.raids.push(r);
+}
+function despawnRaid(r){
+  G.lf5[POOL_KEY[r.bomberType]]+=Math.max(0,r.bombers);G.lf5.f110+=Math.max(0,r.f110);
+  for(const f of G.squadrons){if(f.engagedRaid===r.id)disengage(f,null);}
+  G.raids=G.raids.filter(x=>x!==r);
+  if(UI.selRaid===r.id)UI.selRaid=null;
+}
+function spawnConvoy(){
+  const path=[[-3.0,56.15],[-2.55,56.10],[-2.20,55.95],[-1.85,55.65],[-1.45,55.25],[-1.22,54.85],[-1.05,54.45]].map(p=>W(p[0],p[1]));
+  const north=rnd()<0.5; if(north)path.reverse();
+  const n=rint(14,26);
+  G.convoy={id:'convoy',name:'Convoy '+(north?'FN':'FS')+rint(200,290),kind:'convoy',path,seg:0,t:rrange(0,0.25),ships:n,initShips:n,x:path[0].x,y:path[0].y,health:100};
+  convoyPos(G.convoy);
+  log(`${G.convoy.name} (${n} ships) is sailing ${north?'north to Methil':'south from Methil'} along the east coast.`,'');
+}
+function convoyPos(c){const a=c.path[c.seg],b=c.path[c.seg+1];c.x=a.x+(b.x-a.x)*c.t;c.y=a.y+(b.y-a.y)*c.t;}
+function updateConvoy(dt){
+  const c=G.convoy;if(!c)return;
+  const a=c.path[c.seg],b=c.path[c.seg+1];const L=Math.hypot(b.x-a.x,b.y-a.y)||1;
+  c.t+=0.15*dt/L;
+  while(c.t>=1){c.t-=1;c.seg++;if(c.seg>=c.path.length-1){log(`${c.name} reaches port with ${c.ships} of ${c.initShips} ships.`,'good');G.convoy=null;return;}}
+  convoyPos(c);
+}
+
+function tick(dt){
+  G.minute+=dt;
+  if(!G.duskDone&&isNight()){G.duskDone=true;onDusk();}
+  while(G.plan.length&&G.plan[0].time<=G.minute){const p=G.plan.shift();const s=buildRaidSpec(p);if(s)spawnRaid(s);}
+  updateConvoy(dt);
+  for(const r of G.raids.slice())updateRaid(r,dt);
+  for(const sq of G.squadrons)updateFlight(sq,dt);
+  const m=Math.floor(G.minute);if(m!==G._ordMin){G._ordMin=m;applyOrders();}
+  if(G.minute>=G.dayEnd)endDay();
+}
+
+// ── RAIDS ──
+function radarRange(alt){return alt>=10000?60:alt>=5000?40:(G.works.done.chl?34:17);}
+function raidTotal(r){return Math.max(0,r.bombers)+Math.max(0,r.f110);}
+function raidDest(r){
+  if(r.phase==='outbound')return {x:r.homeX,y:r.homeY};
+  if(r.dogleg)return r.dogleg;
+  const t=T(r.targetId);if(!t)return {x:r.homeX,y:r.homeY};return t;
+}
+function updateRaid(r,dt){
+  const px=r.x,py=r.y;
+  if(r.phase==='inbound'&&!T(r.targetId)){ // target (convoy) gone: pick a port instead
+    const was=r.targetId;r.targetId=was==='anchorage'?'y_greenock':(pickTarget('shipping')||'p_aberdeen');if(r.targetId==='convoy'||r.targetId==='anchorage')r.targetId='p_aberdeen';
+  }
+  const d=raidDest(r);
+  const dx=d.x-r.x,dy=d.y-r.y,dd=Math.hypot(dx,dy),step=r.speed*dt;
+  if(dd<=Math.max(step,1.2)){
+    r.x=d.x;r.y=d.y;
+    if(r.phase==='inbound'){
+      if(r.dogleg){r.dogleg=null;}
+      else {bomb(r);r.phase='outbound';}
+    } else {despawnRaid(r);return;}
+  } else {r.x+=dx/dd*step;r.y+=dy/dd*step;}
+  r.vx=(r.x-px)/dt;r.vy=(r.y-py)/dt;
+  if(r.phase==='outbound'&&r.x>WORLD_W+3){despawnRaid(r);return;}
+  if(raidTotal(r)<=0){despawnRaid(r);return;}
+  // escorts dive on fighters caught climbing beneath them
+  if(r.f110>0){
+    for(const f of G.squadrons){if(f.state==='airborne'&&f.alt<r.alt-3000&&dist(f,r)<3){engage(f,r,true);log(`Bf 110s dive on ${f.name} while it is still climbing!`,'lw');}}
+  }
+  updateTracking(r,dt);
+}
+function updateTracking(r,dt){
+  const land=overLand(r.x,r.y),night=isNight();let seen=false;
+  if(!land){const rng=radarRange(r.alt);for(const t of G.targets){if(t.kind==='radar'&&t.health>=40&&Math.hypot(t.x-r.x,t.y-r.y)<=rng){seen=true;break;}}}
+  else{
+    r.overLandMin+=dt;
+    if(night||((G.weather==='overcast'||G.weather==='rain')&&r.alt>6000)){
+      if(G.minute>=r.seenRollAt){r.seenRollAt=G.minute+2;r.seenRoll=rnd()<(G.works.done.roc?0.85:0.5)?1:0;}
+      seen=!!r.seenRoll;
+    } else seen=true;
+    if(!r.landfall&&r.detected){r.landfall=true;if(r.bomberType!=='Ju88R')siren();}
+  }
+  if(r.engagedBy.length)seen=true;
+  if(seen&&!r.detected){
+    r.detected=true;G.today.raids++;
+    r.estCount=round5(raidTotal(r)*rrange(0.6,1.6));if(raidTotal(r)<4)r.estCount=rint(1,3);
+    r.estAlt=clamp(Math.round((r.alt+rrange(-4000,4000))/1000)*1000,1000,30000);
+    r.plotX=r.x;r.plotY=r.y;r.plotAt=G.minute;
+    log(`${land?'Observer Corps':'Radar'}: new hostile plot ${r.label}, ${r.estCount<5?r.estCount:r.estCount+'+'}, angels ${r.estAlt/1000}, ${land?'over land':compassTo(r)}.`,'lw');
+    beep(740,0.18);
+  }
+  r.tracked=seen;
+  // WAAF plotters move the counter in steps as each new plot comes down the line
+  if(seen&&(r.plotAt==null||G.minute-r.plotAt>=1.5)){if(r.plotAt!=null){r.trail.push({x:r.plotX,y:r.plotY,t:r.plotAt});if(r.trail.length>4)r.trail.shift();}r.plotX=r.x;r.plotY=r.y;r.plotAt=G.minute;}
+  r.lastX=r.plotX;r.lastY=r.plotY;
+  const idDelay=WEATHER[G.weather].idDelay*(G.works.done.roc?0.5:1)*(night?2:1);
+  if(land&&!r.identified&&r.overLandMin>=idDelay&&seen)identify(r,'Observer Corps');
+}
+function identify(r,who){
+  r.identified=true;r.estCount=raidTotal(r)<5?raidTotal(r):round5(raidTotal(r)*rrange(0.85,1.15));
+  r.estAlt=Math.round((r.alt+rrange(-1500,1500))/1000)*1000;
+  if(who)log(`${who}: ${r.label} identified as ${raidComp(r)}, angels ${Math.max(1,r.estAlt/1000)}.`,'lw');
+}
+function compassTo(r){
+  const pts=['N','NE','E','SE','S','SW','W','NW'];const a=Math.atan2(r.vx,-r.vy);const i=Math.round(((a*180/Math.PI)+360)%360/45)%8;
+  // distance to nearest coast target as flavour
+  let best=null,bd=1e9;for(const t of G.targets){if(t.kind==='radar')continue;const d=dist(t,r);if(d<bd){bd=d;best=t;}}
+  return `heading ${pts[i]}, ${Math.round(bd)} mi from ${best?best.name:'the coast'}`;
+}
+function raidComp(r){
+  const BT=BOMBER_TYPES[r.bomberType];
+  if(r.bomberType==='Ju88R')return r.bombers>1?`${r.bombers} ${BT.name} aircraft`:`a lone ${BT.name} aircraft`;
+  const b=r.bombers<5?r.bombers:'~'+round5(r.bombers);
+  return `${b} ${BT.name}${r.f110>0?` with ~${r.f110<5?r.f110:round5(r.f110)} Bf 110 escorts`:', no escort'}`;
+}
+function bomb(r){
+  const t=T(r.targetId);if(!t)return;
+  if(r.bomberType==='Ju88R'){t.recce=G.day+3;log(`${r.label} photographs ${t.name} and turns for Norway. Expect a raid there soon.`,'lw');return;}
+  G.today.bombed++;if(!r.everEngaged){if(isNight())G.today.unopposedNight++;else G.today.unopposed++;}
+  const BT=BOMBER_TYPES[r.bomberType];let acc=1;
+  if((t.id==='n_scapa'&&G.works.done.aa_scapa)||(t.id==='n_rosyth'&&G.works.done.aa_rosyth)){
+    const k=Math.min(r.bombers,poisson(r.bombers*0.07));if(k>0){r.bombers-=k;G.today.lwBombers+=k;G.today.aaKills+=k;log(`AA guns at ${t.name} bring down ${k} of ${r.label}.`,'good');}acc*=0.7;
+  } else if(t.kind==='naval')acc*=0.9;
+  if(t.clyde&&G.works.done.balloons)acc*=0.65;
+  if(isNight()&&G.works.done.searchlights&&t.kind!=='convoy'){const k=Math.min(r.bombers,poisson(r.bombers*0.04));if(k>0){r.bombers-=k;G.today.lwBombers+=k;G.today.aaKills+=k;log(`Searchlights cone ${k} of ${r.label} over ${t.name}, and the guns bring ${k>1?'them':'it'} down.`,'good');}}
+  if(r.bombers<=0)return;
+  const dmg=r.bombers*BT.acc*(1-r.disrupted)*WEATHER[G.weather].bombAcc*acc*rrange(0.7,1.3);
+  if(t.kind==='convoy'){
+    const sunk=Math.min(t.ships,poisson(dmg/12));t.ships-=sunk;G.today.shipsSunk+=sunk;if(t.troop)G.today.troopSunk+=sunk;
+    log(`${r.label} attacks ${t.name}: ${sunk?sunk+' ship'+(sunk>1?'s':'')+' sunk':'no ships lost'}.`,sunk?'warn':'');return;
+  }
+  const real=dmg*KIND_DMG[t.kind];
+  const before=t.health;t.health=Math.max(0,t.health-real);const dd=before-t.health;
+  const k=t.kind;
+  if(k==='airfield')G.today.dmgAirfield+=dd;else if(k==='radar')G.today.dmgRadar+=dd;else if(k==='naval')G.today.dmgNaval+=dd;else if(k==='shipyard'||k==='factory')G.today.dmgIndustry+=dd;else G.today.dmgCity+=dd;
+  if(t.clyde)G.today.dmgGlasgow+=dd;
+  if(k==='city'||k==='port'||k==='shipyard'){const c=Math.round(r.bombers*rrange(1,6)*(k==='city'?2:1));G.today.civilians+=c;}
+  const sev=dd>40?'devastating':dd>20?'heavy':dd>8?'moderate':'light';
+  log(`${r.label} bombs ${t.name}: ${sev} damage${!r.everEngaged?', and not one fighter came up to meet them':''}. (${Math.round(t.health)}% effective)`,'warn');
+  if(k==='radar'&&before>=40&&t.health<40)log(`${t.name} is off the air. There is now a gap in the radar cover.`,'warn');
+  if(k==='airfield'){
+    for(const sq of G.squadrons){
+      if(sq.baseId!==t.id)continue;
+      if(!(sq.state==='ground'||sq.state==='refuel'||(sq.state==='scrambling'&&sq.timer>1.5)))continue;
+      const lam=real/40*(sq.aircraft/12)*(sq.state==='refuel'?1.5:1)*(G.works.done.dispersal?0.4:1);
+      const lost=Math.min(sq.aircraft,poisson(lam));
+      if(lost>0){sq.aircraft-=lost;G.today.groundLost+=lost;let pk=0;const nk=Math.min(sq.pilots,poisson(lost*0.15));for(let i=0;i<nk;i++){if(casualty(sq,'k',`on the ground at ${t.name}`))pk++;}G.today.pilotsKilled+=pk;log(`${lost} of ${sq.name}'s aircraft destroyed on the ground at ${t.name}${pk?`, and ${pk} pilot${pk>1?'s':''} killed`:''}.`,'warn');}
+    }
+  }
+}
+
+// ── FLIGHTS ──
+function sqStrength(sq){return Math.max(0,Math.min(12,sq.aircraft,sq.pilots));}
+function operational(sq){return G.day>=sq.from;}
+function scrambleBlock(sq){
+  if(!operational(sq))return 'Not yet operational';
+  if(sq.state!=='ground')return null;
+  if(sq.standby==='released')return 'Stood down';
+  if(sq.standby==='training')return 'On training flights';
+  if(G.minute<sq.readyAt)return 'Coming to readiness';
+  if(sqStrength(sq)<4)return 'Too few aircraft or pilots';
+  const b=T(sq.baseId);if(b.health<15)return 'Airfield unserviceable';
+  return '';
+}
+function canOrder(sq){
+  if(sq.state==='ground')return scrambleBlock(sq)==='';
+  if(sq.state==='scrambling'||sq.state==='airborne')return true;
+  if(sq.state==='returning')return sq.ammo>0&&sq.fuel>20;
+  return false;
+}
+function scrambleDelay(sq){
+  let d=sq.standby==='readiness'?5:15;
+  const sec=T(SECTOR_OF[sq.baseId]);if(sec&&sec.health<35)d+=5;
+  const b=T(sq.baseId);if(b.health<50)d+=3;
+  if(G.works.done.opsroom)d-=2;
+  return Math.max(2,d);
+}
+function autoAngels(r){return clamp((r.identified||r.detected?r.estAlt:r.alt)+2000,3000,30000);}
+function orderSquadron(sq,order){
+  if(!canOrder(sq))return false;
+  let r=null;if(order.kind==='raid'){r=G.raids.find(x=>x.id===order.raidId);if(!r)return false;}
+  sq.targetAlt=UI.angels!=null?UI.angels:(r?autoAngels(r):15000);
+  sq.order=order;
+  const what=r?`hostile ${r.label}`:`patrol ${nearestPlaceName(order.x,order.y)}`;
+  if(sq.state==='ground'){sq.state='scrambling';sq.timer=scrambleDelay(sq);log(`Scramble ${sq.name}! ${what}, angels ${Math.round(sq.targetAlt/1000)}. Airborne in about ${sq.timer} minutes.`,'raf');bell();}
+  else {if(sq.state==='returning')sq.state='airborne';log(`${sq.name} re-vectored: ${what}, angels ${Math.round(sq.targetAlt/1000)}.`,'raf');}
+  return true;
+}
+function recall(sq){
+  if(sq.state==='scrambling'){sq.state='ground';sq.order=null;log(`${sq.name}: scramble cancelled.`,'raf');return;}
+  if(sq.state==='airborne'){sq.state='returning';sq.order=null;log(`${sq.name} recalled to ${T(sq.baseId).name}.`,'raf');return;}
+  if(sq.state==='engaged'){disengage(sq,'ordered to break off');}
+}
+function nearestField(x,y,excludeId){let best=null,bd=1e9;for(const t of G.targets){if(!fieldUsable(t)||t.id===excludeId||t.health<25)continue;const d=Math.hypot(t.x-x,t.y-y);if(d<bd){bd=d;best=t;}}return best;}
+function nearestPlaceName(x,y){let best=null,bd=1e9;for(const p of PLACES){if(p[3]>=2)continue;const q=W(p[1],p[2]);const d=Math.hypot(q.x-x,q.y-y);if(d<bd){bd=d;best=p;}}for(const t of G.targets){const d=Math.hypot(t.x-x,t.y-y);if(d<bd){bd=d;best=[t.name];}}return bd<6?`over ${best[0]}`:`${Math.round(bd)} mi from ${best[0]}`;}
+function flyToward(sq,tx,ty,dt,speed){const dx=tx-sq.x,dy=ty-sq.y,d=Math.hypot(dx,dy),step=speed*dt;if(d>0.01)sq.hdg=Math.atan2(dy,dx);if(d<=step){sq.x=tx;sq.y=ty;return true;}sq.x+=dx/d*step;sq.y+=dy/d*step;return false;}
+function climb(sq,dt){const rate=RAF_TYPES[sq.type].climb*(1-sq.fatigue/400);if(sq.alt<sq.targetAlt)sq.alt=Math.min(sq.targetAlt,sq.alt+rate*dt);else sq.alt=Math.max(sq.targetAlt,sq.alt-4000*dt);}
+function updateFlight(sq,dt){
+  const TY=RAF_TYPES[sq.type];
+  if(sq.state==='ground'){
+    const f=sq.standby==='readiness'?0.6:sq.standby==='available'?0.2:sq.standby==='training'?0.5:-3;
+    sq.fatigue=clamp(sq.fatigue+f*dt/60,0,100);
+    if(sq.standby==='training')sq.trainedToday=true;
+    return;
+  }
+  if(sq.state==='scrambling'){
+    sq.timer-=dt;
+    if(sq.timer<=0){sq.state='airborne';sq.flying=sqStrength(sq);markFliers(sq);sq.sorties++;G.today.sorties+=sq.flying;sq.fuel=TY.endurance;sq.ammo=3;sq.alt=0;}
+    return;
+  }
+  if(sq.state==='refuel'){sq.timer-=dt;sq.fatigue=clamp(sq.fatigue+0.6*dt/60,0,100);if(sq.timer<=0){sq.state='ground';sq.flying=0;}return;}
+  sq.fuel-=dt;sq.fatigue=clamp(sq.fatigue+3*coStyle(sq).f*dt/60,0,100);
+  const home=T(sq.baseId);
+  const spd=TY.speed*(sq.alt<sq.targetAlt-500?0.85:1);
+  if(sq.state==='engaged'){
+    const r=G.raids.find(x=>x.id===sq.engagedRaid);
+    if(!r||raidTotal(r)<=0){disengage(sq,null);return;}
+    sq.x=r.x;sq.y=r.y;sq.alt=r.alt;
+    sq.combatTimer-=dt;
+    if(sq.combatTimer<=0){
+      combatRound(sq,r);sq.ammo--;sq.combatTimer=1.5;
+      if(sq.ammo<=0||sq.flying<3)disengage(sq,sq.ammo<=0?'out of ammunition':'too few aircraft left');
+      else if(raidTotal(r)<=0)disengage(sq,null);
+    }
+    return;
+  }
+  if(sq.state==='returning'){
+    sq.targetAlt=0;climb(sq,dt);
+    if(flyToward(sq,home.x,home.y,dt,TY.speed))land(sq);
+    return;
+  }
+  // airborne
+  climb(sq,dt);
+  const need=Math.hypot(home.x-sq.x,home.y-sq.y)/TY.speed+8;
+  if(sq.fuel<need){sq.state='returning';sq.order=null;log(`${sq.name} is short of fuel and returning to base.`,'raf');return;}
+  const o=sq.order;
+  if(!o){sq.state='returning';return;}
+  if(o.kind==='raid'){
+    const r=G.raids.find(x=>x.id===o.raidId);
+    if(!r){sq.order={kind:'patrol',x:sq.x,y:sq.y};log(`${sq.name}: the hostile has gone. Orbiting and searching.`,'raf');return;}
+    const dd=dist(sq,r);const cr=contactR(sq);
+    const visible=r.tracked||dd<cr*2.5;
+    let tx,ty;
+    if(visible){const t=Math.min(20,dd/TY.speed);tx=r.x+r.vx*t*0.8;ty=r.y+r.vy*t*0.8;}else{tx=r.lastX;ty=r.lastY;}
+    if(dd<=cr&&sq.alt>=r.alt-6000){engage(sq,r,false);return;}
+    flyToward(sq,dd<cr?r.x:tx,dd<cr?r.y:ty,dt,spd);
+  } else {
+    const d=Math.hypot(o.x-sq.x,o.y-sq.y);
+    if(d>1.5)flyToward(sq,o.x,o.y,dt,spd);
+    else {sq.orbit+=dt*1.3;sq.x=o.x+Math.cos(sq.orbit)*1.2;sq.y=o.y+Math.sin(sq.orbit)*1.2;sq.hdg=sq.orbit+Math.PI/2;}
+    let best=null,bd=isNight()?contactR(sq)*2:Math.max(6,contactR(sq)*2.5);
+    for(const r of G.raids){const dr=dist(sq,r);if(dr<bd){bd=dr;best=r;}}
+    if(best){sq.order={kind:'raid',raidId:best.id};if(!best.detected){best.detected=true;G.today.raids++;best.plotX=best.x;best.plotY=best.y;best.plotAt=G.minute;identify(best,null);}log(`${sq.name} on patrol: tally-ho! It has sighted ${best.label} (${raidComp(best)}).`,'raf');}
+  }
+}
+function land(sq){
+  const b=T(sq.baseId);
+  if(b.health<25||!fieldUsable(b)){const nb=nearestField(sq.x,sq.y,sq.baseId);if(nb){log(`${sq.name} diverts to ${nb.name}: ${b.name} is cratered.`,'warn');sq.baseId=nb.id;return;}}
+  if(isNight()&&!nightCapable(sq)&&sq.flying>0){const n=Math.min(sq.flying,poisson(sq.flying*0.04));if(n>0){sq.aircraft-=n;G.today.rafLost+=n;sq.losses+=n;let k=0;for(let i=0;i<n;i++)if(rnd()<0.4&&casualty(sq,'k',`in a night landing accident at ${b.name}`))k++;G.today.pilotsKilled+=k;log(`${n} of ${sq.name}'s ${RAF_TYPES[sq.type].name}s crash on landing in the dark at ${b.name}.`,'warn');}}
+  for(const p of sq.roster)p.up=false;
+  sq.state='refuel';sq.timer=15+(b.health<50?15:0);sq.alt=0;sq.flying=0;sq.order=null;
+}
+function contactR(sq){let c=WEATHER[G.weather].contact;if(isNight()){c=nightCapable(sq)?2.6:0.7;if(G.works.done.searchlights&&overLand(sq.x,sq.y))c+=0.8;}return c;}
+function markFliers(sq){for(const p of sq.roster)p.up=false;const act=activePilots(sq);const co=act.find(p=>p.co);const rest=act.filter(p=>!p.co).sort((a,b)=>a.s-b.s);for(const p of (co?[co]:[]).concat(rest).slice(0,sq.flying)){p.up=true;p.s++;}}
+function engage(sq,r,bounced){
+  const escAlt=r.alt+(r.f110>0?2000:0);
+  sq.adv=bounced?'below':sq.alt>=escAlt+500?'above':sq.alt>=r.alt-1500?'level':'below';
+  if(coStyle(sq)===CO_STYLES.tactician){if(sq.adv==='level'&&rnd()<0.4)sq.adv='above';else if(sq.adv==='below'&&rnd()<0.3)sq.adv='level';}
+  sq.state='engaged';sq.engagedRaid=r.id;sq.combatTimer=0;sq.order=null;
+  if(!sq.rep)sq.rep={sq:sq.name,sqId:sq.id,raid:r.label,comp:raidComp(r),day:G.day,start:G.minute,adv:sq.adv,rounds:0,kills:0,landKills:0,claims:0,lost:0,damaged:0,credits:{},killed:[],wounded:[],safe:0,night:isNight(),weather:G.weather,alt:Math.round(sq.alt/1000),flying:sq.flying};
+  if(!r.engagedBy.includes(sq.id))r.engagedBy.push(sq.id);
+  if(!r.everEngaged){r.everEngaged=true;G.today.intercepted++;}
+  if(!r.identified)identify(r,null);
+  if(!bounced)log(`${sq.name}: tally-ho! It engages ${r.label} (${raidComp(r)}) ${sq.adv==='above'?'from above, with the sun behind':sq.adv==='level'?'at their level':'from below, still climbing'}.`,'raf');
+  chatter();
+}
+function disengage(sq,why){
+  if(sq.rep)finalizeReport(sq);
+  const r=G.raids.find(x=>x.id===sq.engagedRaid);if(r)r.engagedBy=r.engagedBy.filter(id=>id!==sq.id);
+  sq.engagedRaid=null;sq.order=null;sq.state='returning';
+  if(why)log(`${sq.name} breaks off (${why}) and returns to ${T(sq.baseId).name}.`,'raf');
+}
+function combatRound(sq,r){
+  const TY=RAF_TYPES[sq.type];const flying=sq.flying;if(flying<=0)return;
+  const advF={above:1.3,level:1.0,below:0.7}[sq.adv]||1;
+  const escAdv=sq.adv==='below'?1.4:sq.adv==='above'?0.8:1.0;
+  const skill=0.55+0.45*sq.exp,fat=1-sq.fatigue/200;
+  const S=flying*skill*fat*advF*(isNight()?(nightCapable(sq)?0.9:0.35):1);const st=coStyle(sq);
+  const fighterW=r.f110*0.7;
+  const engaged=r.engagedBy.map(id=>G.squadrons.find(s=>s.id===id)).filter(f=>f&&f.state==='engaged');
+  const wOf=f=>(f.tactic==='fighters'||r.bombers<=0)?2:1;
+  const wsum=engaged.reduce((a,f)=>a+wOf(f),0)||wOf(sq);
+  const E=Math.min(fighterW*wOf(sq)/wsum,flying*2.5)*escAdv;
+  let tie;
+  if(r.bombers<=0)tie=1;else if(fighterW<=0)tie=0;else if(sq.tactic==='fighters')tie=0.85;else tie=clamp(E/(S*3+E),0,0.7);
+  const Sb=S*(1-tie),Sf=S*tie;
+  const BT=BOMBER_TYPES[r.bomberType];
+  let kB=0;if(r.bombers>0&&Sb>0)kB=Math.min(r.bombers,poisson(Sb*0.12*TY.vsB*BT.vuln*st.k));
+  let kF=0;if(r.f110>0&&Sf>0)kF=Math.min(r.f110,poisson(Sf*0.10*TY.vsF*1.5*st.k));
+  r.bombers-=kB;r.f110-=kF;
+  if(r.bomberType==='Ju88R')G.today.lwRecce+=kB;else G.today.lwBombers+=kB;
+  G.today.lwFighters+=kF;
+  const lam=(E*0.018+Sb*0.026*BT.gun)*TY.lossMult*(1+sq.fatigue/150)*(1.15-0.3*sq.exp)*st.l;
+  const lost=Math.min(poisson(lam),flying);
+  const damaged=Math.min(poisson(lam*0.7),flying-lost);
+  const kills=kB+kF;
+  const claims=kills>0?Math.max(kills,Math.round(kills*rrange(1.1,2.1))):(rnd()<0.2?1:0);
+  sq.kills+=kills;sq.claims+=claims;G.today.claims+=claims;
+  sq.flying-=lost+damaged;sq.aircraft-=lost+damaged;sq.losses+=lost;
+  G.today.rafLost+=lost;G.today.rafDamaged+=damaged;
+  if(damaged>0)G.repairs.push({day:G.day+rint(2,4),type:sq.type,n:damaged});
+  const land=overLand(sq.x,sq.y);let killed=0,wounded=0,safe=0;
+  for(let i=0;i<lost;i++){const x=rnd();if(land){if(x<0.35)killed++;else if(x<0.6)wounded++;else safe++;}else{if(x<0.6)killed++;else if(x<0.7)wounded++;else safe++;}}
+  const credited=creditKills(sq,kills);
+  const kNames=[],wNames=[];const where=land?'in action '+nearestPlaceName(sq.x,sq.y):'over the sea';
+  for(let i=0;i<killed;i++){const p=casualty(sq,'k',where);if(p)kNames.push(pname(p));}
+  for(let i=0;i<wounded;i++){const p=casualty(sq,'w','');if(p)wNames.push(pname(p));}
+  G.today.pilotsKilled+=killed;G.today.pilotsWounded+=wounded;G.today.pilotsSafe+=safe;
+  sq.exp=clamp(sq.exp+0.008*(1-sq.exp),0,1);sq.fatigue=clamp(sq.fatigue+3*st.f,0,100);
+  if(sq.rep){const R=sq.rep;R.rounds++;R.kills+=kills;if(overLand(r.x,r.y))R.landKills+=kills;R.claims+=claims;R.lost+=lost;R.damaged+=damaged;R.safe+=safe;for(const c of credited)R.credits[c]=(R.credits[c]||0)+1;R.killed.push(...kNames);R.wounded.push(...wNames);}
+  sq.adv='level';
+  if(r.initBombers>0&&r.bomberType!=='Ju88R'){r.disrupted=clamp(r.disrupted+kB/r.initBombers*1.3+S/(r.bombers+5)*0.02,0,1);}
+  if(r.phase==='inbound'&&r.bombers>0&&r.disrupted>=0.6&&r.bomberType!=='Ju88R'){r.phase='outbound';r.dogleg=null;log(`${r.label} is broken up. The bombers are jettisoning their loads and turning for Norway.`,'good');}
+  if(r.bombers<=0&&r.phase==='inbound'){r.phase='outbound';r.dogleg=null;}
+  let msg=`${sq.name} vs ${r.label}: claims ${claims} destroyed`;
+  if(lost){msg+=`; ${lost} ${TY.name}${lost>1?'s':''} lost`;const bits=[];if(killed)bits.push(`${killed} pilot${killed>1?'s':''} killed`);if(wounded)bits.push(`${wounded} wounded`);if(safe)bits.push(`${safe} ${land?'baled out safely':'picked up from the sea'}`);if(bits.length)msg+=` (${bits.join(', ')})`;}
+  if(damaged)msg+=`; ${damaged} damaged`;
+  log(msg+'.',kills?'good':lost?'warn':'raf');
+  if(!HEADLESS)UI.flashes.push({x:r.x,y:r.y,t:performance.now(),n:kills});
+}
+
+// ── THE SOUTH (abstracted 11 Group battle) ──
+function southIntensity(day){
+  if(day<D_KANAL)return day>=dayOf(6,20)?0.15:0;
+  if(day<D_ADLER)return 0.5;
+  if(day<dayOf(8,24))return 1.0;
+  if(day<D_BLITZ)return 1.2;
+  if(day===dayOf(9,15))return 1.4;
+  if(day<D_LATE)return 0.9;
+  return 0.55;
+}
+function merlinFactor(){const f=T('f_hillington');return 0.5+0.5*f.health/100;}
+function sqEff(s){return sqStrength(s)*(0.55+0.45*s.exp)*(1-s.fatigue/200);}
+function southEffective(){const S=G.south;return 200-S.wear+S.squadrons.reduce((a,s)=>a+sqEff(s)*1.2,0);}
+function southNeed(I){return 150+88*I;}
+function sendSouth(sq,silent){
+  if(sq.state!=='ground'&&sq.state!=='refuel')return false;
+  G.squadrons=G.squadrons.filter(s=>s!==sq);
+  sq.homeBase=sq.baseId;sq.daysSouth=0;sq.state='south';sq.order=null;sq.flying=0;
+  G.south.squadrons.push(sq);
+  if(UI.selSq===sq.id)UI.selSq=null;
+  if(!silent)log(`${sq.name} flies south to join 11 Group.`,'raf');
+  // Dowding sometimes sends a battered squadron north in exchange
+  if(!silent&&southIntensity(G.day)>=0.5&&rnd()<0.55){
+    const avail=SOUTH_SWAPS.filter(s=>!G.south.swapsUsed.includes(s[0])&&!G.squadrons.some(q=>q.id===s[0])&&!G.south.squadrons.some(q=>q.id===s[0]));
+    if(avail.length){const s=pick(avail);G.south.swapsUsed.push(s[0]);
+      const nq=makeSquadron({id:s[0],type:s[1],base:sq.homeBase,exp:rrange(0.4,0.55),pilots:rint(10,14),aircraft:rint(9,12),fatigue:rint(65,85)});
+      G.south.arrivals.push({day:G.day+rint(1,2),sq:nq,base:sq.homeBase});
+      log(`Dowding is sending No. ${s[0]} Squadron north to rest in exchange. It is badly worn.`,'');}
+  }
+  return true;
+}
+function southDay(rep){
+  const I=southIntensity(G.day);
+  const S=G.south;const lines=[];let kills=0,lost=0;
+  if(I>0){
+    for(const s of S.squadrons.slice()){
+      s.daysSouth++;
+      const str=sqStrength(s),skill=0.55+0.45*s.exp,fat=1-s.fatigue/200,TY=RAF_TYPES[s.type];
+      const cs=coStyle(s);
+      const k=poisson(I*str*0.2*skill*fat*(s.type==='spitfire'?1.05:1)*cs.k);
+      const l=Math.min(str,poisson(I*str*0.1*(1+s.fatigue/150)*(1.15-0.3*s.exp)*TY.lossMult*cs.l));
+      let pk=0,pw=0;for(let i=0;i<l;i++){const x=rnd();if(x<0.4)pk++;else if(x<0.6)pw++;}
+      creditKills(s,k);
+      for(let i=0;i<pk;i++)casualty(s,'k','over southern England with 11 Group');
+      for(let i=0;i<pw;i++)casualty(s,'w','');
+      s.aircraft-=l;s.losses+=l;s.kills+=k;s.southClaims+=Math.round(k*rrange(1.2,2));
+      s.fatigue=clamp(s.fatigue+I*14-8,0,100);s.exp=clamp(s.exp+0.012*I*(1-s.exp),0,1);
+      // national pool keeps them topped up, partly
+      s.aircraft=Math.min(16,s.aircraft+rint(1,2));if(rnd()<0.6&&s.pilots<20)addPilots(s,1,0.2,'GB');
+      kills+=k;lost+=l;
+      if(k||l)lines.push(`${s.name}: ${k} destroyed, ${l} lost${pk?` (${pk} pilot${pk>1?'s':''} killed)`:''}`);
+      S.pilotsKilled=(S.pilotsKilled||0)+pk;S.lost=(S.lost||0)+l;S.kills=(S.kills||0)+k;
+      if(sqStrength(s)<7||s.fatigue>85){
+        S.squadrons=S.squadrons.filter(q=>q!==s);
+        s.fatigue=Math.max(s.fatigue,70);
+        G.south.arrivals.push({day:G.day+1,sq:s,base:s.homeBase||'drem'});
+        lines.push(`${s.name} is exhausted after ${s.daysSouth} days and is being sent home to you.`);
+      }
+    }
+    S.wear=clamp(S.wear+I*2.6-1.8*merlinFactor(),0,95);
+  } else {S.wear=Math.max(0,S.wear-1);}
+  const eff=southEffective(),need=southNeed(I);
+  let d=0;
+  if(I>0)d=(need-eff)/18+0.5*I-0.9;else d=-0.5;
+  rep.south={I,eff:Math.round(eff),need:Math.round(need),kills,lost,lines,delta:d};
+  S.lastKills=kills;
+  return d;
+}
+function checkRequests(){
+  if(G.pendingRequest)return;
+  let n=0;
+  for(const r of REQUESTS)if(r[0]===G.day)n=r[1];
+  if(!n&&southIntensity(G.day)>=0.9&&G.gauge>55&&G.day-G.south.lastReq>=6)n=1;
+  if(n>0){G.south.lastReq=G.day;G.pendingRequest={n,day:G.day};G.eventQueue.push('request');}
+}
+function resolveRequest(ids){
+  const req=G.pendingRequest;if(!req)return;
+  const sent=[];for(const id of ids){const s=G.squadrons.find(q=>q.id===id);if(s&&sendSouth(s))sent.push(s.name);}
+  const short=Math.max(0,req.n-sent.length);
+  if(short===0){G.standing=clamp(G.standing+3,0,100);log(`Fighter Command thanks you. ${sent.join(' and ')} ${sent.length>1?'are':'is'} on the way south.`,'good');}
+  else {G.standing=clamp(G.standing-8*short,0,100);G.south.wear=clamp(G.south.wear+6*short,0,95);log(`You ${sent.length?'sent only '+sent.length+' of '+req.n:'refused Dowding\'s request for '+req.n} squadron${req.n>1?'s':''}. 11 Group will have to manage without, and the Air Ministry takes note.`,'warn');}
+  G.pendingRequest=null;
+}
+
+// ── END OF DAY ──
+function endDay(){
+  G.minute=G.dayEnd;
+  for(const r of G.raids.slice())despawnRaid(r);
+  for(const sq of G.squadrons){if(sq.rep)finalizeReport(sq);for(const p of sq.roster)p.up=false;if(sq.state!=='ground'){const b=T(sq.baseId);sq.state='ground';sq.x=b.x;sq.y=b.y;sq.alt=0;sq.flying=0;sq.order=null;sq.engagedRaid=null;}}
+  if(G.convoy){log(`${G.convoy.name} anchors for the night with ${G.convoy.ships} ships.`,'');G.convoy=null;}
+  if(G.anchorage){const a=G.anchorage;log(`${a.name} sails from the Clyde with ${a.ships} of its ${a.initShips} ships.`,a.ships<a.initShips?'warn':'good');G.anchorage=null;}
+  const rep={day:G.day,weather:G.weather,north:Object.assign({},G.today),notes:[],prod:{},works:[]};
+  const g0=G.gauge,s0=G.standing;
+  overnight(rep);
+  const dS=southDay(rep);
+  const t=G.today;
+  // invasion threat: the south, plus damage to the Fleet's bases
+  let dg=dS+t.dmgNaval*0.04+t.shipsSunk*0.25+t.troopSunk*0.5+t.dmgIndustry*0.008;
+  G.gauge=clamp(G.gauge+dg,0,100);
+  // Air Ministry confidence
+  let ds=t.lwBombers*0.25+t.lwRecce*0.8+t.lwFighters*0.25-t.unopposed*3-t.unopposedNight*0.8-(t.dmgNaval+t.dmgIndustry)*0.05-t.dmgCity*0.04-t.dmgGlasgow*0.03-t.rafLost*0.25-t.pilotsKilled*0.3-t.groundLost*0.2-t.shipsSunk*0.4-t.troopSunk*1.2+(rep.south.kills||0)*0.12+(55-G.standing)*0.03;
+  G.standing=clamp(G.standing+ds,0,100);
+  rep.gauge={from:g0,to:G.gauge};rep.standing={from:s0,to:G.standing};
+  for(const k in t)G.totals[k]=(G.totals[k]||0)+t[k];
+  G.history.push({day:G.day,gauge:Math.round(G.gauge),standing:Math.round(G.standing),str:homeStrength(),k:t.lwBombers+t.lwFighters+t.lwRecce,l:t.rafLost+t.groundLost,sth:G.south.squadrons.length});
+  if(G.history.length>200)G.history.shift();
+  if(G.gauge>=100)G.gameOver={win:false,reason:'sealion'};
+  else if(G.standing<=0)G.gameOver={win:false,reason:'sacked'};
+  else if(G.day>=D_END)G.gameOver={win:true};
+  G.lastReport=rep;G.reportPending=true;G.phaseState='night';
+  save();
+  processQueue();
+}
+function homeStrength(){return G.squadrons.reduce((a,s)=>a+(operational(s)?sqStrength(s):0),0);}
+function overnight(rep){
+  // repairs to targets
+  for(const t of G.targets){const r=(KIND_REPAIR[t.kind]||8)*(G.works.done.repair&&(t.kind==='airfield'||t.kind==='radar')?1.6:1);t.health=Math.min(100,t.health+r);}
+  // aircraft production (Merlins from Hillington matter to everyone)
+  const mf=merlinFactor();
+  const hu=Math.round(rrange(1,3)*mf),sp=Math.round(rrange(0,2)*mf+(G.day>=dayOf(8,1)?0.5:0))+(G.day<=G.bonus.spitUntil?1:0);
+  if(G.day>=dayOf(9,1)&&rnd()<0.4)G.pools.blenheim=(G.pools.blenheim||0)+1;
+  G.pools.hurricane+=hu;G.pools.spitfire+=sp;rep.prod={hurricane:hu,spitfire:sp};
+  let rp=0;for(const r of G.repairs.filter(r=>r.day<=G.day)){G.pools[r.type]=(G.pools[r.type]||0)+r.n;rp+=r.n;}G.repairs=G.repairs.filter(r=>r.day>G.day);rep.prod.repaired=rp;
+  // pilots
+  const otu=G.otuShort?rint(1,3):rint(0,2);G.pilotPool+=otu;rep.prod.pilots=otu;
+  for(const s of G.squadrons.concat(G.south.squadrons)){for(const p of s.roster){if(p.st==='w'&&p.ret<=G.day){p.st='a';log(`${pname(p)} returns to ${s.name} from hospital.`,'raf');}}syncPilots(s);}
+  const newExp=G.otuShort?0.12:0.22;
+  const byA=G.squadrons.slice().sort((a,b)=>a.aircraft-b.aircraft);
+  for(const s of byA){const need=16-s.aircraft;if(need<=0)continue;const n=Math.min(need,G.pools[s.type]||0,4);s.aircraft+=n;G.pools[s.type]-=n;}
+  const byP=G.squadrons.slice().sort((a,b)=>a.pilots-b.pilots);
+  for(const s of byP){if(s.pilots>=20)continue;const n=Math.min(3,20-s.pilots,G.pilotPool);if(n<=0)continue;addPilots(s,n,newExp,'GB');G.pilotPool-=n;}
+  // training & rest
+  for(const s of G.squadrons){
+    if(s.trainedToday){const g=0.035*(1-s.exp)*(s.exp<0.4?1.5:1);s.exp=clamp(s.exp+g,0,0.85);G.today.training++;
+      if(rnd()<0.04&&s.aircraft>0){s.aircraft--;rep.notes.push(`${s.name} loses an aircraft in a training accident.`);if(rnd()<0.5)casualty(s,'k','in a training accident');}}
+    s.fatigue=Math.max(0,s.fatigue-(s.standby==='released'?45:32));
+  }
+  // works
+  for(const w of G.works.active.slice()){w.left--;if(w.left<=0){G.works.done[w.id]=true;G.works.active=G.works.active.filter(x=>x!==w);const def=WORKS.find(x=>x.id===w.id);rep.works.push(def.name);log(`Works complete: ${def.name}.`,'good');}}
+  // Luftflotte 5
+  const L=G.lf5;const lost=G.today.lwBombers+G.today.lwFighters;
+  L.morale=clamp(L.morale-G.today.lwBombers/60+0.02,0.35,1.1);
+  L.bombers=Math.min(150,L.bombers+(L.active?2:0));L.f110=Math.min(36,L.f110+(rnd()<0.3?1:0));L.recce=Math.min(20,L.recce+(rnd()<0.5?1:0));
+  const A=L.adapt,sent=G.today.lwSent,lr=sent?G.today.lwBombers/sent:0;
+  if(sent>=3&&lr>=0.2){const k=pick(Object.keys(A));const before=A[k];A[k]=clamp(A[k]+rrange(0.07,0.14),0,k==='dogleg'?0.75:0.8);if(A[k]-before>0.05){rep.notes.push(ADAPT_TEXT[k]);log(ADAPT_TEXT[k],'lw');}}
+  else if(sent>=3&&lr<0.08){for(const k in A)A[k]=Math.max(k==='dogleg'?0.35:0,A[k]-0.05);}
+  if(lost>=15)rep.notes.push('Luftflotte 5 has been badly mauled. Its crews will be warier of daylight raids for a while.');
+}
+function nextDay(){G.reportPending=false;G.day++;beginDay();}
+
+// ── WORKS ──
+function startWork(id){if(G.works.done[id]||G.works.active.some(w=>w.id===id)||G.works.active.length>=workSlots())return;const def=WORKS.find(w=>w.id===id);G.works.active.push({id,left:def.days});log(`Works begun: ${def.name} (${def.days} days).`,'');}
+function cancelWork(id){G.works.active=G.works.active.filter(w=>w.id!==id);}
+
+// ── SAVE ──
+function save(){if(HEADLESS)return;try{localStorage.setItem(SAVE_KEY,JSON.stringify(G));}catch(e){}}
+function tryLoad(){try{const s=localStorage.getItem(SAVE_KEY);if(!s)return null;const g=JSON.parse(s);if(!g||g.version!==2)return null;return g;}catch(e){return null;}}
+function log(m,c){if(!G)return;G.log.unshift({d:G.day,t:G.minute,m,c:c||''});if(G.log.length>350)G.log.length=350;UI.sideDirty=true;}
+let AC=null;
+function audioCtx(){if(HEADLESS||!UI.sound)return null;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC;}catch(e){return null;}}
+function siren(){const ac=audioCtx();if(!ac)return;const now=performance.now();if(UI.lastSiren&&now-UI.lastSiren<45000)return;UI.lastSiren=now;try{const t=ac.currentTime,o=ac.createOscillator(),f=ac.createBiquadFilter(),g=ac.createGain();o.type='sawtooth';f.type='lowpass';f.frequency.value=1400;o.frequency.setValueAtTime(260,t);o.frequency.linearRampToValueAtTime(640,t+1.4);o.frequency.setValueAtTime(640,t+2.2);o.frequency.linearRampToValueAtTime(300,t+3.8);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.03,t+0.6);g.gain.setValueAtTime(0.03,t+2.6);g.gain.linearRampToValueAtTime(0.0001,t+4);o.connect(f);f.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+4.1);}catch(e){}}
+function bell(){const ac=audioCtx();if(!ac)return;try{const t=ac.currentTime;for(let i=0;i<7;i++){const o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.value=1250;g.gain.setValueAtTime(0.05,t+i*0.085);g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.085+0.08);o.connect(g);g.connect(ac.destination);o.start(t+i*0.085);o.stop(t+i*0.085+0.09);}}catch(e){}}
+function chatter(){const ac=audioCtx();if(!ac)return;try{const t=ac.currentTime,len=0.55,buf=ac.createBuffer(1,Math.floor(ac.sampleRate*len),ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++){const env=Math.sin(Math.PI*i/d.length);d[i]=(rnd()*2-1)*env*(0.5+0.5*Math.sin(i/ac.sampleRate*2*Math.PI*9));}const src=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();src.buffer=buf;f.type='bandpass';f.frequency.value=1700;f.Q.value=3;g.gain.value=0.07;src.connect(f);f.connect(g);g.connect(ac.destination);src.start(t);const o=ac.createOscillator(),g2=ac.createGain();o.frequency.value=1000;g2.gain.setValueAtTime(0.03,t+len);g2.gain.exponentialRampToValueAtTime(0.0001,t+len+0.12);o.connect(g2);g2.connect(ac.destination);o.start(t+len);o.stop(t+len+0.13);}catch(e){}}
+function beep(f,d){if(!audioCtx())return;try{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.value=0.035;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+d);o.stop(AC.currentTime+d+0.02);}catch(e){}}
+
+// ── MODALS / EVENT QUEUE ──
+function processQueue(){
+  if(HEADLESS||UI.modal||UI.title)return;
+  if(G.reportPending){showReport();return;}
+  if(G.gameOver){showEnd();return;}
+  const id=G.eventQueue[0];if(!id)return;
+  if(id==='request'){showRequest();return;}
+  if(id.indexOf('co:')===0){showCO(id.slice(3));return;}
+  if(id==='conf'){showConf();return;}
+  const ev=EVENTS.find(e=>e.id===id);if(!ev){G.eventQueue.shift();processQueue();return;}
+  const body=`<h2>${esc(ev.title)}</h2><div class="sub">${esc(ev.sub||dateStr(G.day))}</div>${ev.text||''}`;
+  const done=()=>{G.eventQueue.shift();save();processQueue();};
+  if(ev.choices)showModal(body,ev.choices.map(c=>({label:c.label,cls:'gold',fn:()=>{c.fn();done();}})));
+  else showModal(body,[{label:'Carry on',cls:'gold',fn:done}]);
+}
+let modalButtons=[];
+function showModal(html,buttons){
+  modalButtons=buttons;UI.modal=true;
+  document.getElementById('modalBody').innerHTML=html+`<div class="mbtns">${buttons.map((b,i)=>`<button class="btn ${b.cls||''}" data-mb="${i}">${esc(b.label)}</button>`).join('')}</div>`;
+  document.getElementById('modal').classList.add('show');
+}
+function hideModal(){UI.modal=false;document.getElementById('modal').classList.remove('show');}
+function showRequest(){
+  const req=G.pendingRequest;if(!req){G.eventQueue.shift();processQueue();return;}
+  const elig=G.squadrons.filter(s=>operational(s)&&(s.state==='ground'||s.state==='refuel')&&sqStrength(s)>=6);
+  const draw=()=>{
+    const nSel=Object.keys(UI.reqSel).filter(k=>UI.reqSel[k]).length;
+    const html=`<h2>Signal from Bentley Priory</h2><div class="sub">Air Chief Marshal Dowding · ${dateStr(G.day)}</div>
+      <p>11 Group is being worn down and Park needs fresh squadrons. Fighter Command asks you to send <b>${req.n} squadron${req.n>1?'s':''}</b> south at once.</p>
+      <p class="dim" style="font-size:12.5px">Invasion threat is at <b>${Math.round(G.gauge)}</b>. Good squadrons do more in the south, but the ones you send leave gaps up here. Refusing will cost you the Air Ministry's confidence and cost 11 Group dear.</p>
+      ${elig.length?elig.map(s=>`<div class="pick ${UI.reqSel[s.id]?'on':''}" data-pick="${s.id}"><b style="color:var(--raf);width:40px">${s.id}</b><span style="flex:1">${esc(s.name)} · ${RAF_TYPES[s.type].name} · ${esc(T(s.baseId).name)}</span><span class="dim">${sqStrength(s)}/12 · exp ${Math.round(s.exp*100)} · fatigue ${Math.round(s.fatigue)}</span></div>`).join(''):'<p class="dim">You have no squadrons fit to send.</p>'}`;
+    showModal(html,[
+      {label:nSel?`Send ${nSel} squadron${nSel>1?'s':''} south`:'Send none',cls:'gold',fn:()=>{const ids=Object.keys(UI.reqSel).filter(k=>UI.reqSel[k]);UI.reqSel={};resolveRequest(ids);G.eventQueue.shift();save();processQueue();}},
+      {label:'Refuse the request',cls:'red',fn:()=>{UI.reqSel={};resolveRequest([]);G.eventQueue.shift();save();processQueue();}}
+    ]);
+    UI.redrawRequest=draw;
+  };
+  draw();
+}
+function historyChart(w,h){
+  const H=G.history;if(H.length<2)return '<div class="dim" style="font-size:12px">The chart fills in as the days go by.</div>';
+  const d0=H[0].day,d1=Math.max(D_END,H[H.length-1].day),pl=24,pr=6,pt=8,pb=40,iw=w-pl-pr,ih=h-pt-pb;
+  const X=d=>pl+(d-d0)/Math.max(1,d1-d0)*iw,Y=v=>pt+ih-(v/100)*ih;
+  let o=`<svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block;background:#0a0d10;border:1px solid var(--line);border-radius:3px;font-family:Georgia">`;
+  for(const v of [0,25,50,75,100])o+=`<line x1="${pl}" x2="${w-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#222a33"/><text x="${pl-3}" y="${Y(v)+3}" fill="#6f6a5c" font-size="8" text-anchor="end">${v}</text>`;
+  for(const [d,l] of [[D_KANAL,'Battle opens'],[D_ADLER,'Adlertag'],[dayOf(8,15),'15 Aug'],[D_BLITZ,'Blitz'],[dayOf(9,15),'15 Sep']]){if(d<d0||d>d1)continue;o+=`<line x1="${X(d)}" x2="${X(d)}" y1="${pt}" y2="${pt+ih}" stroke="#3a3326" stroke-dasharray="2,3"/><text x="${X(d)+2}" y="${pt+8}" fill="#8a7d5a" font-size="7.5">${l}</text>`;}
+  const bh=pb-16,by=h-12,mx=Math.max(4,...H.map(p=>Math.max(p.k||0,p.l||0))),bw=Math.max(1,iw/Math.max(1,d1-d0)-0.4);
+  for(const p of H){if(p.k)o+=`<rect x="${X(p.day)}" y="${by-bh*(p.k/mx)}" width="${bw}" height="${bh*(p.k/mx)}" fill="#4fae55" opacity=".7"/>`;if(p.l)o+=`<rect x="${X(p.day)+bw*0.35}" y="${by-bh*(p.l/mx)}" width="${bw*0.65}" height="${bh*(p.l/mx)}" fill="#e2553f" opacity=".85"/>`;}
+  const line=(key,col)=>`<polyline fill="none" stroke="${col}" stroke-width="1.8" points="${H.map(p=>X(p.day).toFixed(1)+','+Y(p[key]).toFixed(1)).join(' ')}"/>`;
+  o+=line('gauge','#e2553f')+line('standing','#5a9be8');
+  o+=`<text x="${pl}" y="${h-2}" font-size="8"><tspan fill="#e2553f">━ invasion threat</tspan><tspan fill="#5a9be8">  ━ confidence</tspan><tspan fill="#4fae55">  ▮ enemy destroyed</tspan><tspan fill="#e2553f">  ▮ our losses (north)</tspan></text></svg>`;
+  return o;
+}
+function showCO(sqId){
+  const P=G.coPending&&G.coPending[sqId];const sq=findSq(sqId);
+  if(!P||!sq){if(G.coPending)delete G.coPending[sqId];G.eventQueue.shift();processQueue();return;}
+  const html=`<h2>${esc(sq.name)} needs a new CO</h2><div class="sub">Its commanding officer has been ${esc(P.why)}</div><p>Choose who takes over the squadron. His style will shape how it fights.</p>`+
+    P.cands.map((c,i)=>`<p style="font-size:13px"><b>${i+1}.</b> ${esc(c.text)}<br><span class="dim">${esc(CO_STYLES[c.style].name)}: ${esc(CO_STYLES[c.style].desc)}</span></p>`).join('');
+  showModal(html,P.cands.map((c,i)=>({label:`Appoint ${i+1}`,cls:'gold',fn:()=>{resolveCO(sqId,i);G.eventQueue.shift();save();processQueue();}})));
+}
+function showConf(){
+  const opts=(G.pendingConf||[]).map(id=>CONF.find(c=>c.id===id)).filter(Boolean);
+  const html=`<h2>Monday conference</h2><div class="sub">Air Ministry and Ministry of Aircraft Production · ${dateStr(G.day)}</div><p>Your weekly session with Whitehall. Every favour you ask for spends some of their confidence in you.</p>`+
+    opts.map(c=>`<p style="font-size:13px"><b>${esc(c.label)}.</b> ${esc(c.desc)} <span class="dim">(${c.cost>0?'costs '+c.cost:'gains '+(-c.cost)} confidence)</span></p>`).join('')+
+    `<p style="font-size:13px"><b>Keep your head down.</b> Ask for nothing. <span class="dim">(gains 2 confidence)</span></p>`;
+  const done=id=>()=>{resolveConf(id);G.eventQueue.shift();save();processQueue();};
+  showModal(html,opts.map(c=>({label:c.label,cls:'gold',fn:done(c.id)})).concat([{label:'Keep your head down',fn:done(null)}]));
+}
+function showFormF(R){
+  const adv={above:'from above',level:'at the same height',below:'from below'}[R.adv]||'';
+  const cred=Object.keys(R.credits).map(k=>`${esc(k)}${R.credits[k]>1?' ('+R.credits[k]+')':''}`).join(', ')||'none';
+  const unconf=Math.max(0,R.claims-R.landKills);
+  const html=`<h2>Form "F": Combat Report</h2><div class="sub">${esc(R.sq)} · ${dateStr(R.day,true)} · ${clockStr(R.start)}–${clockStr(R.end||R.start)}</div>
+  <div class="rep">
+    <div><span>Enemy</span><b>${esc(R.raid)}</b></div><div><span>Conditions</span><b>${R.night?'Night':esc(WEATHER[R.weather].name)}</b></div>
+    <div><span>Enemy force</span><b>${esc(R.comp)}</b></div><div><span>Our aircraft</span><b>${R.flying}, attacking ${adv}</b></div>
+    <div><span>Claimed destroyed</span><b style="color:var(--ok)">${R.claims}</b></div><div><span>Probable / damaged</span><b>${R.prob} / ${R.dmgd}</b></div>
+    <div><span>Our aircraft lost</span><b>${R.lost}</b></div><div><span>Damaged</span><b>${R.damaged}</b></div>
+  </div>
+  <p style="font-size:13px"><b>Victories credited to:</b> ${cred}</p>
+  ${R.killed.length?`<p style="font-size:13px;color:#ffc2b6"><b>Killed:</b> ${R.killed.map(esc).join(', ')}</p>`:''}
+  ${R.wounded.length?`<p style="font-size:13px"><b>Wounded:</b> ${R.wounded.map(esc).join(', ')}</p>`:''}
+  ${R.safe?`<p style="font-size:13px">${R.safe} pilot${R.safe>1?'s':''} baled out or ${R.safe>1?'were':'was'} picked up safely.</p>`:''}
+  <p class="dim" style="font-size:12.5px">Intelligence Officer's note: ${R.landKills} wreck${R.landKills===1?'':'s'} found on land.${unconf?` The other ${unconf} claim${unconf>1?'s':''} fell in the sea or cannot be confirmed.`:''}</p>`;
+  showModal(html,[{label:'File the report',cls:'gold',fn:()=>{processQueue();}}]);
+}
+function showRoster(id){
+  const sq=findSq(id);if(!sq)return;const co=sqCO(sq);
+  const rows=sq.roster.slice().sort((a,b)=>(b.co-a.co)||(b.k-a.k)||(b.s-a.s)).map(p=>`<tr><td>${p.co?'<b style="color:var(--gold)">CO</b> ':''}${p.k>=5?'★ ':''}${esc(pname(p))}</td><td>${p.k}</td><td>${p.s}</td><td>${p.st==='w'?`<span style="color:var(--warn)">Wounded, back ${dateStr(p.ret).replace(' 1940','')}</span>`:'Fit'}</td></tr>`).join('');
+  showModal(`<h2>${esc(sq.name)}${sq.title?` <span class="dim" style="font-size:14px">(${esc(sq.title)})</span>`:''}</h2><div class="sub">${RAF_TYPES[sq.type].name}s · ${sq.state==='south'?'with 11 Group':esc(T(sq.baseId).name)} · CO: ${co?esc(CO_STYLES[co.style].name):'vacant'}${nightCapable(sq)?' · night fighters':''}</div>
+  <table class="t"><tr><th>Pilot</th><th>Victories</th><th>Sorties</th><th>Status</th></tr>${rows}</table>`,[{label:'Close',cls:'gold',fn:()=>{processQueue();}}]);
+}
+function showToast(R){
+  const el=$('toast');if(!el)return;UI.toastRep=R;
+  el.innerHTML=`<b style="color:var(--gold)">Combat report</b> · ${esc(R.sq)} vs ${esc(R.raid)}: claims ${R.claims} destroyed${R.prob?`, ${R.prob} probable`:''}${R.lost?`; ${R.lost} lost`:''}. <u>Read the Form F</u>`;
+  el.classList.add('show');clearTimeout(UI.toastT);UI.toastT=setTimeout(()=>el.classList.remove('show'),9000);
+}
+function showReport(){
+  const R=G.lastReport,n=R.north,s=R.south||{};
+  const sign=v=>(v>=0?'+':'')+v.toFixed(1);
+  const html=`<h2>Daily Report</h2><div class="sub">${dateStr(R.day,true)} · ${WEATHER[R.weather].name}</div>
+  <h3>The north</h3>
+  <div class="rep">
+    <div><span>Hostile raids plotted</span><b>${n.raids}</b></div><div><span>Raids intercepted</span><b>${n.intercepted}</b></div>
+    <div><span>Raids that bombed</span><b>${n.bombed}</b></div><div><span>…unopposed</span><b style="color:${n.unopposed?'var(--bad)':'inherit'}">${n.unopposed}</b></div>
+    <div><span>Sorties flown</span><b>${n.sorties}</b></div><div><span>Enemy destroyed (claimed)</span><b style="color:var(--ok)">${n.claims+n.aaKills}</b></div>
+    <div><span>Our fighters lost</span><b>${n.rafLost}${n.groundLost?` + ${n.groundLost} on ground`:''}</b></div><div><span>Damaged, to repair</span><b>${n.rafDamaged}</b></div>
+    <div><span>Pilots killed</span><b>${n.pilotsKilled}</b></div><div><span>Pilots wounded / safe</span><b>${n.pilotsWounded} / ${n.pilotsSafe}</b></div>
+    ${n.unopposedNight?`<div><span>Night raids unopposed</span><b>${n.unopposedNight}</b></div>`:''}${n.shipsSunk?`<div><span>Convoy ships sunk</span><b>${n.shipsSunk}${n.troopSunk?` (${n.troopSunk} troopships)`:''}</b></div>`:''}${n.civilians?`<div><span>Civilian casualties</span><b>${n.civilians}</b></div>`:''}
+  </div>
+  ${s.I>0?`<h3>The south</h3><p style="font-size:13px">11 Group strength ${s.eff} against the ${s.need} Park needs. Your squadrons down south: ${s.kills} destroyed, ${s.lost} lost.</p>${s.lines.length?'<div class="dim" style="font-size:12px;margin:-4px 0 8px">'+s.lines.map(esc).join('<br>')+'</div>':''}`:''}
+  <h3>Overnight</h3>
+  <p style="font-size:13px">Delivered: ${R.prod.hurricane} Hurricanes and ${R.prod.spitfire} Spitfires${R.prod.repaired?`, plus ${R.prod.repaired} repaired aircraft`:''}. ${R.prod.pilots} new pilots.${R.works.length?` <b>Works finished:</b> ${R.works.map(esc).join(', ')}.`:''}</p>
+  ${R.notes.length?'<p class="dim" style="font-size:12.5px">'+R.notes.map(esc).join('<br>')+'</p>':''}
+  <div class="rep">
+    <div><span>Invasion threat</span><b style="color:${R.gauge.to>R.gauge.from?'var(--bad)':'var(--ok)'}">${Math.round(R.gauge.to)} (${sign(R.gauge.to-R.gauge.from)})</b></div>
+    <div><span>Air Ministry confidence</span><b style="color:${R.standing.to<R.standing.from?'var(--bad)':'var(--ok)'}">${Math.round(R.standing.to)} (${sign(R.standing.to-R.standing.from)})</b></div>
+  </div>
+  ${G.honour.some(x=>x.day===R.day)?`<p style="font-size:12.5px;color:#ffc2b6"><b>Killed today:</b> ${G.honour.filter(x=>x.day===R.day).map(x=>esc(x.n)+' ('+x.sq+')').join(', ')}</p>`:''}
+  ${historyChart(600,150)}`;
+  showModal(html,[{label:G.gameOver?'Continue':'Stand down for the night →',cls:'gold',fn:()=>{G.reportPending=false;if(G.gameOver){save();processQueue();}else nextDay();}}]);
+}
+function showEnd(){
+  const g=G.gameOver,t=G.totals,S=G.south;
+  let title,text;
+  if(g.win){
+    const grade=G.gauge<35&&G.standing>60?'a decisive victory':G.gauge<65?'a victory':'a narrow, costly victory';
+    title='The Battle is won';text=`<p>It is 31 October 1940. The daylight battle is over, and it ended in ${grade}. Operation Sealion has been put off indefinitely. The north held, and the squadrons you sent south helped 11 Group through its worst weeks.</p>`;
+  } else if(g.reason==='sealion'){title='Operation Sealion';text='<p>11 Group has been ground down. With air superiority over the Channel, the German army is crossing to Kent and Sussex. Historians will ask whether the north could have spared more squadrons.</p>';}
+  else {title='Relieved of command';text='<p>The Air Ministry has lost confidence in you. Too many raids got through to the Fleet and the Clyde, or too many requests from Fighter Command went unanswered. A new AOC arrives in Glasgow tomorrow.</p>';}
+  const html=`<h2>${title}</h2><div class="sub">${dateStr(G.day)}</div>${text}
+  <h3>Your command: post-war figures</h3>
+  <div class="rep">
+    <div><span>Enemy destroyed (actual)</span><b>${t.lwBombers+t.lwFighters+t.lwRecce}</b></div><div><span>Enemy destroyed (claimed)</span><b>${t.claims+t.aaKills}</b></div>
+    <div><span>Fighters lost in the north</span><b>${t.rafLost+t.groundLost}</b></div><div><span>Pilots killed in the north</span><b>${t.pilotsKilled}</b></div>
+    <div><span>Destroyed by your squadrons in the south</span><b>${S.kills||0}</b></div><div><span>Your pilots killed in the south</span><b>${S.pilotsKilled||0}</b></div>
+    <div><span>Raids that bombed unopposed</span><b>${t.unopposed}</b></div><div><span>Convoy ships lost</span><b>${t.shipsSunk}</b></div>
+    <div><span>Final invasion threat</span><b>${Math.round(G.gauge)}</b></div><div><span>Air Ministry confidence</span><b>${Math.round(G.standing)}</b></div>
+  </div>
+  <h3>The campaign</h3>${historyChart(600,190)}
+  <h3>The few</h3><p style="font-size:13px">${(()=>{const aces=[];for(const s of G.squadrons.concat(G.south.squadrons))for(const p of s.roster)if(p.k>=5)aces.push(`${esc(pname(p))} (${s.id} Sqn, ${p.k})`);return aces.length?'<b>Surviving aces:</b> '+aces.slice(0,12).join(', ')+(aces.length>12?` and ${aces.length-12} more`:''):'None of your pilots reached five victories.';})()}</p>
+  <p style="font-size:13px"><b>Roll of honour:</b> ${G.honour.length} of your pilots were killed.${G.honour.length?' '+G.honour.slice().sort((a,b)=>b.k-a.k).slice(0,6).map(x=>esc(x.n)).join(', ')+(G.honour.length>6?', and many more.':'.'):''}</p>
+  <p class="dim" style="font-size:12px">Fighter Command as a whole lost 544 aircrew killed between July and October 1940. The Luftwaffe lost about 1,900 aircraft. On 15 August Luftflotte 5 lost about a fifth of the force it sent against the north-east and never again attacked Britain in daylight in strength.</p>`;
+  showModal(html,[{label:'New campaign',cls:'gold',fn:()=>{try{localStorage.removeItem(SAVE_KEY);}catch(e){}G=null;showTitle();}}]);
+}
+
+// ── UI ──
+let cvs,ctx,stat,sctx,clockCvs,clockCtx;
+const view={scale:1,ox:0,oy:0,w:0,h:0,dpr:1};
+let uiPointerDown=false;
+const $=id=>document.getElementById(id);
+function computeView(){
+  const base=Math.min(view.w/WORLD_W,view.h/WORLD_H);
+  view.scale=base*UI.zoom;
+  const halfW=view.w/2/view.scale,halfH=view.h/2/view.scale;
+  UI.cx=WORLD_W<=halfW*2?WORLD_W/2:clamp(UI.cx,halfW,WORLD_W-halfW);
+  UI.cy=WORLD_H<=halfH*2?WORLD_H/2:clamp(UI.cy,halfH,WORLD_H-halfH);
+  view.ox=view.w/2-UI.cx*view.scale;view.oy=view.h/2-UI.cy*view.scale;
+}
+const SX=x=>view.ox+x*view.scale, SY=y=>view.oy+y*view.scale;
+const WXp=px=>(px-view.ox)/view.scale, WYp=py=>(py-view.oy)/view.scale;
+function resize(){
+  const r=$('mapWrap').getBoundingClientRect();
+  view.dpr=window.devicePixelRatio||1;view.w=Math.max(100,r.width);view.h=Math.max(100,r.height);
+  cvs.width=Math.round(view.w*view.dpr);cvs.height=Math.round(view.h*view.dpr);cvs.style.width=view.w+'px';cvs.style.height=view.h+'px';
+  stat.width=cvs.width;stat.height=cvs.height;
+  computeView();buildStatic();
+}
+function tracePoly(c,poly){c.beginPath();poly.forEach((p,i)=>{const x=SX(p.x),y=SY(p.y);if(i)c.lineTo(x,y);else c.moveTo(x,y);});c.closePath();}
+function buildStatic(){
+  const c=sctx;c.setTransform(view.dpr,0,0,view.dpr,0,0);
+  const g=c.createLinearGradient(0,0,view.w,view.h);g.addColorStop(0,'#15384a');g.addColorStop(1,'#0d2533');
+  c.fillStyle=g;c.fillRect(0,0,view.w,view.h);
+  // 10-mile grid
+  c.strokeStyle='rgba(160,200,220,0.07)';c.lineWidth=1;
+  for(let x=0;x<=WORLD_W;x+=10){c.beginPath();c.moveTo(SX(x),SY(0));c.lineTo(SX(x),SY(WORLD_H));c.stroke();}
+  for(let y=0;y<=WORLD_H;y+=10){c.beginPath();c.moveTo(SX(0),SY(y));c.lineTo(SX(WORLD_W),SY(y));c.stroke();}
+  for(const poly of LAND){tracePoly(c,poly);c.fillStyle=poly===ULSTER?'#a89a78':'#c8b98f';c.fill();c.strokeStyle='#6e6246';c.lineWidth=1.2;c.stroke();}
+  // grid letters (RAF grid-style) along the edges
+  c.fillStyle='rgba(230,220,190,0.35)';c.font='10px Georgia';
+  const letters='ABCDEFGHJKLMNOPQRSTUVWXYZ';
+  for(let i=0;i*40<WORLD_W;i++)c.fillText(letters[i%25],SX(i*40+18),SY(0)+12);
+  for(const p of PLACES){
+    const q=W(p[1],p[2]);const x=SX(q.x),y=SY(q.y);const cls=p[3]||0;
+    if(cls>=2){c.fillStyle=cls===2?'rgba(40,40,30,0.35)':'rgba(200,230,240,0.35)';if(!overLand(q.x,q.y))c.fillStyle='rgba(200,230,240,0.3)';c.font=`italic ${cls===2?13:11}px Georgia`;c.textAlign='center';c.fillText(p[0],x,y);c.textAlign='left';continue;}
+    if(cls===0&&UI.zoom<1.4)continue;
+    c.fillStyle='#3a3226';c.beginPath();c.arc(x,y,cls===1?2.6:1.8,0,7);c.fill();
+    c.font=`${cls===1?'bold 12px':'11px'} Georgia`;c.fillStyle='rgba(40,34,24,0.9)';c.fillText(p[0],x+4,y-3);
+  }
+  // HQ marker
+  const hq=W(-4.25,55.86);c.strokeStyle='#8a1f10';c.lineWidth=2;c.strokeRect(SX(hq.x)-6,SY(hq.y)-6,12,12);
+  c.fillStyle='#8a1f10';c.font='bold 10px Georgia';c.fillText('HQ',SX(hq.x)-6,SY(hq.y)+17);
+  // Norway direction
+  c.fillStyle='rgba(226,85,63,0.55)';c.font='italic 12px Georgia';c.textAlign='right';c.fillText('→ Norway (Stavanger, 300 mi)',SX(WORLD_W)-6,SY(25));c.textAlign='left';
+}
+function healthCol(h){return h>=70?'#4fae55':h>=40?'#e3a83c':'#d9452f';}
+function draw(){
+  const c=ctx;c.setTransform(1,0,0,1,0,0);c.drawImage(stat,0,0);c.setTransform(view.dpr,0,0,view.dpr,0,0);
+  if(!G)return;
+  const hits=[];UI.hits=hits;
+  const now=HEADLESS?0:performance.now();
+  if(isNight()){c.fillStyle='rgba(0,0,30,0.34)';c.fillRect(0,0,view.w,view.h);}
+  // radar cover
+  for(const t of G.targets){
+    if(t.kind!=='radar')continue;
+    const on=t.health>=40;
+    if(UI.showRadar&&on){c.beginPath();c.arc(SX(t.x),SY(t.y),60*view.scale,0,7);c.fillStyle='rgba(90,155,232,0.06)';c.fill();c.strokeStyle='rgba(90,155,232,0.25)';c.lineWidth=1;c.stroke();c.beginPath();c.arc(SX(t.x),SY(t.y),radarRange(2000)*view.scale,0,7);c.strokeStyle='rgba(90,155,232,0.18)';c.setLineDash([3,4]);c.stroke();c.setLineDash([]);}
+  }
+  // targets
+  for(const t of G.targets){
+    const x=SX(t.x),y=SY(t.y);const col=healthCol(t.health);
+    if(t.kind==='airfield'){
+      const usable=!t.fighter||fieldUsable(t);
+      c.beginPath();c.arc(x,y,t.fighter?5:3.5,0,7);c.fillStyle=usable?col:'#555';c.fill();c.strokeStyle='#1a1a1a';c.lineWidth=1;c.stroke();
+      if(t.sector){c.beginPath();c.arc(x,y,8,0,7);c.strokeStyle='#d8b25a';c.lineWidth=1.4;c.stroke();}
+      if(t.fighter&&usable){if(t.sector||UI.zoom>=1.5){c.font='bold 10.5px Georgia';c.fillStyle='#10202c';c.fillText(t.name,x+9,y-4);}
+        const here=G.squadrons.filter(s=>s.baseId===t.id&&(s.state==='ground'||s.state==='refuel'||s.state==='scrambling'));
+        here.forEach((s,i)=>{const bx=x+9+i*16,by=y+7;c.fillStyle=s.state==='ground'&&scrambleBlock(s)===''?'#5a9be8':s.state==='scrambling'?'#e6d38c':'#6b7580';c.fillRect(bx,by,14,9);c.fillStyle='#fff';c.font='8px Georgia';c.fillText(s.id,bx+1,by+8);if(UI.selSq===s.id){c.strokeStyle='#d8b25a';c.lineWidth=1.5;c.strokeRect(bx-1,by-1,16,11);}hits.push({type:'sq',id:s.id,x:bx+7,y:by+4,r:8});});
+        hits.push({type:'field',id:t.id,x,y,r:9});}
+    } else if(t.kind==='radar'){
+      c.beginPath();c.moveTo(x,y-6);c.lineTo(x+4.5,y+4);c.lineTo(x-4.5,y+4);c.closePath();c.fillStyle=t.health>=40?'#5a9be8':'#d9452f';c.fill();c.strokeStyle='#10202c';c.lineWidth=1;c.stroke();
+      if(t.health<40){c.strokeStyle='#d9452f';c.lineWidth=2;c.beginPath();c.moveTo(x-6,y-6);c.lineTo(x+6,y+6);c.moveTo(x+6,y-6);c.lineTo(x-6,y+6);c.stroke();}
+    } else {
+      const s=t.kind==='naval'?6:5;c.save();c.translate(x,y);c.rotate(Math.PI/4);c.fillStyle=col;c.fillRect(-s/2,-s/2,s,s);c.strokeStyle='#10202c';c.lineWidth=1;c.strokeRect(-s/2,-s/2,s,s);c.restore();
+      if(UI.zoom>=1.6||t.kind==='naval'){c.font='italic 10px Georgia';c.fillStyle=t.kind==='naval'?'#0c2a3c':'#2a2418';c.fillText(t.name,x+6,y-5);}
+    }
+    if(t.recce>=G.day){c.strokeStyle='rgba(226,85,63,0.7)';c.setLineDash([2,3]);c.beginPath();c.arc(x,y,11,0,7);c.stroke();c.setLineDash([]);}
+  }
+  // convoy
+  for(const cv of [G.convoy,G.anchorage]){if(!cv)continue;const x=SX(cv.x),y=SY(cv.y);c.fillStyle='#dfe8ee';for(let i=0;i<Math.min(8,Math.ceil(cv.ships/3));i++){c.fillRect(x-10+(i%4)*6,y-3+Math.floor(i/4)*5,4,2.5);}c.font='10px Georgia';c.fillStyle='#dfe8ee';c.fillText(`${cv.name} (${cv.ships})`,x+14,y+3);}
+  // flights: vector lines first
+  for(const sq of G.squadrons){
+    if(!['airborne','engaged','returning'].includes(sq.state))continue;
+    const x=SX(sq.x),y=SY(sq.y);
+    let tx=null,ty=null;
+    if(sq.state==='airborne'&&sq.order){if(sq.order.kind==='raid'){const r=G.raids.find(q=>q.id===sq.order.raidId);if(r){tx=r.tracked?r.x:r.lastX;ty=r.tracked?r.y:r.lastY;}}else{tx=sq.order.x;ty=sq.order.y;}}
+    else if(sq.state==='returning'){const b=T(sq.baseId);tx=b.x;ty=b.y;}
+    if(tx!=null){c.strokeStyle=sq.state==='returning'?'rgba(90,155,232,0.35)':'rgba(90,155,232,0.8)';c.lineWidth=1.3;c.setLineDash([5,4]);c.beginPath();c.moveTo(x,y);c.lineTo(SX(tx),SY(ty));c.stroke();c.setLineDash([]);}
+  }
+  // raids
+  for(const r of G.raids){
+    if(!r.detected)continue;
+    const px=r.plotAt!=null?r.plotX:r.x,py=r.plotAt!=null?r.plotY:r.y;
+    const x=SX(px),y=SY(py);
+    const stale=!r.tracked||G.minute-(r.plotAt||0)>4;
+    // earlier plots, each coloured by the sector-clock segment it was plotted in
+    for(const tp of r.trail){c.globalAlpha=stale?0.25:0.6;c.fillStyle=SEG_COLS[Math.floor((tp.t%60)/5)%3];c.beginPath();c.arc(SX(tp.x),SY(tp.y),2.4,0,7);c.fill();}
+    c.globalAlpha=stale?0.45:1;
+    // track arrow, coloured by the time of the latest plot
+    const sp=Math.hypot(r.vx,r.vy)||1;c.strokeStyle=SEG_COLS[Math.floor(((r.plotAt||0)%60)/5)%3];c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(x+r.vx/sp*18,y+r.vy/sp*18);c.stroke();
+    c.beginPath();c.arc(x,y,4,0,7);c.fillStyle='#e2553f';c.fill();
+    const lbl=`${r.label} ${r.estCount<5?r.estCount:r.estCount+'+'}`;const lbl2=`A${Math.max(1,Math.round(r.estAlt/1000))}${stale?' ?':''}${r.phase==='outbound'?' ⇠':''}`;
+    c.font='bold 11px Georgia';const w=Math.max(c.measureText(lbl).width,c.measureText(lbl2).width)+8;
+    const bx=x+8,by=y-26;
+    c.fillStyle=UI.selRaid===r.id?'#f0c040':'#b8281a';c.fillRect(bx,by,w,26);c.strokeStyle='#2a0a05';c.lineWidth=1;c.strokeRect(bx,by,w,26);
+    c.fillStyle=UI.selRaid===r.id?'#1a1000':'#fff';c.fillText(lbl,bx+4,by+11);c.font='10px Georgia';c.fillText(lbl2,bx+4,by+22);
+    c.globalAlpha=1;
+    hits.push({type:'raid',id:r.id,x:bx+w/2,y:by+13,r:Math.max(14,w/2)},{type:'raid',id:r.id,x,y,r:10});
+  }
+  // flights
+  for(const sq of G.squadrons){
+    if(!['airborne','engaged','returning'].includes(sq.state))continue;
+    const x=SX(sq.x),y=SY(sq.y);
+    c.save();c.translate(x,y);c.rotate(sq.hdg);c.beginPath();c.moveTo(8,0);c.lineTo(-6,-5);c.lineTo(-3,0);c.lineTo(-6,5);c.closePath();
+    c.fillStyle=sq.state==='engaged'?'#ffd36a':sq.state==='returning'?'#7aa4d0':'#5a9be8';c.fill();c.strokeStyle='#0a1520';c.lineWidth=1;c.stroke();c.restore();
+    if(UI.selSq===sq.id){c.beginPath();c.arc(x,y,12,0,7);c.strokeStyle='#d8b25a';c.lineWidth=1.6;c.stroke();}
+    c.font='bold 10.5px Georgia';c.fillStyle='#e8f1ff';const t=`${sq.id} A${Math.round(sq.alt/1000)}`;
+    c.fillStyle='rgba(10,21,32,0.75)';const tw=c.measureText(t).width+6;c.fillRect(x+9,y+4,tw,13);c.fillStyle=sq.state==='engaged'?'#ffd36a':'#cfe2ff';c.fillText(t,x+12,y+14);
+    hits.push({type:'sq',id:sq.id,x,y,r:11});
+  }
+  // combat flashes
+  UI.flashes=UI.flashes.filter(f=>now-f.t<1600);
+  for(const f of UI.flashes){const a=1-(now-f.t)/1600;const x=SX(f.x),y=SY(f.y);c.strokeStyle=`rgba(255,210,100,${a})`;c.lineWidth=2;for(let i=0;i<8;i++){const ang=i*Math.PI/4+f.t;const r1=6+(1-a)*10,r2=r1+6;c.beginPath();c.moveTo(x+Math.cos(ang)*r1,y+Math.sin(ang)*r1);c.lineTo(x+Math.cos(ang)*r2,y+Math.sin(ang)*r2);c.stroke();}}
+  // night
+  if(G.phaseState==='night'){c.fillStyle='rgba(0,0,10,0.45)';c.fillRect(0,0,view.w,view.h);}
+}
+function drawClock(){
+  const c=clockCtx,r=21,cx=23,cy=23;c.clearRect(0,0,46,46);
+  const cols=['#c0392b','#e6c229','#2e6fc0'];
+  for(let i=0;i<12;i++){c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,r,(i/12)*Math.PI*2-Math.PI/2,((i+1)/12)*Math.PI*2-Math.PI/2);c.closePath();c.fillStyle=cols[i%3];c.fill();}
+  c.beginPath();c.arc(cx,cy,r-6,0,7);c.fillStyle='#f3ecd8';c.fill();
+  const m=G?G.minute:0;const h=(m/60)%12,mi=m%60;
+  c.strokeStyle='#111';c.lineWidth=2;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.sin(h/12*Math.PI*2)*8,cy-Math.cos(h/12*Math.PI*2)*8);c.stroke();
+  c.lineWidth=1.3;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.sin(mi/60*Math.PI*2)*13,cy-Math.cos(mi/60*Math.PI*2)*13);c.stroke();
+}
+function renderTop(){
+  if(!G)return;
+  $('tbDate').textContent=dateStr(G.day,true);
+  $('tbTime').textContent=(G.phaseState==='night'?'Night':clockStr(G.minute)+(isNight()?' · dark':''))+(isQuiet()&&UI.ff&&G.speed>0&&G.phaseState==='day'?' · quiet ⏩':'');
+  $('tbPhase').textContent=PHASE_NAMES[phaseOf(G.day)];
+  $('tbWeather').textContent=WEATHER[G.weather].name;
+  $('tbGaugeN').textContent=Math.round(G.gauge);$('tbGauge').style.width=G.gauge+'%';
+  $('tbStandN').textContent=Math.round(G.standing);$('tbStand').style.width=G.standing+'%';
+  document.querySelectorAll('#speeds button').forEach(b=>b.classList.toggle('on',+b.dataset.speed===G.speed));
+  $('btnRadar').classList.toggle('on',UI.showRadar);$('btnSound').classList.toggle('on',UI.sound);$('btnFF').classList.toggle('on',UI.ff);
+  drawClock();
+  const sq=UI.selSq?G.squadrons.find(s=>s.id===UI.selSq):null;
+  let hint='';
+  if(sq){hint=canOrder(sq)?`<b>${sq.name}</b> selected. Click a hostile plot to vector it, or click the map to send it on patrol.`:`<b>${sq.name}</b>: ${esc(stateText(sq))}`;}
+  else if(G.raids.some(r=>r.detected))hint='Hostiles plotted. Select a squadron (in the Ops list or on the map), then click a raid.';
+  else hint='Scroll to zoom and drag to pan. Squadrons wait at their airfields.';
+  if($('mapHint').innerHTML!==hint)$('mapHint').innerHTML=hint;
+}
+function isQuiet(){return !G.raids.some(r=>r.detected)&&!G.squadrons.some(s=>['scrambling','airborne','engaged','returning'].includes(s.state));}
+function stateText(sq){
+  const b=T(sq.baseId);
+  switch(sq.state){
+    case 'ground':{const bl=scrambleBlock(sq);return bl?bl:`${sq.standby==='readiness'?'At readiness (5 min)':'Available (15 min)'} at ${b.name}`;}
+    case 'scrambling':return `Scrambling: airborne in ${Math.ceil(sq.timer)} min`;
+    case 'airborne':{const o=sq.order;if(o&&o.kind==='raid'){const r=G.raids.find(q=>q.id===o.raidId);return `Vectored to ${r?r.label:'?'}, climbing through ${Math.round(sq.alt/1000)}k to ${Math.round(sq.targetAlt/1000)}k · fuel ${Math.round(sq.fuel)} min`;}return `Patrolling ${o?nearestPlaceName(o.x,o.y):''} at ${Math.round(sq.alt/1000)}k · fuel ${Math.round(sq.fuel)} min`;}
+    case 'engaged':{const r=G.raids.find(q=>q.id===sq.engagedRaid);return `ENGAGED with ${r?r.label:'?'} · ${sq.flying} aircraft · ammo ${sq.ammo}`;}
+    case 'returning':return `Returning to ${b.name}`;
+    case 'refuel':return `Refuelling and rearming at ${b.name}: ${Math.ceil(sq.timer)} min`;
+  }
+  return sq.state;
+}
+function chipFor(sq){
+  switch(sq.state){
+    case 'ground':{const bl=scrambleBlock(sq);if(!operational(sq))return ['rel','Forming'];if(sq.standby==='training')return ['train','Training'];if(sq.standby==='released')return ['rel','Stood down'];if(bl)return ['rel',bl.split(' ')[0]];return sq.standby==='readiness'?['ready','Readiness']:['avail','Available'];}
+    case 'scrambling':return ['avail','Scramble '+Math.ceil(sq.timer)];
+    case 'airborne':return ['air','Airborne'];
+    case 'engaged':return ['eng','Engaged'];
+    case 'returning':return ['air','Returning'];
+    case 'refuel':return ['rel','Refuel '+Math.ceil(sq.timer)];
+  }
+  return ['rel',sq.state];
+}
+const STANDBY_NAMES={readiness:'Readiness',available:'Available',released:'Stand down',training:'Training'};
+function bar(v,col){return `<div class="bar"><i style="width:${clamp(v,0,100)}%;background:${col}"></i></div>`;}
+function renderSide(force){
+  if(!G||UI.title)return;
+  const sc=$('sideContent');
+  if(!force){const ae=document.activeElement;if(ae&&ae.tagName==='SELECT'&&sc.contains(ae))return;}
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===UI.tab));
+  let h='';
+  if(UI.tab==='ops')h=renderOps();else if(UI.tab==='sqn')h=renderSqn();else if(UI.tab==='south')h=renderSouth();else if(UI.tab==='works')h=renderWorks();else if(UI.tab==='stn')h=renderStations();else h=renderLog();
+  if(h!==UI.lastSideHtml){const st=sc.scrollTop;sc.innerHTML=h;sc.scrollTop=st;UI.lastSideHtml=h;}
+}
+function renderOps(){
+  let h='';
+  const sq=UI.selSq?G.squadrons.find(s=>s.id===UI.selSq):null;
+  if(sq){
+    const TY=RAF_TYPES[sq.type];const ok=canOrder(sq);
+    h+=`<div class="order"><div><b style="color:var(--raf)">${esc(sq.name)}</b> ${sq.title?`<span class="dim">(${esc(sq.title)})</span>`:''} · ${TY.name}s</div>
+      <div class="dim" style="margin-top:2px">${esc(stateText(sq))}</div>
+      <div class="dim">${sqStrength(sq)} ready (${sq.aircraft} aircraft, ${sq.pilots} pilots) · exp ${Math.round(sq.exp*100)} · fatigue ${Math.round(sq.fatigue)}</div>
+      <div class="dim">CO: ${(()=>{const co=sqCO(sq);return co?esc(pname(co))+' · '+esc(CO_STYLES[co.style].name):'vacant'})()}${nightCapable(sq)?' · <span style="color:#cbb3f0">night fighters</span>':isNight()?' · <span style="color:var(--warn)">day fighters: poor at night</span>':''} · <span class="link" data-act="roster" data-id="${sq.id}">roster</span></div>
+      <div class="row">Height: <button class="btn" data-act="ang" data-d="-2000">−</button><b style="min-width:66px;text-align:center">${UI.angels!=null?'Angels '+UI.angels/1000:'Auto (+2k)'}</b><button class="btn" data-act="ang" data-d="2000">+</button><button class="btn ${UI.angels==null?'on':''}" data-act="angauto">Auto</button></div>
+      <div class="row">Attack: <button class="btn ${sq.tactic==='bombers'?'on':''}" data-act="tactic" data-v="bombers">Bombers</button><button class="btn ${sq.tactic==='fighters'?'on':''}" data-act="tactic" data-v="fighters">Escorts</button></div>
+      <div class="row">${['scrambling','airborne','engaged'].includes(sq.state)?`<button class="btn red" data-act="recall">${sq.state==='engaged'?'Break off':'Recall'}</button>`:''}<button class="btn" data-act="desel">Deselect</button>${ok?'<span class="dim">Now click a plot or the map.</span>':''}</div></div>`;
+  } else h+=`<div class="hint">Select a squadron below, then click a hostile plot (on the map or in the list) to scramble and vector it. Clicking open map sends it on a patrol.</div>`;
+  const vis=G.raids.filter(r=>r.detected);
+  h+=`<h3>Hostile plots (${vis.length})</h3>`;
+  if(!vis.length)h+=`<div class="dim" style="font-size:12px">Nothing plotted. The table is quiet, for now.</div>`;
+  for(const r of vis){
+    const t=T(r.targetId);const land=overLand(r.x,r.y);
+    const eng=r.engagedBy.map(id=>id).join(', ');
+    const vect=G.squadrons.filter(s=>s.order&&s.order.kind==='raid'&&s.order.raidId===r.id).map(s=>s.id);
+    h+=`<div class="card ${UI.selRaid===r.id?'sel':''} ${r.tracked?'':'lost'}" data-act="raid" data-id="${r.id}">
+      <div class="top"><span class="rlabel">${r.label}</span><b>${r.estCount<5?r.estCount:r.estCount+'+'}</b> · angels ${Math.max(1,r.estAlt/1000)} ${r.tracked?'':'<span style="color:var(--warn)">· plot faded</span>'}${r.phase==='outbound'?' · <span style="color:var(--ok)">retiring</span>':''}</div>
+      <div class="dim">${r.identified?esc(raidComp(r)):'Unidentified radar plot'} · ${land?'over land':'over the sea'}${r.identified&&r.phase!=='outbound'&&r.overLandMin>0&&t?` · probably heading for ${esc(t.name)}`:''}</div>
+      ${eng?`<div style="color:#ffd36a">Engaged by ${eng}</div>`:''}${vect.length?`<div style="color:#9fcaff">Vectored: ${vect.join(', ')}</div>`:''}</div>`;
+  }
+  const todays=G.reports.filter(x=>x.day===G.day).slice(0,3);
+  if(todays.length){h+=`<h3>Combat reports</h3>`;todays.forEach((R,i)=>{h+=`<div class="card" style="border-left-color:var(--raf)" data-act="report" data-i="${G.reports.indexOf(R)}"><b>${esc(R.sq)}</b> vs ${esc(R.raid)} · ${clockStr(R.start)}<div class="dim">Claims ${R.claims} destroyed, ${R.prob} probable · ${R.lost} lost${R.killed.length?` · <span style="color:#ffc2b6">${R.killed.length} killed</span>`:''}</div></div>`;});}
+  const bySector={};for(const s of G.squadrons){const k=SECTOR_OF[s.baseId]||'turnhouse';(bySector[k]=bySector[k]||[]).push(s);}
+  h+=`<h3>Squadrons (${G.squadrons.length})</h3>`;
+  for(const k of Object.keys(SECTOR_NAMES)){
+    const list=bySector[k];if(!list)continue;
+    const sec=T(k);h+=`<div class="sectorhd">${SECTOR_NAMES[k]}${sec&&sec.health<35?' · <span style="color:var(--bad)">ops room damaged</span>':''}</div>`;
+    for(const s of list){const ch=chipFor(s);
+      h+=`<div class="sqrow ${UI.selSq===s.id?'sel':''}" data-act="sq" data-id="${s.id}"><span class="n">${s.id}${nightCapable(s)?'<span style="color:#cbb3f0" title="Night fighters">☾</span>':''}</span><span class="dim">${RAF_TYPES[s.type].short}</span><span class="chip ${ch[0]}">${esc(ch[1])}</span><span>${sqStrength(s)}/12</span><span title="Fatigue">${bar(s.fatigue,s.fatigue>70?'#d9452f':s.fatigue>40?'#e3a83c':'#4fae55')}</span><button class="btn" style="padding:2px 4px;font-size:10.5px" data-act="standby" data-id="${s.id}" ${s.state!=='ground'?'disabled':''}>${STANDBY_NAMES[s.standby]}</button></div>`;}
+  }
+  return h;
+}
+function renderSqn(){
+  const O=G.orders;
+  let h=`<h3>Standing orders</h3><div class="works">
+    <div class="stat"><span>Keep at readiness in each sector</span><select data-act="ord" data-k="minReady">${[0,1,2,3].map(v=>`<option value="${v}" ${O.minReady===v?'selected':''}>${v?v+' squadron'+(v>1?'s':''):'No minimum'}</option>`).join('')}</select></div>
+    <div class="stat"><label><input type="checkbox" data-act="ord" data-k="auto" ${O.auto?'checked':''}> Auto-scramble the nearest squadron at any plot of</label><select data-act="ord" data-k="autoMin">${[1,5,10,20].map(v=>`<option value="${v}" ${O.autoMin===v?'selected':''}>${v}+</option>`).join('')}</select></div>
+    <div class="stat"><label><input type="checkbox" data-act="ord" data-k="autoRest" ${O.autoRest?'checked':''}> Stand down any squadron whose fatigue reaches 75</label></div>
+    <div class="stat"><label><input type="checkbox" data-act="ord" data-k="duskStand" ${O.duskStand?'checked':''}> Stand day fighters down at dusk</label></div></div>
+  <h3>Your squadrons</h3><div class="dim" style="font-size:12px;margin-bottom:6px">Click a squadron number to see its pilots. Standby: <b>Readiness</b> means a 5-minute scramble with slow fatigue. <b>Available</b> means 15 minutes. <b>Stand down</b> rests them fast. <b>Training</b> builds experience but they can't be scrambled. Squadrons can only change airfield or go south while on the ground.</div>
+  <table class="t"><tr><th>Sqn</th><th>Type</th><th>A/c</th><th>Plt</th><th>Exp</th><th>Fat</th><th>Kills</th><th>Base</th><th></th></tr>`;
+  const fields=G.targets.filter(t=>fieldUsable(t));
+  for(const s of G.squadrons){
+    const ground=s.state==='ground';
+    h+=`<tr><td><b class="link" data-act="roster" data-id="${s.id}">${s.id}</b>${nightCapable(s)?'<span style="color:#cbb3f0">☾</span>':''}</td><td>${RAF_TYPES[s.type].short}</td><td>${s.aircraft}</td><td>${s.pilots}</td><td>${Math.round(s.exp*100)}</td><td style="color:${s.fatigue>70?'var(--bad)':s.fatigue>40?'var(--warn)':'inherit'}">${Math.round(s.fatigue)}</td><td>${s.kills}</td>
+      <td><select data-act="relocate" data-id="${s.id}" ${ground?'':'disabled'}>${fields.map(f=>`<option value="${f.id}" ${f.id===s.baseId?'selected':''}>${esc(f.name)}${f.health<50?' ('+Math.round(f.health)+'%)':''}</option>`).join('')}</select></td>
+      <td><select data-act="setstandby" data-id="${s.id}" ${ground?'':'disabled'}>${['readiness','available','released','training'].map(k=>`<option value="${k}" ${s.standby===k?'selected':''}>${STANDBY_NAMES[k]}</option>`).join('')}</select>
+      ${southIntensity(G.day)>0&&operational(s)?`<button class="btn" style="padding:1px 5px;font-size:10.5px;margin-top:2px" data-act="south" data-id="${s.id}" ${ground?'':'disabled'} title="Send this squadron to 11 Group">South ↓</button>`:''}</td></tr>`;
+  }
+  h+=`</table><h3>Reserves</h3><div class="stat"><span>Hurricanes in store</span><b>${G.pools.hurricane}</b></div><div class="stat"><span>Spitfires in store</span><b>${G.pools.spitfire}</b></div><div class="stat"><span>Defiants in store</span><b>${G.pools.defiant||0}</b></div><div class="stat"><span>Replacement pilots</span><b>${G.pilotPool}</b></div><div class="stat"><span>Aircraft at repair units</span><b>${G.repairs.reduce((a,r)=>a+r.n,0)}</b></div>
+  <div class="dim" style="font-size:12px;margin-top:4px">Replacements go out overnight to the weakest squadrons, up to 16 aircraft and 20 pilots each. New pilots lower a squadron's experience.</div>`;
+  if(G.foreign.length){
+    const low=G.squadrons.slice().sort((a,b)=>a.exp-b.exp)[0];
+    h+=`<h3>Polish and Czech pilots (${G.foreign.length})</h3><div class="dim" style="font-size:12px;margin-bottom:4px">Experienced men who have already fought in Poland and France. They need conversion training first, then can be posted to any squadron.</div>`;
+    G.foreign.forEach((p,i)=>{const ready=G.day>=p.ready;h+=`<div class="stat" style="font-size:12px"><span>${esc(pname(p))} <span class="dim">· ${p.k} victories</span></span>${ready?`<span><select data-act="postsel" data-i="${i}">${G.squadrons.map(s=>`<option value="${s.id}" ${low&&s.id===low.id?'selected':''}>${s.id} Sqn</option>`).join('')}</select> <button class="btn" data-act="post" data-i="${i}">Post</button></span>`:`<span class="dim">ready ${dateStr(p.ready).replace(' 1940','')}</span>`}</div>`;});
+  }
+  const all=[];for(const s of G.squadrons.concat(G.south.squadrons))for(const p of s.roster)if(p.k>0)all.push([p,s]);
+  all.sort((a,b)=>b[0].k-a[0].k);
+  h+=`<h3>Leading pilots</h3>`+(all.length?all.slice(0,6).map(([p,s])=>`<div class="stat" style="font-size:12px"><span>${p.k>=5?'★ ':''}${esc(pname(p))} <span class="dim">· ${s.id} Sqn${s.state==='south'?' (south)':''}${p.st==='w'?' · wounded':''}</span></span><b>${p.k}</b></div>`).join(''):'<div class="dim" style="font-size:12px">No victories yet.</div>');
+  h+=`<h3>Roll of honour (${G.honour.length})</h3>`+(G.honour.length?G.honour.slice(-25).reverse().map(x=>`<div class="stat" style="font-size:12px"><span>${esc(x.n)} <span class="dim">· ${x.sq} Sqn · ${esc(x.where)}</span></span><span class="dim">${dateStr(x.day).replace(' 1940','')}</span></div>`).join(''):'<div class="dim" style="font-size:12px">No one yet. Long may it last.</div>');
+  return h;
+}
+function renderSouth(){
+  const S=G.south,I=southIntensity(G.day);
+  const eff=southEffective(),need=southNeed(I);
+  let h=`<h3>11 Group: the battle in the south</h3>`;
+  if(I<=0)h+=`<div class="hint">The battle in the south has not started yet. When it does, Dowding will ask you for squadrons. Get them trained and rested before then.</div>`;
+  else h+=`<div class="stat"><span>Intensity of fighting</span><b>${I>=1.2?'Desperate':I>=0.9?'Very heavy':I>=0.5?'Heavy':'Skirmishing'}</b></div>
+    <div class="stat"><span>11 Group effective strength</span><b style="color:${eff>=need?'var(--ok)':'var(--bad)'}">${Math.round(eff)}</b></div>
+    <div class="stat"><span>Strength Park needs</span><b>${Math.round(need)}</b></div>
+    <div class="stat"><span>Attrition of the other squadrons</span><b>${Math.round(S.wear)}</b></div>
+    <div class="dim" style="font-size:12px;margin:4px 0 8px">When 11 Group is short of what it needs, the Invasion Threat rises every day. Fresh, experienced squadrons count for more. Damage to Rolls-Royce Hillington slows Merlin engine deliveries, and 11 Group recovers more slowly.</div>`;
+  h+=`<h3>Your squadrons with 11 Group (${S.squadrons.length})</h3>`;
+  if(!S.squadrons.length)h+='<div class="dim" style="font-size:12px">None.</div>';
+  else{h+=`<table class="t"><tr><th>Sqn</th><th>Type</th><th>Days</th><th>Str</th><th>Exp</th><th>Fat</th><th>Kills</th><th>Lost</th></tr>`;
+    for(const s of S.squadrons)h+=`<tr><td><b class="link" data-act="roster" data-id="${s.id}">${s.id}</b></td><td>${RAF_TYPES[s.type].short}</td><td>${s.daysSouth}</td><td>${sqStrength(s)}</td><td>${Math.round(s.exp*100)}</td><td>${Math.round(s.fatigue)}</td><td>${s.kills}</td><td>${s.pilotsLost} plt</td></tr>`;
+    h+='</table><div class="dim" style="font-size:12px;margin-top:4px">Squadrons come back to you when they are worn out.</div>';}
+  if(S.arrivals.length)h+=`<h3>Due to arrive</h3>`+S.arrivals.map(a=>`<div class="stat"><span>${esc(a.sq.name)}</span><span class="dim">${dateStr(a.day)}</span></div>`).join('');
+  h+=`<h3>Totals in the south</h3><div class="stat"><span>Destroyed by your squadrons</span><b>${S.kills||0}</b></div><div class="stat"><span>Your pilots killed there</span><b>${S.pilotsKilled||0}</b></div>`;
+  h+=`<h3>The campaign so far</h3>`+historyChart(390,180);
+  return h;
+}
+function renderWorks(){
+  let h=`<h3>Works and preparations</h3><div class="dim" style="font-size:12px;margin-bottom:8px">Up to ${workSlots()} projects can run at once (ask for more teams at the Monday conference). Each makes progress overnight.</div>`;
+  for(const w of WORKS){
+    const act=G.works.active.find(a=>a.id===w.id),done=G.works.done[w.id];
+    h+=`<div class="works ${act?'active':''} ${done?'done':''}"><div style="display:flex;justify-content:space-between;gap:6px"><b>${esc(w.name)}</b><span class="dim">${done?'✓ Complete':act?`${act.left} day${act.left>1?'s':''} left`:w.days+' days'}</span></div><div class="dim" style="margin:3px 0">${esc(w.desc)}</div>
+      ${done?'':act?`<button class="btn" data-act="cancelwork" data-id="${w.id}">Cancel</button>`:`<button class="btn gold" data-act="startwork" data-id="${w.id}" ${G.works.active.length>=workSlots()?'disabled':''}>Begin</button>`}</div>`;
+  }
+  return h;
+}
+function renderStations(){
+  let h='';
+  const groups=[['Fighter airfields',t=>t.kind==='airfield'&&t.fighter],['Radar (Chain Home)',t=>t.kind==='radar'],['Naval bases',t=>t.kind==='naval'],['Industry',t=>t.kind==='shipyard'||t.kind==='factory'],['Ports and cities',t=>t.kind==='port'||t.kind==='city'],['Other airfields',t=>t.kind==='airfield'&&!t.fighter]];
+  for(const [name,f] of groups){
+    h+=`<h3>${name}</h3>`;
+    for(const t of G.targets.filter(f)){
+      const note=t.fighter&&!fieldUsable(t)?'not yet open':t.kind==='radar'&&t.health<40?'OFF THE AIR':t.sector?'sector station':'';
+      h+=`<div style="display:grid;grid-template-columns:1fr 90px 40px;gap:6px;align-items:center;font-size:12px;padding:2px 0"><span>${esc(t.name)} ${note?`<span class="dim">· ${note}</span>`:''}${t.recce>=G.day?' <span style="color:var(--lw)">· photographed</span>':''}</span>${bar(t.health,healthCol(t.health))}<span style="text-align:right">${Math.round(t.health)}%</span></div>`;
+    }
+  }
+  if(G.convoy||G.anchorage){h+='<h3>Shipping</h3>';for(const c of [G.convoy,G.anchorage])if(c)h+=`<div class="stat"><span>${esc(c.name)}${c.troop?' (troop convoy, Tail of the Bank)':''}</span><b>${c.ships}/${c.initShips} ships</b></div>`;}
+  const nextWS=G.anchorDays.find(d=>d>G.day);if(nextWS!=null&&nextWS-G.day<=1)h+=`<div class="dim" style="font-size:12px">A troop convoy assembles in the Clyde tomorrow.</div>`;
+  h+=`<h3>Luftflotte 5 (intelligence estimate)</h3><div class="stat"><span>Bombers in Norway</span><b>~${round5(G.lf5.bombers*rrange(0.95,1.05))}</b></div><div class="stat"><span>Long-range Bf 110s</span><b>~${round5(G.lf5.f110)}</b></div><div class="stat"><span>Crews' morale</span><b>${G.lf5.morale>0.9?'High':G.lf5.morale>0.6?'Shaken':'Poor'}</b></div>`;
+  const A=G.lf5.adapt,obs=[];if(A.cloud>0.1)obs.push('waits for cloud cover');if(A.low>0.1)obs.push('low-level hit-and-run attacks');if(A.dusk>0.1)obs.push('raids timed for dusk');if(A.lone>0.1)obs.push('lone Ju 88s under cloud');if(A.probe>0.1)obs.push('probes for weakly defended areas and radar gaps');if(A.dogleg>0.45)obs.push('deceptive dog-leg routes');
+  h+=`<div class="stat" style="gap:10px"><span>Observed tactics</span><b style="text-align:right;font-weight:normal">${obs.length?esc(obs.join('; ')):'Straightforward daylight raids'}</b></div>`;
+  return h;
+}
+function renderLog(){
+  return (G.reports.length?`<h3>Combat reports (Form F)</h3>`+G.reports.slice(0,8).map((R,i)=>`<div class="logline raf" style="cursor:pointer" data-act="report" data-i="${i}"><span class="tm">${dateStr(R.day).replace(' 1940','')} ${clockStr(R.start)}</span>${esc(R.sq)} vs ${esc(R.raid)}: claims ${R.claims}, lost ${R.lost} <u>read</u></div>`).join(''):'')+`<h3>Operations log</h3>`+G.log.slice(0,200).map(l=>`<div class="logline ${l.c}"><span class="tm">${l.d!==G.day?dateStr(l.d).replace(' 1940','')+' ':''}${clockStr(l.t)}</span>${esc(l.m)}</div>`).join('');
+}
+
+function handleSideClick(e){
+  const el=e.target.closest('[data-act]');if(!el||!G)return;
+  const act=el.dataset.act,id=el.dataset.id;
+  if(el.tagName==='SELECT'||el.tagName==='INPUT')return;
+  if(act==='report'){const R=G.reports[+el.dataset.i];if(R)showFormF(R);return;}
+  if(act==='roster'){e.stopPropagation();showRoster(id);return;}
+  if(act==='post'){const i=+el.dataset.i;const sel=document.querySelector(`[data-act="postsel"][data-i="${i}"]`);if(sel)postForeign(i,sel.value);renderSide(true);return;}
+  if(act==='sq'){UI.selSq=UI.selSq===id?null:id;UI.angels=null;}
+  else if(act==='raid'){const r=G.raids.find(x=>x.id===+id);const sq=UI.selSq?G.squadrons.find(s=>s.id===UI.selSq):null;if(sq&&r&&canOrder(sq)){orderSquadron(sq,{kind:'raid',raidId:r.id});UI.selSq=null;UI.angels=null;}else UI.selRaid=UI.selRaid===+id?null:+id;}
+  else if(act==='ang'){const sq=G.squadrons.find(s=>s.id===UI.selSq);const baseA=UI.angels!=null?UI.angels:(sq&&sq.order&&sq.targetAlt)||16000;UI.angels=clamp(baseA+(+el.dataset.d),2000,32000);if(sq&&['airborne','scrambling'].includes(sq.state)){sq.targetAlt=UI.angels;}}
+  else if(act==='angauto'){UI.angels=null;}
+  else if(act==='tactic'){const sq=G.squadrons.find(s=>s.id===UI.selSq);if(sq)sq.tactic=el.dataset.v;}
+  else if(act==='recall'){const sq=G.squadrons.find(s=>s.id===UI.selSq);if(sq)recall(sq);}
+  else if(act==='desel'){UI.selSq=null;UI.angels=null;}
+  else if(act==='standby'){e.stopPropagation();const sq=G.squadrons.find(s=>s.id===id);if(sq&&sq.state==='ground'){const order=['readiness','available','released','training'];setStandby(sq,order[(order.indexOf(sq.standby)+1)%order.length]);}}
+  else if(act==='south'){const sq=G.squadrons.find(s=>s.id===id);if(sq&&confirm(`Send ${sq.name} south to 11 Group?`)){sendSouth(sq);G.standing=clamp(G.standing+2,0,100);}}
+  else if(act==='startwork')startWork(id);
+  else if(act==='cancelwork')cancelWork(id);
+  renderSide(true);
+}
+function setStandby(sq,v){
+  const prev=sq.standby;sq.standby=v;
+  if((prev==='released'||prev==='training')&&(v==='readiness'||v==='available'))sq.readyAt=G.minute+15;
+}
+function handleSideChange(e){
+  const el=e.target;if(!el.dataset||!G)return;
+  if(el.dataset.act==='ord'){const k=el.dataset.k;G.orders[k]=el.type==='checkbox'?el.checked:+el.value;el.blur();renderSide(true);return;}
+  if(el.dataset.act==='postsel')return;
+  const sq=G.squadrons.find(s=>s.id===el.dataset.id);if(!sq||sq.state!=='ground'){renderSide(true);return;}
+  if(el.dataset.act==='relocate'){const t=T(el.value);if(t&&t.id!==sq.baseId){sq.baseId=t.id;sq.x=t.x;sq.y=t.y;sq.state='refuel';sq.timer=12;log(`${sq.name} moves to ${t.name}.`,'raf');}}
+  else if(el.dataset.act==='setstandby')setStandby(sq,el.value);
+  el.blur();renderSide(true);
+}
+function hitTest(mx,my){let best=null,bd=1e9;for(const h of UI.hits||[]){const d=Math.hypot(h.x-mx,h.y-my);if(d<=h.r&&d<bd){bd=d;best=h;}}return best;}
+function handleMapClick(mx,my){
+  if(!G||G.phaseState!=='day')return;
+  const hit=hitTest(mx,my);const sq=UI.selSq?G.squadrons.find(s=>s.id===UI.selSq):null;
+  if(hit&&hit.type==='raid'){if(sq&&canOrder(sq)){orderSquadron(sq,{kind:'raid',raidId:hit.id});UI.selSq=null;UI.angels=null;}else UI.selRaid=hit.id;}
+  else if(hit&&hit.type==='sq'){UI.selSq=hit.id;UI.angels=null;UI.tab='ops';}
+  else if(hit&&hit.type==='field'){const here=G.squadrons.filter(s=>s.baseId===hit.id&&s.state==='ground');if(here.length){const i=here.findIndex(s=>s.id===UI.selSq);UI.selSq=here[(i+1)%here.length].id;UI.tab='ops';}}
+  else {const wx=WXp(mx),wy=WYp(my);if(sq&&canOrder(sq)&&wx>=0&&wy>=0&&wx<=WORLD_W&&wy<=WORLD_H){orderSquadron(sq,{kind:'patrol',x:wx,y:wy});UI.selSq=null;UI.angels=null;}else{UI.selSq=null;UI.selRaid=null;}}
+  renderSide(true);
+}
+function showTitle(){
+  UI.title=true;hideModal();$('title').classList.remove('hide');
+  const g=tryLoad();
+  if(g){$('btnContinue').style.display='';$('contInfo').textContent=`${dateStr(g.day,true)} · Invasion threat ${Math.round(g.gauge)} · Confidence ${Math.round(g.standing)}`;}
+  else $('btnContinue').style.display='none';
+}
+function startFromTitle(g){
+  UI.title=false;$('title').classList.add('hide');G=g;UI.selSq=null;UI.selRaid=null;UI.lastSideHtml='';
+  renderSide(true);processQueue();
+}
+function showHelp(){
+  showModal(`<h2>How to command</h2><div class="sub">The plotting table</div>
+  <p><b>Detection.</b> Chain Home radar sees raids over the sea (blue triangles; show their cover with <b>Radar</b>). It can't see inland. Over land, the Observer Corps tracks raids and identifies them after a few minutes. Cloud makes both harder. Low-level raiders slip under the radar unless you build Chain Home Low. Knocked-out radar stations leave gaps.</p>
+  <p><b>Scrambling.</b> Select a squadron, then click a hostile plot to vector it, or click open map to send it on a patrol (it will attack anything that comes close). Set the <b>height</b> before you click: Auto aims 2,000 ft above the radar's estimate. Estimates can be wrong, and a squadron still climbing when it meets the enemy fights at a disadvantage. <b>Attack: Escorts</b> tells a squadron to tie up the Bf 110s so the others can get at the bombers.</p>
+  <p><b>Readiness</b> squadrons are airborne in about 5 minutes and <b>Available</b> ones in 15. Readiness is tiring. Rest squadrons (<b>Stand down</b>) and train green ones (<b>Training</b>). Squadrons refuel after every sortie, and a bombed airfield turns them round more slowly.</p>
+  <p><b>The south.</b> From July, Dowding will ask you for squadrons. They fight with 11 Group and come back to you worn out. The <b>Invasion Threat</b> rises if 11 Group runs short, or if Scapa Flow and Rosyth are hit (the Home Fleet is the navy's answer to an invasion). If it reaches 100, Sealion is launched. <b>Air Ministry confidence</b> falls when raids get through unopposed, when the Clyde and the Fleet are hit, and when you refuse Dowding. If it reaches 0, you are sacked.</p>
+  <p><b>Night.</b> Dusk comes earlier as autumn draws on (the clock shows "dark"). From late August bombers also come at night. Day fighters can barely find them and risk crashing on landing. Night-fighter squadrons (☾), searchlight belts and a good Observer Corps are what count in the dark.</p>
+  <p><b>Your pilots.</b> Every squadron has named pilots. They score victories, become aces and get promoted, and some are killed. When a CO falls, you choose his replacement: a <i>thruster</i> scores more and loses more, a <i>steady hand</i> brings his pilots home, a <i>tactician</i> gets above the enemy. From August, Polish and Czech veterans arrive. Post them to squadrons once their conversion training is done. After every fight a squadron files a <b>Form F</b> combat report: check the claims against the wrecks actually found.</p>
+  <p><b>The enemy learns.</b> If his daylight raids are cut to pieces, Luftflotte 5 adapts: it waits for cloud, comes in low or at dusk, sends lone raiders, and probes for sectors you've stripped of fighters and for gaps in the radar. The Stations tab shows what intelligence has spotted. Troop convoys forming at the Tail of the Bank are a favourite target.</p>
+  <p><b>Standing orders</b> (Squadrons tab) can keep squadrons at readiness, auto-scramble against plots, and rest tired squadrons for you. Every Monday the Air Ministry conference lets you spend confidence on favours.</p>
+  <p><b>Keys:</b> Space pauses, 1–4 set the speed, R toggles radar cover, Esc deselects. Scroll to zoom and drag to pan.</p>`,[{label:'Back to the table',cls:'gold',fn:()=>{}}]);
+}
+function init(){
+  cvs=$('map');ctx=cvs.getContext('2d');stat=document.createElement('canvas');sctx=stat.getContext('2d');
+  clockCvs=$('clock');clockCtx=clockCvs.getContext('2d');
+  window.addEventListener('resize',resize);resize();
+  new ResizeObserver(()=>resize()).observe($('mapWrap'));
+  document.addEventListener('mousedown',()=>{uiPointerDown=true;},true);
+  document.addEventListener('mouseup',()=>{uiPointerDown=false;},true);
+  $('sideContent').addEventListener('click',handleSideClick);
+  $('sideContent').addEventListener('change',handleSideChange);
+  $('tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){UI.tab=b.dataset.tab;renderSide(true);}});
+  $('speeds').addEventListener('click',e=>{const b=e.target.closest('[data-speed]');if(b&&G){G.speed=+b.dataset.speed;if(G.speed>0)UI.lastSpeed=G.speed;}});
+  $('btnRadar').onclick=()=>{UI.showRadar=!UI.showRadar;};
+  $('btnSound').onclick=()=>{UI.sound=!UI.sound;};
+  $('btnFF').onclick=()=>{UI.ff=!UI.ff;};
+  $('btnHelp').onclick=showHelp;
+  $('toast').onclick=()=>{if(UI.toastRep&&!UI.modal){$('toast').classList.remove('show');showFormF(UI.toastRep);}};
+  $('btnMenu').onclick=()=>{if(G)save();showTitle();};
+  $('modal').addEventListener('click',e=>{
+    const p=e.target.closest('[data-pick]');
+    if(p){UI.reqSel[p.dataset.pick]=!UI.reqSel[p.dataset.pick];if(UI.redrawRequest)UI.redrawRequest();return;}
+    const b=e.target.closest('[data-mb]');if(!b)return;const fn=modalButtons[+b.dataset.mb];hideModal();if(fn&&fn.fn)fn.fn();renderSide(true);
+  });
+  $('starts').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    if(b.id==='btnContinue'){const g=tryLoad();if(g)startFromTitle(g);return;}
+    const k=b.dataset.start;if(!k)return;
+    UI.title=false;$('title').classList.add('hide');G=null;newGame(k);startFromTitle(G);
+  });
+  // map interaction: click, drag-pan, wheel-zoom
+  let drag=null;
+  cvs.addEventListener('pointerdown',e=>{const r=cvs.getBoundingClientRect();drag={x:e.clientX,y:e.clientY,cx:UI.cx,cy:UI.cy,moved:false,mx:e.clientX-r.left,my:e.clientY-r.top};cvs.setPointerCapture(e.pointerId);});
+  cvs.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>5)drag.moved=true;if(drag.moved&&UI.zoom>1){UI.cx=drag.cx-dx/view.scale;UI.cy=drag.cy-dy/view.scale;computeView();buildStatic();}});
+  cvs.addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;if(!d.moved)handleMapClick(d.mx,d.my);});
+  cvs.addEventListener('wheel',e=>{e.preventDefault();const r=cvs.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;const wx=WXp(mx),wy=WYp(my);UI.zoom=clamp(UI.zoom*(e.deltaY<0?1.2:1/1.2),1,5);computeView();UI.cx+=wx-WXp(mx);UI.cy+=wy-WYp(my);computeView();buildStatic();},{passive:false});
+  document.addEventListener('keydown',e=>{
+    if(!G||UI.title||e.target.tagName==='SELECT')return;
+    if(e.code==='Space'){e.preventDefault();if(G.speed>0){UI.lastSpeed=G.speed;G.speed=0;}else G.speed=UI.lastSpeed||1;}
+    else if(e.key>='1'&&e.key<='4'){G.speed=+e.key;UI.lastSpeed=G.speed;}
+    else if(e.key==='r'||e.key==='R')UI.showRadar=!UI.showRadar;
+    else if(e.key==='Escape'){UI.selSq=null;UI.selRaid=null;UI.angels=null;renderSide(true);}
+  });
+  showTitle();
+  let last=performance.now(),acc=0;
+  function frame(now){
+    const dtR=Math.min(0.1,(now-last)/1000);last=now;
+    if(G&&!UI.title&&!UI.modal&&!G.gameOver&&G.phaseState==='day'){
+      let rate=SPEEDS[G.speed];if(rate>0&&UI.ff&&isQuiet())rate=Math.max(rate,30);
+      let gm=rate*dtR;
+      while(gm>1e-6&&G.phaseState==='day'){const st=Math.min(0.25,gm);tick(st);gm-=st;}
+    }
+    draw();renderTop();
+    acc+=dtR;if(acc>0.3&&!uiPointerDown){acc=0;renderSide(false);}
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+if(!HEADLESS)init();
+</script>
+</body>
+</html>
