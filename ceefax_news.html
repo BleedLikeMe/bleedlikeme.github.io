@@ -127,7 +127,7 @@ body.side .help{display:none}
   <span class="tch">Tap a headline or key in a page number. Swipe left/right for subpages,
   up/down for the next/previous page. Pinch the screen to zoom. Turn sideways for a bigger screen.<br></span>
   Stories come live from the BBC News RSS feeds via a public CORS relay, so an internet connection is needed.<br>
-  Weather (page 400) comes from Open-Meteo.
+  Weather comes from Open-Meteo, football scores from ESPN and exchange rates from the European Central Bank (via Frankfurter).
 </div>
 
 <script>
@@ -140,16 +140,29 @@ const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 // Each section: index page p, its stories occupy first .. first+max-1
+const BBC = 'https://feeds.bbci.co.uk/';
 const SECTIONS = [
-  {key:'top',   p:101, first:104, max:16, title:'NEWS',     short:'Headlines', label:'News Headlines',        band:'r', ink:'w', feed:'https://feeds.bbci.co.uk/news/rss.xml'},
-  {key:'uk',    p:120, first:121, max:18, title:'UK',       short:'UK',        label:'UK News',               band:'b', ink:'w', feed:'https://feeds.bbci.co.uk/news/uk/rss.xml'},
-  {key:'world', p:140, first:141, max:18, title:'WORLD',    short:'World',     label:'World News',            band:'b', ink:'c', feed:'https://feeds.bbci.co.uk/news/world/rss.xml'},
-  {key:'tech',  p:160, first:161, max:18, title:'TECH',     short:'Tech',      label:'Technology',            band:'m', ink:'w', feed:'https://feeds.bbci.co.uk/news/technology/rss.xml'},
-  {key:'sci',   p:180, first:181, max:18, title:'SCIENCE',  short:'Science',   label:'Science & Environment', band:'g', ink:'k', feed:'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml'},
-  {key:'biz',   p:200, first:201, max:18, title:'BUSINESS', short:'Business',  label:'Business',              band:'c', ink:'b', feed:'https://feeds.bbci.co.uk/news/business/rss.xml'},
-  {key:'arts',  p:250, first:251, max:18, title:'ARTS',     short:'Arts',      label:'Entertainment & Arts',  band:'m', ink:'y', feed:'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml'},
-  {key:'sport', p:300, first:301, max:18, title:'SPORT',    short:'Sport',     label:'Sport',                 band:'y', ink:'b', feed:'https://feeds.bbci.co.uk/sport/rss.xml'},
+  {key:'top',      p:101, first:104, max:16, title:'NEWS',        short:'Headlines', label:'News Headlines',        band:'r', ink:'w', feed:BBC + 'news/rss.xml'},
+  {key:'uk',       p:120, first:121, max:18, title:'UK',          short:'UK',        label:'UK News',               band:'b', ink:'w', feed:BBC + 'news/uk/rss.xml'},
+  {key:'world',    p:140, first:141, max:18, title:'WORLD',       short:'World',     label:'World News',            band:'b', ink:'c', feed:BBC + 'news/world/rss.xml'},
+  {key:'tech',     p:160, first:161, max:18, title:'TECH',        short:'Tech',      label:'Technology',            band:'m', ink:'w', feed:BBC + 'news/technology/rss.xml'},
+  {key:'sci',      p:180, first:181, max:18, title:'SCIENCE',     short:'Science',   label:'Science & Environment', band:'g', ink:'k', feed:BBC + 'news/science_and_environment/rss.xml'},
+  {key:'biz',      p:200, first:201, max:18, title:'BUSINESS',    short:'Business',  label:'Business',              band:'c', ink:'b', feed:BBC + 'news/business/rss.xml'},
+  {key:'arts',     p:250, first:251, max:18, title:'ARTS',        short:'Arts',      label:'Entertainment & Arts',  band:'m', ink:'y', feed:BBC + 'news/entertainment_and_arts/rss.xml'},
+  {key:'politics', p:500, first:501, max:18, title:'POLITICS',    short:'Politics',  label:'Politics',              band:'r', ink:'y', feed:BBC + 'news/politics/rss.xml'},
+  {key:'health',   p:520, first:521, max:18, title:'HEALTH',      short:'Health',    label:'Health',                band:'c', ink:'k', feed:BBC + 'news/health/rss.xml'},
+  {key:'ni',       p:540, first:541, max:18, title:'N IRELAND',   short:'N Ireland', label:'Northern Ireland',      band:'g', ink:'w', feed:BBC + 'news/northern_ireland/rss.xml'},
+  {key:'scot',     p:560, first:561, max:18, title:'SCOTLAND',    short:'Scotland',  label:'Scotland',              band:'b', ink:'w', feed:BBC + 'news/scotland/rss.xml'},
+  {key:'wales',    p:580, first:581, max:18, title:'WALES',       short:'Wales',     label:'Wales',                 band:'r', ink:'w', feed:BBC + 'news/wales/rss.xml'},
+  {key:'sport',    p:300, first:301, max:18, title:'SPORT',       short:'Sport',     label:'Sport',                 band:'y', ink:'b', feed:BBC + 'sport/rss.xml'},
+  {key:'football', p:320, first:321, max:18, title:'FOOTBALL',    short:'Football',  label:'Football',              band:'g', ink:'y', feed:BBC + 'sport/football/rss.xml'},
+  {key:'cricket',  p:360, first:361, max:9,  title:'CRICKET',     short:'Cricket',   label:'Cricket',               band:'g', ink:'k', feed:BBC + 'sport/cricket/rss.xml'},
+  {key:'rugby',    p:370, first:371, max:9,  title:'RUGBY',       short:'Rugby',     label:'Rugby Union', menu:'Rugby Union', band:'y', ink:'r', feed:BBC + 'sport/rugby-union/rss.xml'},
+  {key:'f1',       p:380, first:381, max:9,  title:'FORMULA ONE', short:'F1',        label:'Formula 1',   menu:'Formula 1',   band:'r', ink:'w', feed:BBC + 'sport/formula1/rss.xml'},
+  {key:'tennis',   p:390, first:391, max:9,  title:'TENNIS',      short:'Tennis',    label:'Tennis',                band:'g', ink:'w', feed:BBC + 'sport/tennis/rss.xml'},
 ];
+// Fetched in the background at start-up; the rest load when first visited
+const PREFETCH = ['top', 'uk', 'world', 'tech', 'sci', 'biz', 'arts', 'sport'];
 
 // Weather: page 400 lists the cities, then one forecast page each from 401
 const WEATHER = {p: 400, first: 401, title: 'WEATHER', short: 'Weather', label: 'UK & Ireland Weather', band: 'b', ink: 'y'};
@@ -162,7 +175,39 @@ const CITIES = [
 ].map(([name, lat, lon], i) => ({name, lat, lon, p: WEATHER.first + i}));
 const WX_TTL = 15 * 60 * 1000;
 const isWeather = n => n >= WEATHER.p && n < WEATHER.first + CITIES.length;
-const INDEX_ROWS = [...SECTIONS, WEATHER];
+
+// Exchange rates on one page beside Business: what GBP 1 buys, with the change on the previous day
+const CURRENCY = {p: 220, title: 'CURRENCY', short: 'Currency', band: 'c', ink: 'b', src: 'Frankfurter'};
+const FX = [
+  ['EUR', 'Euro'], ['USD', 'US Dollar'], ['AUD', 'Australian Dollar'], ['CAD', 'Canadian Dollar'],
+  ['CHF', 'Swiss Franc'], ['CNY', 'Chinese Yuan'], ['DKK', 'Danish Krone'], ['HKD', 'Hong Kong Dollar'],
+  ['INR', 'Indian Rupee'], ['JPY', 'Japanese Yen'], ['NZD', 'New Zealand Dollar'], ['NOK', 'Norwegian Krone'],
+  ['PLN', 'Polish Zloty'], ['SEK', 'Swedish Krona'], ['SGD', 'Singapore Dollar'], ['TRY', 'Turkish Lira'],
+  ['ZAR', 'S African Rand'],
+];
+const FX_TTL = 60 * 60 * 1000;
+
+// Football scores and tables from ESPN: 340 lists the competitions, then results + table pages for each
+const SCORES = {p: 340, title: 'SCORES', short: 'Scores', menu: 'Scores/tables', band: 'g', ink: 'w', src: 'ESPN'};
+const LEAGUES = [
+  {key: 'eng.1', name: 'Premier League'}, {key: 'eng.2', name: 'Championship'},
+  {key: 'eng.3', name: 'League One'}, {key: 'eng.4', name: 'League Two'},
+  {key: 'sco.1', name: 'Scottish Premiership'}, {key: 'uefa.champions', name: 'Champions League'},
+].map((lg, i) => ({...lg, res: SCORES.p + 1 + i * 2, tab: SCORES.p + 2 + i * 2}));
+const LIVE_TTL = 2 * 60 * 1000, OLD_TTL = 30 * 60 * 1000;
+const isScores = n => n >= SCORES.p && n <= SCORES.p + LEAGUES.length * 2;
+
+const QUIZ = {p: 700, title: 'BAMBOOZLE', short: 'Bamboozle', band: 'm', ink: 'y'};
+
+// Pages that come from somewhere other than a BBC feed
+const featureOf = n => isWeather(n) ? WEATHER : n === CURRENCY.p ? CURRENCY : isScores(n) ? SCORES : null;
+WEATHER.src = 'Open-Meteo';
+
+// Page 100: news down the left, sport and the rest down the right
+const byKey = k => SECTIONS.find(s => s.key === k);
+const INDEX_LEFT = [...['top', 'uk', 'world', 'tech', 'sci', 'biz'].map(byKey), CURRENCY,
+  ...['arts', 'politics', 'health', 'ni', 'scot', 'wales'].map(byKey)];
+const INDEX_RIGHT = [...['sport', 'football'].map(byKey), SCORES, ...['cricket', 'rugby', 'f1', 'tennis'].map(byKey), WEATHER, QUIZ];
 
 // Public CORS relays, tried in order (the last one that worked goes first)
 const PROXIES = [
@@ -206,10 +251,15 @@ const pad = n => String(n).padStart(2, '0');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const stripTags = s => (s || '').replace(/<[^>]*>/g, ' ');
+const ENTITIES = {amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', nbsp: ' '};
 const clean = s => (s || '')
+  .replace(/&(amp|quot|apos|lt|gt|nbsp);|&#(\d+);|&#x([0-9a-f]+);/gi,
+    (m, n, d, x) => n ? ENTITIES[n.toLowerCase()] : String.fromCodePoint(d ? +d : parseInt(x, 16)))
   .replace(/[‘’‛′]/g, "'").replace(/[“”″]/g, '"')
   .replace(/[–—−]/g, '-').replace(/…/g, '...').replace(/ /g, ' ')
   .replace(/\s+/g, ' ').trim();
+const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const dayName = d => `${DAYS[d.getDay()]} ${pad(d.getDate())} ${MONTHS[d.getMonth()]}`;
 const hhmm = t => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
 const fmtDate = d => (!d || isNaN(d)) ? '' :
   `${DAYS[d.getDay()]} ${pad(d.getDate())} ${MONTHS[d.getMonth()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -329,18 +379,14 @@ function extractParas(html) {
   return out.length ? out : null;
 }
 
-// One request for every city; Open-Meteo allows CORS, relays are only a fallback
-const wx = {};
-function loadWeather() {
-  if (wx.pending) return wx.pending;
-  if (wx.data && Date.now() - wx.at < WX_TTL) return Promise.resolve(wx.data);
-  const url = 'https://api.open-meteo.com/v1/forecast?' + new URLSearchParams({
-    latitude: CITIES.map(c => c.lat).join(','), longitude: CITIES.map(c => c.lon).join(','),
-    current: 'temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_direction_10m',
-    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset',
-    wind_speed_unit: 'mph', timezone: 'Europe/London', forecast_days: 7,
-  });
-  wx.pending = (async () => {
+// JSON APIs that allow CORS: fetch directly, fall back to the relays, keep the last good copy
+const jsonCache = {}; // url -> {data, at, pending}
+function getJSON(url, ttl, check = () => true) {
+  const c = jsonCache[url] || (jsonCache[url] = {});
+  if (c.pending) return c.pending;
+  if (c.data && Date.now() - c.at < ttl) return Promise.resolve(c.data);
+  const ok = t => { try { return !!check(JSON.parse(t)); } catch (e) { return false; } };
+  c.pending = (async () => {
     try {
       let t;
       try {
@@ -349,19 +395,53 @@ function loadWeather() {
         const r = await fetch(url, {signal: ac.signal});
         if (!r.ok) throw new Error('HTTP ' + r.status);
         t = await r.text();
-      } catch (e) { t = await fetchText(url, t => t.includes('"daily"')); }
-      let j = JSON.parse(t);
-      if (!Array.isArray(j)) j = [j];
-      if (j.length !== CITIES.length || !j.every(c => c.daily && c.current)) throw new Error('forecast incomplete');
-      wx.data = j; wx.at = Date.now();
-      return j;
+        if (!ok(t)) throw new Error('unexpected response');
+      } catch (e) { t = await fetchText(url, ok); }
+      c.data = JSON.parse(t); c.at = Date.now();
+      return c.data;
     } catch (e) {
-      if (wx.data) return wx.data; // keep showing the last good copy
+      if (c.data) return c.data;
       throw e;
-    } finally { wx.pending = null; }
+    } finally { c.pending = null; }
   })();
-  return wx.pending;
+  return c.pending;
 }
+const fetchedAt = url => jsonCache[url]?.at;
+
+// One request for every city
+const WX_URL = 'https://api.open-meteo.com/v1/forecast?' + new URLSearchParams({
+  latitude: CITIES.map(c => c.lat).join(','), longitude: CITIES.map(c => c.lon).join(','),
+  current: 'temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_direction_10m',
+  daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset',
+  wind_speed_unit: 'mph', timezone: 'Europe/London', forecast_days: 7,
+});
+const loadWeather = () => getJSON(WX_URL, WX_TTL,
+  j => Array.isArray(j) && j.length === CITIES.length && j.every(c => c.daily && c.current));
+
+// Ten days of rates so the latest can be compared with the one before (ECB publishes on working days)
+const fxURL = () => `https://api.frankfurter.dev/v1/${isoDay(new Date(Date.now() - 10 * 864e5))}..?base=GBP&symbols=${FX.map(f => f[0]).join(',')}`;
+const loadRates = () => getJSON(fxURL(), FX_TTL, j => j.rates && Object.keys(j.rates).length);
+
+// The default scoreboard is the latest match day and carries the season calendar;
+// fetch the rest of that round and the next round one day at a time
+const espn = (lg, q = '') => `https://site.api.espn.com/apis/site/v2/sports/soccer/${lg.key}/scoreboard${q}`;
+const hasEvents = j => Array.isArray(j.events);
+async function loadMatches(lg) {
+  const first = await getJSON(espn(lg), LIVE_TTL, hasEvents);
+  const today = isoDay(new Date());
+  const gap = (a, b) => Math.abs(new Date(a) - new Date(b)) / 864e5;
+  const cal = (first.leagues?.[0]?.calendar || []).filter(c => typeof c === 'string').map(c => c.slice(0, 10));
+  const past = cal.filter(d => d <= today), future = cal.filter(d => d > today);
+  const days = [...past.filter(d => gap(d, past[past.length - 1]) <= 3), ...future.filter(d => gap(d, future[0]) <= 3)];
+  const lists = await Promise.all(days.map(d =>
+    getJSON(espn(lg, '?dates=' + d.replace(/-/g, '')), d < today ? OLD_TTL : LIVE_TTL, hasEvents).then(j => j.events, () => [])));
+  const seen = new Set();
+  return [first.events, ...lists].flat()
+    .filter(e => !seen.has(e.id) && seen.add(e.id))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+const tableURL = lg => `https://site.api.espn.com/apis/v2/sports/soccer/${lg.key}/standings`;
+const loadTable = lg => getJSON(tableURL(lg), LIVE_TTL, j => Array.isArray(j.children));
 
 /* ---------- Page grid ---------- */
 class Grid {
@@ -447,19 +527,19 @@ function buildIndex() {
   const g = new Grid();
   banner(g, 'CEEFAX', 'y', 'b');
   g.put(4, 1, 'News and sport from the BBC', 'c');
-  g.put(5, 1, 'NEWS AND SPORT', 'w', {dh: true});
-  INDEX_ROWS.forEach((s, i) => {
-    const r = 8 + i, fg = i % 2 ? 'c' : 'w';
-    g.put(r, 2, s.label, fg);
-    const d0 = 3 + s.label.length;
-    g.put(r, d0, '.'.repeat(Math.max(0, 35 - d0)), 'b');
-    g.put(r, 36, String(s.p), 'y');
-    g.link(r, 0, 40, s.p);
+  const column = (list, c0) => list.forEach((s, i) => {
+    const r = 5 + i, label = s.menu || s.short;
+    g.put(r, c0, label, i % 2 ? 'c' : 'w');
+    g.put(r, c0 + label.length + 1, '.'.repeat(Math.max(0, 13 - label.length)), 'b');
+    g.put(r, c0 + 14, String(s.p), 'y');
+    g.link(r, c0 - 1, c0 + 18, s.p);
   });
-  g.put(17, 1, ' LATEST ', 'w', {bg: 'r'});
+  column(INDEX_LEFT, 1);
+  column(INDEX_RIGHT, 21);
+  g.put(18, 1, ' LATEST ', 'w', {bg: 'r'});
   const top = feeds.top?.items;
   if (top) {
-    let r = 18;
+    let r = 19;
     top.slice(0, 2).forEach((it, i) => {
       const ls = wrap(it.title, 34).slice(0, 2);
       ls.forEach((l, li) => {
@@ -469,7 +549,7 @@ function buildIndex() {
       });
     });
   } else {
-    g.put(18, 1, 'Receiving headlines...', 'c', {flash: true});
+    g.put(19, 1, 'Receiving headlines...', 'c', {flash: true});
   }
   navBar(g, 'b', 'w', ['Type a page number or select a title', 100]);
   fastext(g, defaultFast);
@@ -483,7 +563,7 @@ function buildSection(sec, items) {
     if (used + e.lines.length > 18) { pages.push([]); used = 0; }
     pages[pages.length - 1].push(e); used += e.lines.length;
   }
-  const idx = SECTIONS.indexOf(sec), next = sport(sec) ? WEATHER : SECTIONS[(idx + 1) % SECTIONS.length];
+  const idx = SECTIONS.indexOf(sec), next = SECTIONS[(idx + 1) % SECTIONS.length];
   return pages.map((pg, si) => {
     const g = new Grid();
     banner(g, sec.title, sec.ink, sec.band, sec.title === sec.short.toUpperCase() ? '' : sec.short);
@@ -550,7 +630,7 @@ const wind = (dir, mph) => mph == null ? '' : `Wind ${compass(dir)} ${Math.round
 function buildWeatherIndex(data) {
   const g = new Grid();
   banner(g, WEATHER.title, WEATHER.ink, WEATHER.band);
-  g.put(4, 1, 'Updated ' + hhmm(wx.at), 'c');
+  g.put(4, 1, 'Updated ' + hhmm(fetchedAt(WX_URL)), 'c');
   g.put(4, 25, 'open-meteo.com', 'g');
   g.fill(5, WEATHER.band);
   [[1, 'CITY'], [14, 'NOW'], [19, 'MAX'], [24, 'MIN'], [28, 'TODAY']].forEach(([c, t]) => g.put(5, c, t, 'y'));
@@ -575,7 +655,7 @@ function buildCityWeather(city, w) {
   const next = city.p < CITIES[CITIES.length - 1].p ? city.p + 1 : WEATHER.p;
   const g = new Grid();
   banner(g, WEATHER.title, WEATHER.ink, WEATHER.band, city.name);
-  g.put(4, 1, 'Updated ' + hhmm(wx.at), 'c');
+  g.put(4, 1, 'Updated ' + hhmm(fetchedAt(WX_URL)), 'c');
   if (day.sunrise?.[0]) {
     const sun = `Sun ${day.sunrise[0].slice(11, 16)}-${day.sunset[0].slice(11, 16)}`;
     g.put(4, 39 - sun.length, sun, 'y');
@@ -603,16 +683,272 @@ function buildCityWeather(city, w) {
   return [g];
 }
 
+/* ---------- Currency page ---------- */
+function buildCurrency(j) {
+  const dates = Object.keys(j.rates).sort();
+  const now = j.rates[dates[dates.length - 1]], prev = j.rates[dates[dates.length - 2]] || {};
+  const day = new Date(dates[dates.length - 1] + 'T12:00:00');
+  const g = new Grid();
+  banner(g, CURRENCY.title, CURRENCY.ink, CURRENCY.band);
+  g.put(4, 1, `ECB rates ${dayName(day)}`, 'c');
+  g.put(4, 25, 'frankfurter.dev', 'g');
+  g.fill(5, CURRENCY.band);
+  [[1, 'GBP 1 BUYS'], [27, 'RATE'], [33, 'CHANGE']].forEach(([c, t]) => g.put(5, c, t, 'k'));
+  FX.forEach(([code, name], i) => {
+    const r = 6 + i, v = now[code], was = prev[code];
+    g.put(r, 1, name, i % 2 ? 'c' : 'w');
+    g.put(r, 20, code, 'w');
+    if (v == null) { g.put(r, 27, 'n/a', 'r'); return; }
+    g.put(r, 24, v.toFixed(v < 10 ? 4 : v < 100 ? 3 : 2).padStart(8), 'y');
+    if (was) {
+      const pct = (v / was - 1) * 100;
+      g.put(r, 33, ((pct > 0 ? '+' : '') + pct.toFixed(2) + '%').padStart(6), pct > 0.005 ? 'g' : pct < -0.005 ? 'r' : 'w');
+    }
+  });
+  navBar(g, CURRENCY.band, CURRENCY.ink, ['Business 200', 200], ['Index 100', 100]);
+  fastext(g, [['Business', 200], ['Headlines', 101], ['Sport', 300], ['Index', 100]]);
+  return [g];
+}
+
+/* ---------- Football pages ---------- */
+function buildScoresIndex() {
+  const g = new Grid();
+  banner(g, SCORES.title, SCORES.ink, SCORES.band, 'Football');
+  g.put(4, 1, 'Latest results, fixtures and tables', 'c');
+  g.fill(5, SCORES.band);
+  [[1, 'COMPETITION'], [24, 'SCORES'], [33, 'TABLE']].forEach(([c, t]) => g.put(5, c, t, 'y'));
+  LEAGUES.forEach((lg, i) => {
+    const r = 7 + i * 2, fg = i % 2 ? 'c' : 'w';
+    g.put(r, 1, lg.name, fg);
+    g.put(r, 26, String(lg.res), 'y'); g.link(r, 0, 30, lg.res);
+    g.put(r, 34, String(lg.tab), 'y'); g.link(r, 30, 40, lg.tab);
+  });
+  g.put(20, 1, 'Football news', 'w'); g.put(20, 36, '320', 'y'); g.link(20, 0, 40, 320);
+  navBar(g, SCORES.band, SCORES.ink, [`${LEAGUES[0].name} ${LEAGUES[0].res}`, LEAGUES[0].res], ['Sport 300', 300]);
+  fastext(g, [['Prem', LEAGUES[0].res], ['Football', 320], ['Sport', 300], ['Index', 100]]);
+  return [g];
+}
+
+// Postponed games stay with the fixtures rather than the results
+const postponed = e => /postp|cancel/i.test(e.status.type.shortDetail || '');
+const played = e => e.status.type.state !== 'pre' && !postponed(e);
+
+// FT, HT or the minute; anything else (postponed, abandoned) shortened
+function matchStatus(e) {
+  const t = e.status.type, d = clean(t.shortDetail);
+  if (/aband/i.test(d)) return ['A', 'r'];
+  if (t.state === 'in') return [/^HT/i.test(d) ? 'HT' : d.replace(/\s/g, '').slice(0, 3), 'g'];
+  return [/pen/i.test(d) ? 'pen' : /AET/i.test(d) ? 'aet' : 'FT', 'c'];
+}
+
+function matchLine(e) {
+  const c = e.competitions[0].competitors;
+  const [h, a] = ['home', 'away'].map(k => c.find(x => x.homeAway === k) || {});
+  const name = t => clean(t.team?.shortDisplayName || t.team?.displayName || '?');
+  const hn = name(h).slice(0, 14), an = name(a).slice(0, 14);
+  const segs = [[15 - hn.length, hn, 'w'], [22, an, 'w']];
+  if (postponed(e)) segs.push([17, 'P-P', 'r']);
+  else if (e.status.type.state === 'pre') segs.push([16, hhmm(e.date), 'c']);
+  else {
+    const score = `${h.score ?? ''}-${a.score ?? ''}`, [st, fg] = matchStatus(e);
+    segs.push([18 - (score.length >> 1), score, 'y'], [37, st, fg]);
+  }
+  return segs;
+}
+
+function buildResults(lg, events) {
+  const lines = [];
+  const section = (head, list) => {
+    if (!list.length) return;
+    if (lines.length) lines.push(null);
+    lines.push([[1, ` ${head} `, 'w', {bg: 'r'}]]);
+    let day = '';
+    for (const e of list) {
+      const d = dayName(new Date(e.date));
+      if (d !== day) { lines.push([[1, d, 'y']]); day = d; }
+      lines.push(matchLine(e));
+    }
+  };
+  const done = events.filter(played), next = events.filter(e => !played(e));
+  section(done.some(e => e.status.type.state === 'in') ? 'LIVE AND LATEST' : 'LATEST RESULTS', done);
+  section('FIXTURES', next);
+  if (!lines.length) lines.push([[1, 'No matches listed at the moment.', 'w']]);
+  const i = LEAGUES.indexOf(lg), nextLg = LEAGUES[(i + 1) % LEAGUES.length];
+  const chunks = paginate(lines, 18);
+  return chunks.map((ch, si) => {
+    const g = new Grid();
+    banner(g, SCORES.title, SCORES.ink, SCORES.band, 'Football');
+    g.put(4, 1, lg.name.toUpperCase(), 'y');
+    g.put(4, 22, 'Updated ' + hhmm(fetchedAt(espn(lg))), 'c');
+    subInd(g, si, chunks.length);
+    ch.forEach((l, r) => l && l.forEach(([c, t, fg, o]) => g.put(5 + r, c, t, fg, o)));
+    navBar(g, SCORES.band, SCORES.ink, [`Table ${lg.tab}`, lg.tab], ['Scores 340', SCORES.p]);
+    fastext(g, [['Table', lg.tab], ['Next', nextLg.res], ['Scores', SCORES.p], ['Index', 100]]);
+    return g;
+  });
+}
+
+function buildTable(lg, j) {
+  const stat = (e, k) => e.stats?.find(x => x.name === k)?.displayValue ?? '';
+  const num = (e, k) => +stat(e, k) || 0;
+  const rows = [];
+  for (const child of j.children) {
+    const entries = [...(child.standings?.entries || [])]
+      .sort((a, b) => (num(a, 'rank') || 99) - (num(b, 'rank') || 99) || num(b, 'points') - num(a, 'points'));
+    if (j.children.length > 1) rows.push({head: clean(child.name)});
+    entries.forEach((e, i) => rows.push({e, pos: num(e, 'rank') || i + 1}));
+  }
+  // Split long tables evenly across subpages of up to 17 rows
+  const per = Math.ceil(rows.length / Math.max(1, Math.ceil(rows.length / 17))) || 1;
+  const pages = [];
+  for (let i = 0; i < rows.length; i += per) pages.push(rows.slice(i, i + per));
+  if (!pages.length) pages.push([]);
+  const i = LEAGUES.indexOf(lg), nextLg = LEAGUES[(i + 1) % LEAGUES.length];
+  return pages.map((pg, si) => {
+    const g = new Grid();
+    banner(g, SCORES.title, SCORES.ink, SCORES.band, 'Football');
+    g.put(4, 1, lg.name.toUpperCase() + ' TABLE', 'y');
+    subInd(g, si, pages.length);
+    g.fill(5, SCORES.band);
+    [[20, 'P'], [23, 'W'], [26, 'D'], [29, 'L'], [32, 'GD'], [35, 'PTS']].forEach(([c, t]) => g.put(5, c, t, 'y'));
+    pg.forEach((row, k) => {
+      const r = 6 + k;
+      if (row.head) { g.put(r, 1, row.head.slice(0, 38), 'y'); return; }
+      const e = row.e, fg = k % 2 ? 'c' : 'w';
+      g.put(r, 1, String(row.pos).padStart(2), 'w');
+      g.put(r, 4, clean(e.team?.shortDisplayName || e.team?.displayName).slice(0, 14), fg);
+      [[19, 'gamesPlayed'], [22, 'wins'], [25, 'ties'], [28, 'losses']].forEach(([c, key]) => g.put(r, c, stat(e, key).padStart(2), fg));
+      g.put(r, 31, stat(e, 'pointDifferential').padStart(3), fg);
+      g.put(r, 35, stat(e, 'points').padStart(3), 'y');
+    });
+    if (!rows.length) g.put(7, 1, 'No table is available yet.', 'w');
+    navBar(g, SCORES.band, SCORES.ink, [`Scores ${lg.res}`, lg.res], ['Scores 340', SCORES.p]);
+    fastext(g, [['Scores', lg.res], ['Next', nextLg.tab], ['Football', 320], ['Index', 100]]);
+    return g;
+  });
+}
+
+/* ---------- Bamboozle quiz ---------- */
+// [question, right answer, three wrong answers]
+const QUESTIONS = [
+  ['Which planet is known as the Red Planet?', 'Mars', 'Venus', 'Jupiter', 'Mercury'],
+  ['How many sides does a hexagon have?', '6', '5', '7', '8'],
+  ['What is the capital of Australia?', 'Canberra', 'Sydney', 'Melbourne', 'Perth'],
+  ['Who wrote Romeo and Juliet?', 'William Shakespeare', 'Charles Dickens', 'Jane Austen', 'Thomas Hardy'],
+  ['What is the chemical symbol for gold?', 'Au', 'Ag', 'Gd', 'Go'],
+  ['In which year did the Titanic sink?', '1912', '1905', '1918', '1921'],
+  ['What is the largest ocean on Earth?', 'Pacific', 'Atlantic', 'Indian', 'Arctic'],
+  ['How many players does a football team have on the pitch?', '11', '10', '12', '9'],
+  ['Which is the longest river in the UK?', 'Severn', 'Thames', 'Trent', 'Tay'],
+  ['What is the hardest natural substance?', 'Diamond', 'Quartz', 'Granite', 'Iron'],
+  ['Which gas do plants take in from the air?', 'Carbon dioxide', 'Oxygen', 'Nitrogen', 'Helium'],
+  ['Who painted the Mona Lisa?', 'Leonardo da Vinci', 'Michelangelo', 'Raphael', 'Rembrandt'],
+  ['What is the smallest prime number?', '2', '1', '3', '5'],
+  ['Which country hosted the 1966 World Cup?', 'England', 'Brazil', 'Mexico', 'West Germany'],
+  ['How many days are in a leap year?', '366', '365', '364', '367'],
+  ['What is the capital of Canada?', 'Ottawa', 'Toronto', 'Vancouver', 'Montreal'],
+  ['Which organ pumps blood around the body?', 'Heart', 'Liver', 'Lungs', 'Kidneys'],
+  ['At what temperature in Fahrenheit does water freeze?', '32', '0', '16', '100'],
+  ['Who was the first person to walk on the Moon?', 'Neil Armstrong', 'Buzz Aldrin', 'Yuri Gagarin', 'John Glenn'],
+  ['Which is the highest mountain in the British Isles?', 'Ben Nevis', 'Snowdon', 'Scafell Pike', 'Slieve Donard'],
+  ['How many strings does a standard violin have?', '4', '5', '6', '3'],
+  ['What is the main language spoken in Brazil?', 'Portuguese', 'Spanish', 'French', 'Italian'],
+  ['Which element has the chemical symbol O?', 'Oxygen', 'Osmium', 'Iron', 'Tin'],
+  ['In which city is the Eiffel Tower?', 'Paris', 'Lyon', 'Brussels', 'Nice'],
+  ['How many minutes are there in a day?', '1,440', '1,240', '1,600', '1,080'],
+  ['In which year did Ceefax begin?', '1974', '1968', '1980', '1985'],
+  ['In which year did Ceefax close?', '2012', '2008', '2010', '2014'],
+  ['Which is the largest planet in the Solar System?', 'Jupiter', 'Saturn', 'Neptune', 'Earth'],
+  ['How many sides does a 50p coin have?', '7', '6', '8', '9'],
+  ['What is the capital of Scotland?', 'Edinburgh', 'Glasgow', 'Aberdeen', 'Dundee'],
+  ['Which vitamin does the skin make in sunlight?', 'Vitamin D', 'Vitamin C', 'Vitamin A', 'Vitamin B12'],
+  ['Who discovered penicillin?', 'Alexander Fleming', 'Louis Pasteur', 'Joseph Lister', 'Edward Jenner'],
+  ['How many bones are in the adult human body?', '206', '186', '226', '256'],
+  ['Which country is home to the kangaroo?', 'Australia', 'New Zealand', 'South Africa', 'Argentina'],
+  ['Which band recorded Hey Jude?', 'The Beatles', 'The Rolling Stones', 'The Who', 'The Kinks'],
+  ['What is 12 times 12?', '144', '124', '132', '156'],
+  ['What is the capital of Northern Ireland?', 'Belfast', 'Derry', 'Armagh', 'Newry'],
+  ['Which sea lies between Great Britain and Ireland?', 'Irish Sea', 'North Sea', 'Baltic Sea', 'Norwegian Sea'],
+  ['Which is the smallest country in the world?', 'Vatican City', 'Monaco', 'San Marino', 'Malta'],
+  ['How many hearts does an octopus have?', '3', '1', '2', '8'],
+  ['Which metal is liquid at room temperature?', 'Mercury', 'Lead', 'Tin', 'Zinc'],
+  ['Who was Prime Minister for most of the Second World War?', 'Winston Churchill', 'Neville Chamberlain', 'Clement Attlee', 'Anthony Eden'],
+  ['What does the D in DNA stand for?', 'Deoxyribo', 'Di', 'Double', 'Dextro'],
+  ['Which is the largest organ of the human body?', 'Skin', 'Liver', 'Brain', 'Lungs'],
+];
+const QUIZ_LEN = 10;
+const QUIZ_COLS = ['r', 'g', 'y', 'c'];
+const quiz = {qs: [], i: 0, score: 0, picked: null};
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function quizAction(a) {
+  const q = quiz.qs[quiz.i];
+  if (a === 'start') {
+    quiz.qs = shuffle(QUESTIONS).slice(0, QUIZ_LEN).map(([text, right, ...wrong]) => ({text, right, opts: shuffle([right, ...wrong])}));
+    Object.assign(quiz, {i: 0, score: 0, picked: null});
+  } else if (a === 'next') {
+    if (quiz.picked == null) return;
+    quiz.i++; quiz.picked = null;
+  } else if (q && quiz.picked == null) {
+    quiz.picked = +a;
+    if (q.opts[quiz.picked] === q.right) quiz.score++;
+  } else return;
+  if (st.current !== QUIZ.p) return;
+  st.pages = buildQuiz(); st.sub = 0; show();
+}
+
+function buildQuiz() {
+  const g = new Grid();
+  const q = quiz.qs[quiz.i], n = quiz.qs.length;
+  banner(g, QUIZ.title, QUIZ.ink, QUIZ.band, q ? `Q${quiz.i + 1}/${n}` : '');
+  const leave = [['Headlines', 101], ['Index', 100]];
+  if (!n) {
+    g.put(6, 1, 'THE TELETEXT QUIZ', 'y', {dh: true});
+    let r = 9;
+    wrap(`${QUIZ_LEN} questions. Answer each one with the coloured Fastext buttons (or keys R, G, Y and C), or select an answer on the screen.`, 38)
+      .forEach(l => g.put(r++, 1, l, 'w'));
+    g.put(r + 1, 1, 'Select PLAY (red) to begin.', 'g', {flash: true});
+    fastext(g, [['Play', 'bz:start'], ['Sport', 300], ...leave]);
+  } else if (!q) {
+    g.put(6, 1, 'YOU SCORED', 'w', {dh: true});
+    g.put(9, 1, `${quiz.score} OUT OF ${n}`, 'y', {dh: true});
+    const verdict = quiz.score === n ? 'Perfect! Not bamboozled at all.' : quiz.score >= 7 ? 'Excellent work!' :
+      quiz.score >= 4 ? 'Not bad at all.' : 'Bamboozled! Better luck next time.';
+    g.put(12, 1, verdict, 'g');
+    fastext(g, [['Again', 'bz:start'], ['Sport', 300], ...leave]);
+  } else {
+    g.put(4, 1, `Score ${quiz.score}`, 'c');
+    let r = 6;
+    wrap(q.text, 38).forEach(l => g.put(r++, 1, l, 'y'));
+    q.opts.forEach((o, k) => {
+      const row = 11 + k * 2, mark = quiz.picked == null ? '' : o === q.right ? ' *' : k === quiz.picked ? ' X' : '';
+      g.put(row, 1, '  ', 'w', {bg: QUIZ_COLS[k]});
+      g.put(row, 4, o + mark, QUIZ_COLS[k]);
+      if (quiz.picked == null) g.link(row, 0, 40, 'bz:' + k);
+    });
+    if (quiz.picked == null) {
+      fastext(g, q.opts.map((o, k) => [o.slice(0, 9), 'bz:' + k]));
+    } else {
+      const right = q.opts[quiz.picked] === q.right;
+      g.put(19, 1, right ? 'CORRECT!' : 'WRONG!', right ? 'g' : 'r', {dh: true});
+      if (!right) g.put(21, 1, ('The answer was ' + q.right).slice(0, 38), 'c');
+      fastext(g, [[quiz.i + 1 < n ? 'Next' : 'Score', 'bz:next'], ['Sport', 300], ...leave]);
+    }
+  }
+  navBar(g, QUIZ.band, QUIZ.ink, ['New game', 'bz:start'], ['Index 100', 100]);
+  return [g];
+}
+
 function notFound(n) {
   const g = new Grid();
   banner(g, 'CEEFAX', 'y', 'b');
-  g.put(6, 1, `PAGE ${n}`, 'y', {dh: true});
-  g.put(9, 1, 'This page is not in transmission.', 'w');
-  g.put(11, 1, 'Pages available:', 'c');
-  INDEX_ROWS.forEach((s, i) => {
-    const r = 13 + (i >> 1), c = i % 2 ? 21 : 1;
-    g.put(r, c, String(s.p), 'y'); g.put(r, c + 4, s.short, 'w'); g.link(r, c, c + 18, s.p);
-  });
+  g.put(5, 1, `PAGE ${n}`, 'y', {dh: true});
+  g.put(7, 1, 'This page is not in transmission.', 'w');
+  g.put(9, 1, 'Pages available:', 'c');
+  [INDEX_LEFT, INDEX_RIGHT].forEach((list, side) => list.forEach((s, i) => {
+    const r = 10 + i, c = side ? 21 : 1;
+    g.put(r, c, String(s.p), 'y'); g.put(r, c + 4, s.menu || s.short, 'w'); g.link(r, c, c + 18, s.p);
+  }));
   navBar(g, 'b', 'w', ['Index 100', 100]);
   fastext(g, defaultFast);
   return [g];
@@ -621,14 +957,15 @@ function notFound(n) {
 function errorPage(n, err) {
   const sec = SECTIONS.find(s => s.p === n || (n >= s.first && n < s.first + s.max));
   const g = new Grid();
+  const feat = featureOf(n);
   if (sec) banner(g, sec.title, sec.ink, sec.band);
-  else if (isWeather(n)) banner(g, WEATHER.title, WEATHER.ink, WEATHER.band);
+  else if (feat) banner(g, feat.title, feat.ink, feat.band);
   else banner(g, 'CEEFAX', 'y', 'b');
   g.put(6, 1, 'NO SIGNAL', 'r', {dh: true});
   g.put(9, 1, `Page ${n} could not be received.`, 'w');
   let r = 11;
-  wrap(isWeather(n)
-    ? 'The forecast comes from Open-Meteo, which may be busy - or your connection may be offline.'
+  wrap(feat
+    ? `This page comes from ${feat.src}, which may be busy - or your connection may be offline.`
     : 'The BBC news feed is fetched through a public relay, which may be busy - or your connection may be offline.', 38)
     .forEach(l => g.put(r++, 1, l, 'c'));
   r++;
@@ -647,6 +984,13 @@ async function buildPage(n) {
     const i = n - WEATHER.first;
     return buildCityWeather(CITIES[i], data[i]);
   }
+  if (n === CURRENCY.p) return buildCurrency(await loadRates());
+  if (isScores(n)) {
+    if (n === SCORES.p) return buildScoresIndex();
+    const lg = LEAGUES[(n - SCORES.p - 1) >> 1];
+    return n === lg.res ? buildResults(lg, await loadMatches(lg)) : buildTable(lg, await loadTable(lg));
+  }
+  if (n === QUIZ.p) return buildQuiz();
   const sec = SECTIONS.find(s => s.p === n);
   if (sec) return buildSection(sec, await loadFeed(sec));
   const ss = SECTIONS.find(s => n >= s.first && n < s.first + s.max);
@@ -777,12 +1121,13 @@ function fastKey(i) { const f = st.fast[i]; if (f) follow(f[1]); }
 function follow(l) {
   l = String(l);
   if (/^\d{3}$/.test(l)) goto(+l);
+  else if (l.startsWith('bz:')) quizAction(l.slice(3));
   else window.open(l, '_blank', 'noopener');
 }
 
 function refresh() {
   Object.values(feeds).forEach(f => { f.at = 0; });
-  wx.at = 0;
+  Object.values(jsonCache).forEach(c => { c.at = 0; });
   articles.clear(); articleText.clear();
   goto(st.current || st.target, false);
 }
@@ -791,7 +1136,7 @@ function refresh() {
 async function quietRebuild() {
   const n = st.current;
   if (n == null || st.searching || st.hold) return;
-  if (n !== 100 && !SECTIONS.some(s => s.p === n) && !isWeather(n)) return;
+  if (n !== 100 && !SECTIONS.some(s => s.p === n) && !featureOf(n)) return;
   try {
     const pages = await buildPage(n);
     if (st.current !== n || st.searching) return;
@@ -801,7 +1146,7 @@ async function quietRebuild() {
 }
 
 async function prefetch() {
-  for (const s of SECTIONS) {
+  for (const s of SECTIONS.filter(s => PREFETCH.includes(s.key))) {
     try { await loadFeed(s); if (s.key === 'top' && st.current === 100) quietRebuild(); } catch (e) {}
     await sleep(600);
   }
@@ -935,6 +1280,7 @@ setInterval(() => {
   if (!st.hold && !st.searching && st.pages.length > 1 && Date.now() - st.subAt > SUB_ROTATE) subStep(1);
 }, 1000);
 setInterval(quietRebuild, FEED_TTL + 1000);
+setInterval(() => { if (isScores(st.current)) quietRebuild(); }, LIVE_TTL + 1000); // live scores
 
 fit();
 drawHeader();
