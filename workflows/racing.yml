@@ -1,0 +1,55 @@
+# Publishes the Ceefax page to GitHub Pages with fresh racing results.
+# Runs every 20 minutes during UK racing hours, whenever a file is changed,
+# and on demand from the Actions tab ("Run workflow").
+name: Publish Ceefax with racing results
+
+on:
+  schedule:
+    - cron: '*/20 10-21 * * *'   # UTC: roughly 11:00-23:00 UK summer time, 10:00-22:00 winter
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # If Sporting Life refuses GitHub's servers, carry on with the copy of
+      # racing_results.js already in the repository (the page will say it is not today's)
+      - name: Fetch today's racing results
+        id: fetch
+        continue-on-error: true
+        shell: pwsh
+        run: ./get_racing.ps1
+
+      - name: Warn if results could not be fetched
+        if: steps.fetch.outcome == 'failure'
+        run: echo "::warning::Racing results could not be fetched - publishing the previous copy"
+
+      - name: Assemble site
+        run: |
+          mkdir _site
+          cp ceefax_news.html _site/index.html
+          cp ceefax_news.html _site/
+          if [ -f racing_results.js ]; then cp racing_results.js _site/; fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
