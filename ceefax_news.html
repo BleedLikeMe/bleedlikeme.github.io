@@ -29,12 +29,44 @@ body{
   background:#000; overflow:hidden; border-radius:6px; user-select:none; -webkit-user-select:none;
   font-family:'VT323',ui-monospace,Consolas,monospace; font-size:var(--fs); line-height:var(--ch);
 }
+/* CRT: scanlines, a curved dark-cornered tube, glow, and a faint rolling bar and flicker */
+.scr.crt{border-radius:3% / 4%}
 .scr.crt::after{
-  content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:5; border-radius:inherit;
   background:repeating-linear-gradient(to bottom,transparent 0,transparent 2px,rgba(0,0,0,.22) 3px);
-  box-shadow:inset 0 0 70px rgba(0,0,0,.75);
+  box-shadow:inset 0 0 70px rgba(0,0,0,.75), inset 0 0 18px rgba(0,0,0,.9);
+  animation:flicker 4s steps(2) infinite;
 }
-.scr.crt .c b{text-shadow:0 0 3px currentColor}
+.scr.crt::before{
+  content:''; position:absolute; left:0; right:0; top:-30%; height:30%; pointer-events:none; z-index:6;
+  background:linear-gradient(to bottom,transparent,rgba(255,255,255,.035) 50%,transparent);
+  animation:roll 9s linear infinite;
+}
+@keyframes flicker{0%,100%{opacity:1} 50%{opacity:.93}}
+@keyframes roll{to{top:100%}}
+.scr.crt .c b{text-shadow:0 0 3px currentColor, 1px 0 0 rgba(255,0,0,.25), -1px 0 0 rgba(0,160,255,.25)}
+.scr.crt .c.m i.on{box-shadow:0 0 3px currentColor}
+#hdr{position:relative; z-index:3; background:#000}
+#body{position:relative; z-index:1; transform-origin:50% 0}
+/* SIZE: double height, top half then bottom half */
+#body.sz1{transform:scaleY(2)}
+#body.sz2{transform:scaleY(2) translateY(-50%)}
+/* MIX: text over the programme; boxed cells (subtitles) keep their background */
+.scr.mix{background:#000}
+.scr.mix .c:not(.bx){background:transparent}
+.scr.mix .c:not(.bx) b{text-shadow:0 0 2px #000, 0 0 4px #000}
+.scr.mix #hdr{background:transparent}
+.prog{position:absolute; inset:0; display:none; z-index:0; filter:blur(10px) saturate(1.2); overflow:hidden}
+.scr.mix .prog{display:block}
+.prog i{position:absolute; border-radius:50%; opacity:.85; animation:drift 14s ease-in-out infinite alternate}
+.prog i:nth-child(1){width:60%; height:70%; left:-5%; top:20%; background:#7a4a2a}
+.prog i:nth-child(2){width:40%; height:55%; left:45%; top:5%; background:#2a5a8a; animation-duration:11s}
+.prog i:nth-child(3){width:28%; height:60%; left:30%; top:35%; background:#d8b090; animation-duration:9s}
+.prog i:nth-child(4){width:50%; height:30%; left:40%; top:75%; background:#3a3a50; animation-duration:17s}
+@keyframes drift{to{transform:translate(8%,-6%) scale(1.1)}}
+/* Concealed text shows only after REVEAL */
+.cc b{visibility:hidden}
+.scr.reveal .cc b{visibility:visible}
 .row{display:flex; height:var(--ch)}
 .c{position:relative; flex:0 0 var(--cw); height:var(--ch); display:flex; align-items:center; justify-content:center}
 .c b{font-weight:400; display:block; white-space:pre; transform:scaleX(var(--sx))}
@@ -98,6 +130,7 @@ body.side .help{display:none}
 
 <div class="tv">
   <div class="scr crt" id="scr" role="application" aria-label="Ceefax-style BBC news pages">
+    <div class="prog" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="row" id="hdr"></div>
     <div id="body"></div>
   </div>
@@ -117,17 +150,26 @@ body.side .help{display:none}
     <button id="bNext" title="Next subpage">Sub ▶</button>
     <button id="bHold" title="Hold this subpage">Hold</button>
     <button id="bRefresh" title="Fetch the latest stories">Refresh</button>
-    <button id="bCrt" class="on" title="CRT scanlines">CRT</button>
+    <button id="bCrt" class="on" title="CRT look">CRT</button>
+  </div>
+  <div class="pad">
+    <button id="bReveal" title="Reveal concealed answers">Reveal</button>
+    <button id="bSize" title="Double height: top half, bottom half, normal">Size</button>
+    <button id="bMix" title="Text over the programme">Mix</button>
+    <button id="bPages" title="Pages from Ceefax: cycle through the pages with music">Pages</button>
+    <button id="bMusic" class="on" title="Music during Pages from Ceefax">Music</button>
   </div>
 </div>
 <div class="help" id="help">
   <span class="kb">Type a page number (<kbd>1</kbd>–<kbd>8</kbd> then two digits) or click a headline.
   <kbd>←</kbd><kbd>→</kbd> subpages · <kbd>↑</kbd><kbd>↓</kbd> next/previous page ·
-  <kbd>R</kbd><kbd>G</kbd><kbd>Y</kbd><kbd>C</kbd> Fastext · <kbd>H</kbd> hold · <kbd>X</kbd> refresh.<br></span>
+  <kbd>R</kbd><kbd>G</kbd><kbd>Y</kbd><kbd>C</kbd> Fastext · <kbd>H</kbd> hold · <kbd>X</kbd> refresh ·
+  <kbd>V</kbd> reveal · <kbd>S</kbd> size · <kbd>M</kbd> mix · <kbd>P</kbd> Pages from Ceefax · <kbd>U</kbd> music.<br></span>
   <span class="tch">Tap a headline or key in a page number. Swipe left/right for subpages,
   up/down for the next/previous page. Pinch the screen to zoom. Turn sideways for a bigger screen.<br></span>
   Stories come live from the BBC News RSS feeds via a public CORS relay, so an internet connection is needed.<br>
-  Weather comes from Open-Meteo, football scores from ESPN and exchange rates from the European Central Bank (via Frankfurter).
+  Weather comes from Open-Meteo, football scores from ESPN, exchange rates from the European Central Bank (via Frankfurter),
+  F1 tables from Jolpica, Tube status from TfL and lottery results from the National Lottery.
 </div>
 
 <script>
@@ -151,21 +193,21 @@ const SECTIONS = [
   {key:'arts',     p:250, first:251, max:18, title:'ARTS',        short:'Arts',      label:'Entertainment & Arts',  band:'m', ink:'y', feed:BBC + 'news/entertainment_and_arts/rss.xml'},
   {key:'politics', p:500, first:501, max:18, title:'POLITICS',    short:'Politics',  label:'Politics',              band:'r', ink:'y', feed:BBC + 'news/politics/rss.xml'},
   {key:'health',   p:520, first:521, max:18, title:'HEALTH',      short:'Health',    label:'Health',                band:'c', ink:'k', feed:BBC + 'news/health/rss.xml'},
-  {key:'ni',       p:540, first:541, max:18, title:'N IRELAND',   short:'N Ireland', label:'Northern Ireland',      band:'g', ink:'w', feed:BBC + 'news/northern_ireland/rss.xml'},
+  {key:'ni',       p:540, first:541, max:13, title:'N IRELAND',   short:'N Ireland', label:'Northern Ireland',      band:'g', ink:'w', feed:BBC + 'news/northern_ireland/rss.xml'},
   {key:'scot',     p:560, first:561, max:18, title:'SCOTLAND',    short:'Scotland',  label:'Scotland',              band:'b', ink:'w', feed:BBC + 'news/scotland/rss.xml'},
   {key:'wales',    p:580, first:581, max:18, title:'WALES',       short:'Wales',     label:'Wales',                 band:'r', ink:'w', feed:BBC + 'news/wales/rss.xml'},
   {key:'sport',    p:300, first:301, max:18, title:'SPORT',       short:'Sport',     label:'Sport',                 band:'y', ink:'b', feed:BBC + 'sport/rss.xml'},
-  {key:'football', p:320, first:321, max:18, title:'FOOTBALL',    short:'Football',  label:'Football',              band:'g', ink:'y', feed:BBC + 'sport/football/rss.xml'},
+  {key:'football', p:320, first:321, max:18, title:'FOOTBALL',    short:'Football',  label:'Football',              band:'g', ink:'y', extra:['Scores', 340], feed:BBC + 'sport/football/rss.xml'},
   {key:'cricket',  p:360, first:361, max:9,  title:'CRICKET',     short:'Cricket',   label:'Cricket',               band:'g', ink:'k', feed:BBC + 'sport/cricket/rss.xml'},
   {key:'rugby',    p:370, first:371, max:9,  title:'RUGBY',       short:'Rugby',     label:'Rugby Union', menu:'Rugby Union', band:'y', ink:'r', feed:BBC + 'sport/rugby-union/rss.xml'},
-  {key:'f1',       p:380, first:381, max:9,  title:'FORMULA ONE', short:'F1',        label:'Formula 1',   menu:'Formula 1',   band:'r', ink:'w', feed:BBC + 'sport/formula1/rss.xml'},
+  {key:'f1',       p:380, first:381, max:9,  title:'FORMULA ONE', short:'F1',        label:'Formula 1',   menu:'Formula 1',   band:'r', ink:'w', extra:['Tables', 355], feed:BBC + 'sport/formula1/rss.xml'},
   {key:'tennis',   p:390, first:391, max:9,  title:'TENNIS',      short:'Tennis',    label:'Tennis',                band:'g', ink:'w', feed:BBC + 'sport/tennis/rss.xml'},
 ];
 // Fetched in the background at start-up; the rest load when first visited
 const PREFETCH = ['top', 'uk', 'world', 'tech', 'sci', 'biz', 'arts', 'sport'];
 
-// Weather: page 400 lists the cities, then one forecast page each from 401
-const WEATHER = {p: 400, first: 401, title: 'WEATHER', short: 'Weather', label: 'UK & Ireland Weather', band: 'b', ink: 'y'};
+// Weather: page 400 lists the cities, 401 is the map, then one forecast page per city from 402
+const WEATHER = {p: 400, map: 401, first: 402, title: 'WEATHER', short: 'Weather', label: 'UK & Ireland Weather', band: 'b', ink: 'y'};
 const CITIES = [
   ['London', 51.51, -0.13], ['Southampton', 50.90, -1.40], ['Plymouth', 50.37, -4.14], ['Bristol', 51.45, -2.59],
   ['Cardiff', 51.48, -3.18], ['Birmingham', 52.48, -1.90], ['Norwich', 52.63, 1.30], ['Manchester', 53.48, -2.24],
@@ -198,16 +240,56 @@ const LIVE_TTL = 2 * 60 * 1000, OLD_TTL = 30 * 60 * 1000;
 const isScores = n => n >= SCORES.p && n <= SCORES.p + LEAGUES.length * 2;
 
 const QUIZ = {p: 700, title: 'BAMBOOZLE', short: 'Bamboozle', band: 'm', ink: 'y'};
+const QUICK = {p: 701, title: 'QUICK QUIZ', short: 'Quick quiz', band: 'm', ink: 'y'};
+
+// F1 tables from Jolpica (the Ergast successor), in the gap between the football tables and cricket
+const F1TAB = {p: 355, cons: 356, race: 357, title: 'FORMULA ONE', short: 'F1 tables', band: 'r', ink: 'w', src: 'Jolpica F1'};
+const F1_TTL = 30 * 60 * 1000;
+const isF1Tab = n => n >= F1TAB.p && n <= F1TAB.race;
+
+// Sun rise/set from the weather feed, moon phase worked out locally
+const SKY = {p: 420, title: 'SUN AND MOON', short: 'Sun & Moon', band: 'b', ink: 'c', src: 'Open-Meteo'};
+
+// London transport status from TfL: 430 lists the lines, 431 explains the disruptions
+const TRAVEL = {p: 430, detail: 431, title: 'TRAVEL', short: 'Travel', menu: 'London travel', band: 'b', ink: 'y', src: 'TfL'};
+const TFL_URL = 'https://api.tfl.gov.uk/Line/Mode/tube,elizabeth-line,dlr,overground,tram/Status';
+const TFL_TTL = 3 * 60 * 1000;
+const TFL_MODES = {'tube': 'UNDERGROUND', 'elizabeth-line': 'ELIZABETH LINE', 'dlr': 'DLR', 'overground': 'OVERGROUND', 'tram': 'TRAM'};
+
+// National Lottery results (the XML feed carries only the latest draw, and allows CORS)
+const LOTTERY = {p: 555, title: 'LOTTERY', short: 'Lottery', band: 'm', ink: 'w', src: 'the National Lottery'};
+const LOTTO_TTL = 30 * 60 * 1000;
+const lottoBand = n => n < 10 ? 'w' : n < 20 ? 'b' : n < 30 ? 'r' : n < 40 ? 'g' : n < 50 ? 'y' : 'm';
+const GAMES = [
+  {key: 'lotto',        name: 'LOTTO',        main: lottoBand, bonus: lottoBand, bonusName: 'Bonus'},
+  {key: 'euromillions', name: 'EUROMILLIONS', main: () => 'r', bonus: () => 'y', bonusName: 'Stars'},
+  {key: 'thunderball',  name: 'THUNDERBALL',  main: () => 'b', bonus: () => 'r', bonusName: 'Thunderball'},
+  {key: 'set-for-life', name: 'SET FOR LIFE', main: () => 'w', bonus: () => 'c', bonusName: 'Life Ball'},
+].map(gm => ({...gm, url: `https://www.national-lottery.co.uk/results/${gm.key}/draw-history/xml`}));
+
+// Pages that aren't fetched: a rolling headline reel, a clock and a subtitles joke
+const NEWSREEL = {p: 102, title: 'NEWSREEL', short: 'Newsreel', band: 'r', ink: 'w'};
+const CLOCK = {p: 103, title: 'CLOCK', short: 'Clock'};
+const SUBS = {p: 888, title: 'SUBTITLES', short: 'Subtitles'};
+const NEWSREEL_ROTATE = 8000;
+
+// Pages from Ceefax: the idle carousel
+const AUTO_PAGES = [100, 101, 102, 120, 140, 160, 200, 220, 250, 300, 340, 341, 342, 355, 401, 400, 420, 430, 555, 500, 560, 103];
+const AUTO_SUB = 10000, IDLE_MS = 5 * 60 * 1000;
 
 // Pages that come from somewhere other than a BBC feed
-const featureOf = n => isWeather(n) ? WEATHER : n === CURRENCY.p ? CURRENCY : isScores(n) ? SCORES : null;
+const featureOf = n => isWeather(n) ? WEATHER : n === CURRENCY.p ? CURRENCY : isScores(n) ? SCORES :
+  isF1Tab(n) ? F1TAB : n === SKY.p ? SKY : (n === TRAVEL.p || n === TRAVEL.detail) ? TRAVEL : n === LOTTERY.p ? LOTTERY : null;
 WEATHER.src = 'Open-Meteo';
 
 // Page 100: news down the left, sport and the rest down the right
 const byKey = k => SECTIONS.find(s => s.key === k);
 const INDEX_LEFT = [...['top', 'uk', 'world', 'tech', 'sci', 'biz'].map(byKey), CURRENCY,
   ...['arts', 'politics', 'health', 'ni', 'scot', 'wales'].map(byKey)];
-const INDEX_RIGHT = [...['sport', 'football'].map(byKey), SCORES, ...['cricket', 'rugby', 'f1', 'tennis'].map(byKey), WEATHER, QUIZ];
+const INDEX_RIGHT = [...['sport', 'football'].map(byKey), SCORES, F1TAB, ...['cricket', 'rugby', 'f1', 'tennis'].map(byKey),
+  WEATHER, TRAVEL, LOTTERY, QUIZ, NEWSREEL];
+// Extra pages listed along row 18 of the index
+const INDEX_MORE = [CLOCK, SKY, SUBS];
 
 // Public CORS relays, tried in order (the last one that worked goes first)
 const PROXIES = [
@@ -244,6 +326,17 @@ const FONT = {
   X:['10001','10001','01010','00100','01010','10001','10001'],
   Y:['10001','10001','01010','00100','00100','00100','00100'],
   Z:['11111','00001','00010','00100','01000','10000','11111'],
+  0:['01110','10001','10011','10101','11001','10001','01110'],
+  1:['00100','01100','00100','00100','00100','00100','01110'],
+  2:['01110','10001','00001','00010','00100','01000','11111'],
+  3:['11111','00010','00100','00010','00001','10001','01110'],
+  4:['00010','00110','01010','10010','11111','00010','00010'],
+  5:['11111','10000','11110','00001','00001','10001','01110'],
+  6:['00110','01000','10000','11110','10001','10001','01110'],
+  7:['11111','00001','00010','00100','01000','01000','01000'],
+  8:['01110','10001','10001','01110','10001','10001','01110'],
+  9:['01110','10001','10001','01111','00001','00010','01100'],
+  ':':['00000','01100','01100','00000','01100','01100','00000'],
 };
 
 /* ---------- Helpers ---------- */
@@ -379,13 +472,20 @@ function extractParas(html) {
   return out.length ? out : null;
 }
 
-// JSON APIs that allow CORS: fetch directly, fall back to the relays, keep the last good copy
+// APIs that allow CORS: fetch directly, fall back to the relays, keep the last good copy
 const jsonCache = {}; // url -> {data, at, pending}
-function getJSON(url, ttl, check = () => true) {
+const getJSON = (url, ttl, check = () => true) => getCached(url, ttl, JSON.parse, check);
+const parseXml = t => {
+  const doc = new DOMParser().parseFromString(t, 'text/xml');
+  if (doc.querySelector('parsererror')) throw new Error('bad XML');
+  return doc;
+};
+const getXML = (url, ttl, check = () => true) => getCached(url, ttl, parseXml, check);
+function getCached(url, ttl, parse, check) {
   const c = jsonCache[url] || (jsonCache[url] = {});
   if (c.pending) return c.pending;
   if (c.data && Date.now() - c.at < ttl) return Promise.resolve(c.data);
-  const ok = t => { try { return !!check(JSON.parse(t)); } catch (e) { return false; } };
+  const ok = t => { try { return !!check(parse(t)); } catch (e) { return false; } };
   c.pending = (async () => {
     try {
       let t;
@@ -397,7 +497,7 @@ function getJSON(url, ttl, check = () => true) {
         t = await r.text();
         if (!ok(t)) throw new Error('unexpected response');
       } catch (e) { t = await fetchText(url, ok); }
-      c.data = JSON.parse(t); c.at = Date.now();
+      c.data = parse(t); c.at = Date.now();
       return c.data;
     } catch (e) {
       if (c.data) return c.data;
@@ -443,6 +543,18 @@ async function loadMatches(lg) {
 const tableURL = lg => `https://site.api.espn.com/apis/v2/sports/soccer/${lg.key}/standings`;
 const loadTable = lg => getJSON(tableURL(lg), LIVE_TTL, j => Array.isArray(j.children));
 
+const JOLPICA = 'https://api.jolpi.ca/ergast/f1/current/';
+const loadF1 = what => getJSON(JOLPICA + what + '.json', F1_TTL, j => j.MRData);
+const loadTfl = () => getJSON(TFL_URL, TFL_TTL, j => Array.isArray(j) && j.length > 0);
+
+// Latest draw of each game; a game that fails is left out rather than failing the page
+async function loadLottery() {
+  const docs = await Promise.all(GAMES.map(gm =>
+    getXML(gm.url, LOTTO_TTL, d => d.querySelector('game balls')).catch(() => null)));
+  if (!docs.some(Boolean)) throw new Error('no lottery results received');
+  return docs;
+}
+
 /* ---------- Page grid ---------- */
 class Grid {
   constructor() {
@@ -459,11 +571,38 @@ class Grid {
       if (o.bg) x.bg = o.bg;
       if (o.link != null) x.link = o.link;
       if (o.flash) x.flash = 1;
+      if (o.box) x.box = 1;         // keeps its background in MIX
+      if (o.conceal) x.cc = 1;      // hidden until REVEAL
       if (o.dh && row < 24) { x.dh = 1; const y = this.r[row + 1][c]; y.dh = 2; y.c = ' '; y.bg = x.bg; }
     }
     return this;
   }
   link(row, c0, c1, link) { for (let c = c0; c < c1; c++) this.r[row][c].link = link; return this; }
+}
+
+// Draw a pixel bitmap (rows of 0/1) as 2x3 mosaic cells from (row0, col0); blank cells are left alone
+function plot(g, row0, col0, bm, ink) {
+  const h = Math.ceil(bm.length / 3), w = Math.ceil(Math.max(...bm.map(r => r.length)) / 2);
+  for (let cr = 0; cr < h; cr++) for (let cc = 0; cc < w; cc++) {
+    const row = row0 + cr, col = col0 + cc;
+    if (row < 1 || row > 24 || col < 0 || col > 39) continue;
+    let v = 0;
+    for (let k = 0; k < 6; k++) if (bm[cr * 3 + (k >> 1)]?.[cc * 2 + (k & 1)]) v |= 1 << k;
+    if (v) { const cell = g.r[row][col]; cell.m = v; cell.fg = ink; cell.c = ' '; }
+  }
+}
+
+// Text in the 5x7 font as a bitmap, each font pixel sx wide and sy tall
+function fontBitmap(text, sx = 1, sy = 1) {
+  const bm = Array.from({length: 7 * sy}, () => []);
+  let x = 0;
+  for (const ch of text) {
+    const gl = FONT[ch];
+    if (gl) for (let y = 0; y < 7; y++) for (let cx = 0; cx < 5; cx++)
+      if (gl[y][cx] === '1') for (let dy = 0; dy < sy; dy++) for (let dx = 0; dx < sx; dx++) bm[y * sy + dy][x + cx * sx + dx] = 1;
+    x += 6 * sx;
+  }
+  return bm;
 }
 
 // Mosaic (2x3 block graphics) banner across rows 1-3
@@ -537,6 +676,11 @@ function buildIndex() {
   column(INDEX_LEFT, 1);
   column(INDEX_RIGHT, 21);
   g.put(18, 1, ' LATEST ', 'w', {bg: 'r'});
+  let mc = 11;
+  for (const [label, pg] of [['Clock', CLOCK.p], ['Sky', SKY.p], ['Subs', SUBS.p]]) {
+    g.put(18, mc, label, 'c'); g.put(18, mc + label.length + 1, String(pg), 'y');
+    g.link(18, mc, mc + label.length + 4, pg); mc += label.length + 6;
+  }
   const top = feeds.top?.items;
   if (top) {
     let r = 19;
@@ -576,7 +720,7 @@ function buildSection(sec, items) {
       g.link(r, 0, 40, e.p); r++;
     });
     navBar(g, sec.band, sec.ink, [`Stories ${sec.first}-${sec.first + items.length - 1}`, sec.first], ['Index 100', 100]);
-    fastext(g, [['Top story', sec.first], [next.short, next.p], sport(sec) ? ['Headlines', 101] : ['Sport', 300], ['Index', 100]]);
+    fastext(g, [['Top story', sec.first], [next.short, next.p], sec.extra || (sport(sec) ? ['Headlines', 101] : ['Sport', 300]), ['Index', 100]]);
     return g;
   });
 }
@@ -646,7 +790,7 @@ function buildWeatherIndex(data) {
   });
   const last = CITIES[CITIES.length - 1].p;
   navBar(g, WEATHER.band, WEATHER.ink, [`City forecasts ${WEATHER.first}-${last}`, WEATHER.first], ['Index 100', 100]);
-  fastext(g, [['Forecasts', WEATHER.first], ['Headlines', 101], ['Sport', 300], ['Index', 100]]);
+  fastext(g, [['Map', WEATHER.map], ['Forecasts', WEATHER.first], ['Sun+Moon', SKY.p], ['Index', 100]]);
   return [g];
 }
 
@@ -679,7 +823,7 @@ function buildCityWeather(city, w) {
       .filter(Boolean).join('  '), 'c');
   });
   navBar(g, WEATHER.band, WEATHER.ink, [next === WEATHER.p ? 'Weather 400' : `Next city ${next}`, next], ['Weather 400', WEATHER.p]);
-  fastext(g, [['Next', next], ['Weather', WEATHER.p], ['Headlines', 101], ['Index', 100]]);
+  fastext(g, [['Next', next], ['Weather', WEATHER.p], ['Map', WEATHER.map], ['Index', 100]]);
   return [g];
 }
 
@@ -908,14 +1052,14 @@ function buildQuiz() {
     wrap(`${QUIZ_LEN} questions. Answer each one with the coloured Fastext buttons (or keys R, G, Y and C), or select an answer on the screen.`, 38)
       .forEach(l => g.put(r++, 1, l, 'w'));
     g.put(r + 1, 1, 'Select PLAY (red) to begin.', 'g', {flash: true});
-    fastext(g, [['Play', 'bz:start'], ['Sport', 300], ...leave]);
+    fastext(g, [['Play', 'bz:start'], ['Quick quiz', QUICK.p], ...leave]);
   } else if (!q) {
     g.put(6, 1, 'YOU SCORED', 'w', {dh: true});
     g.put(9, 1, `${quiz.score} OUT OF ${n}`, 'y', {dh: true});
     const verdict = quiz.score === n ? 'Perfect! Not bamboozled at all.' : quiz.score >= 7 ? 'Excellent work!' :
       quiz.score >= 4 ? 'Not bad at all.' : 'Bamboozled! Better luck next time.';
     g.put(12, 1, verdict, 'g');
-    fastext(g, [['Again', 'bz:start'], ['Sport', 300], ...leave]);
+    fastext(g, [['Again', 'bz:start'], ['Quick quiz', QUICK.p], ...leave]);
   } else {
     g.put(4, 1, `Score ${quiz.score}`, 'c');
     let r = 6;
@@ -937,6 +1081,468 @@ function buildQuiz() {
   }
   navBar(g, QUIZ.band, QUIZ.ink, ['New game', 'bz:start'], ['Index 100', 100]);
   return [g];
+}
+
+/* ---------- Weather map ---------- */
+// [lon, lat] rings, coarse enough for a 2x3-pixel mosaic map
+const ISLES = [
+  // Great Britain, from Land's End east along the south coast, up the east, back down the west
+  [[-5.7,50.07],[-5.2,49.96],[-4.1,50.33],[-3.6,50.22],[-3.4,50.6],[-2.45,50.55],[-1.3,50.6],[-0.8,50.72],[-0.1,50.8],
+   [0.25,50.73],[0.97,50.91],[1.38,51.15],[1.44,51.38],[0.6,51.45],[1.1,51.78],[1.3,51.95],[1.6,52.1],[1.77,52.5],
+   [1.7,52.75],[1.3,52.94],[0.5,52.96],[0.2,52.82],[0.35,53.15],[0.12,53.6],[-0.08,54.12],[-0.6,54.49],[-1.15,54.63],
+   [-1.37,54.9],[-1.45,55.1],[-1.6,55.5],[-2.0,55.77],[-2.13,55.92],[-2.72,56.06],[-3.2,55.98],[-3.7,56.05],
+   [-3.15,56.12],[-2.58,56.28],[-2.95,56.45],[-2.58,56.56],[-2.2,56.96],[-2.08,57.15],[-1.78,57.5],[-2.0,57.69],
+   [-2.8,57.7],[-3.3,57.72],[-4.1,57.55],[-3.77,57.86],[-4.0,57.95],[-3.65,58.12],[-3.08,58.44],[-3.03,58.64],
+   [-3.5,58.62],[-4.4,58.55],[-5.0,58.62],[-5.25,58.15],[-5.5,57.85],[-5.8,57.7],[-5.7,57.28],[-5.83,56.99],
+   [-6.22,56.73],[-5.6,56.5],[-5.47,56.35],[-5.6,55.95],[-5.8,55.3],[-5.45,55.5],[-5.3,55.85],[-4.9,55.95],
+   [-4.87,55.75],[-4.63,55.46],[-4.86,55.22],[-5.15,54.9],[-4.86,54.64],[-4.05,54.78],[-3.4,54.95],[-3.6,54.5],
+   [-3.2,54.1],[-2.9,54.1],[-3.05,53.8],[-3.0,53.4],[-3.85,53.33],[-4.2,53.32],[-4.6,53.42],[-4.7,53.28],
+   [-4.35,53.1],[-4.8,52.78],[-4.1,52.75],[-4.08,52.41],[-4.7,52.1],[-5.3,51.88],[-5.05,51.68],[-4.3,51.56],
+   [-3.9,51.62],[-3.17,51.45],[-2.7,51.6],[-3.0,51.33],[-3.5,51.21],[-4.2,51.18],[-4.53,51.0],[-4.95,50.55],
+   [-5.48,50.21]],
+  // Ireland, from Malin Head clockwise
+  [[-7.37,55.38],[-6.15,55.22],[-5.75,54.85],[-5.45,54.55],[-5.6,54.25],[-6.1,54.02],[-6.3,53.95],[-6.25,53.72],
+   [-6.05,53.38],[-6.15,53.2],[-6.0,52.97],[-6.13,52.8],[-6.35,52.34],[-6.37,52.17],[-6.93,52.12],[-7.5,52.0],
+   [-7.85,51.95],[-8.3,51.8],[-8.53,51.6],[-9.8,51.45],[-10.2,51.6],[-10.4,51.9],[-10.5,52.12],[-9.9,52.4],
+   [-9.93,52.56],[-9.4,52.75],[-9.5,52.95],[-9.0,53.15],[-9.8,53.3],[-10.2,53.45],[-9.9,53.8],[-10.15,54.0],
+   [-10.0,54.28],[-9.2,54.25],[-8.6,54.3],[-8.8,54.62],[-8.35,54.85],[-8.3,55.15],[-7.6,55.27]],
+  [[-6.15,58.52],[-6.8,58.3],[-7.1,58.1],[-7.25,57.7],[-7.45,57.3],[-7.5,56.95],[-7.25,56.95],[-7.15,57.4],
+   [-6.95,57.75],[-6.55,57.95],[-6.2,58.2]],                               // Outer Hebrides
+  [[-6.2,57.72],[-6.7,57.5],[-6.35,57.2],[-5.9,57.05],[-5.7,57.25],[-6.0,57.45]], // Skye
+  [[-6.05,56.65],[-6.45,56.3],[-5.7,56.35],[-5.85,56.55]],                // Mull
+  [[-6.2,55.95],[-6.5,55.62],[-6.05,55.65]],                             // Islay
+  [[-3.4,59.15],[-2.75,59.2],[-2.75,58.8],[-3.35,58.8]],                  // Orkney
+  [[-4.35,54.42],[-4.8,54.25],[-4.65,54.05],[-4.3,54.2]],                 // Isle of Man
+  [[-1.55,50.72],[-1.1,50.72],[-1.2,50.58],[-1.45,50.62]],                // Isle of Wight
+];
+
+function pointInPoly(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+// The map fills rows 5-22 of columns 0-19. Mosaic pixels are 0.5 x 0.4 of a cell width,
+// so a degree of longitude gets cos(54.6N) * 0.8 of the pixels a degree of latitude does
+const MAP = {row0: 5, rows: 18, cols: 20, lat1: 59.4, lat0: 49.8, lon0: -10.8};
+MAP.pxLat = MAP.rows * 3 / (MAP.lat1 - MAP.lat0);
+MAP.pxLon = MAP.pxLat * Math.cos(54.6 * Math.PI / 180) * 0.8;
+// Cities labelled on the map, most important first (a label that would touch another is dropped)
+const MAP_ORDER = ['London', 'Plymouth', 'Cardiff', 'Norwich', 'Birmingham', 'Manchester', 'Newcastle', 'Belfast',
+  'Dublin', 'Glasgow', 'Edinburgh', 'Aberdeen', 'Inverness', 'Southampton', 'Bristol', 'Leeds', 'Liverpool'];
+let mapBits = null;
+function mapBitmap() {
+  if (!mapBits) mapBits = Array.from({length: MAP.rows * 3}, (_, y) => Array.from({length: MAP.cols * 2}, (_, x) => {
+    const lon = MAP.lon0 + (x + 0.5) / MAP.pxLon, lat = MAP.lat1 - (y + 0.5) / MAP.pxLat;
+    return ISLES.some(p => pointInPoly(lon, lat, p)) ? 1 : 0;
+  }));
+  return mapBits;
+}
+const mapCell = (lat, lon) => [MAP.row0 + Math.floor((MAP.lat1 - lat) * MAP.pxLat / 3), Math.floor((lon - MAP.lon0) * MAP.pxLon / 2)];
+
+function buildWeatherMap(data) {
+  const views = [['TODAY', 0, 'max'], ['TONIGHT', 0, 'min'], ['TOMORROW', 1, 'max']];
+  return views.map(([title, di, key], si) => {
+    const g = new Grid();
+    banner(g, WEATHER.title, WEATHER.ink, WEATHER.band, 'Map');
+    g.put(4, 1, 'Updated ' + hhmm(fetchedAt(WX_URL)), 'c');
+    subInd(g, si, views.length);
+    for (let r = MAP.row0; r < MAP.row0 + MAP.rows; r++) g.fill(r, 'b', 0, MAP.cols);
+    plot(g, MAP.row0, 0, mapBitmap(), 'g');
+    const temp = i => data[i].daily[key === 'max' ? 'temperature_2m_max' : 'temperature_2m_min'][di];
+    const taken = new Set();
+    for (const name of MAP_ORDER) {
+      const city = CITIES.find(c => c.name === name), i = CITIES.indexOf(city), t = temp(i);
+      if (t == null) continue;
+      const txt = String(Math.round(t)), [, fg] = wxLabel(data[i].daily.weather_code[di], key === 'max');
+      const [r0, c0] = mapCell(city.lat, city.lon);
+      const spot = [[0, 0], [0, 1], [0, -1], [-1, 0], [1, 0]]
+        .map(([dr, dc]) => [r0 + dr, c0 + dc - (txt.length > 2 ? 1 : 0)])
+        .find(([r, c]) => r >= MAP.row0 && r < MAP.row0 + MAP.rows && c >= 0 && c + txt.length <= MAP.cols &&
+          Array.from({length: txt.length + 2}, (_, k) => r + ',' + (c - 1 + k)).every(k => !taken.has(k)));
+      if (!spot) continue;
+      const [r, c] = spot;
+      for (let k = 0; k < txt.length; k++) taken.add(r + ',' + (c + k));
+      g.put(r, c, txt, fg, {bg: 'k', box: true, link: city.p});
+    }
+    const P = 21;
+    g.put(5, P, ` ${title} `, 'w', {bg: 'r'});
+    g.put(6, P, dayName(new Date(data[0].daily.time[di] + 'T12:00:00')), 'y');
+    g.put(7, P, key === 'max' ? 'Highest temps (C)' : 'Lowest temps (C)', 'c');
+    const vals = CITIES.map((c, i) => [c, temp(i)]).filter(v => v[1] != null).sort((a, b) => b[1] - a[1]);
+    if (vals.length) {
+      const [hi, lo] = [vals[0], vals[vals.length - 1]];
+      g.put(9, P, key === 'max' ? 'Warmest' : 'Mildest', 'w');
+      g.put(10, P + 1, `${hi[0].name} ${tc(hi[1])}`, 'y'); g.link(10, P, 40, hi[0].p);
+      g.put(11, P, 'Coldest', 'w');
+      g.put(12, P + 1, `${lo[0].name} ${tc(lo[1])}`, 'c'); g.link(12, P, 40, lo[0].p);
+    }
+    g.put(14, P, 'KEY', 'w');
+    [['y', 'Sunny'], ['w', 'Cloudy or dry'], ['c', 'Rain or showers'], ['m', 'Thunder']].forEach(([fg, t], k) => {
+      g.put(15 + k, P, '12', fg, {bg: 'k', box: true});
+      g.put(15 + k, P + 3, t, 'w');
+    });
+    g.put(20, P, 'Select a number', 'c');
+    g.put(21, P, 'for that forecast', 'c');
+    navBar(g, WEATHER.band, WEATHER.ink, ['City list 400', WEATHER.p], [`${SKY.short} ${SKY.p}`, SKY.p]);
+    fastext(g, [['Cities', WEATHER.p], ['Forecasts', WEATHER.first], ['Sun+Moon', SKY.p], ['Index', 100]]);
+    return g;
+  });
+}
+
+/* ---------- Sun and moon ---------- */
+const SYNODIC = 29.530588853;
+const NEW_MOON_2000 = Date.UTC(2000, 0, 6, 18, 14);
+const moonAge = t => (((t - NEW_MOON_2000) / 864e5) % SYNODIC + SYNODIC) % SYNODIC;
+const MOON_NAMES = ['New moon', 'Waxing crescent', 'First quarter', 'Waxing gibbous',
+  'Full moon', 'Waning gibbous', 'Last quarter', 'Waning crescent'];
+// Lit part of the disc as seen from the northern hemisphere: waxing lights the right-hand side first
+function moonBitmap(age, w, h, lit) {
+  const th = 2 * Math.PI * age / SYNODIC;
+  return Array.from({length: h}, (_, y) => {
+    const ny = (y + 0.5) / h * 2 - 1, half = Math.sqrt(Math.max(0, 1 - ny * ny));
+    return Array.from({length: w}, (_, x) => {
+      const nx = (x + 0.5) / w * 2 - 1;
+      if (Math.abs(nx) > half) return 0;
+      if (!lit) return 1;
+      return (th < Math.PI ? nx > half * Math.cos(th) : nx < -half * Math.cos(th)) ? 1 : 0;
+    });
+  });
+}
+const minutesOf = s => +s.slice(11, 13) * 60 + +s.slice(14, 16);
+const SKY_CITIES = ['London', 'Cardiff', 'Birmingham', 'Manchester', 'Belfast', 'Newcastle', 'Edinburgh', 'Aberdeen'];
+
+function buildSky(data) {
+  const g = new Grid(), now = Date.now(), age = moonAge(now);
+  banner(g, SKY.title, SKY.ink, SKY.band);
+  g.put(4, 1, dayName(new Date()), 'c');
+  // A disc of 20 x 24 mosaic pixels comes out round: the dark side in blue, the lit side in white
+  plot(g, 5, 2, moonBitmap(age, 20, 24, false), 'b');
+  plot(g, 5, 2, moonBitmap(age, 20, 24, true), 'w');
+  const illum = (1 - Math.cos(2 * Math.PI * age / SYNODIC)) / 2;
+  g.put(5, 15, MOON_NAMES[Math.floor(age / SYNODIC * 8 + 0.5) % 8].toUpperCase(), 'y', {dh: true});
+  g.put(8, 15, `${Math.round(illum * 100)}% illuminated`, 'c');
+  g.put(9, 15, `Age ${age.toFixed(1)} days`, 'w');
+  const when = days => dayName(new Date(now + days * 864e5));
+  g.put(11, 15, 'Next full moon', 'w'); g.put(11, 30, when((SYNODIC / 2 - age + SYNODIC) % SYNODIC), 'y');
+  g.put(12, 15, 'Next new moon', 'w'); g.put(12, 30, when(SYNODIC - age), 'y');
+  g.fill(14, SKY.band);
+  [[1, 'SUN'], [14, 'RISE'], [20, 'SET'], [26, 'DAYLIGHT'], [35, 'CHG']].forEach(([c, t]) => g.put(14, c, t, 'y'));
+  if (!data) g.put(16, 1, 'Sunrise times are not available.', 'w');
+  else SKY_CITIES.forEach((name, k) => {
+    const i = CITIES.findIndex(c => c.name === name), d = data[i].daily, r = 15 + k;
+    const len = j => minutesOf(d.sunset[j]) - minutesOf(d.sunrise[j]);
+    const diff = len(1) - len(0);
+    g.put(r, 1, name, k % 2 ? 'c' : 'w');
+    g.put(r, 14, d.sunrise[0].slice(11, 16), 'y');
+    g.put(r, 20, d.sunset[0].slice(11, 16), 'y');
+    g.put(r, 27, `${Math.floor(len(0) / 60)}h${pad(len(0) % 60)}`, 'w');
+    g.put(r, 35, ((diff > 0 ? '+' : '') + diff + 'm').padStart(4), diff >= 0 ? 'g' : 'r');
+    g.link(r, 0, 40, CITIES[i].p);
+  });
+  navBar(g, SKY.band, SKY.ink, ['Weather map 401', WEATHER.map], ['Weather 400', WEATHER.p]);
+  fastext(g, [['Map', WEATHER.map], ['Weather', WEATHER.p], ['Clock', CLOCK.p], ['Index', 100]]);
+  return [g];
+}
+
+/* ---------- Travel pages ---------- */
+// TfL severities: 10 good service, 18 no issues, 19 information, 20 closed (overnight); the rest are problems
+const tflRank = s => [10, 18, 19].includes(s) ? 0 : s === 20 ? 1 : [9, 14, 15, 17].includes(s) ? 2 : 3;
+const TFL_FG = ['g', 'c', 'y', 'r'];
+const worstStatus = ln => [...(ln.lineStatuses || [])].sort((a, b) => tflRank(b.statusSeverity) - tflRank(a.statusSeverity))[0];
+const sortLines = lines => {
+  const order = Object.keys(TFL_MODES);
+  return [...lines].sort((a, b) => order.indexOf(a.modeName) - order.indexOf(b.modeName) || a.name.localeCompare(b.name));
+};
+const disrupted = lines => sortLines(lines).filter(ln => (ln.lineStatuses || []).some(s => tflRank(s.statusSeverity) >= 2));
+
+function buildTravel(lines) {
+  const rows = []; let mode = '';
+  for (const ln of sortLines(lines)) {
+    if (ln.modeName !== mode) { mode = ln.modeName; rows.push({head: TFL_MODES[mode] || mode.toUpperCase()}); }
+    rows.push({ln});
+  }
+  // 17 rows a subpage, and a mode heading never left on its own at the bottom
+  const pages = []; let cur = [];
+  for (const r of rows) {
+    if (cur.length === 17 || (r.head && cur.length >= 15)) { pages.push(cur); cur = []; }
+    cur.push(r);
+  }
+  if (cur.length) pages.push(cur);
+  const bad = disrupted(lines).length;
+  return pages.map((pg, si) => {
+    const g = new Grid();
+    banner(g, TRAVEL.title, TRAVEL.ink, TRAVEL.band, 'London');
+    g.put(4, 1, 'Updated ' + hhmm(fetchedAt(TFL_URL)), 'c');
+    g.put(4, 16, 'tfl.gov.uk', 'g');
+    subInd(g, si, pages.length);
+    g.fill(5, TRAVEL.band);
+    [[1, 'LINE'], [21, 'STATUS']].forEach(([c, t]) => g.put(5, c, t, 'y'));
+    let alt = 0;
+    pg.forEach((row, k) => {
+      const r = 6 + k;
+      if (row.head) { g.put(r, 1, row.head, 'y'); alt = 0; return; }
+      const s = worstStatus(row.ln), rank = s ? tflRank(s.statusSeverity) : 0;
+      g.put(r, 2, clean(row.ln.name).slice(0, 18), alt++ % 2 ? 'c' : 'w');
+      g.put(r, 21, clean(s?.statusSeverityDescription || 'No information').slice(0, 18), TFL_FG[rank]);
+      if (rank >= 2) g.link(r, 0, 40, TRAVEL.detail);
+    });
+    navBar(g, TRAVEL.band, TRAVEL.ink,
+      bad ? [`${bad} line${bad > 1 ? 's' : ''} disrupted ${TRAVEL.detail}`, TRAVEL.detail] : ['Good service overall', TRAVEL.detail],
+      ['Index 100', 100]);
+    fastext(g, [['Details', TRAVEL.detail], ['Weather', WEATHER.p], ['Headlines', 101], ['Index', 100]]);
+    return g;
+  });
+}
+
+function buildTravelDetail(lines) {
+  const out = [];
+  for (const ln of disrupted(lines)) {
+    if (out.length) out.push(null);
+    const s = worstStatus(ln);
+    out.push({t: clean(ln.name).toUpperCase(), fg: 'y', extra: [clean(s.statusSeverityDescription), TFL_FG[tflRank(s.statusSeverity)]]});
+    const reasons = [...new Set(ln.lineStatuses.map(x => clean(x.reason)).filter(Boolean))];
+    reasons.forEach((why, k) => {
+      if (k) out.push(null);
+      wrap(why, 38).forEach(t => out.push({t, fg: k ? 'c' : 'w'}));
+    });
+  }
+  if (!out.length) wrap('There is a good service on all London Underground, Elizabeth line, DLR, Overground and tram lines.', 38)
+    .forEach(t => out.push({t, fg: 'g'}));
+  const chunks = paginate(out, 18);
+  return chunks.map((ch, si) => {
+    const g = new Grid();
+    banner(g, TRAVEL.title, TRAVEL.ink, TRAVEL.band, 'London');
+    g.put(4, 1, 'Disruptions  updated ' + hhmm(fetchedAt(TFL_URL)), 'c');
+    subInd(g, si, chunks.length);
+    ch.forEach((l, i) => {
+      if (!l) return;
+      g.put(5 + i, 1, l.t, l.fg);
+      if (l.extra) g.put(5 + i, 39 - l.extra[0].length, l.extra[0], l.extra[1]);
+    });
+    navBar(g, TRAVEL.band, TRAVEL.ink, [`All lines ${TRAVEL.p}`, TRAVEL.p], ['Index 100', 100]);
+    fastext(g, [['All lines', TRAVEL.p], ['Weather', WEATHER.p], ['Headlines', 101], ['Index', 100]]);
+    return g;
+  });
+}
+
+/* ---------- Lottery page ---------- */
+function lotteryDraw(doc) {
+  const q = s => doc.querySelector(s)?.textContent?.trim() || '';
+  return {
+    date: q('draw-date'),
+    sets: [...doc.querySelectorAll('game > balls')].map(b => ({
+      main: [...b.querySelectorAll(':scope > ball')].map(x => +x.textContent),
+      bonus: [...b.querySelectorAll(':scope > bonus-ball')].map(x => +x.textContent),
+    })),
+    winners: q('prize-tiers prize-tier[level="1"] number-of-winners'),
+    rollover: q('rollover') === 'Y', rolls: q('rollover-count'),
+    next: q('next-draw-date'), jackpot: q('next-estimated-jackpot'), short: q('next-estimated-jackpot-short'),
+  };
+}
+// A ball is its number in a coloured box, 4 cells wide
+function ball(g, r, c, n, bg) {
+  g.put(r, c, ` ${String(n).padStart(2)} `, 'wygc'.includes(bg) ? 'k' : 'w', {bg, box: true});
+}
+
+function buildLottery(docs) {
+  const g = new Grid();
+  banner(g, LOTTERY.title, LOTTERY.ink, LOTTERY.band, 'Results');
+  g.put(4, 1, 'Latest draws', 'c');
+  g.put(4, 17, 'national-lottery.co.uk', 'g');
+  let r = 5;
+  GAMES.forEach((gm, k) => {
+    if (k) r++;
+    g.put(r, 1, gm.name, 'y');
+    if (!docs[k]) { g.put(r + 1, 1, 'Results not available', 'r'); r += 2; return; }
+    const d = lotteryDraw(docs[k]);
+    if (d.date) g.put(r, 39 - 10, dayName(new Date(d.date + 'T12:00:00')), 'w');
+    r++;
+    for (const set of d.sets) {
+      let c = 1;
+      set.main.forEach(n => { ball(g, r, c, n, gm.main(n)); c += 5; });
+      if (set.bonus.length) {
+        g.put(r, c, '+', 'w'); c += 2;
+        set.bonus.forEach(n => { ball(g, r, c, n, gm.bonus(n)); c += 5; });
+      }
+      r++;
+    }
+    const won = +d.winners;
+    const [txt, fg] = d.rollover ? [`Rollover${+d.rolls > 1 ? ' x' + d.rolls : ''}`, 'r'] :
+      won ? [`${won} winner${won > 1 ? 's' : ''}`, 'g'] : ['No winner', 'c'];
+    g.put(r, 1, txt, fg);
+    if (d.next) {
+      // Estimated jackpot: the short form is in millions; Set For Life's is a sentence, so it is left out
+      const jp = /^[\d.]+$/.test(d.short) ? ` est £${d.short}M` : /^£?[\d,]+$/.test(d.jackpot) ? ` est £${d.jackpot.replace('£', '')}` : '';
+      const nx = `Next ${dayName(new Date(d.next + 'T12:00:00'))}${jp}`;
+      g.put(r, 39 - nx.length, nx, 'w');
+    }
+    r++;
+  });
+  navBar(g, LOTTERY.band, LOTTERY.ink, ['Play responsibly', 100], ['Index 100', 100]);
+  fastext(g, [['Headlines', 101], ['Bamboozle', QUIZ.p], ['Sport', 300], ['Index', 100]]);
+  return [g];
+}
+
+/* ---------- F1 tables ---------- */
+const teamName = c => clean(c?.name || '').replace(/ F1 Team$/i, '');
+// Split a list evenly across subpages of up to `per` rows
+function spread(rows, per) {
+  const n = Math.max(1, Math.ceil(rows.length / per)), size = Math.ceil(rows.length / n) || 1;
+  const out = [];
+  for (let i = 0; i < rows.length; i += size) out.push(rows.slice(i, i + size));
+  return out.length ? out : [[]];
+}
+function f1Page(sub, head, rows, fast, extra) {
+  const pages = spread(rows, 17);
+  return pages.map((pg, si) => {
+    const g = new Grid();
+    banner(g, F1TAB.title, F1TAB.ink, F1TAB.band);
+    g.put(4, 1, sub.slice(0, 32), 'y');
+    subInd(g, si, pages.length);
+    g.fill(5, F1TAB.band);
+    head.forEach(([c, t]) => g.put(5, c, t, 'y'));
+    pg.forEach((cols, k) => cols.forEach(([c, t, fg]) => g.put(6 + k, c, t, fg ?? (k % 2 ? 'c' : 'w'))));
+    if (!rows.length) g.put(7, 1, 'No results yet this season.', 'w');
+    navBar(g, F1TAB.band, F1TAB.ink, extra, ['F1 news 380', 380]);
+    fastext(g, fast);
+    return g;
+  });
+}
+function buildF1Drivers(j) {
+  const t = j.MRData.StandingsTable, list = t.StandingsLists?.[0];
+  const rows = (list?.DriverStandings || []).map(s => [
+    [1, (s.positionText || s.position || '-').padStart(2), 'w'], [4, clean(s.Driver.familyName).slice(0, 14)],
+    [19, teamName(s.Constructors?.[s.Constructors.length - 1]).slice(0, 12)], [32, String(s.wins).padStart(2)],
+    [35, String(s.points).padStart(4), 'y']]);
+  return f1Page(`${t.season} DRIVERS AFTER ROUND ${list?.round ?? t.round}`,
+    [[1, 'POS'], [5, 'DRIVER'], [19, 'TEAM'], [33, 'W'], [36, 'PTS']], rows,
+    [['Teams', F1TAB.cons], ['Last race', F1TAB.race], ['F1 news', 380], ['Index', 100]], [`Constructors ${F1TAB.cons}`, F1TAB.cons]);
+}
+function buildF1Teams(j) {
+  const t = j.MRData.StandingsTable, list = t.StandingsLists?.[0];
+  const rows = (list?.ConstructorStandings || []).map(s => [
+    [1, (s.positionText || s.position || '-').padStart(2), 'w'], [5, teamName(s.Constructor).slice(0, 24)],
+    [32, String(s.wins).padStart(2)], [35, String(s.points).padStart(4), 'y']]);
+  return f1Page(`${t.season} CONSTRUCTORS, ROUND ${list?.round ?? t.round}`,
+    [[1, 'POS'], [5, 'TEAM'], [33, 'W'], [36, 'PTS']], rows,
+    [['Drivers', F1TAB.p], ['Last race', F1TAB.race], ['F1 news', 380], ['Index', 100]], [`Drivers ${F1TAB.p}`, F1TAB.p]);
+}
+function buildF1Race(j) {
+  const race = j.MRData.RaceTable.Races?.[0];
+  const rows = (race?.Results || []).map(x => [
+    [1, String(x.positionText || x.position).padStart(2), 'w'], [4, clean(x.Driver.familyName).slice(0, 11)],
+    [16, teamName(x.Constructor).slice(0, 10)], [27, clean(x.Time?.time || x.status || '').slice(0, 9), 'c'],
+    [36, String(x.points).padStart(3), 'y']]);
+  return f1Page(race ? `${clean(race.raceName).toUpperCase()} RESULT` : 'LATEST RACE',
+    [[1, 'POS'], [5, 'DRIVER'], [16, 'TEAM'], [27, 'TIME'], [36, 'PTS']], rows,
+    [['Drivers', F1TAB.p], ['Teams', F1TAB.cons], ['F1 news', 380], ['Index', 100]], [`Drivers ${F1TAB.p}`, F1TAB.p]);
+}
+
+/* ---------- Newsreel ---------- */
+// The top story from every section that has arrived, one per subpage on a faster rotation
+async function buildNewsreel() {
+  try { await loadFeed(byKey('top')); } catch (e) { /* show whatever else has arrived */ }
+  const secs = SECTIONS.filter(s => feeds[s.key]?.items?.length);
+  if (!secs.length) throw new Error('no headlines received yet');
+  return secs.map((sec, si) => {
+    const it = feeds[sec.key].items[0];
+    const g = new Grid();
+    g.rotate = NEWSREEL_ROTATE;
+    banner(g, NEWSREEL.title, NEWSREEL.ink, NEWSREEL.band);
+    g.put(4, 1, 'Top stories, section by section', 'c');
+    subInd(g, si, secs.length);
+    g.put(6, 1, ` ${sec.label.toUpperCase()} `, sec.ink, {bg: sec.band});
+    let r = 8;
+    wrap(it.title, 38).slice(0, 3).forEach(l => { g.put(r, 1, l, 'y', {dh: true}); g.link(r, 0, 40, sec.first).link(r + 1, 0, 40, sec.first); r += 2; });
+    r++;
+    wrap(it.desc, 38).slice(0, 21 - r).forEach(l => g.put(r++, 1, l, 'w'));
+    g.put(22, 1, fmtDate(it.date), 'c');
+    navBar(g, NEWSREEL.band, NEWSREEL.ink, [`Full story ${sec.first}`, sec.first], ['Index 100', 100]);
+    fastext(g, [['Story', sec.first], [sec.short, sec.p], sec.key === 'top' ? ['Sport', 300] : ['Headlines', 101], ['Index', 100]]);
+    return g;
+  });
+}
+
+/* ---------- Clock ---------- */
+const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const FULL_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function buildClock() {
+  const g = new Grid(), d = new Date();
+  banner(g, 'CEEFAX', 'y', 'b', 'Clock');
+  // HH:MM at 2x3 font pixels is 58 x 21 mosaic pixels: 29 cells by 7 rows
+  plot(g, 6, 5, fontBitmap(`${pad(d.getHours())}:${pad(d.getMinutes())}`, 2, 3), 'y');
+  plot(g, 14, 17, fontBitmap(pad(d.getSeconds())), 'c');
+  const date = `${FULL_DAYS[d.getDay()]} ${d.getDate()} ${FULL_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  g.put(18, (40 - date.length) >> 1, date, 'w', {dh: true});
+  navBar(g, 'b', 'w', ['Sun & Moon 420', SKY.p], ['Index 100', 100]);
+  fastext(g, [['Headlines', 101], ['Weather', WEATHER.p], ['Sun+Moon', SKY.p], ['Index', 100]]);
+  return [g];
+}
+
+/* ---------- Subtitles (888) ---------- */
+// Live-style roll-up subtitles over the "programme": the latest headlines, a word at a time,
+// in boxed double-height text that stays solid while the rest of the page is see-through
+const SUBS_SPEAKERS = ['y', 'c', 'w', 'g'];
+const SUBS_FALLBACK = [
+  'Good evening, and welcome to the programme.', 'Tonight we will be looking at the news from around the country.',
+  'But first, a look at the weather.', 'It has been a mixed day, with sunshine and showers for most of us.',
+  'Thank you for watching.',
+];
+const subs = {words: [], i: 0, lines: [], wait: 0};
+function subsScript() {
+  const items = feeds.top?.items || [];
+  const src = items.length ? items.slice(0, 8).flatMap(it => [/[.?!]$/.test(it.title) ? it.title : it.title + '.', it.desc]).filter(Boolean) : SUBS_FALLBACK;
+  subs.words = src.flatMap((s, k) => s.split(/\s+/).filter(Boolean).map((w, j) => ({w, fg: SUBS_SPEAKERS[k % 4], first: j === 0})));
+  subs.i = 0;
+}
+function subsTick() {
+  if (subs.wait > 0) { subs.wait--; return; }
+  if (subs.i >= subs.words.length) { subsScript(); subs.lines = []; subs.wait = 6; return; }
+  const {w, fg, first} = subs.words[subs.i++];
+  const last = subs.lines[subs.lines.length - 1];
+  // A new speaker, or a full line, rolls the text up
+  if (!last || first || last.t.length + 1 + w.length > 36) subs.lines = [...subs.lines, {t: w, fg}].slice(-2);
+  else last.t += ' ' + w;
+  if (/[.?!]$/.test(w)) subs.wait = 3;
+}
+function buildSubs() {
+  const g = new Grid();
+  g.mix = true;
+  subs.lines.forEach((l, k) => {
+    const t = ` ${l.t} `, r = 19 + k * 2 + (subs.lines.length === 1 ? 2 : 0);
+    g.put(r, (40 - t.length) >> 1, t, l.fg, {bg: 'k', box: true, dh: true});
+  });
+  g.fast = [['Headlines', 101], ['Clock', CLOCK.p], ['Sport', 300], ['Index', 100]];
+  return [g];
+}
+
+/* ---------- Quick quiz (701): answers hidden until REVEAL ---------- */
+function buildQuick() {
+  const qs = shuffle(QUESTIONS).slice(0, 12), pages = [];
+  for (let i = 0; i < qs.length; i += 4) pages.push(qs.slice(i, i + 4));
+  return pages.map((pg, si) => {
+    const g = new Grid();
+    banner(g, QUICK.title, QUICK.ink, QUICK.band);
+    g.put(4, 1, 'Press REVEAL for the answers', 'c', {flash: true});
+    subInd(g, si, pages.length);
+    let r = 6;
+    pg.forEach((q, k) => {
+      const lines = wrap(q[0], 35);
+      lines.forEach((l, li) => g.put(r + li, 4, l, 'y'));
+      g.put(r, 1, String(si * 4 + k + 1).padStart(2), 'w');
+      r += lines.length;
+      g.put(r, 4, 'Answer:', 'w');
+      g.put(r, 12, q[1], 'g', {conceal: true});
+      r += 2;
+    });
+    navBar(g, QUICK.band, QUICK.ink, ['Bamboozle 700', QUIZ.p], ['Index 100', 100]);
+    fastext(g, [['New set', QUICK.p], ['Bamboozle', QUIZ.p], ['Headlines', 101], ['Index', 100]]);
+    return g;
+  });
 }
 
 function notFound(n) {
@@ -978,13 +1584,25 @@ function errorPage(n, err) {
 
 async function buildPage(n) {
   if (n === 100) return buildIndex();
+  if (n === NEWSREEL.p) return buildNewsreel();
+  if (n === CLOCK.p) return buildClock();
+  if (n === SUBS.p) { if (!subs.words.length) subsScript(); return buildSubs(); }
+  if (n === QUICK.p) return buildQuick();
   if (isWeather(n)) {
     const data = await loadWeather();
     if (n === WEATHER.p) return buildWeatherIndex(data);
+    if (n === WEATHER.map) return buildWeatherMap(data);
     const i = n - WEATHER.first;
     return buildCityWeather(CITIES[i], data[i]);
   }
   if (n === CURRENCY.p) return buildCurrency(await loadRates());
+  if (n === SKY.p) return buildSky(await loadWeather().catch(() => null));
+  if (n === TRAVEL.p) return buildTravel(await loadTfl());
+  if (n === TRAVEL.detail) return buildTravelDetail(await loadTfl());
+  if (n === LOTTERY.p) return buildLottery(await loadLottery());
+  if (n === F1TAB.p) return buildF1Drivers(await loadF1('driverStandings'));
+  if (n === F1TAB.cons) return buildF1Teams(await loadF1('constructorStandings'));
+  if (n === F1TAB.race) return buildF1Race(await loadF1('last/results'));
   if (isScores(n)) {
     if (n === SCORES.p) return buildScoresIndex();
     const lg = LEAGUES[(n - SCORES.p - 1) >> 1];
@@ -1021,6 +1639,8 @@ const $body = document.getElementById('body');
 function cellHTML(x) {
   let cls = 'c f' + x.fg + ' g' + x.bg, inner = '', attr = '';
   if (x.flash) cls += ' fl';
+  if (x.box) cls += ' bx';
+  if (x.cc) cls += ' cc';
   if (x.dh === 1) cls += ' dh';
   if (x.link != null) { cls += ' lk'; attr = ` data-l="${esc(x.link)}"`; }
   if (x.m) {
@@ -1038,7 +1658,8 @@ function renderGrid(g) {
 }
 
 /* ---------- State & navigation ---------- */
-const st = {target: 100, current: null, typed: '', hold: false, roll: 100, searching: false, pages: [], sub: 0, subAt: 0, fast: [], token: 0};
+const st = {target: 100, current: null, typed: '', hold: false, roll: 100, searching: false, pages: [], sub: 0, subAt: 0, fast: [], token: 0,
+  reveal: false, size: 0, mix: false, auto: false, autoIdx: -1, autoAt: 0, music: true, idleAt: Date.now()};
 let rollTimer = null, typeTimer = null, hovKey = null;
 
 function drawHeader() {
@@ -1070,6 +1691,7 @@ function show() {
   renderGrid(g);
   st.fast = g.fast || [];
   st.subAt = Date.now();
+  $scr.classList.toggle('mix', st.mix || !!g.mix);
   document.querySelectorAll('[data-fx]').forEach((b, i) => {
     const f = st.fast[i];
     b.textContent = f ? f[0] : '—';
@@ -1080,7 +1702,7 @@ function show() {
 async function goto(n, push = true) {
   n = Math.max(100, Math.min(899, n | 0));
   const my = ++st.token;
-  st.target = n; st.typed = ''; setHold(false);
+  st.target = n; st.typed = ''; setHold(false); setReveal(false);
   clearTimeout(typeTimer);
   startRoll(); drawHeader();
   const minWait = sleep(350 + Math.random() * 650);
@@ -1105,6 +1727,27 @@ function setHold(v) {
   st.hold = v;
   document.getElementById('bHold').classList.toggle('on', v);
   drawHeader();
+}
+
+function setReveal(v) {
+  st.reveal = v;
+  $scr.classList.toggle('reveal', v);
+  document.getElementById('bReveal').classList.toggle('on', v);
+}
+
+// SIZE cycles normal -> top half double height -> bottom half -> normal
+function cycleSize() {
+  st.size = (st.size + 1) % 3;
+  $body.classList.toggle('sz1', st.size === 1);
+  $body.classList.toggle('sz2', st.size === 2);
+  document.getElementById('bSize').classList.toggle('on', st.size > 0);
+}
+
+function toggleMix() {
+  st.mix = !st.mix;
+  document.getElementById('bMix').classList.toggle('on', st.mix);
+  const g = st.pages[st.sub];
+  $scr.classList.toggle('mix', st.mix || !!g?.mix);
 }
 
 function digit(d) {
@@ -1136,7 +1779,7 @@ function refresh() {
 async function quietRebuild() {
   const n = st.current;
   if (n == null || st.searching || st.hold) return;
-  if (n !== 100 && !SECTIONS.some(s => s.p === n) && !featureOf(n)) return;
+  if (n !== 100 && n !== NEWSREEL.p && !SECTIONS.some(s => s.p === n) && !featureOf(n)) return;
   try {
     const pages = await buildPage(n);
     if (st.current !== n || st.searching) return;
@@ -1150,6 +1793,114 @@ async function prefetch() {
     try { await loadFeed(s); if (s.key === 'top' && st.current === 100) quietRebuild(); } catch (e) {}
     await sleep(600);
   }
+}
+
+/* ---------- Pages from Ceefax ---------- */
+// Easy-listening background music, synthesised: electric piano chords, walking bass,
+// brushed hi-hats and a lazy vibraphone line over eight bars of changes in F
+const music = (() => {
+  let ctx = null, master = null, noise = null, timer = null, stopTimer = null, next = 0, step = 0, mel = 72;
+  const S16 = 60 / 92 / 4; // a sixteenth at 92 bpm
+  const BARS = [ // [chord tones, bass root] as MIDI notes
+    [[53, 57, 60, 64], 41], [[57, 60, 64, 67], 45], [[50, 53, 57, 60], 38], [[55, 59, 62, 65], 43],
+    [[55, 58, 62, 65], 43], [[48, 52, 55, 58], 36], [[53, 57, 60, 64], 41], [[48, 53, 55, 58], 36],
+  ];
+  const hz = m => 440 * 2 ** ((m - 69) / 12);
+  function init() {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = 0;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200;
+    const echo = ctx.createDelay(); echo.delayTime.value = S16 * 3;
+    const fb = ctx.createGain(); fb.gain.value = 0.28;
+    const wet = ctx.createGain(); wet.gain.value = 0.3;
+    master.connect(lp); lp.connect(ctx.destination);
+    lp.connect(echo); echo.connect(fb); fb.connect(echo); echo.connect(wet); wet.connect(ctx.destination);
+    noise = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+    const d = noise.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  function tone(t, midi, dur, type, vol, attack = 0.01) {
+    const o = ctx.createOscillator(), gn = ctx.createGain();
+    o.type = type; o.frequency.value = hz(midi);
+    gn.gain.setValueAtTime(0, t);
+    gn.gain.linearRampToValueAtTime(vol, t + attack);
+    gn.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    o.connect(gn); gn.connect(master);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  function hat(t, vol) {
+    const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), gn = ctx.createGain();
+    src.buffer = noise; f.type = 'highpass'; f.frequency.value = 7000;
+    gn.gain.setValueAtTime(vol, t); gn.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    src.connect(f); f.connect(gn); gn.connect(master);
+    src.start(t); src.stop(t + 0.06);
+  }
+  function schedule() {
+    while (next < ctx.currentTime + 0.3) {
+      const b = Math.floor(step / 16) % BARS.length, s = step % 16;
+      const [chord, root] = BARS[b], nextRoot = BARS[(b + 1) % BARS.length][1];
+      const t = next + (s % 2 ? S16 * 0.33 : 0); // swung
+      if (s === 0 || s === 6 || (s === 11 && Math.random() < 0.5))
+        chord.forEach(m => { tone(t, m, S16 * 5, 'sine', 0.05); tone(t, m + 12, S16 * 2.5, 'triangle', 0.012); });
+      if (s % 4 === 0) tone(t, [root, root + 7, root + 12, nextRoot + 1][s / 4], S16 * 3.5, 'triangle', 0.22, 0.005);
+      if (s % 4 === 2) hat(t, 0.05); else if (s % 2 === 0) hat(t, 0.015);
+      if ([0, 4, 10, 12].includes(s) && Math.random() < 0.6) {
+        const opts = [...chord.map(m => m + 12), ...chord.map(m => m + 24)].filter(m => Math.abs(m - mel) <= 7);
+        mel = opts.length ? opts[Math.random() * opts.length | 0] : chord[0] + 12;
+        tone(t, mel, S16 * 6, 'sine', 0.06); tone(t, mel + 24, S16 * 2, 'sine', 0.01);
+      }
+      next += S16; step++;
+    }
+  }
+  return {
+    get ready() { return !!ctx; },
+    play(on) {
+      if (on) {
+        if (!ctx) { try { init(); } catch (e) { return; } }
+        ctx.resume();
+        clearTimeout(stopTimer);
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setTargetAtTime(0.6, ctx.currentTime, 0.3);
+        if (!timer) { next = ctx.currentTime + 0.1; step = 0; timer = setInterval(schedule, 60); }
+      } else if (ctx && timer) {
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setTargetAtTime(0, ctx.currentTime, 0.2);
+        clearTimeout(stopTimer);
+        stopTimer = setTimeout(() => { clearInterval(timer); timer = null; }, 900);
+      }
+    },
+  };
+})();
+
+// The carousel: each page stays for its subpages (up to four) at AUTO_SUB each, then moves on
+function startAuto(manual) {
+  st.auto = true; st.autoIdx = -1; st.autoAt = 0;
+  document.getElementById('bPages').classList.add('on');
+  // Only start sound on our own after the viewer has asked for it once
+  if (st.music && (manual || music.ready)) music.play(true);
+}
+function stopAuto() {
+  st.auto = false;
+  document.getElementById('bPages').classList.remove('on');
+  music.play(false);
+}
+function tickAuto() {
+  const now = Date.now();
+  if (!st.auto) {
+    if (now - st.idleAt > IDLE_MS && !st.searching && !st.hold && st.current !== SUBS.p) startAuto(false);
+    return;
+  }
+  if (st.searching || st.hold) return;
+  if (now - st.autoAt > Math.min(4, Math.max(1, st.pages.length)) * AUTO_SUB) {
+    st.autoIdx = (st.autoIdx + 1) % AUTO_PAGES.length;
+    st.autoAt = Infinity; // hold off until the page has arrived
+    goto(AUTO_PAGES[st.autoIdx], false).then(() => { if (st.auto) st.autoAt = Date.now(); });
+  }
+}
+// Anything the viewer does, other than the Pages/Music controls, ends the carousel
+function userAct() {
+  st.idleAt = Date.now();
+  if (st.auto) stopAuto();
 }
 
 /* ---------- Sizing ---------- */
@@ -1201,6 +1952,21 @@ document.getElementById('bRefresh').addEventListener('click', refresh);
 document.getElementById('bCrt').addEventListener('click', e => {
   e.currentTarget.classList.toggle('on', $scr.classList.toggle('crt'));
 });
+document.getElementById('bReveal').addEventListener('click', () => setReveal(!st.reveal));
+document.getElementById('bSize').addEventListener('click', cycleSize);
+document.getElementById('bMix').addEventListener('click', toggleMix);
+document.getElementById('bPages').addEventListener('click', () => st.auto ? stopAuto() : startAuto(true));
+function toggleMusic() {
+  st.music = !st.music;
+  document.getElementById('bMusic').classList.toggle('on', st.music);
+  if (st.auto) music.play(st.music);
+}
+document.getElementById('bMusic').addEventListener('click', toggleMusic);
+
+// Watch for activity before any other handler sees it (capture), to end or postpone the carousel
+const AUTO_KEYS = ['p', 'u'];
+document.addEventListener('keydown', e => { if (!AUTO_KEYS.includes(e.key.toLowerCase())) userAct(); }, true);
+document.addEventListener('pointerdown', e => { if (!e.target.closest?.('#bPages, #bMusic')) userAct(); }, true);
 
 function highlight(key) {
   if (key === hovKey) return;
@@ -1267,6 +2033,11 @@ document.addEventListener('keydown', e => {
   else if (k.toLowerCase() === 'h') setHold(!st.hold);
   else if (k.toLowerCase() === 'x') refresh();
   else if (k.toLowerCase() === 'i') goto(100);
+  else if (k.toLowerCase() === 'v') setReveal(!st.reveal);
+  else if (k.toLowerCase() === 's') cycleSize();
+  else if (k.toLowerCase() === 'm') toggleMix();
+  else if (k.toLowerCase() === 'p') st.auto ? stopAuto() : startAuto(true);
+  else if (k.toLowerCase() === 'u') toggleMusic();
   else return;
   e.preventDefault();
 });
@@ -1277,8 +2048,16 @@ addEventListener('resize', fit);
 
 setInterval(() => {
   if (!rollTimer) drawHeader();
-  if (!st.hold && !st.searching && st.pages.length > 1 && Date.now() - st.subAt > SUB_ROTATE) subStep(1);
+  const rotate = st.auto ? AUTO_SUB : st.pages[0]?.rotate || SUB_ROTATE;
+  if (!st.hold && !st.searching && st.pages.length > 1 && Date.now() - st.subAt > rotate) subStep(1);
+  if (st.current === CLOCK.p && !st.searching) { st.pages = buildClock(); show(); }
+  tickAuto();
 }, 1000);
+// Subtitles roll on a word at a time
+setInterval(() => {
+  if (st.current !== SUBS.p || st.searching || st.hold) return;
+  subsTick(); st.pages = buildSubs(); show();
+}, 300);
 setInterval(quietRebuild, FEED_TTL + 1000);
 setInterval(() => { if (isScores(st.current)) quietRebuild(); }, LIVE_TTL + 1000); // live scores
 
