@@ -126,7 +126,8 @@ body.side .help{display:none}
   <kbd>R</kbd><kbd>G</kbd><kbd>Y</kbd><kbd>C</kbd> Fastext · <kbd>H</kbd> hold · <kbd>X</kbd> refresh.<br></span>
   <span class="tch">Tap a headline or key in a page number. Swipe left/right for subpages,
   up/down for the next/previous page. Pinch the screen to zoom. Turn sideways for a bigger screen.<br></span>
-  Stories come live from the BBC News RSS feeds via a public CORS relay, so an internet connection is needed.
+  Stories come live from the BBC News RSS feeds via a public CORS relay, so an internet connection is needed.<br>
+  Weather (page 400) comes from Open-Meteo.
 </div>
 
 <script>
@@ -149,6 +150,19 @@ const SECTIONS = [
   {key:'arts',  p:250, first:251, max:18, title:'ARTS',     short:'Arts',      label:'Entertainment & Arts',  band:'m', ink:'y', feed:'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml'},
   {key:'sport', p:300, first:301, max:18, title:'SPORT',    short:'Sport',     label:'Sport',                 band:'y', ink:'b', feed:'https://feeds.bbci.co.uk/sport/rss.xml'},
 ];
+
+// Weather: page 400 lists the cities, then one forecast page each from 401
+const WEATHER = {p: 400, first: 401, title: 'WEATHER', short: 'Weather', label: 'UK & Ireland Weather', band: 'b', ink: 'y'};
+const CITIES = [
+  ['London', 51.51, -0.13], ['Southampton', 50.90, -1.40], ['Plymouth', 50.37, -4.14], ['Bristol', 51.45, -2.59],
+  ['Cardiff', 51.48, -3.18], ['Birmingham', 52.48, -1.90], ['Norwich', 52.63, 1.30], ['Manchester', 53.48, -2.24],
+  ['Liverpool', 53.41, -2.98], ['Leeds', 53.80, -1.55], ['Newcastle', 54.98, -1.61], ['Belfast', 54.60, -5.93],
+  ['Dublin', 53.35, -6.26], ['Edinburgh', 55.95, -3.19], ['Glasgow', 55.86, -4.25], ['Aberdeen', 57.15, -2.09],
+  ['Inverness', 57.48, -4.22],
+].map(([name, lat, lon], i) => ({name, lat, lon, p: WEATHER.first + i}));
+const WX_TTL = 15 * 60 * 1000;
+const isWeather = n => n >= WEATHER.p && n < WEATHER.first + CITIES.length;
+const INDEX_ROWS = [...SECTIONS, WEATHER];
 
 // Public CORS relays, tried in order (the last one that worked goes first)
 const PROXIES = [
@@ -315,6 +329,40 @@ function extractParas(html) {
   return out.length ? out : null;
 }
 
+// One request for every city; Open-Meteo allows CORS, relays are only a fallback
+const wx = {};
+function loadWeather() {
+  if (wx.pending) return wx.pending;
+  if (wx.data && Date.now() - wx.at < WX_TTL) return Promise.resolve(wx.data);
+  const url = 'https://api.open-meteo.com/v1/forecast?' + new URLSearchParams({
+    latitude: CITIES.map(c => c.lat).join(','), longitude: CITIES.map(c => c.lon).join(','),
+    current: 'temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_direction_10m',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset',
+    wind_speed_unit: 'mph', timezone: 'Europe/London', forecast_days: 7,
+  });
+  wx.pending = (async () => {
+    try {
+      let t;
+      try {
+        const ac = new AbortController();
+        setTimeout(() => ac.abort(), 10000);
+        const r = await fetch(url, {signal: ac.signal});
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        t = await r.text();
+      } catch (e) { t = await fetchText(url, t => t.includes('"daily"')); }
+      let j = JSON.parse(t);
+      if (!Array.isArray(j)) j = [j];
+      if (j.length !== CITIES.length || !j.every(c => c.daily && c.current)) throw new Error('forecast incomplete');
+      wx.data = j; wx.at = Date.now();
+      return j;
+    } catch (e) {
+      if (wx.data) return wx.data; // keep showing the last good copy
+      throw e;
+    } finally { wx.pending = null; }
+  })();
+  return wx.pending;
+}
+
 /* ---------- Page grid ---------- */
 class Grid {
   constructor() {
@@ -400,7 +448,7 @@ function buildIndex() {
   banner(g, 'CEEFAX', 'y', 'b');
   g.put(4, 1, 'News and sport from the BBC', 'c');
   g.put(5, 1, 'NEWS AND SPORT', 'w', {dh: true});
-  SECTIONS.forEach((s, i) => {
+  INDEX_ROWS.forEach((s, i) => {
     const r = 8 + i, fg = i % 2 ? 'c' : 'w';
     g.put(r, 2, s.label, fg);
     const d0 = 3 + s.label.length;
@@ -435,7 +483,7 @@ function buildSection(sec, items) {
     if (used + e.lines.length > 18) { pages.push([]); used = 0; }
     pages[pages.length - 1].push(e); used += e.lines.length;
   }
-  const idx = SECTIONS.indexOf(sec), next = SECTIONS[(idx + 1) % SECTIONS.length];
+  const idx = SECTIONS.indexOf(sec), next = sport(sec) ? WEATHER : SECTIONS[(idx + 1) % SECTIONS.length];
   return pages.map((pg, si) => {
     const g = new Grid();
     banner(g, sec.title, sec.ink, sec.band, sec.title === sec.short.toUpperCase() ? '' : sec.short);
@@ -482,13 +530,86 @@ function buildStory(sec, n, items, item, paras) {
   });
 }
 
+/* ---------- Weather pages ---------- */
+// WMO weather codes, labels kept to 12 characters to fit the city table
+const WX_CODES = {
+  0: ['Sunny', 'y'], 1: ['Sunny spells', 'y'], 2: ['Light cloud', 'w'], 3: ['Thick cloud', 'w'],
+  45: ['Fog', 'w'], 48: ['Freezing fog', 'c'],
+  51: ['Drizzle', 'c'], 53: ['Drizzle', 'c'], 55: ['Hvy drizzle', 'c'], 56: ['Frz drizzle', 'c'], 57: ['Frz drizzle', 'c'],
+  61: ['Light rain', 'c'], 63: ['Rain', 'c'], 65: ['Heavy rain', 'c'], 66: ['Frz rain', 'c'], 67: ['Frz rain', 'c'],
+  71: ['Light snow', 'w'], 73: ['Snow', 'w'], 75: ['Heavy snow', 'w'], 77: ['Snow grains', 'w'],
+  80: ['Showers', 'c'], 81: ['Rain showers', 'c'], 82: ['Heavy shwrs', 'c'], 85: ['Snow showers', 'w'], 86: ['Hvy snow shw', 'w'],
+  95: ['Thunderstorm', 'm'], 96: ['Thunder+hail', 'm'], 99: ['Thunder+hail', 'm'],
+};
+const wxLabel = (code, day = 1) =>
+  !day && code <= 1 ? [code ? 'Mostly clear' : 'Clear', 'w'] : WX_CODES[code] || ['Unknown', 'w'];
+const tc = v => v == null ? '--' : Math.round(v) + 'C';
+const compass = d => d == null ? '' : ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(d / 45) % 8];
+const wind = (dir, mph) => mph == null ? '' : `Wind ${compass(dir)} ${Math.round(mph)}mph`;
+
+function buildWeatherIndex(data) {
+  const g = new Grid();
+  banner(g, WEATHER.title, WEATHER.ink, WEATHER.band);
+  g.put(4, 1, 'Updated ' + hhmm(wx.at), 'c');
+  g.put(4, 25, 'open-meteo.com', 'g');
+  g.fill(5, WEATHER.band);
+  [[1, 'CITY'], [14, 'NOW'], [19, 'MAX'], [24, 'MIN'], [28, 'TODAY']].forEach(([c, t]) => g.put(5, c, t, 'y'));
+  CITIES.forEach((city, i) => {
+    const r = 6 + i, cur = data[i].current, day = data[i].daily;
+    const [label, fg] = wxLabel(day.weather_code[0]);
+    g.put(r, 1, city.name, i % 2 ? 'c' : 'w');
+    g.put(r, 13, tc(cur.temperature_2m).padStart(4), 'g');
+    g.put(r, 18, tc(day.temperature_2m_max[0]).padStart(4), 'y');
+    g.put(r, 23, tc(day.temperature_2m_min[0]).padStart(4), 'c');
+    g.put(r, 28, label, fg);
+    g.link(r, 0, 40, city.p);
+  });
+  const last = CITIES[CITIES.length - 1].p;
+  navBar(g, WEATHER.band, WEATHER.ink, [`City forecasts ${WEATHER.first}-${last}`, WEATHER.first], ['Index 100', 100]);
+  fastext(g, [['Forecasts', WEATHER.first], ['Headlines', 101], ['Sport', 300], ['Index', 100]]);
+  return [g];
+}
+
+function buildCityWeather(city, w) {
+  const cur = w.current, day = w.daily;
+  const next = city.p < CITIES[CITIES.length - 1].p ? city.p + 1 : WEATHER.p;
+  const g = new Grid();
+  banner(g, WEATHER.title, WEATHER.ink, WEATHER.band, city.name);
+  g.put(4, 1, 'Updated ' + hhmm(wx.at), 'c');
+  if (day.sunrise?.[0]) {
+    const sun = `Sun ${day.sunrise[0].slice(11, 16)}-${day.sunset[0].slice(11, 16)}`;
+    g.put(4, 39 - sun.length, sun, 'y');
+  }
+  const [nowLabel, nowFg] = wxLabel(cur.weather_code, cur.is_day);
+  g.put(5, 1, ' NOW ', 'w', {bg: 'r'});
+  g.put(5, 7, tc(cur.temperature_2m), 'y', {dh: true});
+  g.put(5, 12, nowLabel, nowFg);
+  g.put(6, 12, `Feels ${tc(cur.apparent_temperature)}  ${wind(cur.wind_direction_10m, cur.wind_speed_10m)}`, 'c');
+  g.put(8, 1, ' 7 DAY FORECAST ', 'w', {bg: 'b'});
+  g.put(8, 29, 'MAX', 'y'); g.put(8, 35, 'MIN', 'c');
+  day.time.slice(0, 7).forEach((t, i) => {
+    const r = 9 + i * 2, d = new Date(t + 'T12:00:00');
+    const [label, fg] = wxLabel(day.weather_code[i]);
+    g.put(r, 1, i ? `${DAYS[d.getDay()]} ${pad(d.getDate())}` : 'Today', 'y');
+    g.put(r, 8, label, fg);
+    g.put(r, 28, tc(day.temperature_2m_max[i]).padStart(4), 'y');
+    g.put(r, 34, tc(day.temperature_2m_min[i]).padStart(4), 'c');
+    const rain = day.precipitation_probability_max?.[i];
+    g.put(r + 1, 8, [rain == null ? '' : `Rain ${rain}%`, wind(day.wind_direction_10m_dominant[i], day.wind_speed_10m_max[i])]
+      .filter(Boolean).join('  '), 'c');
+  });
+  navBar(g, WEATHER.band, WEATHER.ink, [next === WEATHER.p ? 'Weather 400' : `Next city ${next}`, next], ['Weather 400', WEATHER.p]);
+  fastext(g, [['Next', next], ['Weather', WEATHER.p], ['Headlines', 101], ['Index', 100]]);
+  return [g];
+}
+
 function notFound(n) {
   const g = new Grid();
   banner(g, 'CEEFAX', 'y', 'b');
   g.put(6, 1, `PAGE ${n}`, 'y', {dh: true});
   g.put(9, 1, 'This page is not in transmission.', 'w');
   g.put(11, 1, 'Pages available:', 'c');
-  SECTIONS.forEach((s, i) => {
+  INDEX_ROWS.forEach((s, i) => {
     const r = 13 + (i >> 1), c = i % 2 ? 21 : 1;
     g.put(r, c, String(s.p), 'y'); g.put(r, c + 4, s.short, 'w'); g.link(r, c, c + 18, s.p);
   });
@@ -500,11 +621,15 @@ function notFound(n) {
 function errorPage(n, err) {
   const sec = SECTIONS.find(s => s.p === n || (n >= s.first && n < s.first + s.max));
   const g = new Grid();
-  if (sec) banner(g, sec.title, sec.ink, sec.band); else banner(g, 'CEEFAX', 'y', 'b');
+  if (sec) banner(g, sec.title, sec.ink, sec.band);
+  else if (isWeather(n)) banner(g, WEATHER.title, WEATHER.ink, WEATHER.band);
+  else banner(g, 'CEEFAX', 'y', 'b');
   g.put(6, 1, 'NO SIGNAL', 'r', {dh: true});
   g.put(9, 1, `Page ${n} could not be received.`, 'w');
   let r = 11;
-  wrap('The BBC news feed is fetched through a public relay, which may be busy - or your connection may be offline.', 38)
+  wrap(isWeather(n)
+    ? 'The forecast comes from Open-Meteo, which may be busy - or your connection may be offline.'
+    : 'The BBC news feed is fetched through a public relay, which may be busy - or your connection may be offline.', 38)
     .forEach(l => g.put(r++, 1, l, 'c'));
   r++;
   g.put(r, 1, 'Select REFRESH (or press X) to retry.', 'g');
@@ -516,6 +641,12 @@ function errorPage(n, err) {
 
 async function buildPage(n) {
   if (n === 100) return buildIndex();
+  if (isWeather(n)) {
+    const data = await loadWeather();
+    if (n === WEATHER.p) return buildWeatherIndex(data);
+    const i = n - WEATHER.first;
+    return buildCityWeather(CITIES[i], data[i]);
+  }
   const sec = SECTIONS.find(s => s.p === n);
   if (sec) return buildSection(sec, await loadFeed(sec));
   const ss = SECTIONS.find(s => n >= s.first && n < s.first + s.max);
@@ -651,6 +782,7 @@ function follow(l) {
 
 function refresh() {
   Object.values(feeds).forEach(f => { f.at = 0; });
+  wx.at = 0;
   articles.clear(); articleText.clear();
   goto(st.current || st.target, false);
 }
@@ -659,7 +791,7 @@ function refresh() {
 async function quietRebuild() {
   const n = st.current;
   if (n == null || st.searching || st.hold) return;
-  if (n !== 100 && !SECTIONS.some(s => s.p === n)) return;
+  if (n !== 100 && !SECTIONS.some(s => s.p === n) && !isWeather(n)) return;
   try {
     const pages = await buildPage(n);
     if (st.current !== n || st.searching) return;
