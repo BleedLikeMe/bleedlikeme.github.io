@@ -202,8 +202,25 @@ const SECTIONS = [
   {key:'rugby',    p:370, first:371, max:9,  title:'RUGBY',       short:'Rugby',     label:'Rugby Union', menu:'Rugby Union', band:'y', ink:'r', feed:BBC + 'sport/rugby-union/rss.xml'},
   {key:'f1',       p:380, first:381, max:9,  title:'FORMULA ONE', short:'F1',        label:'Formula 1',   menu:'Formula 1',   band:'r', ink:'w', extra:['Tables', 355], feed:BBC + 'sport/formula1/rss.xml'},
   {key:'tennis',   p:390, first:391, max:9,  title:'TENNIS',      short:'Tennis',    label:'Tennis',                band:'g', ink:'w', feed:BBC + 'sport/tennis/rss.xml'},
+  // The Guardian (page 600 lists these): its Content API allows CORS and carries the full article body,
+  // so a section's single request fills every story page with no scraping
+  ...[
+    ['g-uk',       610, 'UK',       'UK News',     'b', 'w', 'uk-news'],
+    ['g-world',    620, 'World',    'World News',  'b', 'c', 'world'],
+    ['g-politics', 630, 'Politics', 'Politics',    'r', 'w', 'politics'],
+    ['g-opinion',  640, 'Opinion',  'Opinion',     'm', 'w', 'commentisfree'],
+    ['g-climate',  650, 'Climate',  'Environment', 'g', 'k', 'environment'],
+    ['g-biz',      660, 'Business', 'Business',    'c', 'b', 'business'],
+    ['g-sport',    670, 'Sport',    'Sport',       'y', 'b', 'sport'],
+    ['g-culture',  680, 'Culture',  'Culture',     'm', 'y', 'culture'],
+    ['g-tech',     690, 'Tech',     'Technology',  'c', 'k', 'technology'],
+  ].map(([key, p, short, menu, band, ink, gu]) => ({key, p, first: p + 1, max: 9, title: 'GUARDIAN', short, menu,
+    label: 'Guardian ' + menu, band, ink, gu, extra: ['Guardian', 600]})),
 ];
-// Fetched in the background at start-up; the rest load when first visited
+const GUARDIAN = {p: 600, title: 'GUARDIAN', short: 'Guardian', band: 'b', ink: 'w', src: 'the Guardian'};
+const GUARDIAN_API = 'https://content.guardianapis.com/search?';
+const GUARDIAN_KEY = '5b3494f4-2c46-4810-b370-06659bb7d7f1'; // free developer key: 60 requests/min, 500/day
+// Fetched in the background at start-up (no Guardian sections, to save the key's daily allowance); the rest load when first visited
 const PREFETCH = ['top', 'uk', 'world', 'tech', 'sci', 'biz', 'arts', 'sport'];
 
 // Weather: page 400 lists the cities, 401 is the map, then one forecast page per city from 402
@@ -274,12 +291,13 @@ const SUBS = {p: 888, title: 'SUBTITLES', short: 'Subtitles'};
 const NEWSREEL_ROTATE = 8000;
 
 // Pages from Ceefax: the idle carousel
-const AUTO_PAGES = [100, 101, 102, 120, 140, 160, 200, 220, 250, 300, 340, 341, 342, 355, 401, 400, 420, 430, 555, 500, 560, 103];
+const AUTO_PAGES = [100, 101, 102, 120, 140, 160, 200, 220, 250, 300, 340, 341, 342, 355, 401, 400, 420, 430, 555, 500, 560, 600, 610, 103];
 const AUTO_SUB = 10000, IDLE_MS = 5 * 60 * 1000;
 
 // Pages that come from somewhere other than a BBC feed
 const featureOf = n => isWeather(n) ? WEATHER : n === CURRENCY.p ? CURRENCY : isScores(n) ? SCORES :
-  isF1Tab(n) ? F1TAB : n === SKY.p ? SKY : (n === TRAVEL.p || n === TRAVEL.detail) ? TRAVEL : n === LOTTERY.p ? LOTTERY : null;
+  isF1Tab(n) ? F1TAB : n === SKY.p ? SKY : (n === TRAVEL.p || n === TRAVEL.detail) ? TRAVEL : n === LOTTERY.p ? LOTTERY :
+  n === GUARDIAN.p ? GUARDIAN : null;
 WEATHER.src = 'Open-Meteo';
 
 // Page 100: news down the left, sport and the rest down the right
@@ -297,6 +315,8 @@ const PROXIES = [
   u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
   u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
 ];
+const READER = 'https://r.jina.ai/'; // CORS-enabled article-to-text service, used alongside the relays
+const STORY_SUBPAGES = 6;            // cap on how long a story page can run
 
 // 5x7 block font for the mosaic banners
 const FONT = {
@@ -431,8 +451,11 @@ function loadFeed(sec) {
   f.pending = (async () => {
     try {
       let items;
-      try { items = await viaRss2Json(sec.feed); }
-      catch (e) { items = parseRss(await fetchText(sec.feed, t => /<item[\s>]/.test(t))); }
+      if (sec.gu) items = await loadGuardian(sec);
+      else {
+        try { items = await viaRss2Json(sec.feed); }
+        catch (e) { items = parseRss(await fetchText(sec.feed, t => /<item[\s>]/.test(t))); }
+      }
       if (!items.length) throw new Error('feed was empty');
       f.items = items.slice(0, sec.max); f.at = Date.now();
       return f.items;
@@ -444,29 +467,107 @@ function loadFeed(sec) {
   return f.pending;
 }
 
+// A Guardian section: one API call returns its stories with their full text, stored straight into articleText
+async function loadGuardian(sec) {
+  const url = GUARDIAN_API + new URLSearchParams({'api-key': GUARDIAN_KEY, section: sec.gu,
+    'show-fields': 'body,trailText', 'page-size': 20, 'order-by': 'newest'});
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 10000);
+  let j;
+  try {
+    const r = await fetch(url, {signal: ac.signal});
+    if (r.status === 429) throw new Error('Guardian API limit reached');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    j = await r.json();
+  } finally { clearTimeout(t); }
+  const res = j?.response?.results;
+  if (!Array.isArray(res)) throw new Error('unexpected response');
+  // live blogs are hundreds of timestamped updates, not a story that reads top to bottom
+  return res.filter(x => x.type === 'article' && x.fields?.body).slice(0, sec.max).map(x => {
+    const paras = htmlParas(x.fields.body);
+    if (paras) articleText.set(x.webUrl, paras);
+    return {title: clean(x.webTitle), desc: clean(stripTags(x.fields.trailText)), link: x.webUrl, date: new Date(x.webPublicationDate)};
+  });
+}
+
+function htmlParas(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('figure, aside').forEach(e => e.remove());
+  const out = [];
+  for (const p of doc.querySelectorAll('p')) {
+    const t = tidySpaces(clean(p.textContent));
+    if (t.length < 25 || out.includes(t) || SKIP_PARA.test(t)) continue;
+    out.push(t);
+  }
+  return out.length ? out : null;
+}
+
 const articles = new Map();   // link -> promise of paragraphs
 const articleText = new Map(); // link -> paragraphs (resolved)
 function loadArticle(item) {
   if (!item.link) return Promise.resolve(null);
   if (!articles.has(item.link)) {
-    articles.set(item.link, fetchText(item.link, t => /<p[\s>]/i.test(t), 6000)
-      .then(extractParas)
-      .then(p => { if (p) articleText.set(item.link, p); return p; })
+    // The public relays are flaky, so race the HTML scrape against a reader service
+    // that returns the article as plain text; whichever yields paragraphs first wins
+    const need = p => p || Promise.reject(new Error('no text'));
+    const scrape = fetchText(item.link, t => /<p[\s>]/i.test(t), 6000).then(extractParas).then(need);
+    const reader = viaReader(item.link).then(extractReaderParas).then(need);
+    articles.set(item.link, Promise.any([scrape, reader])
+      .then(p => { articleText.set(item.link, p); return p; })
       .catch(() => { articles.delete(item.link); return null; }));
   }
   return articles.get(item.link);
 }
 
+async function viaReader(url) {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 15000);
+  try {
+    const r = await fetch(READER + url, {signal: ac.signal});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.text();
+  } finally { clearTimeout(t); }
+}
+
+// Collapse runs of spaces, and drop any padding that ended up before punctuation or inside brackets/quotes
+const tidySpaces = s => s.replace(/\s+/g, ' ').replace(/\s+([,.;:!?)])/g, '$1').replace(/([(])\s+/g, '$1').trim();
+const SKIP_PARA = /^(follow |sign up|listen to|watch:|get in touch|you can |image source|copyright|related topics|more on this story|this video can not)/i;
+
 function extractParas(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
+  // image captions and screen-reader-only labels (", external") aren't story text
+  doc.querySelectorAll('figcaption, .visually-hidden, [class*="VisuallyHidden"]').forEach(e => e.remove());
+  // BBC spaces inline links/bold with CSS margins, not text, so pad them or words run together
+  doc.querySelectorAll('p a, p b, p strong').forEach(e => { e.before(' '); e.after(' '); });
   let ps = doc.querySelectorAll('[data-component="text-block"] p');
   if (!ps.length) ps = doc.querySelectorAll('article p');
   if (!ps.length) ps = doc.querySelectorAll('main p');
   const out = [];
   for (const p of ps) {
-    const t = clean(p.textContent);
-    if (t.length < 25 || out.includes(t)) continue;
-    if (/^(follow |sign up|listen to|watch:|get in touch|you can |image source|copyright|related topics|more on this story|this video can not)/i.test(t)) continue;
+    const t = tidySpaces(clean(p.textContent));
+    if (t.length < 25 || out.includes(t) || SKIP_PARA.test(t)) continue;
+    out.push(t);
+  }
+  return out.length ? out : null;
+}
+
+// Reader output is markdown: a header block, then paragraphs separated by blank lines.
+// An image is followed by its caption, which has no closing punctuation, so drop that too.
+function extractReaderParas(md) {
+  const body = md.split(/^Markdown Content:\s*$/m)[1];
+  if (!body) return null;
+  const out = [];
+  let afterImage = false;
+  for (const block of body.split(/\n\s*\n/)) {
+    const raw = block.trim();
+    if (/^!\[/.test(raw)) { afterImage = true; continue; }
+    const wasAfterImage = afterImage; afterImage = false;
+    if (/^(#|[*-]\s|\||>|\[)/.test(raw)) continue; // headings, lists, tables, link rows
+    const t = tidySpaces(clean(raw.replace(/, external(?=\])/g, '').replace(/\[([^\]]*)\]\([^)]*\)/g, ' $1 ')
+      .replace(/\*\*|__/g, ' ')));
+    if (t.length < 25 || out.includes(t) || SKIP_PARA.test(t)) continue;
+    // captions after images, and the byline/dateline before the story starts, lack end punctuation
+    if ((wasAfterImage || !out.length) && !/[.!?"')]$/.test(t)) continue;
     out.push(t);
   }
   return out.length ? out : null;
@@ -665,7 +766,8 @@ function paginate(lines, per) {
 function buildIndex() {
   const g = new Grid();
   banner(g, 'CEEFAX', 'y', 'b');
-  g.put(4, 1, 'News and sport from the BBC', 'c');
+  g.put(4, 1, 'News & sport from the BBC', 'c');
+  g.put(4, 28, 'Guardian', 'w'); g.put(4, 37, String(GUARDIAN.p), 'y'); g.link(4, 27, 40, GUARDIAN.p);
   const column = (list, c0) => list.forEach((s, i) => {
     const r = 5 + i, label = s.menu || s.short;
     g.put(r, c0, label, i % 2 ? 'c' : 'w');
@@ -700,6 +802,34 @@ function buildIndex() {
   return [g];
 }
 
+async function buildGuardianIndex() {
+  const secs = SECTIONS.filter(s => s.gu);
+  let top = null;
+  try { top = await loadFeed(secs[0]); } catch (e) { /* the list still works without headlines */ }
+  const g = new Grid();
+  banner(g, GUARDIAN.title, GUARDIAN.ink, GUARDIAN.band);
+  g.put(4, 1, 'News and comment from the Guardian', 'c');
+  secs.forEach((s, i) => {
+    const r = 6 + i;
+    g.put(r, 3, s.menu, i % 2 ? 'c' : 'w');
+    g.put(r, 4 + s.menu.length, '.'.repeat(Math.max(0, 28 - s.menu.length)), 'b');
+    g.put(r, 34, String(s.p), 'y');
+    g.link(r, 0, 40, s.p);
+  });
+  g.put(16, 1, ' LATEST ', 'w', {bg: 'b'});
+  if (top?.length) {
+    let r = 17;
+    top.slice(0, 2).forEach((it, i) => wrap(it.title, 34).slice(0, 2).forEach((l, li) => {
+      g.put(r, 1, l, i ? 'c' : 'w');
+      if (li === 0) g.put(r, 36, String(secs[0].first + i), 'y');
+      g.link(r, 0, 40, secs[0].first + i); r++;
+    }));
+  } else g.put(17, 1, 'Headlines unavailable - select a section', 'c');
+  navBar(g, GUARDIAN.band, GUARDIAN.ink, ['Select a section', secs[0].p], ['Index 100', 100]);
+  fastext(g, [['UK', 610], ['World', 620], ['Sport', 670], ['Index', 100]]);
+  return [g];
+}
+
 function buildSection(sec, items) {
   const entries = items.map((it, i) => ({lines: wrap(it.title, 34).slice(0, 3), p: sec.first + i, fg: i % 2 ? 'c' : 'w'}));
   const pages = [[]]; let used = 0;
@@ -707,7 +837,8 @@ function buildSection(sec, items) {
     if (used + e.lines.length > 18) { pages.push([]); used = 0; }
     pages[pages.length - 1].push(e); used += e.lines.length;
   }
-  const idx = SECTIONS.indexOf(sec), next = SECTIONS[(idx + 1) % SECTIONS.length];
+  const group = SECTIONS.filter(s => !s.gu === !sec.gu); // BBC and Guardian sections cycle separately
+  const next = group[(group.indexOf(sec) + 1) % group.length];
   return pages.map((pg, si) => {
     const g = new Grid();
     banner(g, sec.title, sec.ink, sec.band, sec.title === sec.short.toUpperCase() ? '' : sec.short);
@@ -730,14 +861,14 @@ function buildStory(sec, n, items, item, paras) {
   wrap(item.title, 38).forEach(t => lines.push({t, fg: 'y'}));
   lines.push(null);
   const body = paras && paras.length ? paras : [item.desc || 'No further details are available.'];
-  let budget = 18 * 3 - lines.length;
+  let budget = 18 * STORY_SUBPAGES - lines.length;
   for (let i = 0; i < body.length && budget > 0; i++) {
     const w = wrap(body[i], 38);
     if (i > 0) { if (w.length + 1 > budget) break; lines.push(null); budget--; }
     w.slice(0, budget).forEach(t => lines.push({t, fg: i === 0 ? 'w' : 'c'}));
     budget -= w.length;
   }
-  if (!paras) { lines.push(null); lines.push({t: 'Full story on the BBC website: WEB >>', fg: 'g'}); }
+  if (!paras) { lines.push(null); lines.push({t: `Full story on the ${sec.gu ? 'Guardian' : 'BBC'} website: WEB >>`, fg: 'g'}); }
 
   const last = sec.first + items.length - 1;
   const next = n < last ? n + 1 : sec.p;
@@ -749,7 +880,7 @@ function buildStory(sec, n, items, item, paras) {
     subInd(g, si, chunks.length);
     ch.forEach((l, i) => { if (l) g.put(5 + i, 1, l.t, l.fg); });
     navBar(g, sec.band, sec.ink, [next === sec.p ? `${sec.short} ${sec.p}` : `Next story ${next}`, next], ['WEB >>', item.link || 100]);
-    fastext(g, [['Next', next], [sec.short, sec.p], sport(sec) ? ['Headlines', 101] : ['Sport', 300], ['Index', 100]]);
+    fastext(g, [['Next', next], [sec.short, sec.p], sec.gu ? ['Guardian', GUARDIAN.p] : sport(sec) ? ['Headlines', 101] : ['Sport', 300], ['Index', 100]]);
     return g;
   });
 }
@@ -1570,8 +1701,8 @@ function errorPage(n, err) {
   g.put(6, 1, 'NO SIGNAL', 'r', {dh: true});
   g.put(9, 1, `Page ${n} could not be received.`, 'w');
   let r = 11;
-  wrap(feat
-    ? `This page comes from ${feat.src}, which may be busy - or your connection may be offline.`
+  wrap(feat || sec?.gu
+    ? `This page comes from ${feat ? feat.src : 'the Guardian'}, which may be busy - or your connection may be offline.`
     : 'The BBC news feed is fetched through a public relay, which may be busy - or your connection may be offline.', 38)
     .forEach(l => g.put(r++, 1, l, 'c'));
   r++;
@@ -1609,6 +1740,7 @@ async function buildPage(n) {
     return n === lg.res ? buildResults(lg, await loadMatches(lg)) : buildTable(lg, await loadTable(lg));
   }
   if (n === QUIZ.p) return buildQuiz();
+  if (n === GUARDIAN.p) return buildGuardianIndex();
   const sec = SECTIONS.find(s => s.p === n);
   if (sec) return buildSection(sec, await loadFeed(sec));
   const ss = SECTIONS.find(s => n >= s.first && n < s.first + s.max);
