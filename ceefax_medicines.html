@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ceefax Medicines</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cw:16px; --ch:19px; --fs:21px; --sx:1.6; --bez:18px;
+  /* Teletext's eight colours */
+  --k:#000; --r:#ff2020; --g:#20ff40; --y:#ffff30; --b:#3040ff; --m:#ff30ff; --c:#30ffff; --w:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background:#131313; color:#ddd; font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; padding:12px 16px; min-height:100vh; overflow-x:hidden;
+}
+.tv{
+  background:linear-gradient(#2e2e2e,#1b1b1b); padding:var(--bez); border-radius:18px;
+  box-shadow:0 12px 40px rgba(0,0,0,.65), inset 0 1px 0 #474747;
+}
+.scr{
+  position:relative; width:calc(var(--cw)*40); height:calc(var(--ch)*25);
+  background:#000; overflow:hidden; border-radius:6px; user-select:none; -webkit-user-select:none;
+  font-family:'VT323',ui-monospace,Consolas,monospace; font-size:var(--fs); line-height:var(--ch);
+}
+.scr.crt::after{
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 2px,rgba(0,0,0,.22) 3px);
+  box-shadow:inset 0 0 70px rgba(0,0,0,.75);
+}
+.scr.crt .c b{text-shadow:0 0 3px currentColor}
+.row{display:flex; height:var(--ch)}
+.c{position:relative; flex:0 0 var(--cw); height:var(--ch); display:flex; align-items:center; justify-content:center}
+.c b{font-weight:400; display:block; white-space:pre; transform:scaleX(var(--sx))}
+.c.dh{height:calc(var(--ch)*2); z-index:2; align-items:flex-start}
+.c.dh b{transform:scale(var(--sx),2); transform-origin:50% 0}
+.c.m{display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr 1fr; align-items:stretch; justify-content:stretch}
+.c.m i.on{background:currentColor}
+.lk{cursor:pointer}
+.hov b{text-shadow:0 0 6px currentColor,0 0 2px currentColor !important}
+.hov{filter:brightness(1.3)}
+.fl b{animation:flash 1s steps(1) infinite}
+@keyframes flash{50%{opacity:0}}
+
+.fk{color:var(--k)} .fr{color:var(--r)} .fg{color:var(--g)} .fy{color:var(--y)}
+.fb{color:var(--b)} .fm{color:var(--m)} .fc{color:var(--c)} .fw{color:var(--w)}
+.gk{background:var(--k)} .gr{background:var(--r)} .gg{background:var(--g)} .gy{background:var(--y)}
+.gb{background:var(--b)} .gm{background:var(--m)} .gc{background:var(--c)} .gw{background:var(--w)}
+
+.remote{display:flex; flex-direction:column; gap:8px; align-items:center; width:100%; max-width:640px}
+.pad{display:flex; flex-wrap:wrap; gap:6px; justify-content:center}
+.remote button{
+  font:600 14px system-ui,-apple-system,"Segoe UI",sans-serif; min-width:40px; height:40px; padding:0 10px;
+  border-radius:8px; border:1px solid #3a3a3a; background:#262626; color:#eee; cursor:pointer;
+}
+.remote button:hover{background:#303030}
+.remote button:active{transform:translateY(1px)}
+.remote button:focus-visible{outline:2px solid #fff; outline-offset:2px}
+.remote button.on{background:#5a1a1a; border-color:#a33}
+.remote .fx{min-width:88px; color:#000; border:none; font-weight:700}
+.remote .fx:disabled{opacity:.35; cursor:default}
+.fx.r{background:var(--r)} .fx.g{background:var(--g)} .fx.y{background:var(--y)} .fx.c{background:var(--c)}
+.remote .fx:hover{filter:brightness(1.1); background-image:none}
+.fx.r:hover{background:var(--r)} .fx.g:hover{background:var(--g)} .fx.y:hover{background:var(--y)} .fx.c:hover{background:var(--c)}
+.help{font-size:12px; color:#8a8a8a; text-align:center; line-height:1.5; max-width:640px}
+.help kbd{font:inherit; color:#bbb; background:#222; border:1px solid #333; border-radius:4px; padding:0 4px}
+.help .tch{display:none}
+@media (hover:none) and (pointer:coarse){ .help .kb{display:none} .help .tch{display:inline} }
+
+/* Touch: no double-tap zoom on buttons, pinch allowed on the screen but swipes are ours */
+.scr{touch-action:pinch-zoom; -webkit-tap-highlight-color:transparent}
+.remote button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
+
+/* Phone portrait: drop the TV bezel so the screen gets every pixel */
+body.narrow{padding:8px 4px; gap:10px}
+body.narrow .tv, body.side .tv{padding:0; background:none; box-shadow:none; border-radius:6px}
+body.narrow .remote .fx{min-width:74px}
+body.narrow #digits{display:grid; grid-template-columns:repeat(5,1fr); width:100%; max-width:320px}
+body.narrow .remote button{padding:0 8px}
+body.narrow #bPrev, body.narrow #bNext{padding:0 6px}
+
+/* Phone landscape: remote sits beside the screen */
+body.side{flex-direction:row; padding:4px 8px; gap:12px}
+body.side .remote{flex:0 0 210px; width:210px; max-height:calc(100vh - 8px); overflow-y:auto; gap:6px}
+body.side .pad{width:100%}
+body.side .remote button{height:34px; min-width:34px; padding:0 8px; font-size:13px}
+body.side .remote .fx{min-width:0; flex:1 1 45%}
+body.side .help{display:none}
+</style>
+</head>
+<body>
+
+<div class="tv">
+  <div class="scr crt" id="scr" role="application" aria-label="Ceefax-style medicines pages">
+    <div class="row" id="hdr"></div>
+    <div id="body"></div>
+  </div>
+</div>
+
+<div class="remote" id="remote">
+  <div class="pad" id="digits"></div>
+  <div class="pad">
+    <button class="fx r" data-fx="0">—</button>
+    <button class="fx g" data-fx="1">—</button>
+    <button class="fx y" data-fx="2">—</button>
+    <button class="fx c" data-fx="3">—</button>
+  </div>
+  <div class="pad">
+    <button id="bIndex" title="Index page 1000">Index</button>
+    <button id="bPrev" title="Previous subpage">◀ Sub</button>
+    <button id="bNext" title="Next subpage">Sub ▶</button>
+    <button id="bHold" title="Hold this subpage">Hold</button>
+    <button id="bRefresh" title="Fetch the sheet again">Refresh</button>
+    <button id="bCrt" class="on" title="CRT scanlines">CRT</button>
+  </div>
+</div>
+<div class="help" id="help">
+  <span class="kb">Type a four-digit page number or click a name.
+  <kbd>←</kbd><kbd>→</kbd> subpages · <kbd>↑</kbd><kbd>↓</kbd> next/previous page ·
+  <kbd>R</kbd><kbd>G</kbd><kbd>Y</kbd><kbd>C</kbd> Fastext · <kbd>H</kbd> hold · <kbd>X</kbd> refresh.<br></span>
+  <span class="tch">Tap a name or key in a four-digit page number. Swipe left/right for subpages,
+  up/down for the next/previous page. Pinch the screen to zoom. Turn sideways for a bigger screen.<br></span>
+  Page 1000 is the A-Z index, 1001-1026 list the medicines (VTM names) for each letter, and each medicine has its own page from 1100.<br>
+  The data is read live from the public Google Sheet, so an internet connection is needed.
+</div>
+
+<script>
+'use strict';
+
+/* ---------- Config ---------- */
+const SHEET_ID = '1m1nCXerzd6CDu1TRunTNIbsId4WaWYraIIOrKsqfWKc', SHEET_GID = '494915706';
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+const DATA_TTL = 30 * 60 * 1000;
+const SUB_ROTATE = 15000;
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Page numbers: 1000 index, 1001-1027 one list per letter ('#' = names not starting A-Z), 1100+ one per VTM
+const INDEX_P = 1000, LETTER_P = 1001, VTM_P = 1100;
+const LETTERS = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '#'];
+const letterName = L => L === '#' ? '0-9' : L;
+// Band and ink colours, cycled through the letters
+const PALETTE = [['r','w'], ['b','w'], ['m','w'], ['g','k'], ['c','b'], ['m','y'], ['y','b'], ['g','w'], ['b','c'], ['c','k'], ['y','r'], ['r','y']];
+const letterStyle = i => PALETTE[i % PALETTE.length];
+
+// Sheet columns by header (matched ignoring case and spacing, so columns can move)
+const COLS = {
+  bnf: 'bnf code', bnfName: 'bnf name', ampp: 'ampp', vmpp: 'vmpp', prod: 'dm+d: product description',
+  str: 'strength', packDesc: 'dm+d: product and pack description', size: 'pack', sub: 'sub-pack',
+  vtm: 'vtm', vtmName: 'vtm name', gtin: 'gtin', vmp: 'vmp', marks: 'description',
+  t1: 't1', t2: 't2', d: 'd', l: 'l', can: 'can', usage: 'usage', ppm: 'ppm',
+  dt: 'dt',
+};
+
+// 5x7 block font for the mosaic banners
+const FONT = {
+  A:['01110','10001','10001','11111','10001','10001','10001'],
+  B:['11110','10001','10001','11110','10001','10001','11110'],
+  C:['01110','10001','10000','10000','10000','10001','01110'],
+  D:['11110','10001','10001','10001','10001','10001','11110'],
+  E:['11111','10000','10000','11110','10000','10000','11111'],
+  F:['11111','10000','10000','11110','10000','10000','10000'],
+  G:['01110','10001','10000','10111','10001','10001','01111'],
+  H:['10001','10001','10001','11111','10001','10001','10001'],
+  I:['01110','00100','00100','00100','00100','00100','01110'],
+  J:['00111','00010','00010','00010','00010','10010','01100'],
+  K:['10001','10010','10100','11000','10100','10010','10001'],
+  L:['10000','10000','10000','10000','10000','10000','11111'],
+  M:['10001','11011','10101','10101','10001','10001','10001'],
+  N:['10001','10001','11001','10101','10011','10001','10001'],
+  O:['01110','10001','10001','10001','10001','10001','01110'],
+  P:['11110','10001','10001','11110','10000','10000','10000'],
+  Q:['01110','10001','10001','10001','10101','10010','01101'],
+  R:['11110','10001','10001','11110','10100','10010','10001'],
+  S:['01111','10000','10000','01110','00001','00001','11110'],
+  T:['11111','00100','00100','00100','00100','00100','00100'],
+  U:['10001','10001','10001','10001','10001','10001','01110'],
+  V:['10001','10001','10001','10001','10001','01010','00100'],
+  W:['10001','10001','10001','10101','10101','10101','01010'],
+  X:['10001','10001','01010','00100','01010','10001','10001'],
+  Y:['10001','10001','01010','00100','00100','00100','00100'],
+  Z:['11111','00001','00010','00100','01000','10000','11111'],
+};
+
+/* ---------- Helpers ---------- */
+const pad = n => String(n).padStart(2, '0');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const ENTITIES = {amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', nbsp: ' '};
+const clean = s => (s || '')
+  .replace(/&(amp|quot|apos|lt|gt|nbsp);|&#(\d+);|&#x([0-9a-f]+);/gi,
+    (m, n, d, x) => n ? ENTITIES[n.toLowerCase()] : String.fromCodePoint(d ? +d : parseInt(x, 16)))
+  .replace(/[‘’‛′]/g, "'").replace(/[“”″]/g, '"')
+  .replace(/[–—−]/g, '-').replace(/…/g, '...').replace(/ /g, ' ')
+  .replace(/\s+/g, ' ').trim();
+const hhmm = t => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const norm = s => String(s).replace(/\s+/g, ' ').trim().toLowerCase();
+const coll = new Intl.Collator('en', {sensitivity: 'base', numeric: true});
+const uniq = a => [...new Set(a.filter(Boolean))];
+
+function wrap(text, width) {
+  const lines = []; let line = '';
+  for (let w of String(text).split(/\s+/).filter(Boolean)) {
+    while (w.length > width) {
+      if (line) { lines.push(line); line = ''; }
+      lines.push(w.slice(0, width)); w = w.slice(width);
+    }
+    if (!w) continue;
+    if (!line) line = w;
+    else if (line.length + 1 + w.length <= width) line += ' ' + w;
+    else { lines.push(line); line = w; }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/* ---------- Fetching ---------- */
+// A private sheet answers with a Google sign-in page instead of CSV
+const isSheet = t => /vtm name/i.test(t.slice(0, 3000));
+
+async function fetchSheet() {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 45000);
+  try {
+    const r = await fetch(SHEET_URL, {signal: ac.signal});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const text = await r.text();
+    if (!isSheet(text)) throw new Error('sheet is not shared publicly');
+    return text;
+  } finally { clearTimeout(t); }
+}
+
+function parseCSV(t) {
+  const rows = []; let row = [], i = 0;
+  const n = t.length;
+  while (i < n) {
+    let f;
+    if (t[i] === '"') {
+      let j = i + 1; f = '';
+      for (;;) {
+        const q = t.indexOf('"', j);
+        if (q < 0) { f += t.slice(j); i = n; break; }
+        f += t.slice(j, q);
+        if (t[q + 1] === '"') { f += '"'; j = q + 2; } else { i = q + 1; break; }
+      }
+    } else {
+      let j = i;
+      while (j < n && t[j] !== ',' && t[j] !== '\n' && t[j] !== '\r') j++;
+      f = t.slice(i, j); i = j;
+    }
+    row.push(f);
+    if (t[i] === ',') { i++; if (i === n) row.push(''); }
+    else { if (t[i] === '\r') i++; if (t[i] === '\n') i++; rows.push(row); row = []; }
+  }
+  if (row.length) rows.push(row);
+  return rows;
+}
+
+// "Abacavir 300mg tablets (Dr Reddy's Laboratories (UK) Ltd)" -> name + supplier
+function splitSupplier(desc) {
+  if (!desc.endsWith(')')) return {name: desc, supplier: ''};
+  let depth = 0;
+  for (let i = desc.length - 1; i >= 0; i--) {
+    if (desc[i] === ')') depth++;
+    else if (desc[i] === '(' && --depth === 0) return {name: desc.slice(0, i).trim(), supplier: desc.slice(i + 1, -1).trim()};
+  }
+  return {name: desc, supplier: ''};
+}
+// "Abacavir 300mg (Milpharm Ltd) 60 tablets" -> "60 tablets"
+function packOf(desc, size) {
+  const i = desc.lastIndexOf(')');
+  return (i >= 0 ? desc.slice(i + 1).trim() : '') || (size ? size + ' pack' : '');
+}
+
+function buildDB(rows, partial) {
+  const head = (rows[0] || []).map(norm);
+  const ix = {};
+  for (const k in COLS) ix[k] = head.indexOf(COLS[k]);
+  if (ix.vtmName < 0) throw new Error('no VTM Name column in the sheet');
+  const map = new Map(); let count = 0;
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r], rec = {};
+    for (const k in ix) rec[k] = ix[k] < 0 ? '' : String(row[ix[k]] ?? '').replace(/\s+/g, ' ').trim();
+    if (!rec.vtmName) continue;
+    count++;
+    const {name, supplier} = splitSupplier(rec.prod || rec.packDesc);
+    rec.name = name || rec.bnfName; rec.supplier = supplier;
+    rec.packText = packOf(rec.packDesc, rec.size);
+    let v = map.get(rec.vtmName);
+    if (!v) map.set(rec.vtmName, v = {name: rec.vtmName, code: '', rows: []});
+    if (!v.code && rec.vtm) v.code = rec.vtm;
+    v.rows.push(rec);
+  }
+  if (!count) throw new Error('the sheet has no rows');
+  const vtms = [...map.values()].sort((a, b) => coll.compare(a.name, b.name));
+  const letters = LETTERS.map((L, i) => ({L, i, p: LETTER_P + i, vtms: []}));
+  vtms.forEach((v, i) => {
+    v.p = VTM_P + i; v.i = i;
+    const c = v.name[0].toUpperCase();
+    v.letter = letters[c >= 'A' && c <= 'Z' ? c.charCodeAt(0) - 65 : 26];
+    v.letter.vtms.push(v);
+  });
+  return {at: Date.now(), count, vtms, partial, letters, byP: new Map(vtms.map(v => [v.p, v])),
+    // '#' only appears when something is filed under it
+    nav: letters.filter(l => l.L !== '#' || l.vtms.length)};
+}
+
+// Opened as a local file, the CSV download is blocked (Google's redirect has no CORS header for file://),
+// so the sheet comes in as a JSONP script. That route types each column by its majority, so the
+// few text values in a mostly numeric column (Can: FSP1, MDU...) arrive blank.
+const GVIZ_URL = cb => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:${cb}&gid=${SHEET_GID}`;
+function viaJsonp() {
+  return new Promise((resolve, reject) => {
+    const cb = '__sheet' + Date.now(), s = document.createElement('script');
+    const done = (f, x) => { clearTimeout(t); delete window[cb]; s.remove(); f(x); };
+    const t = setTimeout(() => done(reject, new Error('sheet timed out - is it shared publicly?')), 60000);
+    window[cb] = j => j.status === 'ok' ? done(resolve, j.table)
+      : done(reject, new Error(j.errors?.[0]?.detailed_message || 'sheet error'));
+    s.onerror = () => done(reject, new Error('could not reach Google Sheets'));
+    s.src = GVIZ_URL(cb);
+    document.head.appendChild(s);
+  });
+}
+function tableRows(tb) {
+  const head = tb.cols.map(c => c.label || '');
+  return [head, ...tb.rows.map(r => tb.cols.map((c, i) => {
+    const x = r.c?.[i];
+    return !x ? '' : x.f != null ? String(x.f) : x.v == null ? '' : String(x.v);
+  }))];
+}
+
+let db = null, dbPending = null;
+function loadData() {
+  if (dbPending) return dbPending;
+  if (db && Date.now() - db.at < DATA_TTL) return Promise.resolve(db);
+  dbPending = (async () => {
+    try {
+      if (location.protocol.startsWith('http')) {
+        try { db = buildDB(parseCSV(await fetchSheet()), false); return db; }
+        catch (e) { if (/not shared/.test(e.message)) throw e; }
+      }
+      db = buildDB(tableRows(await viaJsonp()), true);
+      return db;
+    } catch (e) {
+      if (db) return db; // keep showing the last good copy
+      throw e;
+    } finally { dbPending = null; }
+  })();
+  return dbPending;
+}
+
+/* ---------- Medicine data ---------- */
+// One choice per value in the Strength column (blank last)
+function strengthsOf(v) {
+  if (v.strengths) return v.strengths;
+  const m = new Map();
+  for (const r of v.rows) { if (!m.has(r.str)) m.set(r.str, []); m.get(r.str).push(r); }
+  v.strengths = [...m].map(([str, rows]) => ({str, rows}))
+    .sort((a, b) => (!a.str) - (!b.str) || (parseFloat(a.str) - parseFloat(b.str)) || coll.compare(a.str, b.str));
+  v.strengths.forEach(s => { s.label = strengthLabel(s); });
+  return v.strengths;
+}
+
+// The Strength column has no units: borrow them from a product name ("300" -> "300mg")
+const UNIT = /^\s*(mg\/ml|mg\/5ml|mg\/g|micrograms?\/dose|micrograms?|mcg|mg|ml|g|units?\/ml|units?|unit|%|nanograms?)/i;
+function strengthLabel(s) {
+  if (!s.str) return 'Not given';
+  for (const r of s.rows) {
+    const nm = r.name.replace(/(\d),(?=\d{3})/g, '$1');
+    for (let i = nm.indexOf(s.str); i >= 0; i = nm.indexOf(s.str, i + 1)) {
+      if (i > 0 && /[\d.]/.test(nm[i - 1])) continue;
+      const m = UNIT.exec(nm.slice(i + s.str.length));
+      if (m) return s.str + m[1];
+    }
+  }
+  return s.str;
+}
+
+function money(s) {
+  s = s.replace(/\s+/g, '');
+  if (!s || /^£?-?$/.test(s) || /^n\/?a$/i.test(s)) return null;
+  const neg = /\(.*\)|^-|£-/.test(s), num = s.replace(/[£()\-]/g, '');
+  return num ? [(neg ? '-£' : '£') + num, neg ? 'r' : null] : null;
+}
+const noPPM = s => /^0\s*ppm$/i.test(s);
+
+// Fields that are the same for every pack of a product are shown once, the rest on each pack
+const FIELDS = [
+  ['bnf', 'BNF'], ['vmp', 'VMP'],
+  ['can', 'Can', 'g'], ['usage', 'Usage', 'g'], ['ppm', 'PPM', 'g'],
+  ['dt', 'DT', 'y'],
+];
+const MONEY = new Set(['dt']);
+function fieldToken(r, [k, label, fg]) {
+  const v = r[k];
+  if (!v || (k === 'ppm' && noPPM(v))) return null;
+  if (MONEY.has(k)) { const m = money(v); return m && [label, m[0], m[1] || fg]; }
+  return [label, clean(v), fg];
+}
+const PACK_FIELDS = [['gtin', 'GTIN'], ['ampp', 'AMPP'], ['vmpp', 'VMPP'], ['sub', 'Blister'], ['marks', 'Marks', 'm'],
+  ['t1', 'T1'], ['t2', 'T2'], ['d', 'D'], ['l', 'L']];
+
+// Lay "label value" pairs along lines from column `indent`
+function packTokens(tokens, indent) {
+  const out = []; let segs = [], col = indent;
+  for (const t of tokens) {
+    if (!t) continue;
+    let [label, val, fg] = t;
+    const w = label.length + 1 + val.length;
+    if (segs.length && col + 2 + w > 39) { out.push(segs); segs = []; col = indent; }
+    if (segs.length) col += 2;
+    val = val.slice(0, Math.max(1, 39 - col - label.length - 1));
+    segs.push([col, label, 'c'], [col + label.length + 1, val, fg || 'w']);
+    col += label.length + 1 + val.length;
+  }
+  if (segs.length) out.push(segs);
+  return out;
+}
+
+function detailLines(rows) {
+  const groups = new Map();
+  for (const r of rows) {
+    const k = r.vmp || r.name;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+  const list = [...groups.values()].map(rs => {
+    // The most common BNF name is usually the generic one
+    const n = {}; rs.forEach(r => { if (r.bnfName) n[r.bnfName] = (n[r.bnfName] || 0) + 1; });
+    const name = Object.keys(n).sort((a, b) => n[b] - n[a])[0] || rs[0].name;
+    return {name, rows: rs};
+  }).sort((a, b) => coll.compare(a.name, b.name));
+
+  const lines = [];
+  for (const grp of list) {
+    lines.push(null);
+    wrap(clean(grp.name), 36).forEach(t => lines.push([[1, (' ' + t).padEnd(38), 'y', {bg: 'b'}]]));
+    const shared = [], own = [];
+    for (const f of FIELDS) {
+      const vals = uniq(grp.rows.map(r => fieldToken(r, f)?.[1]));
+      (vals.length > 1 ? own : shared).push(f);
+    }
+    lines.push(...packTokens(shared.map(f => fieldToken(grp.rows.find(r => fieldToken(r, f)) || {}, f)), 1));
+    const sorted = [...grp.rows].sort((a, b) =>
+      coll.compare(a.name, b.name) || coll.compare(a.supplier, b.supplier) || (parseFloat(a.size) - parseFloat(b.size)));
+    for (const r of sorted) {
+      if (r.name && r.name !== grp.name) lines.push([[2, clean(r.name).slice(0, 37), 'm']]);
+      const pt = clean(r.packText), sup = clean(r.supplier);
+      if (pt.length + sup.length + 4 <= 38) lines.push([[2, pt, 'y'], [pt.length + 4, sup, 'w']]);
+      else { lines.push([[2, pt.slice(0, 37), 'y']]); if (sup) lines.push([[4, sup.slice(0, 35), 'w']]); }
+      lines.push(...packTokens([...PACK_FIELDS.map(f => fieldToken(r, f)), ...own.map(f => fieldToken(r, f))], 4));
+    }
+  }
+  return lines;
+}
+
+/* ---------- Page grid ---------- */
+class Grid {
+  constructor() {
+    this.r = Array.from({length: 25}, () => Array.from({length: 40}, () => ({c: ' ', fg: 'w', bg: 'k'})));
+    this.fast = [];
+  }
+  fill(row, bg, c0 = 0, c1 = 40) { for (let c = c0; c < c1; c++) this.r[row][c].bg = bg; return this; }
+  put(row, col, str, fg = 'w', o = {}) {
+    str = String(str);
+    for (let i = 0; i < str.length; i++) {
+      const c = col + i; if (c < 0 || c >= 40) continue;
+      const x = this.r[row][c];
+      x.c = str[i]; x.fg = fg; x.m = null;
+      if (o.bg) x.bg = o.bg;
+      if (o.link != null) x.link = o.link;
+      if (o.flash) x.flash = 1;
+      if (o.dh && row < 24) { x.dh = 1; const y = this.r[row + 1][c]; y.dh = 2; y.c = ' '; y.bg = x.bg; }
+    }
+    return this;
+  }
+  link(row, c0, c1, link) { for (let c = c0; c < c1; c++) this.r[row][c].link = link; return this; }
+}
+
+// Mosaic (2x3 block graphics) banner across rows 1-3
+function banner(g, word, ink, band, right) {
+  for (let r = 1; r <= 3; r++) g.fill(r, band);
+  const W = 80, H = 9;
+  let sx = 2;
+  if (word.length * 6 * sx - sx > 74) sx = 1;
+  const bm = Array.from({length: H}, () => new Uint8Array(W));
+  let x = 4;
+  for (const ch of word) {
+    const gl = FONT[ch];
+    if (gl) for (let y = 0; y < 7; y++) for (let cx = 0; cx < 5; cx++)
+      if (gl[y][cx] === '1') for (let d = 0; d < sx; d++) { const xx = x + cx * sx + d; if (xx < W) bm[y + 1][xx] = 1; }
+    x += 6 * sx;
+  }
+  for (let cr = 0; cr < 3; cr++) for (let cc = 0; cc < 40; cc++) {
+    let v = 0;
+    for (let k = 0; k < 6; k++) if (bm[cr * 3 + (k >> 1)][cc * 2 + (k & 1)]) v |= 1 << k;
+    if (v) { const cell = g.r[1 + cr][cc]; cell.m = v; cell.fg = ink; }
+  }
+  const endCol = Math.ceil(x / 2);
+  if (right && endCol + right.length + 1 < 40) g.put(2, 39 - right.length, right, ink);
+}
+
+function fastext(g, list) {
+  g.fast = list;
+  const cols = ['r', 'g', 'y', 'c'];
+  list.forEach(([label, p], i) => { g.put(24, i * 10 + 1, label.slice(0, 9), cols[i]); g.link(24, i * 10, i * 10 + 10, p); });
+}
+
+function subInd(g, i, n) {
+  if (n < 2) return;
+  const s = `${i + 1}/${n}`;
+  g.put(4, 39 - s.length, s, 'w');
+}
+
+function navBar(g, band, ink, left, right) {
+  g.fill(23, band);
+  if (left) { g.put(23, 1, left[0], ink); g.link(23, 0, left[0].length + 2, left[1]); }
+  if (right) { const c = 39 - right[0].length; g.put(23, c, right[0], ink); g.link(23, c - 1, 40, right[1]); }
+}
+
+function paginate(lines, per) {
+  const out = []; let cur = [];
+  for (const l of lines) {
+    if (cur.length === per) { out.push(cur); cur = []; }
+    if (!l && !cur.length) continue;
+    cur.push(l);
+  }
+  if (cur.length) out.push(cur);
+  out.forEach(p => { while (p.length && !p[p.length - 1]) p.pop(); });
+  return out.length ? out : [[]];
+}
+
+// Each line is a list of [col, text, colour, options]; line.link makes the whole row a link
+function putLines(g, lines, row0) {
+  lines.forEach((l, i) => {
+    if (!l) return;
+    l.forEach(([c, t, fg, o]) => g.put(row0 + i, c, t, fg, o));
+    if (l.link != null) g.link(row0 + i, 0, 40, l.link);
+  });
+}
+const linked = (segs, link) => Object.assign(segs, {link});
+
+/* ---------- Page builders ---------- */
+function buildIndex(d) {
+  const g = new Grid();
+  banner(g, 'CEEFAX', 'y', 'b');
+  g.put(4, 1, 'Medicines A-Z from the dm+d sheet', 'c');
+  g.fill(5, 'b');
+  [1, 21].forEach(c0 => [[c0, 'A-Z'], [c0 + 4, 'NO.'], [c0 + 13, 'PAGE']].forEach(([c, t]) => g.put(5, c, t, 'y')));
+  d.letters.slice(0, 26).forEach((lt, i) => {
+    const r = 6 + i % 13, c0 = i < 13 ? 1 : 21;
+    g.put(r, c0, lt.L, i % 2 ? 'c' : 'w');
+    g.put(r, c0 + 3, String(lt.vtms.length).padStart(4), lt.vtms.length ? 'c' : 'b');
+    g.put(r, c0 + 8, '....', 'b');
+    g.put(r, c0 + 13, String(lt.p), 'y');
+    g.link(r, c0 - 1, c0 + 18, lt.p);
+  });
+  const other = d.letters[26];
+  if (other.vtms.length) {
+    g.put(19, 1, '0-9 and others', 'w'); g.put(19, 17, String(other.vtms.length).padStart(4), 'c');
+    g.put(19, 34, String(other.p), 'y'); g.link(19, 0, 40, other.p);
+  }
+  g.put(20, 1, `${d.vtms.length} medicines, ${d.count} products`, 'w');
+  g.put(21, 1, 'Updated ' + hhmm(d.at), 'c');
+  navBar(g, 'b', 'w', ['Type a page number or select a letter', LETTER_P]);
+  fastext(g, [['A-F', LETTER_P], ['G-L', LETTER_P + 6], ['M-R', LETTER_P + 12], ['S-Z', LETTER_P + 18]]);
+  return [g];
+}
+
+function neighbours(list, item) {
+  const i = list.indexOf(item), n = list.length;
+  return [list[(i - 1 + n) % n], list[(i + 1) % n]];
+}
+
+function buildLetter(d, lt) {
+  const [band, ink] = letterStyle(lt.i);
+  const lines = lt.vtms.map((v, k) => linked([[1, clean(v.name).slice(0, 33), k % 2 ? 'c' : 'w'], [35, String(v.p), 'y']], v.p));
+  if (!lines.length) lines.push([[1, 'No medicines under this letter.', 'w']]);
+  const [prev, next] = neighbours(d.nav, lt);
+  const chunks = paginate(lines, 18);
+  return chunks.map((ch, si) => {
+    const g = new Grid();
+    banner(g, lt.L === '#' ? 'MEDICINES' : 'MEDICINES ' + lt.L, ink, band, lt.L === '#' ? '0-9' : '');
+    g.put(4, 1, `${lt.vtms.length} medicines  Updated ${hhmm(d.at)}`, 'c');
+    subInd(g, si, chunks.length);
+    putLines(g, ch, 5);
+    navBar(g, band, ink, [`Next letter ${letterName(next.L)} ${next.p}`, next.p], ['Index 1000', INDEX_P]);
+    fastext(g, [['Prev', prev.p], ['Next', next.p], ['First', lt.vtms[0]?.p ?? INDEX_P], ['Index', INDEX_P]]);
+    return g;
+  });
+}
+
+function medBanner(g, v) {
+  const lt = v.letter, [band, ink] = letterStyle(lt.i);
+  banner(g, lt.L === '#' ? 'MEDICINES' : 'MEDICINES ' + lt.L, ink, band, lt.L === '#' ? '0-9' : '');
+  return [band, ink];
+}
+
+// Sub-index: one choice per strength, plus all of them together
+function buildStrengths(d, v, ss) {
+  const lt = v.letter, [prev, next] = neighbours(d.vtms, v);
+  // Canister code(s), squeezed into 5 columns ("179", "FSP1", "60/61", "179+" when there are more)
+  const cans = rows => {
+    const c = uniq(rows.map(r => clean(r.can)));
+    const all = c.join('/');
+    return all.length <= 5 ? all : c[0].slice(0, 4) + '+';
+  };
+  const lines = [linked([[1, 'All strengths', 'g'], [35, String(v.rows.length).padStart(3), 'c']], v.p + '/0')];
+  ss.forEach((s, k) => {
+    const names = uniq(s.rows.map(r => clean(r.name)));
+    const what = names[0] + (names.length > 1 ? ` +${names.length - 1}` : '');
+    lines.push(linked([[1, s.label.slice(0, 12), 'y'], [14, what.slice(0, 14), k % 2 ? 'c' : 'w'],
+      [29, cans(s.rows), 'g'], [35, String(s.rows.length).padStart(3), 'c']], `${v.p}/${k + 1}`));
+  });
+  const chunks = paginate(lines, 16);
+  return chunks.map((ch, si) => {
+    const g = new Grid();
+    const [band, ink] = medBanner(g, v);
+    g.put(4, 1, clean(v.name).slice(0, 34), 'y');
+    subInd(g, si, chunks.length);
+    g.fill(5, band);
+    [[1, 'STRENGTH'], [14, 'PRODUCTS'], [29, 'CAN'], [34, 'PACKS']].forEach(([c, t]) => g.put(5, c, t, ink));
+    g.put(6, 1, 'Select a strength:', 'c');
+    putLines(g, ch, 7);
+    navBar(g, band, ink, [`${next.p} ${clean(next.name)}`.slice(0, 24), next.p], [`${letterName(lt.L)} list ${lt.p}`, lt.p]);
+    fastext(g, [['Prev', prev.p], ['Next', next.p], [`${letterName(lt.L)} list`, lt.p], ['Index', INDEX_P]]);
+    return g;
+  });
+}
+
+// Everything the sheet has for a medicine, or for one of its strengths (k = 1..n)
+function buildDetail(d, v, k, ss) {
+  const lt = v.letter, [prev, next] = neighbours(d.vtms, v);
+  const s = k ? ss[k - 1] : null, rows = s ? s.rows : v.rows;
+  const lines = [];
+  wrap(clean(v.name), 38).forEach(t => lines.push([[1, t, 'y', {dh: true}]], []));
+  const one = s || (ss.length === 1 && ss[0].str ? ss[0] : null);
+  if (one) lines.push([[1, 'Strength', 'c'], [10, one.label, 'g']]);
+  else if (ss.length > 1) lines.push([[1, `All ${ss.length} strengths`, 'g']]);
+  lines.push(...detailLines(rows));
+  const fast = ss.length < 2
+    ? [['Prev', prev.p], ['Next', next.p], [`${letterName(lt.L)} list`, lt.p], ['Index', INDEX_P]]
+    : k ? [['Prev str', `${v.p}/${k > 1 ? k - 1 : ss.length}`], ['Next str', `${v.p}/${k < ss.length ? k + 1 : 1}`],
+           ['Strengths', v.p], ['Index', INDEX_P]]
+        : [['Strengths', v.p], ['Next', next.p], [`${letterName(lt.L)} list`, lt.p], ['Index', INDEX_P]];
+  const chunks = paginate(lines, 18);
+  return chunks.map((ch, si) => {
+    const g = new Grid();
+    const [band, ink] = medBanner(g, v);
+    g.put(4, 1, `VTM ${v.code || '-'}  ${rows.length} pack${rows.length === 1 ? '' : 's'}`, 'c');
+    subInd(g, si, chunks.length);
+    putLines(g, ch, 5);
+    navBar(g, band, ink, [`${next.p} ${clean(next.name)}`.slice(0, 24), next.p], [`${letterName(lt.L)} list ${lt.p}`, lt.p]);
+    fastext(g, fast);
+    return g;
+  });
+}
+
+function notFound(d, n) {
+  const g = new Grid();
+  banner(g, 'CEEFAX', 'y', 'b');
+  g.put(5, 1, `PAGE ${n}`, 'y', {dh: true});
+  g.put(7, 1, 'This page is not in transmission.', 'w');
+  g.put(9, 1, 'Pages available:', 'c');
+  const last = VTM_P + d.vtms.length - 1;
+  [[INDEX_P, `${INDEX_P}`, 'A-Z index'], [LETTER_P, `${LETTER_P}-${d.nav[d.nav.length - 1].p}`, 'Medicines by letter'],
+   [VTM_P, `${VTM_P}-${last}`, 'One page per medicine']].forEach(([p, nums, label], i) => {
+    g.put(11 + i, 1, nums, 'y'); g.put(11 + i, 12, label, 'w'); g.link(11 + i, 0, 40, p);
+  });
+  navBar(g, 'b', 'w', ['Index 1000', INDEX_P]);
+  fastext(g, [['Index', INDEX_P], ['A', LETTER_P], ['M', LETTER_P + 12], ['S', LETTER_P + 18]]);
+  return [g];
+}
+
+function errorPage(n, err) {
+  const g = new Grid();
+  banner(g, 'CEEFAX', 'y', 'b');
+  g.put(6, 1, 'NO SIGNAL', 'r', {dh: true});
+  g.put(9, 1, `Page ${n} could not be received.`, 'w');
+  let r = 11;
+  wrap('The medicines come from a Google Sheet. It may not be shared publicly any more, Google may be busy, or your connection may be offline.', 38)
+    .forEach(l => g.put(r++, 1, l, 'c'));
+  r++;
+  g.put(r, 1, 'Select REFRESH (or press X) to retry.', 'g');
+  g.put(21, 1, ('Error: ' + (err?.message || err || 'unknown')).slice(0, 38), 'm');
+  navBar(g, 'b', 'w', ['Index 1000', INDEX_P]);
+  fastext(g, [['Index', INDEX_P], ['A', LETTER_P], ['M', LETTER_P + 12], ['S', LETTER_P + 18]]);
+  return [g];
+}
+
+function loadingPage() {
+  const g = new Grid();
+  banner(g, 'CEEFAX', 'y', 'b');
+  g.put(6, 1, 'Receiving medicines data...', 'c', {flash: true});
+  return [g];
+}
+
+// sel: undefined = strength choices, 0 = all strengths, k = strength k
+async function buildPage(n, sel) {
+  const d = await loadData();
+  if (n === INDEX_P) return buildIndex(d);
+  const lt = d.letters[n - LETTER_P];
+  if (lt && d.nav.includes(lt)) return buildLetter(d, lt);
+  const v = d.byP.get(n);
+  if (v) {
+    const ss = strengthsOf(v);
+    if (ss.length < 2 || sel === 0) return buildDetail(d, v, 0, ss);
+    if (sel > 0 && ss[sel - 1]) return buildDetail(d, v, sel, ss);
+    return buildStrengths(d, v, ss);
+  }
+  await sleep(1500); // keep "searching" a little, like a real set
+  return notFound(d, n);
+}
+
+/* ---------- Rendering ---------- */
+const $scr = document.getElementById('scr');
+const $hdr = document.getElementById('hdr');
+const $body = document.getElementById('body');
+
+function cellHTML(x) {
+  let cls = 'c f' + x.fg + ' g' + x.bg, inner = '', attr = '';
+  if (x.flash) cls += ' fl';
+  if (x.dh === 1) cls += ' dh';
+  if (x.link != null) { cls += ' lk'; attr = ` data-l="${esc(x.link)}"`; }
+  if (x.m) {
+    cls += ' m';
+    for (let k = 0; k < 6; k++) inner += (x.m >> k) & 1 ? '<i class="on"></i>' : '<i></i>';
+  } else if (x.c !== ' ' && x.dh !== 2) inner = '<b>' + esc(x.c) + '</b>';
+  return `<span class="${cls}"${attr}>${inner}</span>`;
+}
+
+function renderGrid(g) {
+  let h = '';
+  for (let r = 1; r < 25; r++) h += '<div class="row">' + g.r[r].map(cellHTML).join('') + '</div>';
+  $body.innerHTML = h;
+  hovKey = null;
+}
+
+/* ---------- State & navigation ---------- */
+const st = {target: INDEX_P, sel: undefined, current: null, typed: '', hold: false, roll: INDEX_P, searching: false, pages: [], sub: 0, subAt: 0, fast: [], token: 0};
+let rollTimer = null, typeTimer = null, hovKey = null;
+const lastPage = () => db ? VTM_P + db.vtms.length - 1 : 1999;
+const isPage = l => /^\d{4}(\/\d+)?$/.test(l);
+
+function drawHeader() {
+  const d = new Date();
+  const pnum = st.hold ? 'HOLD ' : 'P' + (st.typed ? st.typed.padEnd(4, '-') : st.target);
+  const segs = [
+    [' ', 'w'], [pnum, st.hold ? 'r' : 'w'], [' CEEFAX 1 ', 'w'], [String(st.roll), st.searching ? 'g' : 'w'],
+    [` ${DAYS[d.getDay()]} ${pad(d.getDate())} ${MONTHS[d.getMonth()]} `, 'w'],
+    [`${pad(d.getHours())}:${pad(d.getMinutes())}/${pad(d.getSeconds())}`, 'y'],
+  ];
+  const cells = [];
+  for (const [s, fg] of segs) for (const c of s) cells.push({c, fg, bg: 'k'});
+  while (cells.length < 40) cells.push({c: ' ', fg: 'w', bg: 'k'});
+  $hdr.innerHTML = cells.slice(0, 40).map(cellHTML).join('');
+}
+
+function startRoll() {
+  st.searching = true;
+  if (rollTimer) return;
+  rollTimer = setInterval(() => { st.roll = st.roll >= lastPage() ? INDEX_P : st.roll + 1; drawHeader(); }, 45);
+}
+function stopRoll(n) {
+  clearInterval(rollTimer); rollTimer = null;
+  st.searching = false; st.roll = n; drawHeader();
+}
+
+function show() {
+  const g = st.pages[st.sub];
+  renderGrid(g);
+  st.fast = g.fast || [];
+  st.subAt = Date.now();
+  document.querySelectorAll('[data-fx]').forEach((b, i) => {
+    const f = st.fast[i];
+    b.textContent = f ? f[0] : '—';
+    b.disabled = !f;
+  });
+}
+
+const pageHash = (n, sel) => '#' + n + (sel != null ? '/' + sel : '');
+
+async function goto(n, push = true, sel) {
+  n = Math.max(INDEX_P, Math.min(9999, n | 0));
+  const my = ++st.token;
+  st.target = n; st.sel = sel; st.typed = ''; setHold(false);
+  clearTimeout(typeTimer);
+  startRoll(); drawHeader();
+  if (!st.pages.length) { st.pages = loadingPage(); st.sub = 0; show(); }
+  const minWait = sleep(350 + Math.random() * 650);
+  let pages;
+  try { pages = await buildPage(n, sel); } catch (e) { console.warn(e); pages = errorPage(n, e); }
+  await minWait;
+  if (my !== st.token) return;
+  stopRoll(n);
+  st.current = n; st.pages = pages; st.sub = 0;
+  show();
+  if (push && location.hash !== pageHash(n, sel)) history.pushState(null, '', pageHash(n, sel));
+}
+
+// Up/down skip the unused numbers between the letter lists and the medicines
+function stepPage(k) {
+  let n = (st.current ?? st.target) + k;
+  if (db) {
+    const lastLetter = db.nav[db.nav.length - 1].p;
+    if (n > lastLetter && n < VTM_P) n = k > 0 ? VTM_P : lastLetter;
+    if (n > lastPage()) n = INDEX_P;
+    if (n < INDEX_P) n = lastPage();
+  }
+  goto(n);
+}
+
+function subStep(k) {
+  const len = st.pages.length;
+  if (len < 2) return;
+  st.sub = (st.sub + k + len) % len;
+  show();
+}
+
+function setHold(v) {
+  st.hold = v;
+  document.getElementById('bHold').classList.toggle('on', v);
+  drawHeader();
+}
+
+function digit(d) {
+  if (!st.typed && d < 1) return;
+  st.typed += d;
+  drawHeader();
+  clearTimeout(typeTimer);
+  if (st.typed.length === 4) goto(+st.typed);
+  else typeTimer = setTimeout(() => { st.typed = ''; drawHeader(); }, 5000);
+}
+
+function fastKey(i) { const f = st.fast[i]; if (f) follow(f[1]); }
+
+function follow(l) {
+  l = String(l);
+  if (!isPage(l)) return;
+  const [p, s] = l.split('/');
+  goto(+p, true, s == null ? undefined : +s);
+}
+
+function refresh() {
+  if (db) db.at = 0;
+  goto(st.current || st.target, false, st.sel);
+}
+
+// Rebuild the page quietly when the sheet has been fetched again
+async function quietRebuild() {
+  const n = st.current;
+  if (n == null || st.searching || st.hold) return;
+  try {
+    const pages = await buildPage(n, st.sel);
+    if (st.current !== n || st.searching) return;
+    st.pages = pages; st.sub = Math.min(st.sub, pages.length - 1);
+    const at = st.subAt; show(); st.subAt = at;
+  } catch (e) { /* keep what is on screen */ }
+}
+
+/* ---------- Sizing ---------- */
+const measureCtx = document.createElement('canvas').getContext('2d');
+function fit() {
+  // side = phone held sideways: remote moves beside the screen
+  const side = innerWidth > innerHeight && innerHeight < 520 && innerWidth >= 560;
+  const narrow = !side && innerWidth < 600;
+  document.body.classList.toggle('side', side);
+  document.body.classList.toggle('narrow', narrow);
+  const $remote = document.getElementById('remote');
+  const bezK = side || narrow ? 0 : 1.1; // bezel as a multiple of cell width
+  let availW, availH;
+  if (side) {
+    availW = innerWidth - $remote.offsetWidth - 28;
+    availH = innerHeight - 8;
+  } else {
+    const remoteH = $remote.offsetHeight + document.getElementById('help').offsetHeight + (narrow ? 36 : 60);
+    availW = innerWidth - (narrow ? 8 : 32);
+    availH = Math.max(260, innerHeight - remoteH);
+  }
+  let cw = Math.min(availW / (40 + 2 * bezK), availH / (30 + 2 * bezK));
+  cw = Math.max(6, Math.floor(cw * 2) / 2);
+  const ch = Math.round(cw * 1.2);
+  const fs = ch * 1.12;
+  const root = document.documentElement.style;
+  root.setProperty('--cw', cw + 'px');
+  root.setProperty('--ch', ch + 'px');
+  root.setProperty('--fs', fs + 'px');
+  root.setProperty('--bez', Math.round(cw * bezK) + 'px');
+  measureCtx.font = `${fs}px VT323, ui-monospace, Consolas, monospace`;
+  const adv = measureCtx.measureText('M').width || fs * 0.5;
+  root.setProperty('--sx', Math.min(2.6, Math.max(0.6, cw * 0.88 / adv)).toFixed(3));
+}
+
+/* ---------- Wiring ---------- */
+const $digits = document.getElementById('digits');
+[1,2,3,4,5,6,7,8,9,0].forEach(d => {
+  const b = document.createElement('button');
+  b.textContent = d; b.addEventListener('click', () => digit(d));
+  $digits.appendChild(b);
+});
+document.querySelectorAll('[data-fx]').forEach(b => b.addEventListener('click', () => fastKey(+b.dataset.fx)));
+document.getElementById('bIndex').addEventListener('click', () => goto(INDEX_P));
+document.getElementById('bPrev').addEventListener('click', () => subStep(-1));
+document.getElementById('bNext').addEventListener('click', () => subStep(1));
+document.getElementById('bHold').addEventListener('click', () => setHold(!st.hold));
+document.getElementById('bRefresh').addEventListener('click', refresh);
+document.getElementById('bCrt').addEventListener('click', e => {
+  e.currentTarget.classList.toggle('on', $scr.classList.toggle('crt'));
+});
+
+function highlight(key) {
+  if (key === hovKey) return;
+  $body.querySelectorAll('.hov').forEach(x => x.classList.remove('hov'));
+  hovKey = key;
+  if (key != null) $body.querySelectorAll(`[data-l="${CSS.escape(key)}"]`).forEach(x => x.classList.add('hov'));
+}
+
+// A finger is wider than a 10px teletext row: find a link in the row above/below
+const coarse = matchMedia('(pointer:coarse)');
+function nearLink(e) {
+  const g = st.pages[st.sub];
+  if (!g || !coarse.matches) return null;
+  const rc = $body.getBoundingClientRect();
+  const x = (e.clientX - rc.left) / (rc.width / 40), y = (e.clientY - rc.top) / (rc.height / 24);
+  const col = Math.floor(x), row = Math.floor(y) + 1; // grid row 0 is the header
+  const rows = y - Math.floor(y) < 0.5 ? [row - 1, row + 1] : [row + 1, row - 1];
+  for (const r of rows) {
+    if (r < 1 || r > 24) continue;
+    for (const c of [col, col - 1, col + 1]) if (c >= 0 && c < 40 && g.r[r][c].link != null) return String(g.r[r][c].link);
+  }
+  return null;
+}
+
+let swipedAt = 0;
+$body.addEventListener('click', e => {
+  if (Date.now() - swipedAt < 400) return;
+  const l = e.target.closest('[data-l]')?.dataset.l ?? nearLink(e);
+  if (l == null) return;
+  highlight(l); // visible while the page is being fetched
+  follow(l);
+});
+$body.addEventListener('mouseover', e => highlight(e.target.closest('[data-l]')?.dataset.l ?? null));
+$body.addEventListener('mouseleave', () => highlight(null));
+
+// Swipes: left/right = subpages, up/down = next/previous page
+let touch0 = null;
+$scr.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  touch0 = e.touches.length === 1 ? {x: t.clientX, y: t.clientY} : null;
+}, {passive: true});
+$scr.addEventListener('touchmove', e => { if (e.touches.length > 1) touch0 = null; }, {passive: true});
+$scr.addEventListener('touchcancel', () => { touch0 = null; });
+$scr.addEventListener('touchend', e => {
+  if (!touch0) return;
+  const t = e.changedTouches[0], dx = t.clientX - touch0.x, dy = t.clientY - touch0.y;
+  touch0 = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < Math.max(30, $scr.offsetWidth * 0.12)) return;
+  swipedAt = Date.now();
+  if (Math.abs(dx) > Math.abs(dy)) subStep(dx < 0 ? 1 : -1);
+  else stepPage(dy < 0 ? 1 : -1);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if (/^[0-9]$/.test(k)) digit(+k);
+  else if (k === 'ArrowRight') subStep(1);
+  else if (k === 'ArrowLeft') subStep(-1);
+  else if (k === 'ArrowUp') stepPage(1);
+  else if (k === 'ArrowDown') stepPage(-1);
+  else if ('rgyc'.includes(k.toLowerCase()) && k.length === 1) fastKey('rgyc'.indexOf(k.toLowerCase()));
+  else if (k.toLowerCase() === 'h') setHold(!st.hold);
+  else if (k.toLowerCase() === 'x') refresh();
+  else if (k.toLowerCase() === 'i') goto(INDEX_P);
+  else return;
+  e.preventDefault();
+});
+
+const hashPage = () => { const m = /^#(\d{4})(?:\/(\d+))?$/.exec(location.hash); return m ? [+m[1], m[2] == null ? undefined : +m[2]] : null; };
+addEventListener('popstate', () => {
+  const h = hashPage();
+  if (h && (h[0] !== st.target || h[1] !== st.sel)) goto(h[0], false, h[1]);
+});
+addEventListener('resize', fit);
+
+setInterval(() => {
+  if (!rollTimer) drawHeader();
+  if (!st.hold && !st.searching && st.pages.length > 1 && Date.now() - st.subAt > SUB_ROTATE) subStep(1);
+}, 1000);
+setInterval(quietRebuild, DATA_TTL + 1000);
+
+fit();
+drawHeader();
+document.fonts?.load('20px VT323').then(fit, () => {});
+const [startP, startSel] = hashPage() || [INDEX_P];
+history.replaceState(null, '', pageHash(startP, startSel));
+goto(startP, false, startSel);
+</script>
+</body>
+</html>
