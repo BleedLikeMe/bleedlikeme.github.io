@@ -591,7 +591,7 @@ function buildDetail(d, v, k) {
 
 function notFound(d, n) {
   const g = new Grid();
-  banner(g, 'CEEFAX', 'y', 'b');
+  banner(g, 'STOCKFAX', 'y', 'b');
   g.put(5, 1, `PAGE ${n}`, 'y', {dh: true});
   g.put(7, 1, 'This page is not in transmission.', 'w');
   g.put(9, 1, 'Pages available:', 'c');
@@ -607,7 +607,7 @@ function notFound(d, n) {
 
 function errorPage(n, err) {
   const g = new Grid();
-  banner(g, 'CEEFAX', 'y', 'b');
+  banner(g, 'STOCKFAX', 'y', 'b');
   g.put(6, 1, 'NO SIGNAL', 'r', {dh: true});
   g.put(9, 1, `Page ${n} could not be received.`, 'w');
   let r = 11;
@@ -623,7 +623,7 @@ function errorPage(n, err) {
 
 function loadingPage() {
   const g = new Grid();
-  banner(g, 'CEEFAX', 'y', 'b');
+  banner(g, 'STOCKFAX', 'y', 'b');
   g.put(6, 1, 'Receiving product codes...', 'c', {flash: true});
   return [g];
 }
@@ -678,7 +678,7 @@ function drawHeader() {
   const d = new Date();
   const pnum = st.hold ? 'HOLD ' : 'P' + (st.typed ? st.typed.padEnd(4, '-') : st.target);
   const segs = [
-    [' ', 'w'], [pnum, st.hold ? 'r' : 'w'], [' CEEFAX 1 ', 'w'], [String(st.roll), st.searching ? 'g' : 'w'],
+    [' ', 'w'], [pnum, st.hold ? 'r' : 'w'], [' STOCKFAX 1 ', 'w'], [String(st.roll), st.searching ? 'g' : 'w'],
     [` ${DAYS[d.getDay()]} ${pad(d.getDate())} ${MONTHS[d.getMonth()]} `, 'w'],
     [`${pad(d.getHours())}:${pad(d.getMinutes())}/${pad(d.getSeconds())}`, 'y'],
   ];
