@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ceefax Codes</title>
+<title>CEEFAX Codes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -97,7 +97,7 @@ body.side .help{display:none}
 <body>
 
 <div class="tv">
-  <div class="scr crt" id="scr" role="application" aria-label="Ceefax-style product codes pages">
+  <div class="scr crt" id="scr" role="application" aria-label="CEEFAX-style product codes pages">
     <div class="row" id="hdr"></div>
     <div id="body"></div>
   </div>
@@ -478,7 +478,7 @@ const linked = (segs, link) => Object.assign(segs, {link});
 /* ---------- Page builders ---------- */
 function buildIndex(d) {
   const g = new Grid();
-  banner(g, 'STOCKFAX', 'y', 'b');
+  banner(g, 'CEEFAX', 'y', 'b');
   g.put(4, 1, 'Product codes and canisters A-Z', 'c');
   g.fill(5, 'b');
   [1, 21].forEach(c0 => [[c0, 'A-Z'], [c0 + 4, 'NO.'], [c0 + 13, 'PAGE']].forEach(([c, t]) => g.put(5, c, t, 'y')));
@@ -591,7 +591,7 @@ function buildDetail(d, v, k) {
 
 function notFound(d, n) {
   const g = new Grid();
-  banner(g, 'STOCKFAX', 'y', 'b');
+  banner(g, 'CEEFAX', 'y', 'b');
   g.put(5, 1, `PAGE ${n}`, 'y', {dh: true});
   g.put(7, 1, 'This page is not in transmission.', 'w');
   g.put(9, 1, 'Pages available:', 'c');
@@ -607,7 +607,7 @@ function notFound(d, n) {
 
 function errorPage(n, err) {
   const g = new Grid();
-  banner(g, 'STOCKFAX', 'y', 'b');
+  banner(g, 'CEEFAX', 'y', 'b');
   g.put(6, 1, 'NO SIGNAL', 'r', {dh: true});
   g.put(9, 1, `Page ${n} could not be received.`, 'w');
   let r = 11;
@@ -623,7 +623,7 @@ function errorPage(n, err) {
 
 function loadingPage() {
   const g = new Grid();
-  banner(g, 'STOCKFAX', 'y', 'b');
+  banner(g, 'CEEFAX', 'y', 'b');
   g.put(6, 1, 'Receiving product codes...', 'c', {flash: true});
   return [g];
 }
@@ -678,7 +678,7 @@ function drawHeader() {
   const d = new Date();
   const pnum = st.hold ? 'HOLD ' : 'P' + (st.typed ? st.typed.padEnd(4, '-') : st.target);
   const segs = [
-    [' ', 'w'], [pnum, st.hold ? 'r' : 'w'], [' STOCKFAX 1 ', 'w'], [String(st.roll), st.searching ? 'g' : 'w'],
+    [' ', 'w'], [pnum, st.hold ? 'r' : 'w'], [' CEEFAX 1 ', 'w'], [String(st.roll), st.searching ? 'g' : 'w'],
     [` ${DAYS[d.getDay()]} ${pad(d.getDate())} ${MONTHS[d.getMonth()]} `, 'w'],
     [`${pad(d.getHours())}:${pad(d.getMinutes())}/${pad(d.getSeconds())}`, 'y'],
   ];
