@@ -92,6 +92,9 @@ body.side .pad{width:100%}
 body.side .remote button{height:34px; min-width:34px; padding:0 8px; font-size:13px}
 body.side .remote .fx{min-width:0; flex:1 1 45%}
 body.side .help{display:none}
+
+/* Full screen: the help text goes so the screen can grow */
+body.fs .help{display:none}
 </style>
 </head>
 <body>
@@ -118,12 +121,13 @@ body.side .help{display:none}
     <button id="bHold" title="Hold this subpage">Hold</button>
     <button id="bRefresh" title="Fetch the sheet again">Refresh</button>
     <button id="bCrt" class="on" title="CRT scanlines">CRT</button>
+    <button id="bFull" title="Full screen (F)">Full</button>
   </div>
 </div>
 <div class="help" id="help">
   <span class="kb">Type a page number (100 for the front page, or four digits) or click a name.
   <kbd>←</kbd><kbd>→</kbd> subpages · <kbd>↑</kbd><kbd>↓</kbd> next/previous page ·
-  <kbd>R</kbd><kbd>G</kbd><kbd>Y</kbd><kbd>C</kbd> Fastext · <kbd>H</kbd> hold · <kbd>X</kbd> refresh.<br></span>
+  <kbd>R</kbd><kbd>G</kbd><kbd>Y</kbd><kbd>C</kbd> Fastext · <kbd>H</kbd> hold · <kbd>X</kbd> refresh · <kbd>F</kbd> full screen.<br></span>
   <span class="tch">Tap a name or key in a page number. Swipe left/right for subpages,
   up/down for the next/previous page. Pinch the screen to zoom. Turn sideways for a bigger screen.<br></span>
   100 front page · 1000 dm+d medicines A-Z (one page per medicine from 1100) · 5000 codes and canisters A-Z (from 5100).<br>
@@ -1147,6 +1151,28 @@ document.getElementById('bCrt').addEventListener('click', e => {
   e.currentTarget.classList.toggle('on', $scr.classList.toggle('crt'));
 });
 
+// Full screen covers the whole page so the remote stays usable (Safari still uses the webkit names)
+const $full = document.getElementById('bFull');
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+function toggleFull() {
+  const d = document.documentElement;
+  const p = fsEl() ? (document.exitFullscreen || document.webkitExitFullscreen).call(document)
+                   : (d.requestFullscreen || d.webkitRequestFullscreen).call(d);
+  p?.catch?.(() => {});
+}
+function fsChanged() {
+  const on = !!fsEl();
+  document.body.classList.toggle('fs', on);
+  $full.classList.toggle('on', on);
+  $full.textContent = on ? 'Exit full' : 'Full';
+  fit();
+}
+if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
+  $full.addEventListener('click', toggleFull);
+  document.addEventListener('fullscreenchange', fsChanged);
+  document.addEventListener('webkitfullscreenchange', fsChanged);
+} else $full.hidden = true; // e.g. iPhone Safari: no full screen for pages
+
 function highlight(key) {
   if (key === hovKey) return;
   $body.querySelectorAll('.hov').forEach(x => x.classList.remove('hov'));
@@ -1211,6 +1237,7 @@ document.addEventListener('keydown', e => {
   else if (k.toLowerCase() === 'h') setHold(!st.hold);
   else if (k.toLowerCase() === 'x') refresh();
   else if (k.toLowerCase() === 'i') goto(FRONT_P);
+  else if (k.toLowerCase() === 'f' && !$full.hidden) toggleFull();
   else return;
   e.preventDefault();
 });
