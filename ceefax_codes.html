@@ -478,7 +478,7 @@ const linked = (segs, link) => Object.assign(segs, {link});
 /* ---------- Page builders ---------- */
 function buildIndex(d) {
   const g = new Grid();
-  banner(g, 'CEEFAX', 'y', 'b');
+  banner(g, 'STOCKFAX', 'y', 'b');
   g.put(4, 1, 'Product codes and canisters A-Z', 'c');
   g.fill(5, 'b');
   [1, 21].forEach(c0 => [[c0, 'A-Z'], [c0 + 4, 'NO.'], [c0 + 13, 'PAGE']].forEach(([c, t]) => g.put(5, c, t, 'y')));
