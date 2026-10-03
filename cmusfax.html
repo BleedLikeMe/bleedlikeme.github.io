@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cmusfax</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cw:16px; --ch:19px; --fs:21px; --sx:1.6; --bez:18px;
+  /* Teletext's eight colours */
+  --k:#000; --r:#ff2020; --g:#20ff40; --y:#ffff30; --b:#3040ff; --m:#ff30ff; --c:#30ffff; --w:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background:#131313; color:#ddd; font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; padding:12px 16px; min-height:100vh; overflow-x:hidden;
+}
+.tv{
+  background:linear-gradient(#2e2e2e,#1b1b1b); padding:var(--bez); border-radius:18px;
+  box-shadow:0 12px 40px rgba(0,0,0,.65), inset 0 1px 0 #474747;
+}
+.scr{
+  position:relative; width:calc(var(--cw)*40); height:calc(var(--ch)*25);
+  background:#000; overflow:hidden; border-radius:6px; user-select:none; -webkit-user-select:none;
+  font-family:'VT323',ui-monospace,Consolas,monospace; font-size:var(--fs); line-height:var(--ch);
+}
+/* CRT: scanlines, a curved dark-cornered tube, glow, and a faint rolling bar and flicker */
+.scr.crt{border-radius:3% / 4%}
+.scr.crt::after{
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:5; border-radius:inherit;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 2px,rgba(0,0,0,.22) 3px);
+  box-shadow:inset 0 0 70px rgba(0,0,0,.75), inset 0 0 18px rgba(0,0,0,.9);
+  animation:flicker 4s steps(2) infinite;
+}
+.scr.crt::before{
+  content:''; position:absolute; left:0; right:0; top:-30%; height:30%; pointer-events:none; z-index:6;
+  background:linear-gradient(to bottom,transparent,rgba(255,255,255,.035) 50%,transparent);
+  animation:roll 9s linear infinite;
+}
+@keyframes flicker{0%,100%{opacity:1} 50%{opacity:.93}}
+@keyframes roll{to{top:100%}}
+.scr.crt .c b{text-shadow:0 0 3px currentColor, 1px 0 0 rgba(255,0,0,.25), -1px 0 0 rgba(0,160,255,.25)}
+.scr.crt .c.m i.on{box-shadow:0 0 3px currentColor}
+#hdr{position:relative; z-index:3; background:#000}
+#body{position:relative; z-index:1; transform-origin:50% 0}
+/* SIZE: double height, top half then bottom half */
+#body.sz1{transform:scaleY(2)}
+#body.sz2{transform:scaleY(2) translateY(-50%)}
+/* MIX: text over the programme; boxed cells keep their background */
+.scr.mix{background:#000}
+.scr.mix .c:not(.bx){background:transparent}
+.scr.mix .c:not(.bx) b{text-shadow:0 0 2px #000, 0 0 4px #000}
+.scr.mix #hdr{background:transparent}
+.prog{position:absolute; inset:0; display:none; z-index:0; filter:blur(10px) saturate(1.2); overflow:hidden}
+.scr.mix .prog{display:block}
+.prog i{position:absolute; border-radius:50%; opacity:.85; animation:drift 14s ease-in-out infinite alternate}
+.prog i:nth-child(1){width:60%; height:70%; left:-5%; top:20%; background:#7a4a2a}
+.prog i:nth-child(2){width:40%; height:55%; left:45%; top:5%; background:#2a5a8a; animation-duration:11s}
+.prog i:nth-child(3){width:28%; height:60%; left:30%; top:35%; background:#d8b090; animation-duration:9s}
+.prog i:nth-child(4){width:50%; height:30%; left:40%; top:75%; background:#3a3a50; animation-duration:17s}
+@keyframes drift{to{transform:translate(8%,-6%) scale(1.1)}}
+.row{display:flex; height:var(--ch)}
+.c{position:relative; flex:0 0 var(--cw); height:var(--ch); display:flex; align-items:center; justify-content:center}
+.c b{font-weight:400; display:block; white-space:pre; transform:scaleX(var(--sx))}
+.c.dh{height:calc(var(--ch)*2); z-index:2; align-items:flex-start}
+.c.dh b{transform:scale(var(--sx),2); transform-origin:50% 0}
+.c.m{display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr 1fr; align-items:stretch; justify-content:stretch}
+.c.m i.on{background:currentColor}
+.lk{cursor:pointer}
+.hov b{text-shadow:0 0 6px currentColor,0 0 2px currentColor !important}
+.hov{filter:brightness(1.3)}
+.fl b{animation:flash 1s steps(1) infinite}
+@keyframes flash{50%{opacity:0}}
+
+.fk{color:var(--k)} .fr{color:var(--r)} .fg{color:var(--g)} .fy{color:var(--y)}
+.fb{color:var(--b)} .fm{color:var(--m)} .fc{color:var(--c)} .fw{color:var(--w)}
+.gk{background:var(--k)} .gr{background:var(--r)} .gg{background:var(--g)} .gy{background:var(--y)}
+.gb{background:var(--b)} .gm{background:var(--m)} .gc{background:var(--c)} .gw{background:var(--w)}
+
+.remote{display:flex; flex-direction:column; gap:8px; align-items:center; width:100%; max-width:640px}
+.pad{display:flex; flex-wrap:wrap; gap:6px; justify-content:center}
+.remote button{
+  font:600 14px system-ui,-apple-system,"Segoe UI",sans-serif; min-width:40px; height:40px; padding:0 10px;
+  border-radius:8px; border:1px solid #3a3a3a; background:#262626; color:#eee; cursor:pointer;
+}
+.remote button:hover{background:#303030}
+.remote button:active{transform:translateY(1px)}
+.remote button:focus-visible{outline:2px solid #fff; outline-offset:2px}
+.remote button.on{background:#5a1a1a; border-color:#a33}
+.remote .fx{min-width:88px; color:#000; border:none; font-weight:700}
+.remote .fx:disabled{opacity:.35; cursor:default}
+.fx.r{background:var(--r)} .fx.g{background:var(--g)} .fx.y{background:var(--y)} .fx.c{background:var(--c)}
+.remote .fx:hover{filter:brightness(1.1); background-image:none}
+.fx.r:hover{background:var(--r)} .fx.g:hover{background:var(--g)} .fx.y:hover{background:var(--y)} .fx.c:hover{background:var(--c)}
+.remote .tp{min-width:52px; font-size:16px}
+#searchPad input{
+  font:16px 'VT323',ui-monospace,monospace; width:100%; max-width:420px; height:40px; padding:0 12px;
+  border-radius:8px; border:1px solid #a33; background:#000; color:var(--y); outline:none;
+}
+#searchPad input:focus{border-color:var(--y)}
+.help{font-size:12px; color:#8a8a8a; text-align:center; line-height:1.5; max-width:640px}
+.help kbd{font:inherit; color:#bbb; background:#222; border:1px solid #333; border-radius:4px; padding:0 4px}
+.help .tch{display:none}
+@media (hover:none) and (pointer:coarse){ .help .kb{display:none} .help .tch{display:inline} }
+
+/* Touch: no double-tap zoom on buttons, pinch allowed on the screen but swipes are ours */
+.scr{touch-action:pinch-zoom; -webkit-tap-highlight-color:transparent}
+.remote button{touch-action:manipulation; -webkit-tap-highlight-color:transparent}
+
+/* Phone portrait: drop the TV bezel so the screen gets every pixel */
+body.narrow{padding:8px 4px; gap:10px}
+body.narrow .tv, body.side .tv{padding:0; background:none; box-shadow:none; border-radius:6px}
+body.narrow .remote .fx{min-width:74px}
+body.narrow #digits{display:grid; grid-template-columns:repeat(5,1fr); width:100%; max-width:320px}
+body.narrow .remote button{padding:0 8px}
+
+/* Phone landscape: remote sits beside the screen */
+body.side{flex-direction:row; padding:4px 8px; gap:12px}
+body.side .remote{flex:0 0 210px; width:210px; max-height:calc(100vh - 8px); overflow-y:auto; gap:6px}
+body.side .pad{width:100%}
+body.side .remote button{height:34px; min-width:34px; padding:0 8px; font-size:13px}
+body.side .remote .fx{min-width:0; flex:1 1 45%}
+body.side .help{display:none}
+</style>
+</head>
+<body>
+
+<div class="tv">
+  <div class="scr crt" id="scr" role="application" aria-label="Teletext-style front end for cmus">
+    <div class="prog" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="row" id="hdr"></div>
+    <div id="body"></div>
+  </div>
+</div>
+
+<div class="remote" id="remote">
+  <div class="pad" id="searchPad" hidden>
+    <input id="q" type="search" placeholder="Type part of a track title" autocomplete="off" spellcheck="false" aria-label="Search track titles">
+  </div>
+  <div class="pad" id="digits"></div>
+  <div class="pad">
+    <button class="fx r" data-fx="0">—</button>
+    <button class="fx g" data-fx="1">—</button>
+    <button class="fx y" data-fx="2">—</button>
+    <button class="fx c" data-fx="3">—</button>
+  </div>
+  <div class="pad">
+    <button class="tp" data-cmd="prev" title="Previous track (Z)">⏮</button>
+    <button class="tp" data-cmd="pause" id="bPlay" title="Play / pause (Space)">⏯</button>
+    <button class="tp" data-cmd="stop" title="Stop (V)">⏹</button>
+    <button class="tp" data-cmd="next" title="Next track (B)">⏭</button>
+    <button class="tp" data-cmd="seek" data-v="-10" title="Back 10 seconds (,)">⏪</button>
+    <button class="tp" data-cmd="seek" data-v="+10" title="Forward 10 seconds (.)">⏩</button>
+    <button class="tp" data-cmd="vol" data-v="-5" title="Volume down (-)">🔉</button>
+    <button class="tp" data-cmd="vol" data-v="+5" title="Volume up (+)">🔊</button>
+  </div>
+  <div class="pad">
+    <button id="bIndex" title="Album artists, page 100">Index</button>
+    <button id="bNow" title="Now playing, page 101">Now</button>
+    <button id="bPrev" title="Previous subpage">◀ Sub</button>
+    <button id="bNext" title="Next subpage">Sub ▶</button>
+    <button id="bHold" title="Hold this subpage">Hold</button>
+    <button id="bShuffle" data-cmd="shuffle" title="cmus shuffle (S)">Shuffle</button>
+    <button id="bRepeat" data-cmd="repeat" title="cmus repeat (L)">Repeat</button>
+  </div>
+  <div class="pad">
+    <button id="bCrt" class="on" title="CRT look">CRT</button>
+    <button id="bSize" title="Double height: top half, bottom half, normal">Size</button>
+    <button id="bMix" title="Text over the programme">Mix</button>
+    <button id="bRescan" title="Re-read the music folder">Rescan</button>
+  </div>
+</div>
+<div class="help" id="help">
+  <span class="kb">Type a page number (<kbd>1</kbd>–<kbd>8</kbd> then two digits) or click an artist, album or track.
+  <kbd>←</kbd><kbd>→</kbd> subpages · <kbd>↑</kbd><kbd>↓</kbd> next/previous page ·
+  <kbd>R</kbd><kbd>G</kbd><kbd>Y</kbd><kbd>C</kbd> Fastext · <kbd>I</kbd> index · <kbd>N</kbd> now playing · <kbd>H</kbd> hold ·
+  <kbd>D</kbd> size · <kbd>M</kbd> mix · <kbd>/</kbd> search.<br>
+  cmus keys: <kbd>Space</kbd> play/pause · <kbd>Z</kbd> previous · <kbd>X</kbd> play · <kbd>V</kbd> stop · <kbd>B</kbd> next ·
+  <kbd>,</kbd><kbd>.</kbd> seek · <kbd>-</kbd><kbd>+</kbd> volume · <kbd>S</kbd> shuffle · <kbd>L</kbd> repeat.<br></span>
+  <span class="tch">Tap an artist, album or track. Swipe left/right for subpages,
+  up/down for the next/previous page. Turn sideways for a bigger screen.<br></span>
+  Your music folder is read, and cmus driven, by <kbd>cmusfax/server.py</kbd>, which must be running.
+</div>
+
+<script>
+'use strict';
+
+/* ---------- Config ---------- */
+// Served by server.py; opened straight from disk, talk to it on its default port
+const API = location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:8766';
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const STATUS_MS = 1000;
+
+// Page map: 100 album artists, 101-106 player pages, one page per artist from 200
+const P = {index: 100, now: 101, queue: 102, recent: 103, dip: 104, stats: 105, search: 106, artist0: 200};
+const SEARCH_MAX = 204; // twelve subpages of results
+const MAX_ARTISTS = 700; // 200..899
+const MENU = [
+  [P.now, 'Now playing'], [P.queue, 'Up next'], [P.recent, 'Recent'], [P.dip, 'Lucky dip'], [P.stats, 'Stats'],
+  [P.search, 'Search'],
+];
+// Banner colours for artist pages, picked by artist number
+const BANDS = [['b', 'y'], ['r', 'w'], ['g', 'k'], ['m', 'w'], ['c', 'b'], ['y', 'b'], ['b', 'c'], ['r', 'y'], ['g', 'b'], ['m', 'y']];
+
+// 5x7 block font for the mosaic banners
+const FONT = {
+  A:['01110','10001','10001','11111','10001','10001','10001'],
+  B:['11110','10001','10001','11110','10001','10001','11110'],
+  C:['01110','10001','10000','10000','10000','10001','01110'],
+  D:['11110','10001','10001','10001','10001','10001','11110'],
+  E:['11111','10000','10000','11110','10000','10000','11111'],
+  F:['11111','10000','10000','11110','10000','10000','10000'],
+  G:['01110','10001','10000','10111','10001','10001','01111'],
+  H:['10001','10001','10001','11111','10001','10001','10001'],
+  I:['01110','00100','00100','00100','00100','00100','01110'],
+  J:['00111','00010','00010','00010','00010','10010','01100'],
+  K:['10001','10010','10100','11000','10100','10010','10001'],
+  L:['10000','10000','10000','10000','10000','10000','11111'],
+  M:['10001','11011','10101','10101','10001','10001','10001'],
+  N:['10001','10001','11001','10101','10011','10001','10001'],
+  O:['01110','10001','10001','10001','10001','10001','01110'],
+  P:['11110','10001','10001','11110','10000','10000','10000'],
+  Q:['01110','10001','10001','10001','10101','10010','01101'],
+  R:['11110','10001','10001','11110','10100','10010','10001'],
+  S:['01111','10000','10000','01110','00001','00001','11110'],
+  T:['11111','00100','00100','00100','00100','00100','00100'],
+  U:['10001','10001','10001','10001','10001','10001','01110'],
+  V:['10001','10001','10001','10001','10001','01010','00100'],
+  W:['10001','10001','10001','10101','10101','10101','01010'],
+  X:['10001','10001','01010','00100','01010','10001','10001'],
+  Y:['10001','10001','01010','00100','00100','00100','00100'],
+  Z:['11111','00001','00010','00100','01000','10000','11111'],
+  0:['01110','10001','10011','10101','11001','10001','01110'],
+  1:['00100','01100','00100','00100','00100','00100','01110'],
+  2:['01110','10001','00001','00010','00100','01000','11111'],
+  3:['11111','00010','00100','00010','00001','10001','01110'],
+  4:['00010','00110','01010','10010','11111','00010','00010'],
+  5:['11111','10000','11110','00001','00001','10001','01110'],
+  6:['00110','01000','10000','11110','10001','10001','01110'],
+  7:['11111','00001','00010','00100','01000','01000','01000'],
+  8:['01110','10001','10001','01110','10001','10001','01110'],
+  9:['01110','10001','10001','01111','00001','00010','01100'],
+  ':':['00000','01100','01100','00000','01100','01100','00000'],
+  '-':['00000','00000','00000','11111','00000','00000','00000'],
+  '.':['00000','00000','00000','00000','00000','01100','01100'],
+  "'":['00100','00100','01000','00000','00000','00000','00000'],
+  '&':['01100','10010','10100','01000','10101','10010','01101'],
+  '!':['00100','00100','00100','00100','00100','00000','00100'],
+  '?':['01110','10001','00001','00010','00100','00000','00100'],
+  '/':['00001','00010','00010','00100','01000','01000','10000'],
+};
+
+/* ---------- Helpers ---------- */
+const pad = n => String(n).padStart(2, '0');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const clean = s => String(s || '')
+  .replace(/[‘’‛′]/g, "'").replace(/[“”″]/g, '"')
+  .replace(/[–—−]/g, '-').replace(/…/g, '...').replace(/\s+/g, ' ').trim();
+const fold = s => clean(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+const same = (a, b) => fold(a).toLowerCase() === fold(b).toLowerCase();
+const dayName = d => `${DAYS[d.getDay()]} ${pad(d.getDate())} ${MONTHS[d.getMonth()]}`;
+const fmtTime = s => {
+  s = Math.max(0, Math.round(s || 0));
+  const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60;
+  return h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`;
+};
+const fmtLong = s => {
+  const d = Math.floor(s / 86400), h = Math.floor(s / 3600) % 24, m = Math.floor(s / 60) % 60;
+  return d ? `${plural(d, 'day')} ${plural(h, 'hour')}` : h ? `${plural(h, 'hour')} ${plural(m, 'min')}` : plural(m, 'min');
+};
+const cut = (s, n) => (s = clean(s)).length > n ? s.slice(0, n - 1) + '.' : s;
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+function wrap(text, width) {
+  const lines = []; let line = '';
+  for (let w of String(text).split(/\s+/).filter(Boolean)) {
+    while (w.length > width) {
+      if (line) { lines.push(line); line = ''; }
+      lines.push(w.slice(0, width)); w = w.slice(width);
+    }
+    if (!w) continue;
+    if (!line) line = w;
+    else if (line.length + 1 + w.length <= width) line += ' ' + w;
+    else { lines.push(line); line = w; }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/* ---------- Talking to server.py ---------- */
+async function api(path, ms = 8000) {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), ms);
+  try {
+    const r = await fetch(API + path, {signal: ac.signal});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+let LIB = null;                       // {artists, albums, tracks} once indexed
+let libState = {scanning: true, done: 0, total: 0};
+let bridgeUp = null;                  // null until the first answer
+let S = {running: false};             // the latest cmus-remote -Q, parsed
+
+function setLibrary(j) {
+  j.albums.forEach(a => a.tracks.forEach(t => { j.tracks[t].albumId = a.id; }));
+  j.tracks.forEach(t => { t.key = fold(t.title).toLowerCase(); });
+  j.artists.forEach(ar => {
+    ar.p = ar.id < MAX_ARTISTS ? P.artist0 + ar.id : null;
+    ar.trackCount = ar.albums.reduce((n, a) => n + j.albums[a].tracks.length, 0);
+  });
+  LIB = j;
+}
+
+async function loadLibrary(rescan) {
+  if (rescan) { try { await api('/api/scan'); } catch (e) { /* reported below */ } LIB = null; }
+  for (;;) {
+    try {
+      const j = await api('/api/library', 30000);
+      bridgeUp = true;
+      if (j.artists) {
+        setLibrary(j);
+        if (st.loading || [P.index, P.recent, P.dip, P.stats].includes(st.current)) goto(st.current || st.target, false, st.loading ? st.wantSub : st.sub);
+        return;
+      }
+      libState = j;
+    } catch (e) { bridgeUp = false; }
+    if (st.loading || st.current === P.index) quietRebuild();
+    await sleep(bridgeUp ? 600 : 3000);
+  }
+}
+
+let polling = false, lastSig = '';
+async function pollStatus() {
+  if (polling) return;
+  polling = true;
+  try { S = await api('/api/status', 4000); bridgeUp = true; }
+  catch (e) { S = {running: false}; bridgeUp = false; }
+  finally { polling = false; }
+  updateButtons();
+  liveUpdate();
+}
+
+async function cmd(c, extra = {}) {
+  try {
+    const r = await api('/api/cmd?' + new URLSearchParams({c, ...extra}), 15000);
+    if (!r.ok) note(r.error || 'cmus did not accept that');
+  } catch (e) { note('No reply from server.py'); }
+  setTimeout(pollStatus, 120);
+}
+
+// Track/album helpers
+const trackOf = id => LIB?.tracks[id];
+const albumOf = id => LIB?.albums[id];
+const artistOf = id => LIB?.artists[id];
+const playingId = () => (S.running && S.status !== 'stopped') ? S.trackId : null;
+
+/* ---------- Page grid ---------- */
+class Grid {
+  constructor() {
+    this.r = Array.from({length: 25}, () => Array.from({length: 40}, () => ({c: ' ', fg: 'w', bg: 'k'})));
+    this.fast = [];
+  }
+  fill(row, bg, c0 = 0, c1 = 40) { for (let c = c0; c < c1; c++) this.r[row][c].bg = bg; return this; }
+  put(row, col, str, fg = 'w', o = {}) {
+    str = String(str);
+    for (let i = 0; i < str.length; i++) {
+      const c = col + i; if (c < 0 || c >= 40) continue;
+      const x = this.r[row][c];
+      x.c = str[i]; x.fg = fg; x.m = null;
+      if (o.bg) x.bg = o.bg;
+      if (o.link != null) x.link = o.link;
+      if (o.flash) x.flash = 1;
+      if (o.box) x.box = 1;         // keeps its background in MIX
+      if (o.dh && row < 24) { x.dh = 1; const y = this.r[row + 1][c]; y.dh = 2; y.c = ' '; y.bg = x.bg; }
+    }
+    return this;
+  }
+  link(row, c0, c1, link) { for (let c = Math.max(0, c0); c < Math.min(40, c1); c++) this.r[row][c].link = link; return this; }
+}
+
+// Mosaic (2x3 block graphics) banner across rows 1-3
+function banner(g, word, ink, band, right) {
+  for (let r = 1; r <= 3; r++) g.fill(r, band);
+  const W = 80, H = 9;
+  let sx = 2;
+  if (word.length * 6 * sx - sx > 74) sx = 1;
+  const bm = Array.from({length: H}, () => new Uint8Array(W));
+  let x = 4;
+  for (const ch of word) {
+    const gl = FONT[ch];
+    if (gl) for (let y = 0; y < 7; y++) for (let cx = 0; cx < 5; cx++)
+      if (gl[y][cx] === '1') for (let d = 0; d < sx; d++) { const xx = x + cx * sx + d; if (xx < W) bm[y + 1][xx] = 1; }
+    x += 6 * sx;
+  }
+  for (let cr = 0; cr < 3; cr++) for (let cc = 0; cc < 40; cc++) {
+    let v = 0;
+    for (let k = 0; k < 6; k++) if (bm[cr * 3 + (k >> 1)][cc * 2 + (k & 1)]) v |= 1 << k;
+    if (v) { const cell = g.r[1 + cr][cc]; cell.m = v; cell.fg = ink; }
+  }
+  const endCol = Math.ceil(x / 2);
+  if (right && endCol + right.length + 1 < 40) g.put(2, 39 - right.length, right, ink);
+}
+
+// The biggest piece of a name that fits the banner: "NICK CAVE & THE BAD SEEDS" -> "NICK CAVE"
+function bannerWord(name) {
+  let w = fold(name).toUpperCase().replace(/[^A-Z0-9:&'.!?/ -]/g, '').replace(/\s+/g, ' ').trim();
+  if (w.length <= 12) return w || 'MUSIC';
+  w = w.replace(/^THE /, '');
+  const words = w.split(' ');
+  while (words.length > 1 && (words.join(' ').length > 12 || /^(&|AND|THE|OF|-|A)$/.test(words[words.length - 1]))) words.pop();
+  return words.join(' ').slice(0, 12);
+}
+
+function fastext(g, list) {
+  g.fast = list;
+  const cols = ['r', 'g', 'y', 'c'];
+  list.forEach(([label, p], i) => { g.put(24, i * 10 + 1, label.slice(0, 9), cols[i]); g.link(24, i * 10, i * 10 + 10, p); });
+}
+
+function subInd(g, i, n) {
+  if (n < 2) return;
+  const s = `${i + 1}/${n}`;
+  g.put(4, 39 - s.length, s, 'w');
+}
+
+function navBar(g, band, ink, left, right) {
+  g.fill(23, band);
+  if (left) { g.put(23, 1, left[0], ink); g.link(23, 0, left[0].length + 2, left[1]); }
+  if (right) { const c = 39 - right[0].length; g.put(23, c, right[0], ink); g.link(23, c - 1, 40, right[1]); }
+}
+
+// A row of "Label........123" with the page number in yellow
+function menuLine(g, r, c0, w, label, num, fg, link) {
+  const ns = String(num);
+  label = cut(label, w - ns.length - 1);
+  g.put(r, c0, label, fg);
+  g.put(r, c0 + label.length + 1, '.'.repeat(Math.max(0, w - label.length - ns.length - 2)), 'b');
+  g.put(r, c0 + w - ns.length, ns, 'y');
+  g.link(r, c0 - 1 < 0 ? 0 : c0 - 1, c0 + w, link ?? num);
+}
+
+/* ---------- Album covers as teletext mosaics ---------- */
+// Error-diffused to the eight teletext colours, then each 2x3 cell keeps its two commonest
+const PAL = {k: [0,0,0], r: [255,0,0], g: [0,255,0], y: [255,255,0], b: [0,0,255], m: [255,0,255], c: [0,255,255], w: [255,255,255]};
+const PKEYS = Object.keys(PAL);
+const COVER = {cols: 14, rows: 12}; // 28 x 36 mosaic pixels, square on screen
+const covers = new Map();           // album id -> cells | 'loading' | null
+const dist = (a, b) => 2 * (a[0] - b[0]) ** 2 + 4 * (a[1] - b[1]) ** 2 + 3 * (a[2] - b[2]) ** 2;
+const nearest = (px, keys = PKEYS) => keys.reduce((best, k) => dist(px, PAL[k]) < dist(px, PAL[best]) ? k : best, keys[0]);
+
+function mosaicCells(source, sw, sh) {
+  const W = COVER.cols * 2, H = COVER.rows * 3;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const cx = cv.getContext('2d');
+  const s = Math.min(sw, sh); // centre square crop
+  cx.drawImage(source, (sw - s) / 2, (sh - s) / 2, s, s, 0, 0, W, H);
+  const d = cx.getImageData(0, 0, W, H).data;
+  const px = [];
+  for (let i = 0; i < W * H; i++) {
+    let [r, g, b] = [d[i * 4], d[i * 4 + 1], d[i * 4 + 2]];
+    const l = (r + g + b) / 3; // a little more saturation and contrast, as broadcast graphics had
+    [r, g, b] = [r, g, b].map(v => Math.max(0, Math.min(255, ((l + (v - l) * 1.4) - 128) * 1.15 + 128)));
+    px.push([r, g, b]);
+  }
+  const orig = px.map(p => [...p]), idx = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, k = nearest(px[i]), e = px[i].map((v, j) => v - PAL[k][j]);
+    idx[i] = k;
+    const spread = (dx, dy, f) => {
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || xx >= W || yy >= H) return;
+      const q = px[yy * W + xx]; for (let j = 0; j < 3; j++) q[j] += e[j] * f;
+    };
+    // a little under full error diffusion: less speckle on a 28-pixel-wide picture
+    spread(1, 0, 0.35); spread(-1, 1, 0.15); spread(0, 1, 0.25); spread(1, 1, 0.05);
+  }
+  const cells = [];
+  for (let cr = 0; cr < COVER.rows; cr++) for (let cc = 0; cc < COVER.cols; cc++) {
+    const ids = [];
+    for (let k = 0; k < 6; k++) ids.push((cr * 3 + (k >> 1)) * W + cc * 2 + (k & 1));
+    const count = {};
+    ids.forEach(i => { count[idx[i]] = (count[idx[i]] || 0) + 1; });
+    const top = Object.keys(count).sort((a, b) => count[b] - count[a]);
+    const bg = top[0], fg = top[1] || top[0];
+    let m = 0;
+    ids.forEach((i, k) => { if (fg !== bg && (idx[i] === fg || (idx[i] !== bg && nearest(orig[i], [bg, fg]) === fg))) m |= 1 << k; });
+    cells.push({fg, bg, m});
+  }
+  return cells;
+}
+
+// A record, for albums with no artwork
+let recordCells = null;
+function record() {
+  if (recordCells) return recordCells;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 120;
+  const c = cv.getContext('2d');
+  c.fillStyle = '#000'; c.fillRect(0, 0, 120, 120);
+  const disc = (r, col) => { c.fillStyle = col; c.beginPath(); c.arc(60, 60, r, 0, 7); c.fill(); };
+  disc(58, '#0000ff'); disc(44, '#000'); disc(40, '#0000ff'); disc(24, '#ff0000'); disc(4, '#000');
+  return (recordCells = mosaicCells(cv, 120, 120));
+}
+
+function getCover(aid) {
+  if (covers.has(aid)) return covers.get(aid);
+  covers.set(aid, 'loading');
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    try { covers.set(aid, mosaicCells(img, img.naturalWidth, img.naturalHeight)); } catch (e) { covers.set(aid, null); }
+    if (st.current === P.now) quietRebuild();
+  };
+  img.onerror = () => covers.set(aid, null);
+  img.src = `${API}/api/cover/${aid}`;
+  return 'loading';
+}
+
+function drawCells(g, row0, col0, cells, link) {
+  cells.forEach((x, i) => {
+    const r = row0 + Math.floor(i / COVER.cols), c = col0 + i % COVER.cols;
+    Object.assign(g.r[r][c], {c: ' ', fg: x.fg, bg: x.bg, m: x.m || null, link});
+  });
+}
+
+/* ---------- Page builders ---------- */
+function loadingLines(g, r) {
+  if (bridgeUp === false) {
+    g.put(r, 1, 'NO SIGNAL', 'r', {dh: true});
+    wrap('server.py is not answering. Start it with:', 38).forEach((l, i) => g.put(r + 3 + i, 1, l, 'w'));
+    g.put(r + 5, 1, 'python3 cmusfax/server.py', 'y');
+    g.put(r + 7, 1, 'then open http://127.0.0.1:8766/', 'c');
+  } else {
+    g.put(r, 1, 'Indexing your music...', 'c', {flash: true});
+    if (libState.total) g.put(r + 2, 1, `${libState.done} of ${libState.total} files read`, 'w');
+  }
+}
+
+// 100: every album artist, two columns a subpage
+function buildIndex() {
+  const per = 34, list = LIB ? LIB.artists.filter(a => a.p) : [];
+  const n = Math.max(1, Math.ceil(list.length / per));
+  return Array.from({length: n}, (_, si) => {
+    const g = new Grid();
+    banner(g, 'MUSIC', 'y', 'b', 'cmus');
+    if (!LIB) loadingLines(g, 6);
+    else {
+      g.put(4, 1, 'Album artists', 'c');
+      const tot = `${LIB.tracks.length} tracks`;
+      if (n < 2) g.put(4, 39 - tot.length, tot, 'g');
+      subInd(g, si, n);
+      list.slice(si * per, si * per + per).forEach((ar, i) => {
+        const col = i < per / 2 ? 1 : 21, r = 5 + i % (per / 2);
+        menuLine(g, r, col, 18, ar.name, ar.p, i % 2 ? 'c' : 'w');
+      });
+    }
+    // the player pages, along the bottom
+    const pid = playingId(), t = trackOf(pid);
+    if (t) {
+      g.put(22, 1, '>', 'g', {flash: S.status === 'paused'});
+      g.put(22, 3, cut(`${t.title} - ${t.artist || artistOf(albumOf(t.albumId).artistId).name}`, 32), 'g');
+      g.put(22, 36, String(P.now), 'y'); g.link(22, 0, 40, P.now);
+    } else {
+      let c = 1;
+      [[P.now, 'Now'], [P.queue, 'Next'], [P.recent, 'Recent'], [P.search, 'Search']].forEach(([p, label]) => {
+        g.put(22, c, label, 'c'); g.put(22, c + label.length + 1, String(p), 'y');
+        g.link(22, c, c + label.length + 4, p); c += label.length + 6;
+      });
+    }
+    navBar(g, 'b', 'w', ['Select an artist', P.index], [`Stats ${P.stats}`, P.stats]);
+    fastext(g, [['Now', P.now], ['Up next', P.queue], ['Recent', P.recent], ['Lucky dip', P.dip]]);
+    return g;
+  });
+}
+
+// An artist page: the albums first (sub-index), then one subpage of tracks per album
+function buildArtist(ar) {
+  const [band, ink] = BANDS[ar.id % BANDS.length];
+  const word = bannerWord(ar.name);
+  const albs = ar.albums.map(albumOf);
+  const next = LIB.artists[ar.id + 1]?.p || P.index;
+  const pid = playingId();
+
+  // album subpages first, so the sub-index knows where each one starts
+  const albumPages = [];
+  albs.forEach((alb, ai) => {
+    const rows = [];
+    alb.tracks.map(trackOf).forEach((t, ti) => {
+      const on = t.id === pid, fg = on ? 'g' : ti % 2 ? 'c' : 'w';
+      const lines = wrap(clean(t.title), 28).slice(0, 2);
+      const item = lines.map((l, li) => ({t: l, fg, num: li === 0 ? (t.n != null ? pad(t.n) : '--') : '', secs: li === 0 ? t.secs : 0, id: t.id, on: on && li === 0}));
+      if (t.artist && !same(t.artist, alb.artist || ar.name)) item.push({t: cut(t.artist, 28), fg: 'm', id: t.id, num: ''});
+      rows.push(item);
+    });
+    const pages = [[]]; let used = 0;
+    for (const item of rows) {
+      if (used + item.length > 16) { pages.push([]); used = 0; }
+      pages[pages.length - 1].push(...item); used += item.length;
+    }
+    const time = fmtTime(alb.tracks.reduce((s, t) => s + (trackOf(t).secs || 0), 0));
+    pages.forEach((lines, pi) => {
+      const g = new Grid();
+      g.albumId = alb.id;
+      banner(g, word, ink, band);
+      g.put(4, 1, cut(alb.name, pages.length > 1 ? 33 : 38), 'y');
+      if (pages.length > 1) g.put(4, 35, `${pi + 1}/${pages.length}`, 'w');
+      g.put(5, 1, [alb.year, alb.genre && cut(alb.genre, 14), plural(alb.tracks.length, 'track'), time].filter(Boolean).join('  '), 'c');
+      lines.forEach((l, i) => {
+        const r = 6 + i;
+        if (l.on) g.put(r, 0, '>', 'g', {flash: S.status === 'paused'});
+        if (l.num) g.put(r, 1, l.num, l.on ? 'g' : 'y');
+        g.put(r, 4, l.t, l.fg);
+        if (l.secs) { const s = fmtTime(l.secs); g.put(r, 39 - s.length, s, l.on ? 'g' : 'c'); }
+        g.link(r, 0, 40, 'pl:' + l.id);
+      });
+      g.put(22, 1, `Album ${ai + 1} of ${albs.length}`, 'b');
+      g.put(22, 20, 'Select a track', 'g');
+      navBar(g, band, ink, [cut(`${ar.name} albums`, 24), 'sp:0'], [`Now ${P.now}`, P.now]);
+      fastext(g, [['Play', 'pa:' + alb.id], ['Shuffle', 'sa:' + alb.id], ['Queue', 'qa:' + alb.id], ['Albums', 'sp:0']]);
+      albumPages.push(g);
+    });
+  });
+
+  // sub-index: one line per album
+  const per = 16, nIdx = Math.max(1, Math.ceil(albs.length / per));
+  const first = albs.map(a => nIdx + albumPages.findIndex(g => g.albumId === a.id));
+  const total = fmtLong(albs.reduce((s, a) => s + a.tracks.reduce((x, t) => x + (trackOf(t).secs || 0), 0), 0));
+  const index = Array.from({length: nIdx}, (_, si) => {
+    const g = new Grid();
+    banner(g, word, ink, band);
+    g.put(4, 1, cut(ar.name, 30), 'y');
+    if (nIdx > 1) g.put(4, 35, `${si + 1}/${nIdx}`, 'w');
+    g.fill(5, band);
+    [[1, 'YEAR'], [6, 'ALBUM'], [34, 'TRKS']].forEach(([c, t]) => g.put(5, c, t, ink));
+    albs.slice(si * per, si * per + per).forEach((a, i) => {
+      const r = 6 + i, k = si * per + i, on = trackOf(pid)?.albumId === a.id;
+      g.put(r, 1, a.year || '----', 'y');
+      g.put(r, 6, cut(a.name, 28), on ? 'g' : i % 2 ? 'c' : 'w');
+      g.put(r, 36, String(a.tracks.length).padStart(3), 'g');
+      if (on) g.put(r, 0, '>', 'g', {flash: S.status === 'paused'});
+      g.link(r, 0, 40, 'sp:' + first[k]);
+    });
+    g.put(22, 1, `${plural(albs.length, 'album')}, ${ar.trackCount} tracks, ${total}`.slice(0, 38), 'c');
+    navBar(g, band, ink, ['Album artists 100', P.index], [`Next ${next}`, next]);
+    fastext(g, [['Play all', 'pr:' + ar.id], ['Shuffle', 'sr:' + ar.id], ['Next', next], ['Index', P.index]]);
+    return g;
+  });
+  return [...index, ...albumPages];
+}
+
+// 101: now playing, live
+function buildNow() {
+  const g = new Grid();
+  banner(g, 'NOW PLAYING', 'y', 'r');
+  const ctl = (r, c, label, link, on) => { g.put(r, c, ` ${label} `, on ? 'k' : 'w', {bg: on ? 'g' : 'b', box: true, link}); };
+  if (!S.running) {
+    if (bridgeUp === false) loadingLines(g, 6);
+    else {
+      g.put(6, 1, 'CMUS IS NOT RUNNING', 'r', {dh: true});
+      wrap('Select any track and cmus will be started in the background, or start it yourself in a terminal.', 38)
+        .forEach((l, i) => g.put(9 + i, 1, l, 'w'));
+    }
+    navBar(g, 'r', 'w', ['Album artists 100', P.index]);
+    fastext(g, [['Artists', P.index], ['Recent', P.recent], ['Lucky dip', P.dip], ['Shuffle', 'cmd:random']]);
+    return [g];
+  }
+  const t = trackOf(S.trackId), alb = t && albumOf(t.albumId), ar = alb && artistOf(alb.artistId);
+  const tags = S.tags || {};
+  const file = (S.file || '').split('/').pop();
+  const title = clean(tags.title || t?.title || file || 'Nothing playing');
+  const artist = clean(tags.artist || t?.artist || ar?.name || '');
+  const album = clean(tags.album || alb?.name || '');
+  const state = S.status === 'playing' ? ['PLAYING', 'g'] : S.status === 'paused' ? ['PAUSED', 'y'] : ['STOPPED', 'r'];
+  g.put(4, 1, state[0], state[1], {flash: S.status === 'paused'});
+  if (alb) g.put(4, 10, `Track ${alb.tracks.indexOf(t.id) + 1} of ${alb.tracks.length}`, 'c');
+  if (t) { const f = `${t.ext.toUpperCase()} ${t.kbps ? t.kbps + 'k' : ''}`.trim(); g.put(4, 39 - f.length, f, 'b'); }
+
+  // cover on the left
+  const cells = alb ? getCover(alb.id) : null;
+  drawCells(g, 5, 1, Array.isArray(cells) ? cells : record(), alb ? 'ap:' + alb.id : P.index);
+
+  // the words on the right
+  const R = 16;
+  let r = 5;
+  wrap(title, 23).slice(0, 2).forEach(l => { g.put(r, R, l, 'y', {dh: true}); r += 2; });
+  r++;
+  wrap(artist, 23).slice(0, 2).forEach(l => { g.put(r, R, l, 'c'); if (ar?.p) g.link(r, R, 40, ar.p); r++; });
+  wrap(album, 23).slice(0, 3).forEach(l => { g.put(r, R, l, 'w'); if (alb) g.link(r, R, 40, 'ap:' + alb.id); r++; });
+  const meta = [alb?.year || t?.year, t?.genre || alb?.genre].filter(Boolean).join('  ');
+  if (meta && r < 17) g.put(r, R, cut(meta, 23), 'g');
+
+  // progress: a mosaic bar you can click to seek
+  const dur = S.duration || t?.secs || 0, pos = S.position || 0;
+  const px = dur ? Math.round(pos / dur * 76) : 0;
+  for (let c = 0; c < 38; c++) {
+    let m = 0, done = 0;
+    for (let k = 0; k < 2; k++) {
+      const x = c * 2 + k;
+      if (x < px) { m |= (1 | 4 | 16) << k; done = 1; } else m |= 4 << k;
+    }
+    Object.assign(g.r[18][1 + c], {m, fg: done ? 'y' : 'b', link: dur ? 'sk:' + Math.round((c + 0.5) / 38 * dur) : null});
+  }
+  g.put(19, 1, fmtTime(pos), 'y');
+  const rest = '-' + fmtTime(dur - pos) + ' / ' + fmtTime(dur);
+  g.put(19, 39 - rest.length, rest, 'c');
+  // volume as ten blocks, each one a click target
+  g.put(19, 12, 'VOL', 'w');
+  const vol = S.vol || 0;
+  for (let k = 0; k < 10; k++) {
+    const on = vol >= (k + 1) * 10 - 5;
+    Object.assign(g.r[19][16 + k], {c: ' ', m: on ? 63 : 16 | 32, fg: on ? 'g' : 'b', link: 'vl:' + (k + 1) * 10});
+  }
+
+  ctl(20, 1, 'SHUFFLE', 'cmd:shuffle', S.shuffle);
+  ctl(20, 11, 'REPEAT', 'cmd:repeat', S.repeat);
+  ctl(20, 20, 'STOP', 'cmd:stop', false);
+  // what's next
+  const q = (S.queue || [])[0];
+  const nt = typeof q === 'number' ? trackOf(q) : null;
+  if (q != null) {
+    g.put(21, 1, 'NEXT', 'm');
+    g.put(21, 6, cut(nt ? `${nt.title} - ${nt.artist || artistOf(albumOf(nt.albumId).artistId).name}` : String(q).split('/').pop(), 33), 'w');
+    g.link(21, 0, 40, P.queue);
+  } else g.put(21, 1, S.shuffle ? 'Next: shuffled from cmus' : 'Next: from cmus\'s library', 'm');
+
+  navBar(g, 'r', 'w', ar?.p ? [cut(`${ar.name} ${ar.p}`, 22), 'ap:' + alb.id] : ['Album artists 100', P.index], [`Up next ${P.queue}`, P.queue]);
+  fastext(g, [['Prev', 'cmd:prev'], [S.status === 'playing' ? 'Pause' : 'Play', 'cmd:pause'], ['Next', 'cmd:next'],
+    alb ? ['Album', 'ap:' + alb.id] : ['Index', P.index]]);
+  return [g];
+}
+
+// 102: cmus's queue
+function buildQueue() {
+  const q = S.queue || [], per = 17;
+  const n = Math.max(1, Math.ceil(q.length / per));
+  const total = q.reduce((s, x) => s + (trackOf(x)?.secs || 0), 0);
+  return Array.from({length: n}, (_, si) => {
+    const g = new Grid();
+    banner(g, 'UP NEXT', 'w', 'm', 'Queue');
+    if (!S.running) g.put(6, 1, bridgeUp === false ? 'server.py is not answering.' : 'cmus is not running.', 'w');
+    else if (!q.length) wrap('The queue is empty. Select a track to play it and queue the rest of its album, or use QUEUE on an album page.', 38)
+      .forEach((l, i) => g.put(6 + i, 1, l, 'w'));
+    else {
+      g.put(4, 1, `${plural(q.length, 'track')}  ${fmtTime(total)}`, 'c');
+      subInd(g, si, n);
+      g.fill(5, 'm');
+      [[1, 'NO'], [5, 'TITLE / ARTIST'], [35, 'TIME']].forEach(([c, t]) => g.put(5, c, t, 'w'));
+      q.slice(si * per, si * per + per).forEach((x, i) => {
+        const r = 6 + i, k = si * per + i, t = trackOf(x);
+        g.put(r, 1, String(k + 1).padStart(3), 'y');
+        if (!t) { g.put(r, 5, cut(String(x).split('/').pop(), 34), 'w'); return; }
+        const who = t.artist || artistOf(albumOf(t.albumId).artistId).name;
+        g.put(r, 5, cut(t.title, 28), i % 2 ? 'c' : 'w');
+        if (t.title.length < 24) g.put(r, 6 + Math.min(t.title.length, 28), cut(who, 32 - Math.min(t.title.length, 28) - 1), 'm');
+        const s = fmtTime(t.secs); g.put(r, 39 - s.length, s, 'c');
+        g.link(r, 0, 40, 'pl:' + t.id);
+      });
+    }
+    navBar(g, 'm', 'w', [`Now playing ${P.now}`, P.now], ['Index 100', P.index]);
+    fastext(g, [['Now', P.now], ['Clear', 'cmd:clearq'], ['Shuffle', 'cmd:random'], ['Index', P.index]]);
+    return g;
+  });
+}
+
+// Two-line album entries (album, then artist), used by Recent and Lucky dip
+function albumList(g, list, extra) {
+  list.forEach((a, i) => {
+    const r = 5 + i * 2, ar = artistOf(a.artistId);
+    g.put(r, 1, cut(a.name, 33), i % 2 ? 'c' : 'w');
+    if (ar.p) g.put(r, 36, String(ar.p), 'y');
+    g.put(r + 1, 3, cut(ar.name + (a.year ? '  ' + a.year : ''), 24), 'g');
+    const e = extra(a);
+    if (e) g.put(r + 1, 39 - e.length, e, 'b');
+    g.link(r, 0, 40, 'ap:' + a.id).link(r + 1, 0, 40, 'ap:' + a.id);
+  });
+}
+
+function buildRecent() {
+  const list = [...LIB.albums].sort((a, b) => b.mtime - a.mtime).slice(0, 36), per = 9;
+  const n = Math.ceil(list.length / per);
+  return Array.from({length: n}, (_, si) => {
+    const g = new Grid();
+    banner(g, 'RECENT', 'c', 'b', 'Added');
+    g.put(4, 1, 'Newest albums in your folder', 'c');
+    subInd(g, si, n);
+    albumList(g, list.slice(si * per, si * per + per), a => dayName(new Date(a.mtime * 1000)) + ' ' + new Date(a.mtime * 1000).getFullYear());
+    navBar(g, 'b', 'w', ['Lucky dip 104', P.dip], ['Index 100', P.index]);
+    fastext(g, [['Now', P.now], ['Lucky dip', P.dip], ['Stats', P.stats], ['Index', P.index]]);
+    return g;
+  });
+}
+
+function buildDip() {
+  const list = shuffle(LIB.albums).slice(0, 9);
+  const g = new Grid();
+  banner(g, 'LUCKY DIP', 'k', 'y');
+  g.put(4, 1, 'Nine albums picked at random', 'c');
+  albumList(g, list, a => plural(a.tracks.length, 'track'));
+  navBar(g, 'y', 'k', ['Another dip 104', P.dip], ['Index 100', P.index]);
+  fastext(g, [['Play 1st', 'pa:' + list[0].id], ['New dip', P.dip], ['Shuffle', 'cmd:random'], ['Index', P.index]]);
+  return [g];
+}
+
+// 105: counts, then albums by decade and the top genres as mosaic bar charts
+function buildStats() {
+  const secs = LIB.tracks.reduce((s, t) => s + (t.secs || 0), 0);
+  const fmt = {};
+  LIB.tracks.forEach(t => { fmt[t.ext] = (fmt[t.ext] || 0) + 1; });
+  const dec = {}, gen = {};
+  LIB.albums.forEach(a => {
+    if (/^\d{4}$/.test(a.year) && a.year >= '1900' && +a.year <= new Date().getFullYear() + 1) { const d = a.year.slice(0, 3) + '0s'; dec[d] = (dec[d] || 0) + 1; }
+    const gn = clean(a.genre);
+    if (gn && !/^(other|unknown|genre|www\.)/i.test(gn)) gen[gn] = (gen[gn] || 0) + 1;
+  });
+  const bars = (g, r0, rows, labelW) => {
+    const max = Math.max(...rows.map(x => x[1]), 1), w = 37 - labelW - 5;
+    rows.forEach(([label, v], i) => {
+      const r = r0 + i, px = Math.max(1, Math.round(v / max * w * 2));
+      g.put(r, 1, cut(label, labelW), i % 2 ? 'c' : 'w');
+      for (let c = 0; c < Math.ceil(px / 2); c++)
+        Object.assign(g.r[r][labelW + 2 + c], {c: ' ', m: (c * 2 + 1 < px ? 63 : 21), fg: ['y', 'g', 'c', 'm'][i % 4]});
+      g.put(r, labelW + 3 + Math.ceil(px / 2), String(v), 'w');
+    });
+  };
+  const head = (g, si) => { banner(g, 'LIBRARY', 'w', 'g', 'Stats'); subInd(g, si, 2); };
+  const g1 = new Grid(); head(g1, 0);
+  [['Artists', LIB.artists.length], ['Albums', LIB.albums.length], ['Tracks', LIB.tracks.length], ['Playing time', fmtLong(secs)],
+   ['Formats', Object.entries(fmt).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join('  ')]]
+    .forEach(([k, v], i) => { g1.put(5 + i, 1, k, 'c'); g1.put(5 + i, 14, cut(String(v), 25), 'y'); });
+  g1.put(11, 1, ' ALBUMS BY DECADE ', 'w', {bg: 'r'});
+  bars(g1, 12, Object.entries(dec).sort().slice(-10), 5);
+  const g2 = new Grid(); head(g2, 1);
+  g2.put(5, 1, ' TOP GENRES (ALBUMS) ', 'w', {bg: 'r'});
+  bars(g2, 6, Object.entries(gen).sort((a, b) => b[1] - a[1]).slice(0, 16), 14);
+  [g1, g2].forEach(g => {
+    navBar(g, 'g', 'k', ['Album artists 100', P.index], ['Recent 103', P.recent]);
+    fastext(g, [['Now', P.now], ['Recent', P.recent], ['Lucky dip', P.dip], ['Index', P.index]]);
+  });
+  return [g1, g2];
+}
+
+// 106: track titles containing every word typed, best matches first
+function searchTracks(q) {
+  const words = fold(q).toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const hits = LIB.tracks.filter(t => words.every(w => t.key.includes(w)));
+  const head = words.join(' ');
+  const rank = t => t.key === head ? 0 : t.key.startsWith(head) ? 1 : t.key.includes(head) ? 2 : 3;
+  return hits.sort((a, b) => rank(a) - rank(b) || a.key.localeCompare(b.key));
+}
+
+function buildSearch() {
+  const hits = searchTracks(st.query), shown = hits.slice(0, SEARCH_MAX), per = 17;
+  const n = Math.max(1, Math.ceil(shown.length / per)), pid = playingId();
+  return Array.from({length: n}, (_, si) => {
+    const g = new Grid();
+    banner(g, 'SEARCH', 'w', 'r', 'Titles');
+    g.put(4, 1, ' FIND ', 'k', {bg: 'y', box: true, link: 'sq:focus'});
+    g.put(4, 8, cut(st.query, 22), 'y', {link: 'sq:focus'});
+    g.put(4, 8 + Math.min(clean(st.query).length, 22), '_', 'y', {flash: true});
+    subInd(g, si, n);
+    if (!clean(st.query)) {
+      wrap('Type part of a track title in the box below the screen. Every word you type has to appear in the title.', 38)
+        .forEach((l, i) => g.put(6 + i, 1, l, 'w'));
+      g.put(10, 1, 'Select a result to play it.', 'c');
+      g.put(11, 1, 'ENTER plays the first, ESC leaves the box.', 'c');
+    } else if (!hits.length) g.put(6, 1, 'No track titles match.', 'w');
+    else {
+      g.fill(5, 'r');
+      g.put(5, 1, hits.length > SEARCH_MAX ? `FIRST ${SEARCH_MAX} OF ${hits.length}` : plural(hits.length, 'MATCH').replace('MATCHs', 'MATCHES'), 'w');
+      g.put(5, 26, 'ARTIST', 'w');
+      shown.slice(si * per, si * per + per).forEach((t, i) => {
+        const r = 6 + i, on = t.id === pid, alb = albumOf(t.albumId);
+        if (on) g.put(r, 0, '>', 'g', {flash: S.status === 'paused'});
+        g.put(r, 1, cut(t.title, 24), on ? 'g' : i % 2 ? 'c' : 'w');
+        g.put(r, 26, cut(t.artist || artistOf(alb.artistId).name, 13), 'm');
+        g.link(r, 0, 40, 'pl:' + t.id);
+      });
+    }
+    navBar(g, 'r', 'w', ['New search', 'sq:clear'], ['Index 100', P.index]);
+    fastext(g, shown.length ? [['Play 1st', 'pl:' + shown[0].id], ['Clear', 'sq:clear'], ['Now', P.now], ['Index', P.index]]
+      : [['Now', P.now], ['Clear', 'sq:clear'], ['Lucky dip', P.dip], ['Index', P.index]]);
+    return g;
+  });
+}
+
+function loadingPage(n) {
+  const g = new Grid();
+  banner(g, 'MUSIC', 'y', 'b', 'cmus');
+  g.put(4, 1, `Page ${n}`, 'c');
+  loadingLines(g, 6);
+  navBar(g, 'b', 'w', ['Index 100', P.index]);
+  fastext(g, [['Now', P.now], ['Up next', P.queue], ['Index', P.index]]);
+  g.loading = true;
+  return [g];
+}
+
+function notFound(n) {
+  const g = new Grid();
+  banner(g, 'MUSIC', 'y', 'b', 'cmus');
+  g.put(5, 1, `PAGE ${n}`, 'y', {dh: true});
+  g.put(7, 1, 'This page is not in transmission.', 'w');
+  g.put(9, 1, 'Pages available:', 'c');
+  menuLine(g, 10, 1, 30, 'Album artists', P.index, 'w');
+  MENU.forEach(([p, label], i) => menuLine(g, 11 + i, 1, 30, label, p, i % 2 ? 'w' : 'c'));
+  if (LIB) menuLine(g, 17, 1, 30, 'Artist pages', `${P.artist0}-${P.artist0 + Math.min(LIB.artists.length, MAX_ARTISTS) - 1}`, 'w', P.artist0);
+  navBar(g, 'b', 'w', ['Index 100', P.index]);
+  fastext(g, [['Now', P.now], ['Up next', P.queue], ['Recent', P.recent], ['Index', P.index]]);
+  return [g];
+}
+
+async function buildPage(n) {
+  if (n === P.index) return buildIndex();
+  if (n === P.now) return buildNow();
+  if (n === P.queue) return buildQueue();
+  if (!LIB && (n === P.recent || n === P.dip || n === P.stats || n === P.search || n >= P.artist0)) return loadingPage(n);
+  if (n === P.recent) return buildRecent();
+  if (n === P.dip) return buildDip();
+  if (n === P.stats) return buildStats();
+  if (n === P.search) return buildSearch();
+  const ar = n >= P.artist0 ? LIB.artists[n - P.artist0] : null;
+  if (ar && ar.p === n) return buildArtist(ar);
+  await sleep(1200); // keep "searching" a little, like a real set
+  return notFound(n);
+}
+
+/* ---------- Rendering ---------- */
+const $scr = document.getElementById('scr');
+const $hdr = document.getElementById('hdr');
+const $body = document.getElementById('body');
+const $searchPad = document.getElementById('searchPad'), $q = document.getElementById('q');
+
+function cellHTML(x) {
+  let cls = 'c f' + x.fg + ' g' + x.bg, inner = '', attr = '';
+  if (x.flash) cls += ' fl';
+  if (x.box) cls += ' bx';
+  if (x.dh === 1) cls += ' dh';
+  if (x.link != null) { cls += ' lk'; attr = ` data-l="${esc(x.link)}"`; }
+  if (x.m) {
+    cls += ' m';
+    for (let k = 0; k < 6; k++) inner += (x.m >> k) & 1 ? '<i class="on"></i>' : '<i></i>';
+  } else if (x.c !== ' ' && x.dh !== 2) inner = '<b>' + esc(x.c) + '</b>';
+  return `<span class="${cls}"${attr}>${inner}</span>`;
+}
+
+function renderGrid(g) {
+  let h = '';
+  for (let r = 1; r < 25; r++) h += '<div class="row">' + g.r[r].map(cellHTML).join('') + '</div>';
+  $body.innerHTML = h;
+  if (hovKey != null) { const k = hovKey; hovKey = null; highlight(k); }
+}
+
+/* ---------- State & navigation ---------- */
+const st = {target: 100, current: null, typed: '', hold: false, roll: 100, searching: false, pages: [], sub: 0, fast: [],
+  token: 0, size: 0, mix: false, loading: false, note: '', noteUntil: 0, query: ''};
+let rollTimer = null, typeTimer = null, hovKey = null, pointerHeld = false;
+
+function drawHeader() {
+  const d = new Date();
+  const pnum = st.hold ? 'HOLD' : 'P' + (st.typed ? st.typed.padEnd(3, '-') : st.target);
+  const tail = Date.now() < st.noteUntil ? [[' ' + st.note.slice(0, 21), 'r']] : [
+    [` ${DAYS[d.getDay()]} ${pad(d.getDate())} ${MONTHS[d.getMonth()]} `, 'w'],
+    [`${pad(d.getHours())}:${pad(d.getMinutes())}/${pad(d.getSeconds())}`, 'y'],
+  ];
+  const segs = [[' ', 'w'], [pnum, st.hold ? 'r' : 'w'], [' CMUSFAX ', 'c'], [String(st.roll), st.searching ? 'g' : 'w'], ...tail];
+  const cells = [];
+  for (const [s, fg] of segs) for (const c of s) cells.push({c, fg, bg: 'k'});
+  while (cells.length < 40) cells.push({c: ' ', fg: 'w', bg: 'k'});
+  $hdr.innerHTML = cells.slice(0, 40).map(cellHTML).join('');
+}
+
+function note(msg) { st.note = msg; st.noteUntil = Date.now() + 4000; drawHeader(); }
+
+function startRoll() {
+  st.searching = true;
+  if (rollTimer) return;
+  rollTimer = setInterval(() => { st.roll = st.roll >= 899 ? 100 : st.roll + 1; drawHeader(); }, 45);
+}
+function stopRoll(n) {
+  clearInterval(rollTimer); rollTimer = null;
+  st.searching = false; st.roll = n; drawHeader();
+}
+
+function show() {
+  const g = st.pages[st.sub];
+  renderGrid(g);
+  st.fast = g.fast || [];
+  st.loading = !!g.loading;
+  const searching = st.current === P.search;
+  if ($searchPad.hidden === searching) { $searchPad.hidden = !searching; fit(); }
+  $scr.classList.toggle('mix', st.mix);
+  document.querySelectorAll('[data-fx]').forEach((b, i) => {
+    const f = st.fast[i];
+    b.textContent = f ? f[0] : '—';
+    b.disabled = !f;
+  });
+}
+
+// sub: a subpage number, or {album: id} to open that album's tracks
+async function goto(n, push = true, sub = 0) {
+  n = Math.max(100, Math.min(899, n | 0));
+  const my = ++st.token;
+  st.target = n; st.typed = ''; setHold(false);
+  clearTimeout(typeTimer);
+  startRoll(); drawHeader();
+  const minWait = sleep(250 + Math.random() * 450);
+  let pages;
+  try { pages = await buildPage(n); } catch (e) { console.warn(e); pages = notFound(n); }
+  await minWait;
+  if (my !== st.token) return;
+  stopRoll(n);
+  st.current = n; st.pages = pages;
+  if (pages[0]?.loading) st.wantSub = sub; // open the subpage asked for once the library arrives
+  const k = typeof sub === 'object' ? pages.findIndex(g => g.albumId === sub.album) : sub;
+  st.sub = Math.max(0, Math.min(pages.length - 1, k));
+  show();
+  if (n === P.search && !coarse.matches) focusSearch(); // on a phone, tapping the box brings up the keyboard
+  if (push && location.hash !== '#' + n) history.pushState(null, '', '#' + n);
+}
+
+// Rebuild the page on screen in place (live player state, library arriving)
+function quietRebuild() {
+  const n = st.current;
+  if (n == null || st.searching || st.hold || pointerHeld) return;
+  if (n === P.dip && !st.loading) return; // a rebuild would draw a different dip
+  buildPage(n).then(pages => {
+    if (st.current !== n || st.searching) return;
+    const albumId = st.pages[st.sub]?.albumId, rel = st.sub - st.pages.findIndex(g => g.albumId === albumId);
+    st.pages = pages;
+    // stay on the same album (and part of it) even if the sub-index changed length
+    const k = albumId != null ? pages.findIndex(g => g.albumId === albumId) : -1;
+    st.sub = Math.min(pages.length - 1, k >= 0 ? k + rel : st.sub);
+    show();
+  }).catch(() => {});
+}
+
+// Called after every status poll: redraw whatever shows the player's state
+function liveUpdate() {
+  const sig = [bridgeUp, S.running, S.status, S.trackId, S.file, (S.queue || []).join(','), S.shuffle, S.repeat, S.vol].join('|');
+  const changed = sig !== lastSig;
+  lastSig = sig;
+  const n = st.current;
+  if (n === P.now) quietRebuild();
+  else if (changed && (n === P.index || n === P.queue || n === P.search || n >= P.artist0 || st.loading)) quietRebuild();
+}
+
+function subStep(k) {
+  const len = st.pages.length;
+  if (len < 2) return;
+  st.sub = (st.sub + k + len) % len;
+  show();
+}
+
+function setHold(v) {
+  st.hold = v;
+  document.getElementById('bHold').classList.toggle('on', v);
+  drawHeader();
+}
+
+// SIZE cycles normal -> top half double height -> bottom half -> normal
+function cycleSize() {
+  st.size = (st.size + 1) % 3;
+  $body.classList.toggle('sz1', st.size === 1);
+  $body.classList.toggle('sz2', st.size === 2);
+  document.getElementById('bSize').classList.toggle('on', st.size > 0);
+}
+
+function toggleMix() {
+  st.mix = !st.mix;
+  document.getElementById('bMix').classList.toggle('on', st.mix);
+  $scr.classList.toggle('mix', st.mix);
+}
+
+function digit(d) {
+  if (!st.typed && (d < 1 || d > 8)) return;
+  st.typed += d;
+  drawHeader();
+  clearTimeout(typeTimer);
+  if (st.typed.length === 3) goto(+st.typed);
+  else typeTimer = setTimeout(() => { st.typed = ''; drawHeader(); }, 5000);
+}
+
+function fastKey(i) { const f = st.fast[i]; if (f) follow(f[1]); }
+
+// Links: a page number, or an action
+function follow(l) {
+  l = String(l);
+  if (/^\d{3}$/.test(l)) return goto(+l);
+  const [k, v] = [l.slice(0, 2), l.slice(3)];
+  if (k === 'sp') { st.sub = Math.min(+v, st.pages.length - 1); show(); }
+  else if (k === 'ap') { const a = albumOf(+v), ar = a && artistOf(a.artistId); if (ar?.p) goto(ar.p, true, {album: a.id}); }
+  else if (k === 'pl') cmd('play', {t: v});
+  else if (k === 'pa') cmd('album', {a: v});
+  else if (k === 'sa') cmd('album', {a: v, shuffle: 1});
+  else if (k === 'qa') { cmd('queue', {a: v}); note('Album queued'); }
+  else if (k === 'pr') cmd('artist', {a: v});
+  else if (k === 'sr') cmd('artist', {a: v, shuffle: 1});
+  else if (k === 'sk') cmd('seek', {v});
+  else if (k === 'vl') cmd('vol', {v});
+  else if (k === 'sq') { if (v === 'clear') { $q.value = st.query = ''; redrawSearch(); } focusSearch(); }
+  else if (l.startsWith('cmd:')) cmd(l.slice(4));
+}
+
+function updateButtons() {
+  document.getElementById('bShuffle').classList.toggle('on', !!S.shuffle);
+  document.getElementById('bRepeat').classList.toggle('on', !!S.repeat);
+  document.getElementById('bPlay').textContent = S.status === 'playing' ? '⏸' : '▶';
+}
+
+/* ---------- Sizing ---------- */
+const measureCtx = document.createElement('canvas').getContext('2d');
+function fit() {
+  // side = phone held sideways: remote moves beside the screen
+  const side = innerWidth > innerHeight && innerHeight < 520 && innerWidth >= 560;
+  const narrow = !side && innerWidth < 600;
+  document.body.classList.toggle('side', side);
+  document.body.classList.toggle('narrow', narrow);
+  const $remote = document.getElementById('remote');
+  const bezK = side || narrow ? 0 : 1.1; // bezel as a multiple of cell width
+  let availW, availH;
+  if (side) {
+    availW = innerWidth - $remote.offsetWidth - 28;
+    availH = innerHeight - 8;
+  } else {
+    const remoteH = $remote.offsetHeight + document.getElementById('help').offsetHeight + (narrow ? 36 : 60);
+    availW = innerWidth - (narrow ? 8 : 32);
+    availH = Math.max(260, innerHeight - remoteH);
+  }
+  let cw = Math.min(availW / (40 + 2 * bezK), availH / (30 + 2 * bezK));
+  cw = Math.max(6, Math.floor(cw * 2) / 2);
+  const ch = Math.round(cw * 1.2);
+  const fs = ch * 1.12;
+  const root = document.documentElement.style;
+  root.setProperty('--cw', cw + 'px');
+  root.setProperty('--ch', ch + 'px');
+  root.setProperty('--fs', fs + 'px');
+  root.setProperty('--bez', Math.round(cw * bezK) + 'px');
+  measureCtx.font = `${fs}px VT323, ui-monospace, Consolas, monospace`;
+  const adv = measureCtx.measureText('M').width || fs * 0.5;
+  root.setProperty('--sx', Math.min(2.6, Math.max(0.6, cw * 0.88 / adv)).toFixed(3));
+}
+
+/* ---------- Wiring ---------- */
+const $digits = document.getElementById('digits');
+[1,2,3,4,5,6,7,8,9,0].forEach(d => {
+  const b = document.createElement('button');
+  b.textContent = d; b.addEventListener('click', () => digit(d));
+  $digits.appendChild(b);
+});
+document.querySelectorAll('[data-fx]').forEach(b => b.addEventListener('click', () => fastKey(+b.dataset.fx)));
+document.querySelectorAll('[data-cmd]').forEach(b => b.addEventListener('click', () =>
+  cmd(b.dataset.cmd, b.dataset.v ? {v: b.dataset.v} : {})));
+document.getElementById('bIndex').addEventListener('click', () => goto(P.index));
+document.getElementById('bNow').addEventListener('click', () => goto(P.now));
+document.getElementById('bPrev').addEventListener('click', () => subStep(-1));
+document.getElementById('bNext').addEventListener('click', () => subStep(1));
+document.getElementById('bHold').addEventListener('click', () => setHold(!st.hold));
+document.getElementById('bCrt').addEventListener('click', e => {
+  e.currentTarget.classList.toggle('on', $scr.classList.toggle('crt'));
+});
+document.getElementById('bSize').addEventListener('click', cycleSize);
+document.getElementById('bMix').addEventListener('click', toggleMix);
+// The search box: every keystroke redraws the results from subpage 1
+function redrawSearch() {
+  if (st.current !== P.search || !LIB) return;
+  st.pages = buildSearch(); st.sub = 0; show();
+}
+function focusSearch() { if (st.current === P.search) $q.focus({preventScroll: true}); }
+$q.addEventListener('input', () => { st.query = $q.value; redrawSearch(); });
+$q.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const t = searchTracks(st.query)[0]; if (t) cmd('play', {t: t.id}); }
+  else if (e.key === 'Escape') $q.blur();
+  else if (e.key === 'PageDown') subStep(1);
+  else if (e.key === 'PageUp') subStep(-1);
+  else return;
+  e.preventDefault();
+});
+document.getElementById('bRescan').addEventListener('click', () => { note('Rescanning library'); covers.clear(); loadLibrary(true); });
+
+// Never replace the page while a button is held down, or the browser drops the click
+document.addEventListener('pointerdown', () => { pointerHeld = true; }, true);
+['pointerup', 'pointercancel'].forEach(e => document.addEventListener(e, () => { pointerHeld = false; }, true));
+
+function highlight(key) {
+  if (key === hovKey) return;
+  $body.querySelectorAll('.hov').forEach(x => x.classList.remove('hov'));
+  hovKey = key;
+  if (key != null) $body.querySelectorAll(`[data-l="${CSS.escape(key)}"]`).forEach(x => x.classList.add('hov'));
+}
+
+// A finger is wider than a 10px teletext row: find a link in the row above/below
+const coarse = matchMedia('(pointer:coarse)');
+function nearLink(e) {
+  const g = st.pages[st.sub];
+  if (!g || !coarse.matches) return null;
+  const rc = $body.getBoundingClientRect();
+  const x = (e.clientX - rc.left) / (rc.width / 40), y = (e.clientY - rc.top) / (rc.height / 24);
+  const col = Math.floor(x), row = Math.floor(y) + 1; // grid row 0 is the header
+  const rows = y - Math.floor(y) < 0.5 ? [row - 1, row + 1] : [row + 1, row - 1];
+  for (const r of rows) {
+    if (r < 1 || r > 24) continue;
+    for (const c of [col, col - 1, col + 1]) if (c >= 0 && c < 40 && g.r[r][c].link != null) return String(g.r[r][c].link);
+  }
+  return null;
+}
+
+let swipedAt = 0;
+$body.addEventListener('click', e => {
+  if (Date.now() - swipedAt < 400) return;
+  const l = e.target.closest('[data-l]')?.dataset.l ?? nearLink(e);
+  if (l == null) return;
+  highlight(l); // visible while the page is being fetched
+  follow(l);
+  if (!/^\d{3}$/.test(l)) setTimeout(() => highlight(null), 600);
+});
+$body.addEventListener('mouseover', e => highlight(e.target.closest('[data-l]')?.dataset.l ?? null));
+$body.addEventListener('mouseleave', () => highlight(null));
+
+// Swipes: left/right = subpages, up/down = next/previous page
+let touch0 = null;
+$scr.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  touch0 = e.touches.length === 1 ? {x: t.clientX, y: t.clientY} : null;
+}, {passive: true});
+$scr.addEventListener('touchmove', e => { if (e.touches.length > 1) touch0 = null; }, {passive: true});
+$scr.addEventListener('touchcancel', () => { touch0 = null; });
+$scr.addEventListener('touchend', e => {
+  if (!touch0) return;
+  const t = e.changedTouches[0], dx = t.clientX - touch0.x, dy = t.clientY - touch0.y;
+  touch0 = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < Math.max(30, $scr.offsetWidth * 0.12)) return;
+  swipedAt = Date.now();
+  if (Math.abs(dx) > Math.abs(dy)) subStep(dx < 0 ? 1 : -1);
+  else goto((st.current || st.target) + (dy < 0 ? 1 : -1));
+});
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target === $q) return; // typing a search: the box's own handler deals with it
+  const k = e.key, kl = k.toLowerCase();
+  if (/^[0-9]$/.test(k)) digit(+k);
+  else if (k === 'ArrowRight') subStep(1);
+  else if (k === 'ArrowLeft') subStep(-1);
+  else if (k === 'ArrowUp') goto((st.current || st.target) + 1);
+  else if (k === 'ArrowDown') goto((st.current || st.target) - 1);
+  else if ('rgyc'.includes(kl) && k.length === 1) fastKey('rgyc'.indexOf(kl));
+  else if (k === ' ' || kl === 'c') cmd('pause');
+  else if (kl === 'x') cmd('resume');
+  else if (kl === 'z') cmd('prev');
+  else if (kl === 'b') cmd('next');
+  else if (kl === 'v') cmd('stop');
+  else if (k === ',') cmd('seek', {v: '-10'});
+  else if (k === '.') cmd('seek', {v: '+10'});
+  else if (k === '+' || k === '=') cmd('vol', {v: '+5'});
+  else if (k === '-' || k === '_') cmd('vol', {v: '-5'});
+  else if (kl === 's') cmd('shuffle');
+  else if (kl === 'l') cmd('repeat');
+  else if (k === '/') goto(P.search);
+  else if (kl === 'h') setHold(!st.hold);
+  else if (kl === 'i') goto(P.index);
+  else if (kl === 'n') goto(P.now);
+  else if (kl === 'd') cycleSize();
+  else if (kl === 'm') toggleMix();
+  else return;
+  e.preventDefault();
+});
+
+const hashPage = () => { const m = /^#(\d{3})$/.exec(location.hash); return m ? +m[1] : null; };
+const hashSub = () => +(/^#\d{3}\.(\d+)$/.exec(location.hash)?.[1] || 1) - 1; // #212.3 opens subpage 3
+addEventListener('popstate', () => { const n = hashPage(); if (n && n !== st.target) goto(n, false); });
+addEventListener('resize', fit);
+
+setInterval(() => { if (!rollTimer) drawHeader(); }, 1000);
+setInterval(pollStatus, STATUS_MS);
+
+fit();
+drawHeader();
+document.fonts?.load('20px VT323').then(fit, () => {});
+const start = hashPage() || +(/^#(\d{3})/.exec(location.hash)?.[1] || 100), startSub = hashSub();
+history.replaceState(null, '', '#' + start);
+pollStatus().then(() => goto(start, false, startSub)).then(() => loadLibrary());
+</script>
+</body>
+</html>
