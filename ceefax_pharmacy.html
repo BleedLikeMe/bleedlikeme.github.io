@@ -639,8 +639,8 @@ function codeProducts(d, v) {
   const lt = v.letter, [prev, next] = neighbours(d.items, v);
   const lines = [linked([[1, `All ${v.rows.length} products`, 'g']], v.p + '/0')];
   v.rows.forEach((r, k) => {
-    lines.push(linked([[1, clean(r.rest).slice(0, 17), k % 2 ? 'c' : 'w'], [19, r.size.padStart(4), 'y'],
-      [24, clean(r.can).slice(0, 5), 'g'], [30, clean(r.ppm).slice(0, 9), 'c']], `${v.p}/${k + 1}`));
+    lines.push(linked([[1, clean(r.rest).slice(0, 14), k % 2 ? 'c' : 'w'], [16, r.size.padStart(4), 'y'],
+      [21, clean(r.can).slice(0, 5), 'g'], [27, clean(r.ppm).slice(0, 3), 'c'], [31, clean(r.bulk).slice(0, 9), 'm']], `${v.p}/${k + 1}`));
   });
   const chunks = paginate(lines, 16);
   return chunks.map((ch, si) => {
@@ -649,7 +649,7 @@ function codeProducts(d, v) {
     g.put(4, 1, clean(v.name).slice(0, 34), 'y');
     subInd(g, si, chunks.length);
     g.fill(5, band);
-    [[1, 'PRODUCT'], [19, 'PACK'], [24, 'CAN'], [30, 'PPM']].forEach(([c, t]) => g.put(5, c, t, ink));
+    [[1, 'PRODUCT'], [16, 'PACK'], [21, 'CAN'], [27, 'PPM'], [31, 'BULK']].forEach(([c, t]) => g.put(5, c, t, ink));
     g.put(6, 1, 'Select a product:', 'c');
     putLines(g, ch, 7);
     itemNav(g, band, ink, v, next);
