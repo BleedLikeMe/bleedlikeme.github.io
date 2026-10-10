@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-GB" xml:lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Derek Reid" />
+  <title>Can We Sing a Rainbow?</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for citations */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+      margin-bottom: 0em;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }  </style>
+  <link rel="stylesheet" href="rainbow.css" />
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Can We Sing a Rainbow?</h1>
+<p class="subtitle">On the Absence of Radio Rainbows and the
+Sonification of the Optical One</p>
+<p class="author">Derek Reid</p>
+<p class="date">Summer 2026</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>The children’s song exhorts us to “sing a rainbow”, but the physics
+of doing so has received surprisingly little attention. We first ask
+whether rainbows emit, or could be detected at, radio frequencies. A
+rainbow is not a source but a caustic: sunlight refracted and internally
+reflected by raindrops into a cone of half-angle about 42<span
+class="math inline">\(^\circ\)</span> around the antisolar point, unique
+to each observer. The mechanism needs droplets much larger than the
+wavelength. For radio waves on millimetre-scale raindrops, scattering is
+Rayleigh-like and featureless; at sub-millimetre wavelengths, where the
+sizes become comparable, absorption by water suppresses the internal ray
+paths. We therefore predict, with some confidence and mild
+disappointment, that there are no natural radio rainbows.</p>
+<p>We then propose a large dielectric prism illuminated by the Sun and
+by artificial lamps. Solar microwave emission should be measurably
+refracted but negligibly dispersed, while the radio emission of lamps
+comes from their drive electronics, not their light. Finally we turn to
+the optical bow. Transposing the visible spectrum (430–750 THz) down by
+40 octaves maps it to roughly G4–F5, a span of about a minor seventh.
+Using synthesised audio from model spectra, we show that a continuous
+source such as sunlight sounds like band-limited noise, and a scan
+across the bow sounds like a filter sweeping open from the low end.
+Line-spectrum sources fare better: a fluorescent tube produces a
+recognisable whole-tone chord. We describe simple experiments with
+fluorescent tubes that let the reader hear this for themselves. We
+conclude that one can indeed sing a rainbow, provided one is content to
+hum.</p>
+<p><strong>Keywords:</strong> rainbow; Mie scattering; microwave
+refraction; sonification; spectral lines; fluorescent lamps</p>
+</div>
+</header>
+<h1 data-number="1" id="introduction"><span
+class="header-section-number">1</span> Introduction</h1>
+<p>We can sing a rainbow, but only after lowering it by 40 octaves, and
+it mostly hums. This paper explains why, and why no radio telescope will
+do it for us.</p>
+<p>The song “I Can Sing a Rainbow” <span class="citation"
+data-cites="hamilton1955">(<a href="#ref-hamilton1955"
+role="doc-biblioref">Hamilton 1955</a>)</span> lists the colours red,
+yellow, pink, green, purple, orange and blue, and invites the listener
+to sing them. Taken literally, this raises three questions:</p>
+<ol>
+<li><p>Does a rainbow emit anything outside the visible band, in
+particular radio waves that a receiver could turn into sound?</p></li>
+<li><p>If not, can we build an artificial rainbow, a large prism, that
+spreads radio waves the way a rainbow spreads light?</p></li>
+<li><p>Failing both, what would the visible rainbow sound like if we
+simply moved its frequencies down into the range of hearing?</p></li>
+</ol>
+<p>A rainbow is not an object. Sunlight enters a spherical raindrop,
+refracts, reflects once off the back surface and refracts out again.
+Light leaving the drop piles up near a minimum deviation angle of about
+138<span class="math inline">\(^\circ\)</span>, so it returns about
+42<span class="math inline">\(^\circ\)</span> from the antisolar point
+<span class="citation" data-cites="descartes1637">(<a
+href="#ref-descartes1637" role="doc-biblioref">Descartes
+1637</a>)</span>; for modern accounts see <span class="citation"
+data-cites="nussenzveig1977">Nussenzveig (<a href="#ref-nussenzveig1977"
+role="doc-biblioref">1977</a>)</span>, <span class="citation"
+data-cites="lee2001">Lee and Fraser (<a href="#ref-lee2001"
+role="doc-biblioref">2001</a>)</span> and <span class="citation"
+data-cites="adam2002">Adam (<a href="#ref-adam2002"
+role="doc-biblioref">2002</a>)</span>. Because the refractive index of
+water falls slightly from violet to red, each colour has its own angle,
+and the bow is spread from about 40.5<span
+class="math inline">\(^\circ\)</span> (violet) to 42.4<span
+class="math inline">\(^\circ\)</span> (red). Every observer sees a
+different set of drops, so there is no single rainbow to point an
+antenna at.</p>
+<p>Rainbows and sound have met before, in three different senses. True
+acoustic rainbows, caustics just like the optical one, appear when sound
+scatters from fluid spheres in which it travels more slowly than in the
+surrounding water <span class="citation" data-cites="marston1983">(<a
+href="#ref-marston1983" role="doc-biblioref">Marston and Langley
+1983</a>)</span>. Acoustic “rainbow trapping” metamaterials <span
+class="citation" data-cites="zhu2013">(<a href="#ref-zhu2013"
+role="doc-biblioref">Zhu et al. 2013</a>)</span> and topology-optimised
+acoustic prisms <span class="citation" data-cites="christiansen2025">(<a
+href="#ref-christiansen2025" role="doc-biblioref">Christiansen,
+Fernandez-Grande, and Sigmund 2025</a>)</span> sort broadband sound by
+frequency into different positions or directions: rainbows in the
+colour-sorting sense, not the 42<span
+class="math inline">\(^\circ\)</span> sense. This paper asks the reverse
+question: not how to make a rainbow out of sound, but how to make sound
+out of a rainbow.</p>
+<h1 data-number="2" id="why-there-are-no-radio-rainbows"><span
+class="header-section-number">2</span> Why there are no radio
+rainbows</h1>
+<p>A rainbow needs drops much larger than the wavelength, and at radio
+wavelengths raindrops are hundreds to thousands of times too small. The
+relevant number is the size parameter, the drop’s circumference divided
+by the wavelength, <span class="math display">\[x = \frac{2\pi
+a}{\lambda},\]</span> where <span class="math inline">\(a\)</span> is
+the drop radius. The geometric-optics rainbow of Section 1 is accurate
+for <span class="math inline">\(x\)</span> of several hundred or more.
+Supernumerary bows and Airy’s wave correction <span class="citation"
+data-cites="airy1838">(<a href="#ref-airy1838" role="doc-biblioref">Airy
+1838</a>)</span> appear as <span class="math inline">\(x\)</span> falls
+into the tens to low thousands. Below <span
+class="math inline">\(x\approx1\)</span> there is no ray path at all:
+the drop scatters as a tiny dipole (Rayleigh scattering), with intensity
+falling as the fourth power of wavelength and no preferred angle near
+42<span class="math inline">\(^\circ\)</span> (Table <a
+href="#tab:regimes" data-reference-type="ref"
+data-reference="tab:regimes">1</a>).</p>
+<div id="tab:regimes">
+<table>
+<caption><strong>Table 1.</strong> Size parameter of a 1 mm raindrop
+across the spectrum, and whether a bow can form.</caption>
+<thead>
+<tr>
+<th style="text-align: left;">Band</th>
+<th style="text-align: left;">Wavelength</th>
+<th style="text-align: right;"><span
+class="math inline">\(x\)</span></th>
+<th style="text-align: left;">Regime</th>
+<th style="text-align: left;">Rainbow?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Visible light</td>
+<td style="text-align: left;">0.4–0.7 m</td>
+<td
+style="text-align: right;">9<span>,</span>000–16<span>,</span>000</td>
+<td style="text-align: left;">Geometric optics</td>
+<td style="text-align: left;">Yes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Far infrared / THz</td>
+<td style="text-align: left;">0.1–1 mm</td>
+<td style="text-align: right;">6–60</td>
+<td style="text-align: left;">Mie resonances</td>
+<td style="text-align: left;">No: water absorbs the internal ray within
+<span class="math inline">\({\sim}0.1\)</span> mm</td>
+</tr>
+<tr>
+<td style="text-align: left;">Millimetre wave (100 GHz)</td>
+<td style="text-align: left;">3 mm</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">Mie</td>
+<td style="text-align: left;">No</td>
+</tr>
+<tr>
+<td style="text-align: left;">Weather radar (3 GHz)</td>
+<td style="text-align: left;">10 cm</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: left;">Rayleigh</td>
+<td style="text-align: left;">No</td>
+</tr>
+<tr>
+<td style="text-align: left;">FM radio (100 MHz)</td>
+<td style="text-align: left;">3 m</td>
+<td style="text-align: right;">0.002</td>
+<td style="text-align: left;">Rayleigh</td>
+<td style="text-align: left;">No</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The one band where the sizes almost match, the far infrared, is
+closed by water itself. Liquid water absorbs so strongly there that
+light entering a drop is gone long before it reaches the back surface to
+reflect. With no internal reflection, there is no bow.</p>
+<p>Rain does interact with radio, and usefully: weather radar measures
+exactly this Rayleigh scattering <span class="citation"
+data-cites="noaanws">(<a href="#ref-noaanws" role="doc-biblioref">NOAA
+NWS n.d.</a>)</span>, whose strength scales with the sixth power of drop
+diameter. But radar echoes come back in all directions, with no bright
+42<span class="math inline">\(^\circ\)</span> cone. A radio rainbow
+would need drops about a metre across, which is not a form of weather we
+would wish on anyone.</p>
+<h1 data-number="3"
+id="the-giant-prism-sunlight-versus-lamps-at-radio-frequencies"><span
+class="header-section-number">3</span> The giant prism: sunlight versus
+lamps at radio frequencies</h1>
+<p>A metre-scale prism of the right material will bend the Sun’s
+microwaves by tens of degrees but will barely spread them into a
+spectrum, and it does nothing at all to the radio noise from lamps. If
+nature won’t make a radio rainbow, we can try to build one. A prism
+avoids the size problem of Section 2: we can make it as large as we
+like.</p>
+<h2 data-number="3.1"
+id="the-source-the-sun-is-a-radio-transmitter"><span
+class="header-section-number">3.1</span> The source: the Sun is a radio
+transmitter</h2>
+<p>The Sun is bright at centimetre wavelengths, with a brightness
+temperature of order 10<span>,</span>000 K at 10–12 GHz. That is easily
+detected with a domestic satellite dish, Ku-band LNB and
+satellite-finder meter or software-defined radio; a commercial
+satellite-TV dish has been used to measure the Sun’s flux at 11.2 GHz
+<span class="citation" data-cites="mandal2016">(<a
+href="#ref-mandal2016" role="doc-biblioref">Mandal et al.
+2016</a>)</span>. Daily 10.7 cm solar flux (the F10.7 index) has been a
+standard space-weather measurement since 1947 <span class="citation"
+data-cites="noaaswpc">(<a href="#ref-noaaswpc" role="doc-biblioref">NOAA
+SWPC n.d.</a>)</span>.</p>
+<h2 data-number="3.2" id="the-experiment"><span
+class="header-section-number">3.2</span> The experiment</h2>
+<ol>
+<li><p>Mount a satellite dish (about 80 cm) with a Ku-band LNB
+(10.7–12.75 GHz) on a steerable mount, and log signal strength.</p></li>
+<li><p>Map the Sun with no prism: a drift scan gives its position and
+the dish’s beam width (about 2<span
+class="math inline">\(^\circ\)</span> at 11.7 GHz for an 80 cm
+dish).</p></li>
+<li><p>Place a 60<span class="math inline">\(^\circ\)</span> prism
+across the dish aperture. It must be at least as large as the dish,
+which is why the prism needs faces of a metre or more.</p></li>
+<li><p>Map the Sun again. The peak should move by the prism’s deviation
+angle.</p></li>
+<li><p>Repeat at the band’s two ends (10.7 and 12.75 GHz) to look for
+dispersion: a shift of peak position between them.</p></li>
+</ol>
+<h2 data-number="3.3" id="what-to-build-it-from"><span
+class="header-section-number">3.3</span> What to build it from</h2>
+<p>The deviation at minimum deviation, for apex angle <span
+class="math inline">\(A\)</span> and refractive index <span
+class="math inline">\(n\)</span>, is <span class="math display">\[D =
+2\arcsin\!\left(n\sin\frac{A}{2}\right) - A .\]</span> The material
+matters more than the size: it must be transparent at 12 GHz, not just
+in visible light (Table <a href="#tab:materials"
+data-reference-type="ref" data-reference="tab:materials">2</a>).</p>
+<div id="tab:materials">
+<table>
+<caption><strong>Table 2.</strong> Candidate prism materials at about
+12 GHz. Deviations are for a 60<span
+class="math inline">\(^\circ\)</span> prism at minimum
+deviation.</caption>
+<thead>
+<tr>
+<th style="text-align: left;">Material</th>
+<th style="text-align: center;"><span
+class="math inline">\(n\)</span></th>
+<th style="text-align: center;">Loss</th>
+<th style="text-align: center;">Deviation</th>
+<th style="text-align: left;">Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">PTFE (Teflon)</td>
+<td style="text-align: center;">1.44</td>
+<td style="text-align: center;"><span
+class="math inline">\({\sim}0.3\)</span> dB/m</td>
+<td style="text-align: center;"><span
+class="math inline">\({\sim}32^\circ\)</span></td>
+<td style="text-align: left;">Ideal, but about a tonne and costly</td>
+</tr>
+<tr>
+<td style="text-align: left;">Paraffin (candle) wax</td>
+<td style="text-align: center;">1.5</td>
+<td style="text-align: center;"><span
+class="math inline">\(&lt;1\)</span> dB/m</td>
+<td style="text-align: center;"><span
+class="math inline">\({\sim}37^\circ\)</span></td>
+<td style="text-align: left;">Best value; the classic teaching-lab
+microwave prism <span class="citation" data-cites="umd">(<a
+href="#ref-umd" role="doc-biblioref">UMD n.d.</a>)</span></td>
+</tr>
+<tr>
+<td style="text-align: left;">Solid perspex (PMMA)</td>
+<td style="text-align: center;">1.6</td>
+<td style="text-align: center;"><span
+class="math inline">\({\sim}9\)</span> dB/m</td>
+<td style="text-align: center;"><span
+class="math inline">\({\sim}46^\circ\)</span></td>
+<td style="text-align: left;">Works, with some loss</td>
+</tr>
+<tr>
+<td style="text-align: left;">Window glass</td>
+<td style="text-align: center;"><span
+class="math inline">\({\sim}2.4\)</span></td>
+<td style="text-align: center;">10–20 dB/m</td>
+<td style="text-align: center;">none</td>
+<td style="text-align: left;">Total internal reflection (<span
+class="math inline">\(n&gt;2\)</span>); also too lossy and several
+tonnes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Perspex shell filled with water</td>
+<td style="text-align: center;"><span
+class="math inline">\({\sim}8\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({\sim}3\)</span> dB/mm</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: left;">Acts as a mirror (Section 3.4)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The expected result is clear refraction with almost no dispersion.
+PTFE and wax have almost no change in refractive index across 10–13 GHz,
+so the two ends of the band leave the prism within a small fraction of a
+degree of each other, well inside the dish’s 2<span
+class="math inline">\(^\circ\)</span> beam. We would have bent a radio
+beam, but not made a radio rainbow.</p>
+<h2 data-number="3.4" id="the-water-filled-perspex-prism"><span
+class="header-section-number">3.4</span> The water-filled perspex
+prism</h2>
+<p>A hollow perspex prism filled with water behaves completely
+differently in the two bands, and both results are worth having.</p>
+<p><strong>In visible light it is the best prism of all for this
+paper.</strong> The flat, parallel perspex walls add no net deviation,
+so the light is bent by the water alone. Water’s refractive index (about
+1.333) gives a minimum deviation of about 24<span
+class="math inline">\(^\circ\)</span>, and red to violet spread over
+about 1<span class="math inline">\(^\circ\)</span>, roughly 9 cm on a
+screen 5 m away. This is a rainbow made from rainbow material: the same
+water, with the same dispersion, that makes the real bow. A solid
+perspex prism (<span class="math inline">\(n\approx1.49\)</span>) bends
+light more (about 36<span class="math inline">\(^\circ\)</span>) and
+spreads it a little wider (about 1.5<span
+class="math inline">\(^\circ\)</span>). Mind the weight: an equilateral
+prism 2 m on a side and 2 m deep holds about 3.5 tonnes of water, and
+the bottom panel takes about 20 kPa of pressure. A 30 cm version works
+just as well optically.</p>
+<p><strong>At microwave frequencies it is a mirror.</strong> Water at
+10–12 GHz has a refractive index of about 8 and is extremely absorbing:
+microwaves lose about 3 dB per millimetre, which is why microwave ovens
+work. About 60% of the Sun’s signal would reflect off the first face and
+the rest would be absorbed within a few millimetres. Ironically, water
+is strongly dispersive at microwaves (its molecular relaxation peak is
+near 20 GHz), but, as with raindrops in the far infrared, the absorption
+hides it. At VHF (100 MHz) tap water is less lossy, and its index of
+about 9 makes total internal reflection catch everything: the critical
+angle is about 6<span class="math inline">\(^\circ\)</span>, so no ray
+could leave the second face of a 60<span
+class="math inline">\(^\circ\)</span> prism. A water prism is excellent
+for light and useless for radio.</p>
+<h2 data-number="3.5" id="artificial-lamps"><span
+class="header-section-number">3.5</span> Artificial lamps</h2>
+<p>Lamps make a useful control, because their radio output has nothing
+to do with their light. An incandescent filament is far smaller than a
+centimetre wavelength and is a poor (metallic) thermal emitter, so its
+thermal radio emission is undetectable beside the Sun. LEDs emit no
+measurable thermal radio at all. What a receiver near a lamp does pick
+up is electronic interference, from LED drivers, fluorescent ballasts
+and dimmers, at kHz to MHz frequencies. Those wavelengths are metres to
+kilometres, so a 2 m prism has no effect on them. The comparison is
+therefore: the Sun’s radio passes through the prism and is bent; the
+lamps’ “radio” never came from the light in the first place.</p>
+<h1 data-number="4" id="sonifying-the-optical-rainbow"><span
+class="header-section-number">4</span> Sonifying the optical
+rainbow</h1>
+<p>We hear light by dividing every optical frequency by <span
+class="math inline">\(2^{40}\)</span>, which lowers it exactly 40
+octaves and lands the whole visible spectrum between about F<span
+class="math inline">\(\sharp\)</span>4 and F5. Since a radio receiver
+cannot help us, we take the visible rainbow itself and move it into the
+audible range: <span class="math display">\[f_{\mathrm{audio}} =
+\frac{c}{\lambda\,2^{40}} .\]</span> Dividing by a power of two keeps
+every musical interval intact: two spectral lines a fifth apart in
+optical frequency are still a fifth apart in sound. Newton drew the same
+analogy in reverse, dividing the spectrum “after the manner of a Musical
+Chord” <span class="citation" data-cites="newton1730">(<a
+href="#ref-newton1730" role="doc-biblioref">Newton
+1704/1730</a>)</span>. Colour organs that play light like music go back
+to the eighteenth century <span class="citation"
+data-cites="peacock1988">(<a href="#ref-peacock1988"
+role="doc-biblioref">Peacock 1988</a>)</span>, and sonification is now
+an established tool in astronomy <span class="citation"
+data-cites="zanella2022 chandra2020">(<a href="#ref-zanella2022"
+role="doc-biblioref">Zanella et al. 2022</a>; <a href="#ref-chandra2020"
+role="doc-biblioref">NASA/Chandra 2020</a>)</span>. Unlike Newton’s
+division, ours has no free choices: the mapping is fixed by physics and
+one integer (Table <a href="#tab:notes" data-reference-type="ref"
+data-reference="tab:notes">3</a>).</p>
+<div id="tab:notes">
+<table>
+<caption><strong>Table 3.</strong> The visible spectrum transposed down
+40 octaves.</caption>
+<thead>
+<tr>
+<th style="text-align: right;">Wavelength</th>
+<th style="text-align: left;">Colour</th>
+<th style="text-align: right;">Audio frequency</th>
+<th style="text-align: left;">Nearest note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">750 nm</td>
+<td style="text-align: left;">Deep red (limit of vision)</td>
+<td style="text-align: right;">364 Hz</td>
+<td style="text-align: left;">F<span
+class="math inline">\(\sharp\)</span>4</td>
+</tr>
+<tr>
+<td style="text-align: right;">700 nm</td>
+<td style="text-align: left;">Red</td>
+<td style="text-align: right;">390 Hz</td>
+<td style="text-align: left;">G4</td>
+</tr>
+<tr>
+<td style="text-align: right;">650 nm</td>
+<td style="text-align: left;">Red</td>
+<td style="text-align: right;">420 Hz</td>
+<td style="text-align: left;">G<span
+class="math inline">\(\sharp\)</span>4</td>
+</tr>
+<tr>
+<td style="text-align: right;">605 nm</td>
+<td style="text-align: left;">Orange</td>
+<td style="text-align: right;">451 Hz</td>
+<td style="text-align: left;">A4 (sharp)</td>
+</tr>
+<tr>
+<td style="text-align: right;">580 nm</td>
+<td style="text-align: left;">Yellow</td>
+<td style="text-align: right;">470 Hz</td>
+<td style="text-align: left;">A<span
+class="math inline">\(\sharp\)</span>4</td>
+</tr>
+<tr>
+<td style="text-align: right;">530 nm</td>
+<td style="text-align: left;">Green</td>
+<td style="text-align: right;">515 Hz</td>
+<td style="text-align: left;">C5 (flat)</td>
+</tr>
+<tr>
+<td style="text-align: right;">470 nm</td>
+<td style="text-align: left;">Blue</td>
+<td style="text-align: right;">580 Hz</td>
+<td style="text-align: left;">D5</td>
+</tr>
+<tr>
+<td style="text-align: right;">430 nm</td>
+<td style="text-align: left;">Violet-blue</td>
+<td style="text-align: right;">634 Hz</td>
+<td style="text-align: left;">D<span
+class="math inline">\(\sharp\)</span>5</td>
+</tr>
+<tr>
+<td style="text-align: right;">400 nm</td>
+<td style="text-align: left;">Violet</td>
+<td style="text-align: right;">682 Hz</td>
+<td style="text-align: left;">F5 (flat)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The whole of human vision fits in a little under an octave, from
+750 nm to 400 nm, a frequency ratio of 1.875. The ear hears about ten
+octaves; the eye sees less than one. The rainbow is a very short
+song.</p>
+<h4 class="unnumbered" id="synthesis.">Synthesis.</h4>
+<p>Each clip is synthesised from a model spectrum, not recorded from a
+real instrument; Section 6 describes how to measure the real ones.</p>
+<ul>
+<li><p>Continuous spectra (the Sun, a filament, an LED’s phosphor)
+become shaped noise. We build the sound’s spectrum directly: each audio
+frequency gets the amplitude of the light at its corresponding
+wavelength, with random phase, and an inverse Fourier transform gives
+the waveform. This is the correct sound of incoherent thermal light,
+which has random phases.</p></li>
+<li><p>Spectral lines (mercury, sodium, hydrogen, neon, the rare-earth
+phosphors in fluorescent tubes) become near-pure tones at their
+transposed frequencies, with relative loudness set by their relative
+power.</p></li>
+<li><p>The Sun uses a 5778 K blackbody with the strongest Fraunhofer
+absorption lines cut in. The incandescent lamp uses 2700 K.</p></li>
+<li><p>The rainbow scan uses Airy’s theory <span class="citation"
+data-cites="airy1838">(<a href="#ref-airy1838" role="doc-biblioref">Airy
+1838</a>)</span> for each of 90 wavelengths, with 0.25 mm drops, smeared
+by the Sun’s 0.53<span class="math inline">\(^\circ\)</span> disc.
+Water’s refractive index follows a Cauchy fit (1.3435 at 404 nm, 1.3308
+at 706 nm), placing the primary bow between 40.5<span
+class="math inline">\(^\circ\)</span> (violet) and 42.4<span
+class="math inline">\(^\circ\)</span> (red).</p></li>
+<li><p>All clips are normalised to the same loudness (<span
+class="math inline">\(-20\)</span> dBFS RMS), 8 s long, 44.1 kHz mono.
+We do not weight by the eye’s sensitivity, so a clip sounds like the
+light’s physical spectrum, not its perceived colour.</p></li>
+</ul>
+<h1 data-number="5" id="results-what-light-sounds-like"><span
+class="header-section-number">5</span> Results: what light sounds
+like</h1>
+<p>Smooth spectra hiss and line spectra play chords (Figure <a
+href="#fig:sources" data-reference-type="ref"
+data-reference="fig:sources">1</a>). Sunlight and lamps with continuous
+spectra sound like wind through a narrow filter, while gas-discharge
+lamps produce recognisable notes, and the fluorescent tube plays a
+whole-tone chord. Table <a href="#tab:clips" data-reference-type="ref"
+data-reference="tab:clips">4</a> describes each clip.</p>
+<figure id="fig:sources">
+<img src="fig_sources.svg" />
+<figcaption><strong>Figure 1.</strong> Model spectra of seven light
+sources, transposed down 40 octaves onto a musical axis. Continuous
+sources (grey areas) are heard as hiss; line sources (bars) are heard as
+notes. The fluorescent tube (blue) lands on A4, B4, C<span
+class="math inline">\(\sharp\)</span>5 and D<span
+class="math inline">\(\sharp\)</span>5, each about 20 cents sharp.
+Heights are relative power within each source.</figcaption>
+</figure>
+<div id="tab:clips">
+<table>
+<caption><strong>Table 4.</strong> The ten supplementary audio clips.
+Files are named <code>NN_description.wav</code>.</caption>
+<thead>
+<tr>
+<th style="text-align: right;">Clip</th>
+<th style="text-align: left;">Source</th>
+<th style="text-align: left;">What you hear</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">01
+<audio controls preload="none" src="../audio/01_sunlight.wav"></audio></td>
+<td style="text-align: left;">Sunlight (5778 K)</td>
+<td style="text-align: left;">Band-limited hiss from about 364 to
+718 Hz, centred near 507 Hz. Like wind, or a distant waterfall.</td>
+</tr>
+<tr>
+<td style="text-align: right;">02
+<audio controls preload="none" src="../audio/02_incandescent_2700K.wav"></audio></td>
+<td style="text-align: left;">Filament bulb (2700 K)</td>
+<td style="text-align: left;">The same hiss tilted downward, centred
+near 434 Hz. Audibly darker: the bulb’s “warm white” is a warm
+hiss.</td>
+</tr>
+<tr>
+<td style="text-align: right;">03
+<audio controls preload="none" src="../audio/03_white_led.wav"></audio></td>
+<td style="text-align: left;">White LED</td>
+<td style="text-align: left;">A whistle near 606 Hz (the 450 nm blue
+chip) over a broad hiss (the yellow phosphor).</td>
+</tr>
+<tr>
+<td style="text-align: right;">04
+<audio controls preload="none" src="../audio/04_fluorescent_tube.wav"></audio></td>
+<td style="text-align: left;">Triphosphor fluorescent tube</td>
+<td style="text-align: left;">A chord: A4, B4, C<span
+class="math inline">\(\sharp\)</span>5 and D<span
+class="math inline">\(\sharp\)</span>5, each about 20 cents sharp, with
+faint A<span class="math inline">\(\sharp\)</span>4 and E5. A whole-tone
+cluster over a soft hiss.</td>
+</tr>
+<tr>
+<td style="text-align: right;">05
+<audio controls preload="none" src="../audio/05_low_pressure_sodium.wav"></audio></td>
+<td style="text-align: left;">Low-pressure sodium lamp</td>
+<td style="text-align: left;">A single note, A<span
+class="math inline">\(\sharp\)</span>4 at 463 Hz, that swells and fades
+about every two seconds.</td>
+</tr>
+<tr>
+<td style="text-align: right;">06
+<audio controls preload="none" src="../audio/06_hydrogen_tube.wav"></audio></td>
+<td style="text-align: left;">Hydrogen discharge tube</td>
+<td style="text-align: left;">G<span
+class="math inline">\(\sharp\)</span>4, C<span
+class="math inline">\(\sharp\)</span>5, D<span
+class="math inline">\(\sharp\)</span>5 and E5: a C<span
+class="math inline">\(\sharp\)</span> minor chord with an added
+ninth.</td>
+</tr>
+<tr>
+<td style="text-align: right;">07
+<audio controls preload="none" src="../audio/07_neon_sign.wav"></audio></td>
+<td style="text-align: left;">Neon sign</td>
+<td style="text-align: left;">Sixteen lines packed between G4 and A<span
+class="math inline">\(\sharp\)</span>4. A dense, beating tone cluster,
+like a swarm of bees.</td>
+</tr>
+<tr>
+<td style="text-align: right;">08
+<audio controls preload="none" src="../audio/08_rainbow_scan_outside_to_inside.wav"></audio></td>
+<td style="text-align: left;">A scan across the rainbow</td>
+<td style="text-align: left;">Silence, then a low hiss that brightens
+from the bottom up, then a steady full-band hiss.</td>
+</tr>
+<tr>
+<td style="text-align: right;">09
+<audio controls preload="none" src="../audio/09_sing_a_rainbow.wav"></audio></td>
+<td style="text-align: left;">The song’s seven colours</td>
+<td style="text-align: left;">G<span
+class="math inline">\(\sharp\)</span>4, A<span
+class="math inline">\(\sharp\)</span>4, G<span
+class="math inline">\(\sharp\)</span>4 with hiss, C5, G<span
+class="math inline">\(\sharp\)</span>4 + D<span
+class="math inline">\(\sharp\)</span>5, A4, D5.</td>
+</tr>
+<tr>
+<td style="text-align: right;">10
+<audio controls preload="none" src="../audio/10_fluorescent_photodiode_100Hz.wav"></audio></td>
+<td style="text-align: left;">Fluorescent tube via a photodiode</td>
+<td style="text-align: left;">A 100 Hz mains buzz. Not transposed: what
+a real tube sounds like through a solar cell (Section 6).</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 class="unnumbered"
+id="the-sunlight-hiss-is-not-quite-featureless-but-it-sounds-so.">The
+sunlight hiss is not quite featureless, but it sounds so.</h4>
+<p>The Fraunhofer absorption lines are real gaps in the spectrum
+(visible as notches in Figure <a href="#fig:sources"
+data-reference-type="ref" data-reference="fig:sources">1</a>). But they
+are only about 0.1 nm wide, which becomes about 0.1 Hz in audio, far too
+narrow for the ear to notice in noise. To hear them they would have to
+be widened about a hundredfold.</p>
+<h4 class="unnumbered" id="the-sodium-lamp-beats.">The sodium lamp
+beats.</h4>
+<p>Its two D lines, at 588.995 and 589.592 nm <span class="citation"
+data-cites="nist">(<a href="#ref-nist" role="doc-biblioref">NIST
+n.d.</a>)</span>, transpose to 462.9 and 462.5 Hz. Two tones that close
+beat against each other at their difference, 0.47 Hz. The lamp plays one
+note that pulses slowly, like a singer breathing. This is the sodium
+doublet made audible: a fine-structure splitting caused by electron
+spin, heard as a tremolo.</p>
+<h4 class="unnumbered" id="the-rainbow-scan-fills-from-the-bottom.">The
+rainbow scan fills from the bottom.</h4>
+<p>Outside the primary bow lies Alexander’s dark band, which is silent
+(Figure <a href="#fig:scan" data-reference-type="ref"
+data-reference="fig:scan">2</a>). Moving inward, red appears first at
+42.4<span class="math inline">\(^\circ\)</span>, so the sound begins as
+a low hiss around G4. As each shorter wavelength joins (violet last, at
+40.5<span class="math inline">\(^\circ\)</span>), the upper edge of the
+hiss climbs, like a synthesiser filter opening. The sound’s centre of
+mass rises from about 410 to 560 Hz over the bow’s 2<span
+class="math inline">\(^\circ\)</span>, then settles into the steady
+full-spectrum hiss of the bright sky inside the bow, gently swelling
+with the supernumerary arcs. Because no colour switches off as you move
+inward, a rainbow is not a glissando but a crescendo of brightness from
+the bass upward.</p>
+<figure id="fig:scan">
+<img src="fig_scan.svg" />
+<figcaption><strong>Figure 2.</strong> Brightness of the primary bow
+(Airy theory, 0.25 mm drops, smeared by the solar disc) against
+scattering angle and transposed pitch. Reading left to right is clip 08:
+silence, a dark band that fills from the low notes upward, then the
+supernumerary arcs. The dashed line is the geometric-optics edge. Faint
+horizontal lines are solar Fraunhofer lines.</figcaption>
+</figure>
+<h4 class="unnumbered" id="singing-the-song.">Singing the song.</h4>
+<p>The song’s colours are red, yellow, pink, green, purple, orange and
+blue. Two are not in the rainbow at all. Pink is a desaturated red (red
+plus white), so it sounds as G<span
+class="math inline">\(\sharp\)</span>4 under a wash of hiss. Purple is
+red plus blue, which no single wavelength can make, so it sounds as two
+notes at once, G<span class="math inline">\(\sharp\)</span>4 and D<span
+class="math inline">\(\sharp\)</span>5, a perfect fifth. The resulting
+“melody” is G<span class="math inline">\(\sharp\)</span>, A<span
+class="math inline">\(\sharp\)</span>, G<span
+class="math inline">\(\sharp\)</span>, C, G<span
+class="math inline">\(\sharp\)</span>+D<span
+class="math inline">\(\sharp\)</span>, A, D. It is not Arthur Hamilton’s
+tune, and we do not recommend it to choirs.</p>
+<h1 data-number="6" id="fluorescent-tubes-experiments-to-try"><span
+class="header-section-number">6</span> Fluorescent tubes: experiments to
+try</h1>
+<p>Fluorescent tubes are the most musical light source in the home, and
+two cheap experiments let you hear them: one through their spectrum, one
+directly. Both use equipment costing a few pounds.</p>
+<h2 data-number="6.1" id="hear-the-chord-measure-the-spectrum"><span
+class="header-section-number">6.1</span> Hear the chord: measure the
+spectrum</h2>
+<ol>
+<li><p>Make a spectroscope from a cereal box, a narrow slit and a piece
+of CD or DVD as a diffraction grating, or buy a pocket
+spectroscope.</p></li>
+<li><p>Look at a fluorescent tube. Instead of a smooth rainbow you will
+see a handful of sharp coloured lines: violet and blue mercury lines, a
+bright green line, and a strong orange-red line from the europium
+phosphor.</p></li>
+<li><p>Photograph the spectrum with a phone held against the eyepiece.
+Calibrate the wavelength scale using two known lines: mercury green at
+546.1 nm and mercury blue at 435.8 nm.</p></li>
+<li><p>Read the brightness along the spectrum and replace the model
+spectrum in the accompanying generator with your measurement. You will
+hear your own lamp’s chord.</p></li>
+</ol>
+<h2 data-number="6.2"
+id="compare-tubes-and-see-whether-the-chord-changes"><span
+class="header-section-number">6.2</span> Compare tubes, and see whether
+the chord changes</h2>
+<ul>
+<li><p><strong>Warm white, cool white and daylight tubes</strong> use
+the same three phosphors in different proportions. Prediction: the same
+notes, with a different balance (warm white louder at A4, daylight
+louder at C<span class="math inline">\(\sharp\)</span>5 and D<span
+class="math inline">\(\sharp\)</span>5). The chord’s voicing changes,
+not its notes.</p></li>
+<li><p><strong>Old halophosphate tubes</strong> (common before the
+1990s) have broad emission bands, not sharp lines. Prediction: much more
+hiss and a far weaker chord.</p></li>
+<li><p><strong>Warm-up.</strong> Record the spectrum every 30 seconds
+after switching on a cold tube. Does the chord’s balance shift as the
+mercury vapour pressure rises? We have not tested this, and would like
+to know.</p></li>
+<li><p><strong>Sodium street lamp</strong> (low-pressure, the old
+deep-orange kind). One note, beating slowly (Section 5). The modern
+white LED street lamps that replaced them play the LED’s
+whistle-over-hiss instead.</p></li>
+</ul>
+<h2 data-number="6.3"
+id="listen-to-light-directly-with-a-solar-cell"><span
+class="header-section-number">6.3</span> Listen to light directly with a
+solar cell</h2>
+<p>This experiment involves no transposition: you hear the light’s
+flicker as it really is. It is a standard school practical <span
+class="citation" data-cites="iop">(<a href="#ref-iop"
+role="doc-biblioref">IOP n.d.</a>)</span>.</p>
+<ol>
+<li><p>Take a small solar cell (from a garden light) or a photodiode and
+solder it to a 3.5 mm jack.</p></li>
+<li><p>Plug it into an amplified computer speaker, or a computer’s line
+or microphone input with recording software.</p></li>
+<li><p>Point it at different light sources (Table <a href="#tab:flicker"
+data-reference-type="ref" data-reference="tab:flicker">5</a>).</p></li>
+</ol>
+<div id="tab:flicker">
+<table>
+<caption><strong>Table 5.</strong> What a solar cell connected to an
+amplifier hears from different light sources.</caption>
+<thead>
+<tr>
+<th style="text-align: left;">Light source</th>
+<th style="text-align: left;">Expected sound</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Sunlight</td>
+<td style="text-align: left;">Silence. Sunlight does not flicker, apart
+from slow changes as clouds pass.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Incandescent bulb</td>
+<td style="text-align: left;">A soft 100 Hz hum. The filament cools
+slightly between each mains half-cycle, but its heat smooths most of the
+flicker.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Fluorescent tube, magnetic ballast</td>
+<td style="text-align: left;">A loud, buzzy 100 Hz tone with strong
+harmonics (clip 10). Light output swings by 43–49% at 100 Hz <span
+class="citation" data-cites="wilkins1989">(<a href="#ref-wilkins1989"
+role="doc-biblioref">Wilkins et al. 1989</a>)</span>.</td>
+</tr>
+<tr>
+<td style="text-align: left;">Fluorescent tube or CFL, electronic
+ballast</td>
+<td style="text-align: left;">Nearly silent. The flicker is at
+20–60 kHz, above hearing; a bat detector will make it audible.</td>
+</tr>
+<tr>
+<td style="text-align: left;">LED bulb</td>
+<td style="text-align: left;">Anything from silence (good driver) to a
+loud 100 Hz buzz (cheap driver). This doubles as a quality test.</td>
+</tr>
+<tr>
+<td style="text-align: left;">TV remote control</td>
+<td style="text-align: left;">Clicks and chirps from its
+38 kHz-modulated infrared bursts.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In 50 Hz countries such as the UK, flicker is at 100 Hz because the
+light peaks on both halves of each mains cycle (120 Hz in 60 Hz
+countries). This experiment is the real-world answer to the
+sunlight-versus-lamps question of Section 3: the Sun is silent, and
+every lamp betrays its power supply.</p>
+<h2 data-number="6.4" id="safety"><span
+class="header-section-number">6.4</span> Safety</h2>
+<ul>
+<li><p>Never connect anything to the lamp’s wiring. The solar cell only
+needs to see the light.</p></li>
+<li><p>Don’t break fluorescent tubes or CFLs: they contain mercury.
+Dispose of them at a recycling point.</p></li>
+<li><p>Never look at the Sun, even through a spectroscope. Point the
+spectroscope at a white card lit by sunlight, or at blue sky.</p></li>
+</ul>
+<h1 data-number="7" id="discussion-and-conclusion"><span
+class="header-section-number">7</span> Discussion and conclusion</h1>
+<p>There are no radio rainbows, a radio prism bends without spreading,
+and the optical rainbow, lowered 40 octaves, hums a soft hiss a little
+under an octave wide. The song’s request can be met only in part.</p>
+<h4 class="unnumbered" id="what-we-can-and-cannot-claim.">What we can
+and cannot claim.</h4>
+<p>The physics of Sections 2 and 3 is standard and the numbers are
+robust to an order of magnitude. The sounds of Section 5 are faithful to
+their model spectra, but they are syntheses, not recordings: a measured
+spectrum (Section 6.1) would differ in detail, especially in the
+relative loudness of lines. The 40-octave transposition is a choice,
+though a natural one, since it is the power-of-two shift that places the
+visible band in the range of the singing voice. (Three octaves fewer,
+37, would put it at 2.9–5.7 kHz, where the ear is most sensitive, but no
+one could sing it.)</p>
+<h4 class="unnumbered" id="three-lessons.">Three lessons.</h4>
+<ol>
+<li><p><em>Size decides everything.</em> Whether a drop makes a rainbow
+depends on its size relative to the wavelength, and at radio wavelengths
+raindrops are hopelessly small.</p></li>
+<li><p><em>Absorption hides dispersion.</em> Water is strongly
+dispersive in both the far infrared and the microwave, but in both bands
+it absorbs too strongly for a bow or a prism spectrum to form.</p></li>
+<li><p><em>Smooth spectra hiss; line spectra sing.</em> A continuous
+source like the Sun has nothing to sing but noise. Atoms, with their
+discrete energy levels, are the ones that play notes, and the humble
+fluorescent tube is a four-note instrument hanging from most office
+ceilings.</p></li>
+</ol>
+<h4 class="unnumbered" id="further-work.">Further work.</h4>
+<p>The most satisfying follow-up would be the dish-and-prism experiment
+of Section 3.2, since bending the Sun’s microwaves with a block of
+candle wax is a striking result for a modest outlay. Recording real
+fluorescent spectra across tube types (Section 6.2) would test our
+predictions about chord voicing. And a choir willing to sing G<span
+class="math inline">\(\sharp\)</span>, A<span
+class="math inline">\(\sharp\)</span>, G<span
+class="math inline">\(\sharp\)</span>, C, G<span
+class="math inline">\(\sharp\)</span>+D<span
+class="math inline">\(\sharp\)</span>, A, D in public would settle, at
+last, whether one can truly sing a rainbow.</p>
+<p>We conclude that one can, provided one is content to hum.</p>
+<h1 class="unnumbered" id="supplementary-material">Supplementary
+material</h1>
+<p>Ten audio clips (WAV, 8 s, 44.1 kHz) and the Python generator used to
+synthesise them and to draw Figures <a href="#fig:sources"
+data-reference-type="ref" data-reference="fig:sources">1</a> and <a
+href="#fig:scan" data-reference-type="ref"
+data-reference="fig:scan">2</a> accompany this paper.</p>
+<div id="refs" class="references csl-bib-body hanging-indent"
+data-entry-spacing="0" role="list">
+<div id="ref-adam2002" class="csl-entry" role="listitem">
+Adam, John A. 2002. <span>‘The Mathematical Physics of Rainbows and
+Glories’</span>. <em>Physics Reports</em> 356 (4–5): 229–365. <a
+href="https://doi.org/10.1016/S0370-1573(01)00076-X">https://doi.org/10.1016/S0370-1573(01)00076-X</a>.
+</div>
+<div id="ref-airy1838" class="csl-entry" role="listitem">
+Airy, George Biddell. 1838. <span>‘On the Intensity of Light in the
+Neighbourhood of a Caustic’</span>. <em>Transactions of the Cambridge
+Philosophical Society</em> 6: 379–402.
+</div>
+<div id="ref-christiansen2025" class="csl-entry" role="listitem">
+Christiansen, Rasmus E., Efren Fernandez-Grande, and Ole Sigmund. 2025.
+<span>‘Morphogenesis of Sound Creates Acoustic Rainbows’</span>.
+<em>Science Advances</em> 11 (24): eads7497. <a
+href="https://doi.org/10.1126/sciadv.ads7497">https://doi.org/10.1126/sciadv.ads7497</a>.
+</div>
+<div id="ref-descartes1637" class="csl-entry" role="listitem">
+Descartes, René. 1637. <em>Discours de La m<span>é</span>thode … Plus La
+Dioptrique, Les m<span>é</span>t<span>é</span>ores Et La
+g<span>é</span>om<span>é</span>trie</em>. Leyde: Ian Maire. <a
+href="https://library.si.edu/digital-library/book/discoursdelamet00desca">https://library.si.edu/digital-library/book/discoursdelamet00desca</a>.
+</div>
+<div id="ref-hamilton1955" class="csl-entry" role="listitem">
+Hamilton, Arthur. 1955. <span>‘<span class="nocase">Sing a
+Rainbow</span>’</span>. Song, performed by Peggy Lee in <em>Pete Kelly’s
+Blues</em> (Warner Bros.).
+</div>
+<div id="ref-iop" class="csl-entry" role="listitem">
+IOP. n.d. <span>‘Hearing a Laser Beam’</span>. Institute of Physics,
+IOPSpark practical activity. <a
+href="https://spark.iop.org/hearing-laser-beam">https://spark.iop.org/hearing-laser-beam</a>.
+</div>
+<div id="ref-lee2001" class="csl-entry" role="listitem">
+Lee, Raymond L., Jr., and Alistair B. Fraser. 2001. <em>The Rainbow
+Bridge: Rainbows in Art, Myth, and Science</em>. University Park, PA:
+Pennsylvania State University Press.
+</div>
+<div id="ref-mandal2016" class="csl-entry" role="listitem">
+Mandal, Pratik, Devansh Agarwal, Pranshu Kumar, Anjali Yelikar, Kanishk
+Soni, and Vineeth Krishna T. 2016. <span>‘Everyday Radio
+Telescope’</span>. arXiv:1601.02982 [physics.ed-ph]. <a
+href="https://arxiv.org/abs/1601.02982">https://arxiv.org/abs/1601.02982</a>.
+</div>
+<div id="ref-marston1983" class="csl-entry" role="listitem">
+Marston, Philip L., and D. S. Langley. 1983. <span>‘Glory- and
+Rainbow-Enhanced Acoustic Backscattering from Fluid Spheres: Models for
+Diffracted Axial Focusing’</span>. <em>Journal of the Acoustical Society
+of America</em> 73 (5): 1464–75. <a
+href="https://doi.org/10.1121/1.389434">https://doi.org/10.1121/1.389434</a>.
+</div>
+<div id="ref-chandra2020" class="csl-entry" role="listitem">
+NASA/Chandra. 2020. <span>‘<span class="nocase">A Universe of
+Sound</span>’</span>. NASA Chandra X-ray Center sonification project. <a
+href="https://chandra.harvard.edu/sound/">https://chandra.harvard.edu/sound/</a>.
+</div>
+<div id="ref-newton1730" class="csl-entry" role="listitem">
+Newton, Isaac. 1704/1730. <em>Opticks: Or, a Treatise of the
+Reflections, Refractions, Inflections and Colours of Light</em>. 4th ed.
+London: William Innys. <a
+href="https://www.gutenberg.org/files/33504/33504-h/33504-h.htm">https://www.gutenberg.org/files/33504/33504-h/33504-h.htm</a>.
+</div>
+<div id="ref-nist" class="csl-entry" role="listitem">
+NIST. n.d. <span>‘Strong Lines of Sodium (<span>Na I</span>)’</span>.
+Handbook of Basic Atomic Spectroscopic Data, NIST Physical Measurement
+Laboratory. <a
+href="https://physics.nist.gov/PhysRefData/Handbook/Tables/sodiumtable2.htm">https://physics.nist.gov/PhysRefData/Handbook/Tables/sodiumtable2.htm</a>.
+</div>
+<div id="ref-noaanws" class="csl-entry" role="listitem">
+NOAA NWS. n.d. <span>‘<span class="nocase">RAC Principles of
+Radar</span>, <span>§</span>2.7: Rayleigh Scattering’</span>. NOAA
+National Weather Service, Warning Decision Training Division. <a
+href="https://training.weather.gov/wdtd/courses/rac/documentation/rac19-principles.pdf">https://training.weather.gov/wdtd/courses/rac/documentation/rac19-principles.pdf</a>.
+</div>
+<div id="ref-noaaswpc" class="csl-entry" role="listitem">
+NOAA SWPC. n.d. <span>‘<span>F10.7</span> Cm Radio Emissions’</span>.
+NOAA Space Weather Prediction Center. <a
+href="https://www.spaceweather.gov/phenomena/f107-cm-radio-emissions">https://www.spaceweather.gov/phenomena/f107-cm-radio-emissions</a>.
+</div>
+<div id="ref-nussenzveig1977" class="csl-entry" role="listitem">
+Nussenzveig, H. Moisés. 1977. <span>‘The Theory of the Rainbow’</span>.
+<em>Scientific American</em> 236 (4): 116–27. <a
+href="https://doi.org/10.1038/scientificamerican0477-116">https://doi.org/10.1038/scientificamerican0477-116</a>.
+</div>
+<div id="ref-peacock1988" class="csl-entry" role="listitem">
+Peacock, Kenneth. 1988. <span>‘Instruments to Perform Color-Music: Two
+Centuries of Technological Experimentation’</span>. <em>Leonardo</em> 21
+(4): 397–406. <a
+href="https://doi.org/10.2307/1578702">https://doi.org/10.2307/1578702</a>.
+</div>
+<div id="ref-umd" class="csl-entry" role="listitem">
+UMD. n.d. <span>‘<span>L4-41</span>: Microwaves – Refraction by
+Prism’</span>. University of Maryland Physics Lecture Demonstration
+Facility. <a
+href="https://lecdem.physics.umd.edu/l/l4/1611-l4-41.html">https://lecdem.physics.umd.edu/l/l4/1611-l4-41.html</a>.
+</div>
+<div id="ref-wilkins1989" class="csl-entry" role="listitem">
+Wilkins, Arnold J., Ian Nimmo-Smith, Anthony I. Slater, and L. Bedocs.
+1989. <span>‘Fluorescent Lighting, Headaches and Eyestrain’</span>.
+<em>Lighting Research &amp; Technology</em> 21 (1): 11–18. <a
+href="https://doi.org/10.1177/096032718902100102">https://doi.org/10.1177/096032718902100102</a>.
+</div>
+<div id="ref-zanella2022" class="csl-entry" role="listitem">
+Zanella, Anita, Chris M. Harrison, Sara Lenzi, Jeffrey Cooke, Peter
+Damsma, and Scott W. Fleming. 2022. <span>‘Sonification and Sound Design
+for Astronomy Research, Education and Public Engagement’</span>.
+<em>Nature Astronomy</em> 6 (11): 1241–48. <a
+href="https://doi.org/10.1038/s41550-022-01721-z">https://doi.org/10.1038/s41550-022-01721-z</a>.
+</div>
+<div id="ref-zhu2013" class="csl-entry" role="listitem">
+Zhu, Jie, Yongyao Chen, Xuefeng Zhu, Francisco J. Garcia-Vidal, Xiaobo
+Yin, Weili Zhang, and Xiang Zhang. 2013. <span>‘Acoustic Rainbow
+Trapping’</span>. <em>Scientific Reports</em> 3: 1728. <a
+href="https://doi.org/10.1038/srep01728">https://doi.org/10.1038/srep01728</a>.
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+:root { --bg:#fdfcf9; --fg:#1d1d1f; --muted:#5f5f66; --accent:#1f5fbf; --rule:#d9d6cf; --shade:#f2efe8; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#16171a; --fg:#e6e4df; --muted:#a3a19b; --accent:#7fb0ff; --rule:#3a3b40; --shade:#202126; }
+  figure img { background:#fff; border-radius:4px; }
+}
+* { box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; }
+body { margin:0 auto; max-width:46rem; padding:2.5rem 1rem 4rem; background:var(--bg); color:var(--fg);
+  font:1.075rem/1.65 "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; hyphens:auto; }
+header#title-block-header { text-align:center; margin-bottom:2.5rem; }
+h1.title { font-size:2.1rem; line-height:1.2; margin:0 0 .4rem; }
+p.subtitle { font-size:1.2rem; color:var(--muted); margin:0 0 1rem; }
+p.author, p.date { margin:.1rem 0; }
+p.date { color:var(--muted); font-size:.95rem; }
+.abstract { background:var(--shade); border-left:3px solid var(--accent); padding:.6rem 1.2rem; margin-top:1.8rem; text-align:left; font-size:.97rem; }
+.abstract-title { font-weight:bold; text-align:center; margin-bottom:.2rem; }
+h1, h2, h3 { line-height:1.25; }
+h1 { font-size:1.45rem; margin-top:2.6rem; }
+h2 { font-size:1.15rem; margin-top:1.8rem; }
+.header-section-number { color:var(--accent); margin-right:.5em; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+figure { margin:2rem 0; }
+figure img { width:100%; height:auto; display:block; }
+figcaption, caption { font-size:.9rem; color:var(--muted); text-align:left; line-height:1.5; }
+figcaption { margin-top:.6rem; }
+div[id^="tab:"] { overflow-x:auto; margin:2rem 0; }
+table { border-collapse:collapse; width:100%; font-size:.88rem; line-height:1.45;
+  border-top:1.5px solid var(--fg); border-bottom:1.5px solid var(--fg); }
+caption { caption-side:top; padding-bottom:.6rem; }
+th { border-bottom:1px solid var(--fg); font-weight:600; }
+th, td { padding:.35rem .6rem; vertical-align:top; }
+tbody tr:nth-child(even) { background:var(--shade); }
+td audio { display:block; width:9.5rem; height:2rem; margin-top:.3rem; }
+mjx-container[display="true"] { overflow-x:auto; overflow-y:hidden; }
+#refs { font-size:.92rem; }
+#refs .csl-entry { margin-bottom:.6rem; padding-left:1.5em; text-indent:-1.5em; }
+code { font-size:.88em; }
+h4 { font-size:1rem; margin:1.4rem 0 .3rem; }
