@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liber Incantationum</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0a0b;
+    --panel: #1a1314;
+    --parch: #e9dcc0;
+    --ink: #2a1a12;
+    --red: #8b1a1a;
+    --gold: #c9a24a;
+    --muted: #8a7a6a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: radial-gradient(ellipse at top, #2a1416 0%, var(--bg) 70%);
+    color: var(--parch); font-family: 'IM Fell English', Georgia, serif; padding: 24px 16px 60px;
+  }
+  header { text-align: center; margin-bottom: 24px; }
+  h1 { font-family: 'Cinzel', serif; letter-spacing: .15em; color: var(--gold); margin: 0; font-size: clamp(1.6rem, 5vw, 2.6rem); }
+  .sub { color: var(--muted); font-style: italic; margin-top: 6px; }
+  .controls {
+    max-width: 760px; margin: 0 auto 28px; background: var(--panel); border: 1px solid #3a2a26;
+    border-radius: 6px; padding: 20px; display: grid; gap: 14px;
+  }
+  label { font-family: 'Cinzel', serif; font-size: .8rem; letter-spacing: .12em; color: var(--gold); display: block; margin-bottom: 6px; }
+  input, select {
+    width: 100%; padding: 10px 12px; background: #0f0b0b; color: var(--parch); border: 1px solid #4a3530;
+    border-radius: 4px; font-family: inherit; font-size: 1.05rem;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; } }
+  .buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+  button {
+    flex: 1; min-width: 140px; padding: 12px; font-family: 'Cinzel', serif; letter-spacing: .1em; font-size: .95rem;
+    background: var(--red); color: var(--parch); border: 1px solid #b8322f; border-radius: 4px; cursor: pointer;
+  }
+  button.secondary { background: transparent; border-color: #4a3530; color: var(--muted); }
+  button:hover { filter: brightness(1.2); }
+  #scroll {
+    max-width: 760px; margin: 0 auto; background: var(--parch); color: var(--ink);
+    padding: clamp(20px, 5vw, 48px); border-radius: 3px; line-height: 1.6; font-size: 1.12rem;
+    box-shadow: 0 0 60px rgba(139,26,26,.35), inset 0 0 80px rgba(120,80,40,.35);
+    display: none;
+  }
+  #scroll.show { display: block; animation: fade 1.2s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  #scroll h2 { font-family: 'Cinzel', serif; text-align: center; color: var(--red); margin: 0; font-size: 1.6rem; letter-spacing: .08em; }
+  #scroll .figura { text-align: center; font-style: italic; margin-bottom: 20px; }
+  #scroll h3 { font-family: 'Cinzel', serif; color: var(--red); font-size: 1rem; letter-spacing: .15em; border-bottom: 1px solid #b89a70; padding-bottom: 4px; margin-top: 28px; }
+  .law { text-align: center; font-style: italic; margin: 14px 0; }
+  .names { font-family: 'Cinzel', serif; text-align: center; letter-spacing: .12em; color: var(--red); font-size: 1.1rem; line-height: 2; overflow-wrap: anywhere; }
+  @media (max-width: 420px) { .names { font-size: .95rem; letter-spacing: .06em; } }
+  .corr { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; }
+  .corr b { font-family: 'Cinzel', serif; font-size: .85rem; }
+  .stanza { margin: 12px 0 12px 1.2em; }
+  .sigil { display: flex; justify-content: center; margin: 18px 0 4px; }
+  .sigil-cap { text-align: center; font-style: italic; font-size: .9rem; }
+  .colophon { text-align: right; font-style: italic; margin-top: 30px; }
+  .footer { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 30px; font-style: italic; }
+  @media print {
+    body { background: #fff; padding: 0; } header, .controls, .footer { display: none; }
+    #scroll { box-shadow: none; display: block; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Liber Incantationum</h1>
+  <div class="sub">A Grimoire that writeth itself, after the manner of the Master Therion</div>
+</header>
+
+<div class="controls">
+  <div>
+    <label for="intent">State thy True Will</label>
+    <input id="intent" placeholder="e.g. find my lost keys, pass my driving test, banish Monday" maxlength="120">
+  </div>
+  <div class="row">
+    <div>
+      <label for="planet">Planetary Force</label>
+      <select id="planet">
+        <option value="auto">Let the Stars Decide</option>
+        <option>Saturn</option><option>Jupiter</option><option>Mars</option><option>Sol</option>
+        <option>Venus</option><option>Mercury</option><option>Luna</option>
+      </select>
+    </div>
+    <div>
+      <label for="element">Element</label>
+      <select id="element">
+        <option value="auto">Let the Stars Decide</option>
+        <option>Fire</option><option>Water</option><option>Air</option><option>Earth</option><option>Spirit</option>
+      </select>
+    </div>
+  </div>
+  <div class="buttons">
+    <button id="go">Invoke</button>
+    <button id="print" class="secondary">Print the Scroll</button>
+  </div>
+</div>
+
+<article id="scroll"></article>
+
+<div class="footer">For entertainment and literary amusement. 93 93/93.</div>
+
+<script>
+/* ---------- Correspondences (after Liber 777) ---------- */
+const PLANETS = {
+  Saturn:  { day: 'Saturday',  num: 3, colour: 'black',      incense: 'myrrh and civet',        god: 'IAO SABAO',      angel: 'Cassiel',  metal: 'lead',        epithet: 'Ancient of Days, Lord of the Night of Time' },
+  Jupiter: { day: 'Thursday',  num: 4, colour: 'royal blue', incense: 'saffron and cedar',      god: 'EL',             angel: 'Sachiel',  metal: 'tin',         epithet: 'Father of Gods, Lord of Abundance' },
+  Mars:    { day: 'Tuesday',   num: 5, colour: 'scarlet',    incense: 'dragon\'s blood and tobacco', god: 'ELOHIM GIBOR', angel: 'Samael', metal: 'iron',      epithet: 'Lord of the Sword, Breaker of Chains' },
+  Sol:     { day: 'Sunday',    num: 6, colour: 'gold',       incense: 'olibanum',               god: 'RA-HOOR-KHUIT',  angel: 'Michael',  metal: 'gold',        epithet: 'Lord of the Aeon, Crowned and Conquering Child' },
+  Venus:   { day: 'Friday',    num: 7, colour: 'emerald',    incense: 'rose and red sandal',    god: 'BABALON',        angel: 'Anael',    metal: 'copper',      epithet: 'Scarlet Woman, Mother of Abominations, Lady of Delight' },
+  Mercury: { day: 'Wednesday', num: 8, colour: 'orange',     incense: 'storax and mastic',      god: 'THOTH',          angel: 'Raphael',  metal: 'quicksilver', epithet: 'Lord of Wisdom, Scribe of the Gods, Messenger of the Word' },
+  Luna:    { day: 'Monday',    num: 9, colour: 'violet',     incense: 'jasmine and camphor',    god: 'SHADDAI EL CHAI', angel: 'Gabriel', metal: 'silver',     epithet: 'Lady of the Shifting Tides, Queen of the Starry Veil' }
+};
+const ELEMENTS = {
+  Fire:   { dir: 'South', weapon: 'Wand',   archangel: 'Michael', enochian: 'OIP TEAA PEDOCE', beast: 'Lion',  quality: 'burning' },
+  Water:  { dir: 'West',  weapon: 'Cup',    archangel: 'Gabriel', enochian: 'EMPEH ARSEL GAIOL', beast: 'Eagle', quality: 'flowing' },
+  Air:    { dir: 'East',  weapon: 'Dagger', archangel: 'Raphael', enochian: 'ORO IBAH AOZPI', beast: 'Man',   quality: 'swift' },
+  Earth:  { dir: 'North', weapon: 'Disk',   archangel: 'Auriel',  enochian: 'MOR DIAL HCTGA', beast: 'Bull',  quality: 'enduring' },
+  Spirit: { dir: 'the Centre', weapon: 'Lamp', archangel: 'Metatron', enochian: 'EXARP HCOMA NANTA BITOM', beast: 'Serpent', quality: 'boundless' }
+};
+
+/* ---------- Vocabularies ---------- */
+const BARBAROUS = ['IAO','ABRAHADABRA','SABAO','ARBATHIAO','ZAZAS','NASATANADA','THIAO','PHRE','IABOS','AOTH','ABRAOTH','BASUM','ISAK','APOPHIS','OSORRONOPHRIS','ISCHURE','AR','THIAF','PAKERBETH','IEOU','PUR','AEOOU','ZODACARE','OD','ZAMRAN','HEKAS','EPOIOI','TELEIOS','MA','PANTOKRATOR'];
+const SYLLABLES = ['ab','ra','tha','io','zo','ka','ma','nu','he','os','ar','khu','set','ba','lo','ion','eth','ph','ro','sa','ze','tu','al','om','ix','ia','ou','pha','do','kre'];
+const ADJ = ['flaming','starry','secret','unutterable','glittering','serpentine','crowned','naked','terrible','holy','ineffable','silent','abysmal','radiant','wingèd','unconquered','mighty','ecstatic','burning','veiled'];
+const NOUN = ['Abyss','Pillar','Rose','Cross','Serpent','Star','Flame','Eye','Throne','Chalice','Wand','Pentacle','Veil','Temple','Crown','Sword','Beast','Void','Pyramid','Sphere'];
+const VERB = ['Come forth','Arise','Descend','Hear me','Behold','Manifest','Appear','Thunder','Burn','Awaken'];
+const LATIN = ['Magicae','Arcanorum','Voluntatis','Stellae','Serpentis','Flammae','Silentii','Potentiae','Mysterii','Lucis','Noctis','Abyssi','Leonis','Rosae'];
+const MOTTOS = ['Perdurabo','To Mega Therion','Ou Mh','Vi Veri Vniversum Vivus Vici','Baphomet','Frater Achad','Soror Virakam'];
+
+/* ---------- Seeded RNG ---------- */
+function hash(str) { let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+let rnd = Math.random;
+const pick = arr => arr[Math.floor(rnd() * arr.length)];
+const pickN = (arr, n) => { const a = [...arr]; const out = []; while (out.length < n && a.length) out.push(a.splice(Math.floor(rnd() * a.length), 1)[0]); return out; };
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function roman(n) {
+  const map = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+  let s = ''; for (const [v, r] of map) while (n >= v) { s += r; n -= v; } return s;
+}
+function gematria(str) { return [...str.toUpperCase()].reduce((s, c) => s + (c >= 'A' && c <= 'Z' ? c.charCodeAt(0) - 64 : 0), 0); }
+function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+
+function inventName() {
+  const n = 2 + Math.floor(rnd() * 3);
+  let w = ''; for (let i = 0; i < n; i++) w += pick(SYLLABLES);
+  return w.toUpperCase();
+}
+
+/* Turn "help me find my keys" into "find my keys", and "my" into "thy servant's" flavour */
+function archaicise(intent) {
+  let s = intent.trim().replace(/[.!?]+$/, '');
+  s = s.replace(/^(please\s+)?(help me( to)?|i want to|i wish to|i need to|i would like to|let me|make me|to)\s+/i, '');
+  s = s.replace(/\bmy (?=[aeiou])/gi, 'mine ');
+  s = s.replace(/\byou\b/gi, 'thee').replace(/\byour\b/gi, 'thy').replace(/\bare\b/gi, 'art');
+  return s || 'accomplish the Great Work';
+}
+
+/* ---------- Sigil: consonants, deduplicated, plotted on a wheel ---------- */
+function sigilSVG(intent, colour) {
+  const letters = [...new Set(intent.toUpperCase().replace(/[^A-Z]/g, '').replace(/[AEIOU]/g, ''))];
+  if (letters.length < 2) letters.push('X', 'Y');
+  const cx = 110, cy = 110, r = 80;
+  const pt = ch => { const a = ((ch.charCodeAt(0) - 65) / 26) * Math.PI * 2 - Math.PI / 2; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+  const pts = letters.map(pt);
+  const path = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const [sx, sy] = pts[0], [ex, ey] = pts[pts.length - 1];
+  const stroke = '#8b1a1a';
+  let ticks = '';
+  for (let i = 0; i < 26; i++) {
+    const a = (i / 26) * Math.PI * 2 - Math.PI / 2;
+    ticks += `<line x1="${cx + 92*Math.cos(a)}" y1="${cy + 92*Math.sin(a)}" x2="${cx + 98*Math.cos(a)}" y2="${cy + 98*Math.sin(a)}" stroke="#2a1a12" stroke-width="1"/>`;
+  }
+  return `<svg width="220" height="220" viewBox="0 0 220 220" aria-label="Sigil">
+    <circle cx="${cx}" cy="${cy}" r="102" fill="none" stroke="#2a1a12" stroke-width="1.5"/>
+    <circle cx="${cx}" cy="${cy}" r="88" fill="none" stroke="#2a1a12" stroke-width=".7"/>
+    ${ticks}
+    <path d="${path}" fill="none" stroke="${stroke}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${sx}" cy="${sy}" r="5" fill="none" stroke="${stroke}" stroke-width="2"/>
+    <line x1="${ex - 7}" y1="${ey}" x2="${ex + 7}" y2="${ey}" stroke="${stroke}" stroke-width="2.5"/>
+  </svg>`;
+}
+
+/* ---------- The Spell ---------- */
+function generate() {
+  const raw = document.getElementById('intent').value.trim() || 'attain the Knowledge and Conversation of my Holy Guardian Angel';
+  rnd = mulberry(hash(raw + Date.now()));
+
+  const pName = document.getElementById('planet').value;
+  const eName = document.getElementById('element').value;
+  const planetKey = pName === 'auto' ? pick(Object.keys(PLANETS)) : pName;
+  const elemKey = eName === 'auto' ? pick(Object.keys(ELEMENTS)) : eName;
+  const P = PLANETS[planetKey], E = ELEMENTS[elemKey];
+
+  const will = archaicise(raw);
+  const num = gematria(raw) || 93;
+  const liber = roman(Math.max(1, (num * P.num) % 999 || 418));
+  const title = `Liber ${liber} vel ${pick(LATIN)} ${pick(LATIN)}`;
+  const spirit = inventName();
+  const names = pickN(BARBAROUS, 6 + Math.floor(rnd() * 4));
+  names.splice(Math.floor(rnd() * names.length), 0, spirit);
+
+  const a = () => pick(ADJ), n = () => pick(NOUN);
+
+  const stanzas = [
+    `Thee I invoke, ${P.god}, ${P.epithet}!<br>Thee, that art ${a()} beyond the ${a()} ${n()}, whose ${n()} is ${a()} as the ${a()} ${n()} of the ${E.dir}!`,
+    `${pick(VERB)}, O ${a()} One! Thou that wast and art and art to come, ${pick(VERB).toLowerCase()} unto me in the hour of ${planetKey}!<br>For I am the ${a()} ${n()}, and the ${E.quality} ${E.weapon} is in mine hand.`,
+    `By the ${a()} ${n()} and the ${a()} ${n()}, by the ${E.beast} that roareth in the ${E.dir}, by the ${P.metal} and the ${P.colour}: hear me!`,
+    `I am the Flame that burns in every heart of man, and in the core of every star.<br>I am thou, and thou art I; there is no difference. ${pick(VERB)}!`
+  ];
+  const ioPan = rnd() > .5 ? '<p class="names">IO PAN! IO PAN PAN! IO PAN!</p>' : '<p class="names">ABRAHADABRA! ABRAHADABRA!</p>';
+
+  const html = `
+    <h2>${title}</h2>
+    <div class="figura">sub figura ${num} &mdash; A Ritual of ${planetKey} in ${elemKey}<br>being the Invocation of the Spirit ${spirit}</div>
+
+    <p class="law">Do what thou wilt shall be the whole of the Law.</p>
+
+    <h3>I &middot; The Preliminaries</h3>
+    <div class="corr">
+      <b>Day</b><span>${P.day}, in the hour of ${planetKey}</span>
+      <b>Robe</b><span>${cap(P.colour)}, girded with a cord of ${P.num} knots</span>
+      <b>Incense</b><span>${cap(P.incense)}</span>
+      <b>Weapon</b><span>The Magick ${E.weapon}, wrought of ${P.metal}</span>
+      <b>Quarter</b><span>Face thou the ${E.dir}</span>
+      <b>Number</b><span>${num}, which is the number of thy Working</span>
+    </div>
+
+    <h3>II &middot; The Banishing</h3>
+    <p>Let the Magician stand in the centre of the Circle and perform the Star Ruby. Let him cry aloud: <i>Apo pantos kakodaimonos!</i> and trace the ${a()} pentagram toward each quarter, vibrating the Names until the Temple ring with them. Then shall ${E.archangel} stand before him, and the ${E.beast} in the ${E.dir}.</p>
+
+    <h3>III &middot; The Invocation</h3>
+    ${stanzas.map(s => `<p class="stanza">${s}</p>`).join('')}
+
+    <h3>IV &middot; The Barbarous Names of Evocation</h3>
+    <p><i>Change not these Names, for they have a power ineffable in the sacred rites.</i></p>
+    <p class="names">${names.join(' &middot; ')}</p>
+    <p class="names" style="font-size:.95rem">${E.enochian}</p>
+
+    <h3>V &middot; The Charge to the Spirit</h3>
+    <p>O thou ${spirit}, ${a()} spirit of ${planetKey}, by the Names aforesaid and by the ${a()} Word of the Aeon, I charge thee and bind thee: that thou go forth swiftly and bring to pass this my True Will &mdash; <b>to ${escapeHtml(will)}</b>. Deviate not to the right hand nor to the left, neither tarry, for thou art ${E.quality} as the ${n().toLowerCase()} of ${P.god}. Lust not for result, O my soul, for pure will, unassuaged of purpose, is in every way perfect.</p>
+    ${ioPan}
+
+    <h3>VI &middot; The Seal of the Working</h3>
+    <div class="sigil">${sigilSVG(raw, P.colour)}</div>
+    <div class="sigil-cap">Gaze upon the Seal until it be forgotten; then burn it in the flame of ${P.incense.split(' and ')[0]}.</div>
+
+    <h3>VII &middot; The License to Depart</h3>
+    <p>Depart now unto thine abodes and habitations, O ${spirit}, and let there be peace between thee and me, and be thou ever ready to come when thou art called. Let the Magician perform again the Banishing, and close the Temple with the Sign of Silence.</p>
+
+    <p class="law">Love is the law, love under will.</p>
+    <div class="colophon">Given under the Seal of ${pick(MOTTOS)}<br>Anno Vi<sub>xii</sub>, Sol in the House of ${pick(['Leo','Scorpio','Aries','Capricorn','Pisces','Libra'])}</div>
+  `;
+
+  const scroll = document.getElementById('scroll');
+  scroll.classList.remove('show'); void scroll.offsetWidth;
+  scroll.innerHTML = html;
+  scroll.classList.add('show');
+  scroll.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.getElementById('go').addEventListener('click', generate);
+document.getElementById('intent').addEventListener('keydown', e => { if (e.key === 'Enter') generate(); });
+document.getElementById('print').addEventListener('click', () => window.print());
+</script>
+</body>
+</html>
