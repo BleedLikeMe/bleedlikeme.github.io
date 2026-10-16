@@ -1,0 +1,1570 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#120e14">
+<style>[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
+<title>Sent from my iPhone</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a stage-left narrative (fringe-poster type) beside a phone that never stops buzzing. Single dark world: a pub after closing. */
+:root {
+  --night: #120e14;
+  --glass: #1d1721;
+  --glass-2: #2a2230;
+  --ink: #f0e8ec;
+  --mute: #a3979f;
+  --amber: #e9a23b;
+  --alarm: #ef5350;
+  --logged: #7cc6a5;
+  --mail: #7fa7e8;
+  --dm: #d98ac0;
+  --star: #f0c45a;
+  --line: rgba(240, 232, 236, 0.13);
+  --bezel: #070508;
+  --f-display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --f-body: "Literata", Georgia, "Times New Roman", serif;
+  --f-ui: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--night);
+  color: var(--ink);
+  font-family: var(--f-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+  background-image:
+    radial-gradient(60rem 30rem at 85% -10%, rgba(233, 162, 59, 0.10), transparent 60%),
+    radial-gradient(40rem 30rem at 0% 110%, rgba(239, 83, 80, 0.07), transparent 60%);
+  background-attachment: fixed;
+}
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+button:focus-visible, textarea:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+.top {
+  max-width: 1100px; margin: 0 auto 28px;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px 16px; flex-wrap: wrap;
+  font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute);
+}
+.top b { color: var(--amber); font-weight: 600; }
+.settings { display: flex; gap: 8px; flex-wrap: wrap; }
+.toggle {
+  background: none; border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px;
+  font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute);
+}
+.toggle[aria-pressed="true"] { color: var(--amber); border-color: var(--amber); }
+
+.grid {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 56px; align-items: start;
+}
+.stage { min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+
+/* HUD */
+.hud { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.meter { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.meter-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.meter label { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meter output { font-family: var(--f-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.bar { height: 6px; background: var(--glass-2); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 50%; border-radius: 3px; transition: width .4s ease, background-color .4s; }
+.m-nerve i { background: var(--amber); }
+.m-nerve.low i { background: var(--alarm); }
+.m-nerve.low output { color: var(--alarm); }
+.m-evidence i { background: var(--logged); }
+.m-heat i { background: var(--alarm); }
+.m-life i { background: var(--ink); opacity: .75; }
+
+/* Scene */
+.scene { display: flex; flex-direction: column; gap: 18px; animation: rise .5s ease both; }
+@keyframes rise { from { transform: translateY(8px); opacity: .4; } to { transform: none; opacity: 1; } }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber); }
+.scene h1 {
+  font-family: var(--f-display); font-weight: 900; text-transform: uppercase;
+  font-size: clamp(3rem, 8vw, 5.6rem); line-height: .86; letter-spacing: -0.005em; margin: 0;
+  text-wrap: balance;
+}
+.scene h1 em { font-style: normal; color: var(--amber); }
+.prose { display: flex; flex-direction: column; gap: 14px; max-width: 62ch; }
+.prose p { margin: 0; font-family: var(--f-body); font-size: 1.12rem; line-height: 1.62; color: var(--ink); }
+.prose p.quiet { color: var(--mute); font-style: italic; }
+.prose .her { font-style: italic; color: var(--amber); }
+.prose .mine { font-style: italic; color: var(--logged); }
+.warn {
+  font-size: 13px; line-height: 1.5; color: var(--mute); max-width: 62ch;
+  border-left: 2px solid var(--alarm); padding-left: 12px; margin: 0;
+}
+
+.choices { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
+.choice {
+  text-align: left; background: var(--glass); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;
+  transition: border-color .15s, background-color .15s, transform .15s;
+}
+.choice:hover:not(:disabled) { border-color: var(--amber); background: var(--glass-2); transform: translateX(3px); }
+.choice b { font-weight: 600; font-size: 1rem; line-height: 1.35; }
+.choice span { font-size: .88rem; color: var(--mute); line-height: 1.4; }
+.choice.write { border-style: dashed; }
+.choice:disabled { cursor: not-allowed; opacity: .55; }
+.choice:disabled span { color: var(--alarm); }
+
+.composer { display: flex; flex-direction: column; gap: 10px; max-width: 640px; background: var(--glass); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.composer label { font-size: 12px; color: var(--mute); }
+.composer textarea {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 90px;
+  background: var(--night); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+  font-family: var(--f-ui); font-size: 16px; line-height: 1.45;
+}
+.composer-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.composer-row .count { margin-right: auto; font-family: var(--f-mono); font-size: 11px; color: var(--mute); font-variant-numeric: tabular-nums; }
+
+.row-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.primary {
+  align-self: flex-start; background: var(--amber); color: var(--night); border: 0; border-radius: 99px;
+  padding: 14px 26px; font-weight: 600; font-size: 1rem; letter-spacing: .01em;
+}
+.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.primary:disabled { opacity: .45; cursor: not-allowed; }
+.ghost { align-self: flex-start; background: none; border: 1px solid var(--line); border-radius: 99px; padding: 13px 22px; color: var(--ink); font-size: 1rem; }
+.ghost:hover { border-color: var(--mute); }
+
+.panel {
+  background: var(--glass); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 10px; max-width: 640px;
+}
+.panel h3 { margin: 0; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); font-weight: 600; }
+.panel p { margin: 0; line-height: 1.55; }
+.panel .small { color: var(--mute); font-size: 13px; }
+.tally { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 14px; }
+.tally div { display: flex; flex-direction: column; gap: 2px; }
+.tally strong { font-family: var(--f-display); font-weight: 800; font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.tally span { font-size: 12px; color: var(--mute); }
+.help-list { display: grid; gap: 8px; }
+.help-list div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; border-top: 1px solid var(--line); padding-top: 8px; }
+.help-list code { font-family: var(--f-mono); color: var(--amber); user-select: all; font-size: 14px; overflow-wrap: anywhere; }
+
+.recap { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.recap li { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 4px 14px; padding: 10px 0; border-top: 1px solid var(--line); }
+.recap .when { font-family: var(--f-mono); font-size: 11px; color: var(--mute); line-height: 1.5; }
+.recap .what { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.recap .scene-name { font-size: 12px; color: var(--amber); text-transform: uppercase; letter-spacing: .08em; }
+.recap .pick { font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-family: var(--f-mono); font-size: 10.5px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.chip.good { color: var(--logged); border-color: rgba(124, 198, 165, .4); }
+.chip.bad { color: var(--alarm); border-color: rgba(239, 83, 80, .4); }
+
+/* Phone */
+.phone-wrap { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); display: flex; justify-content: center; }
+.phone {
+  position: relative; width: 100%; max-width: 350px; height: min(680px, calc(100vh - 80px)); min-height: 520px;
+  border: 11px solid var(--bezel); border-radius: 48px; overflow: hidden;
+  background:
+    radial-gradient(14rem 14rem at 20% 25%, rgba(233, 162, 59, .28), transparent 70%),
+    radial-gradient(10rem 10rem at 85% 60%, rgba(239, 83, 80, .18), transparent 70%),
+    radial-gradient(8rem 8rem at 40% 90%, rgba(233, 162, 59, .14), transparent 70%),
+    var(--glass);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 0 1px var(--line);
+  display: flex; flex-direction: column;
+  transition: filter .6s;
+}
+.phone.buzz { animation: buzz .32s linear; }
+@keyframes buzz {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-3px) rotate(-.6deg); }
+  40% { transform: translateX(3px) rotate(.6deg); }
+  60% { transform: translateX(-2px) rotate(-.4deg); }
+  80% { transform: translateX(2px) rotate(.4deg); }
+}
+.phone.dim .lock, .phone.dim .note { filter: brightness(.45) blur(.4px); }
+.phone.dim .note:first-child { filter: brightness(.75); }
+.phone.paused .notes { opacity: .5; }
+.statusbar { display: flex; justify-content: space-between; padding: 12px 24px 0; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ph-hud { display: none; }
+.lock { text-align: center; padding: 14px 16px 8px; display: flex; flex-direction: column; gap: 2px; }
+.lock .date { font-size: 13px; color: var(--mute); }
+.lock .clock { font-family: var(--f-display); font-weight: 600; font-size: 4.6rem; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.unread {
+  margin: 4px auto 0; font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  background: rgba(239, 83, 80, .16); color: var(--alarm); border-radius: 99px; padding: 4px 10px; font-variant-numeric: tabular-nums;
+}
+.timer { height: 3px; margin: 6px 22px 0; background: var(--line); border-radius: 2px; overflow: hidden; }
+.timer i { display: block; height: 100%; width: 0; background: var(--amber); }
+.notes {
+  list-style: none; margin: 0; padding: 10px 10px 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+  scrollbar-width: thin;
+}
+.note {
+  background: rgba(29, 23, 33, .82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+  animation: drop .28s ease both;
+}
+@keyframes drop { from { transform: translateY(-10px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+.note-head { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--mute); min-width: 0; }
+.app { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; font-size: 9px; font-weight: 700; color: var(--night); flex: none; }
+.ch-sms .app { background: var(--logged); }
+.ch-email .app { background: var(--mail); }
+.ch-dm .app, .ch-alt .app { background: var(--dm); }
+.ch-vm .app, .ch-call .app { background: var(--amber); }
+.ch-review .app { background: var(--star); }
+.ch-card .app { background: var(--ink); }
+.ch-typing .app { background: var(--mute); }
+.note.ch-typing { font-style: italic; color: var(--mute); }
+.note-head .from { color: var(--ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.note-head .tag { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .06em; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; flex: none; }
+.note-head time { margin-left: auto; font-variant-numeric: tabular-nums; flex: none; }
+.note-body { margin: 0; font-size: 13.5px; line-height: 1.38; overflow-wrap: anywhere; }
+.note-foot { font-size: 11px; color: var(--mute); font-style: italic; }
+.note-row { display: flex; justify-content: flex-end; }
+.log-btn {
+  background: none; border: 1px solid var(--logged); color: var(--logged); border-radius: 99px;
+  font-size: 11px; font-weight: 600; padding: 3px 10px; letter-spacing: .03em;
+}
+.log-btn:hover:not(:disabled) { background: var(--logged); color: var(--night); }
+.log-btn:disabled { border-color: var(--line); color: var(--mute); cursor: default; }
+.note.is-logged { border-color: rgba(124, 198, 165, .5); }
+.note.is-logged .log-btn { border-color: transparent; color: var(--logged); }
+.note.is-old { opacity: .7; }
+
+.phone-foot { padding: 8px 16px 16px; display: flex; justify-content: center; gap: 8px; }
+.phone-foot button {
+  background: rgba(240, 232, 236, .1); border: 1px solid var(--line); border-radius: 99px; padding: 10px 16px; font-size: 13px; font-weight: 500;
+}
+.phone-foot button:hover { background: rgba(240, 232, 236, .18); }
+
+.call {
+  position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 70px 24px 44px; text-align: center;
+  background: linear-gradient(180deg, rgba(18, 14, 20, .94), rgba(42, 34, 48, .97));
+}
+.call .who { display: flex; flex-direction: column; gap: 6px; }
+.call .name { font-family: var(--f-display); font-weight: 800; font-size: 3rem; text-transform: uppercase; line-height: 1; overflow-wrap: anywhere; }
+.call .sub { color: var(--mute); font-size: 14px; }
+.call .ring { font-family: var(--f-mono); color: var(--amber); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.call-actions { display: flex; gap: 40px; }
+.call-actions button { display: flex; flex-direction: column; align-items: center; gap: 8px; background: none; border: 0; font-size: 13px; }
+.call-actions .dot { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; }
+.call-actions .decline .dot { background: var(--alarm); }
+.call-actions .answer .dot { background: var(--logged); }
+.call-actions svg { width: 26px; height: 26px; fill: var(--night); }
+.decline svg { transform: rotate(135deg); }
+
+.foot { max-width: 1100px; margin: 48px auto 0; font-size: 12px; color: var(--mute); line-height: 1.5; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 860px) {
+  body { padding-block: 12px 32px; }
+  .top { margin-bottom: 20px; }
+  .top .tagline { display: none; }
+  .grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .stage { gap: 22px; }
+  .hud { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .prose p { font-size: 1.04rem; line-height: 1.58; }
+  .choice { padding: 16px; }
+  .choice:hover:not(:disabled) { transform: none; }
+  .primary, .ghost { align-self: stretch; text-align: center; padding-block: 16px; }
+  .row-buttons > * { flex: 1 1 100%; }
+  .recap li { grid-template-columns: minmax(0, 1fr); }
+  .phone-wrap { position: static; }
+  .phone { height: 540px; min-height: 0; border-width: 8px; border-radius: 38px; }
+  .log-btn { min-height: 34px; padding: 6px 16px; font-size: 12.5px; }
+  .note-body { font-size: 14.5px; }
+  .call-actions .dot { width: 72px; height: 72px; }
+  .phone-foot button { padding: 14px 18px; font-size: 14px; }
+
+  /* While her messages are arriving, the phone takes over the whole screen */
+  body.flooding { overflow: hidden; }
+  body.flooding .phone {
+    position: fixed; inset: 0; z-index: 50; max-width: none; height: auto;
+    border: 0; border-radius: 0;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  }
+  body.flooding .lock .clock { font-size: 3.2rem; }
+  body.flooding .lock .date { display: none; }
+  body.flooding .ph-hud {
+    display: flex; justify-content: space-between; gap: 8px; margin: 8px 16px 0;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--mute);
+  }
+  .ph-hud b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ph-hud .low b { color: var(--alarm); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span><b>Sent from my iPhone</b><span class="tagline"> · a game about being stalked</span></span>
+  <div class="settings">
+    <button class="toggle" id="sound" aria-pressed="false">Sound off</button>
+    <button class="toggle" id="haptics" aria-pressed="false">Vibrate off</button>
+    <button class="toggle" id="pace" aria-pressed="false">Pace: normal</button>
+  </div>
+</header>
+
+<main class="grid">
+  <section class="stage" id="stage" aria-live="polite"></section>
+
+  <aside class="phone-wrap">
+    <div class="phone" id="phone">
+      <div class="statusbar"><span id="sb-time">16:12</span><span>●●●● 4G 31%</span></div>
+      <div class="ph-hud" aria-hidden="true"><span id="ph-nerve-wrap">Nerve <b id="ph-nerve">80</b></span><span>Evidence <b id="ph-ev">0</b></span><span>Fixation <b id="ph-heat">10</b></span></div>
+      <div class="lock">
+        <div class="date" id="ph-date">Tuesday 9 September</div>
+        <div class="clock" id="ph-clock">16:12</div>
+        <div class="unread" id="ph-count">0 from Heather</div>
+      </div>
+      <div class="timer" id="timer" hidden><i id="timer-bar"></i></div>
+      <ul class="notes" id="notes" aria-live="polite" aria-relevant="additions"></ul>
+      <div class="phone-foot" id="phone-foot" hidden>
+        <button id="pause">Pause</button>
+        <button id="facedown">Turn phone face down</button>
+      </div>
+      <div class="call" id="call" hidden>
+        <div class="who">
+          <span class="ring">Incoming call</span>
+          <span class="name" id="call-name">Heather</span>
+          <span class="sub" id="call-sub">mobile</span>
+        </div>
+        <div class="call-actions">
+          <button class="decline" id="decline"><span class="dot"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></span>Decline</button>
+          <button class="answer" id="answer"><span class="dot"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg></span>Answer</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<p class="foot">A work of fiction inspired by the Netflix drama <i>Baby Reindeer</i>. Heather, Puffin, Ronan, Sam, Gail and the Crown &amp; Feathers are invented. If someone is doing this to you, it is stalking, and it is a crime: the National Stalking Helpline (UK) is on 0808 802 0300.</p>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------- Her voice ---------- */
+const POOL = {
+  1: [
+    "u made my day puffin. told everyone in chambers about u. they think im mad lol",
+    "Did u get home safe? Just checking. Your so kind to me x",
+    "Had lunch with a High Court judge today very boring thought of u the whole time",
+    "PUFFIN!!!!!! xxxxxxx",
+    "Funniest man in London. I mean it. I know talent. I know people",
+    "what time ur shift tomorrow. ill bring my crossword",
+    "Your eyes when you laugh. Thats all. Thats the email",
+    "Had a dream about u, cant say what, a lady never tells hahahahahaha",
+    "u never said bye properly today. not like u. is everything ok",
+    "I have a friend at the BBC. Dont tell anyone. Big things coming for my Puffin",
+    "Thank u for the diet coke. Best diet coke of my life. Will treasure it",
+    "Morning!!! Its 5am, im an early bird, u should be too, worms dont catch themselves"
+  ],
+  2: [
+    "why havnt u replied. I can see when u read it",
+    "Who was SHE at the bar. Blonde. I saw u laugh at her joke it wasnt funny",
+    "Ok. Ignore me. Everyone does. Didnt think u would",
+    "Sorry sorry sorry sorry for the last email. bad day in court",
+    "Puffins mate for life. Thats a fact. U can google it",
+    "Rang the pub 4 times, that lad said u were busy. ur never too busy for me",
+    "I bought u a present. its a tiny hat for a puffin. joke. or is it",
+    "pick up pick up pick up pick up pick up",
+    "walked past urs. lights on. hope u had a nice tea",
+    "Is Sam ur girlfriend or ur boyfriend or ur nothing. id say nothing",
+    "U looked tired at the gig. U need someone to look after u",
+    "I dont even like u that much if im honest"
+  ],
+  3: [
+    "Your a fake. A fake little nothing man with a nothing career",
+    "Saw ur mum in her garden. Lovely roses. Shame about the fence",
+    "If i cant talk to u ill talk to Sam. Sam seems nice. For now",
+    "U dont get to walk away from me. Nobody walks away",
+    "sorry. love u. sorry. u make me like this",
+    "Ill tell everyone what u did. They will believe ME. I am a barrister",
+    "Saw u on the 29. upstairs, front seat. u looked sad",
+    "Why are u doing this to US",
+    "I know which bus ur dad gets. Hes got ur nose",
+    "Im not angry. IM NOT ANGRY. ok im a bit angry",
+    "You'll be sorry when im gone. Ill be sorry when ur gone"
+  ],
+  4: [
+    "Im outside.",
+    "Is that ur window on the left",
+    "U have made a very big mistake",
+    "Count to ten puffin",
+    "I will be at every gig. Every single one. Front row",
+    "Nobody will ever love u like i do and nobody will ever hate u like i do",
+    "Open the door",
+    "I can hear ur telly",
+    "Tell Sam to stay away from my Puffin"
+  ]
+};
+const VOICEMAIL = {
+  1: [
+    "She sings the whole of 'Islands in the Stream'. Both parts.",
+    "\"Just wanted to hear your voice. Your answerphone voice. It's nice. Bye. Bye. Bye, Puffin.\"",
+    "Forty seconds of her laughing at something you said three days ago."
+  ],
+  2: [
+    "\"Why aren't you picking up? I'm worried. I'm WORRIED.\" Then breathing.",
+    "She reads you a poem she wrote. It rhymes 'Puffin' with 'nothing'.",
+    "\"I'm at the pub. Where are you? They say you're off. You're never off.\""
+  ],
+  3: [
+    "She screams for a full minute, then says \"sorry, wrong number\" and laughs.",
+    "\"Your mum's called Pauline, isn't she. Pauline. Nice name. Old name.\"",
+    "Silence. Then a door closing. Then silence."
+  ],
+  4: [
+    "\"I can see your light on.\"",
+    "Knocking. Not on her door. You can tell from the echo it's your stairwell.",
+    "She whispers your full name, your address and your postcode. Then hangs up."
+  ]
+};
+const EMAIL_SUBJECTS = ["(no subject)", "Re: Re: Re: us", "PUFFIN", "urgent!!", "Fwd: important", "sorry", "a question", "READ THIS"];
+const ALT_NAMES = ["heather.qc.official", "PuffinsNo1Fan", "h_not_heather", "crownandfeathers_fanclub", "a.friend.of.heathers", "justice4heather", "new_account_who_dis"];
+const REVIEWS = [
+  "★☆☆☆☆ The barman with the curly hair is a liar and a coward. Ask him what he promised me.",
+  "★☆☆☆☆ Watered-down drinks and a watered-down man.",
+  "★★★★★ The tall barman is a comic GENIUS. Go see him. I am his manager.",
+  "★☆☆☆☆ Staff encourage vulnerable women then ignore them. Disgusting. Reported to the council.",
+  "★☆☆☆☆ Would give zero stars. He knows why.",
+  "★★★★★ Lovely pub. Lovely barman. He's taken."
+];
+const CARDS = [
+  "A card with a puffin on it. Inside: \"Sorry about last night x\"",
+  "A photo of your front door, taken from across the road. Printed at Boots.",
+  "Your own gig flyer, with every date circled in green ink.",
+  "A Christmas card in November, signed \"from us\".",
+  "A single sock you lost at the pub, washed and ironed.",
+  "A handwritten list of the times you left the flat last week. It's accurate."
+];
+const QUOTES = [
+  q => `u said "${q}". i read it 400 times`,
+  q => `"${q}" thats what u said. I have it on my fridge`,
+  q => `Remember when u said "${q}"? I do. Every word puffin`,
+  q => `"${q}" means u love me. I asked a judge`,
+  q => `I showed my friends where u said "${q}". They said its obvious`
+];
+
+/* ---------- State ---------- */
+const fresh = () => ({
+  ch: -1, nerve: 80, evidence: 0, heat: 10, life: 70,
+  received: 0, logged: 0, declined: 0, voicemails: 0, answered: 0, faceDowns: 0,
+  flags: {}, replies: [], log: [], lostAt: ""
+});
+let S = fresh();
+let F = null;            // active flood
+let checkpoint = null;   // state at the start of the current chapter
+const settings = { sound: false, haptics: false, pace: 1 };
+let audioCtx = null;
+const bags = {};
+const SAVE_KEY = "sent-from-my-iphone/save/v2";
+const SET_KEY = "sent-from-my-iphone/settings";
+
+const $ = id => document.getElementById(id);
+const stage = $("stage"), notesEl = $("notes"), phone = $("phone");
+const clamp = (v, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, v));
+const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const plain = s => s.replace(/<[^>]+>/g, "");
+const val = x => typeof x === "function" ? x() : x;
+const copy = o => JSON.parse(JSON.stringify(o));
+function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (_) { return null; } }
+function lsSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
+function draw(tier) {
+  if (!bags[tier] || !bags[tier].length) bags[tier] = [...POOL[tier]].sort(() => Math.random() - .5);
+  return bags[tier].pop();
+}
+
+function adj(d = {}) {
+  for (const k of Object.keys(d)) {
+    S[k] = k === "evidence" ? Math.max(0, S[k] + d[k]) : clamp(S[k] + d[k]);
+  }
+  hud();
+}
+
+/* Typed replies: whatever you write, she keeps */
+function writeResult(t) {
+  const text = t.trim();
+  S.replies.push(text.length > 70 ? text.slice(0, 67) + "..." : text);
+  const lower = text.toLowerCase();
+  let read;
+  if (/stop|leave me|police|go away|enough|block|harass/.test(lower)) {
+    read = "She reads it as passion. <span class=\"her\">\"U only shout at people u care about.\"</span>";
+  } else if (/sorry|nice|lovely|kind|x$|thanks|thank you/.test(lower)) {
+    read = "She reads it as a love letter. She tells you she's printed it out.";
+  } else {
+    read = "She reads it as an opening. Whatever you meant, what she heard was: he's talking to me.";
+  }
+  return {
+    d: { heat: 10 + Math.min(10, Math.round(text.length / 16)), nerve: 2 },
+    text: [
+      `You send: <span class="mine">“${esc(text)}”</span>`,
+      read,
+      "She replies forty times in an hour. From now on, your own words will keep coming back to you."
+    ]
+  };
+}
+
+/* ---------- Chapters ---------- */
+const CH = [
+  {
+    when: "Day 1 · Tuesday · 16:12", date: "Tuesday 9 September", clock: "16:12",
+    title: "A cup of <em>tea</em>",
+    text: () => [
+      "You work behind the bar at the Crown & Feathers in north London. Afternoons are dead. You're thirty-one and your stand-up is going nowhere.",
+      "A woman comes in and sits at the bar. She doesn't order. After a while you realise she's crying, quietly, like she's had a lot of practice.",
+      "You make her a cup of tea, on the house. She looks at you as if nobody has done anything kind for her in years. You say something daft and she laughs: a huge laugh that turns every head in the room.",
+      "<span class=\"her\">\"Heather. I'm a barrister. Very important. Very busy.\"</span> She has nowhere to be until closing."
+    ],
+    choices: [
+      { label: "Stay and chat. She thinks you're hilarious.", sub: "It's been a long time since anyone did.",
+        go: () => ({ d: { nerve: 6, heat: 8 }, flags: { flattered: 1 }, text: [
+          "You talk for an hour. She laughs at everything. She says you've got a face for the telly. You go home lighter than you've felt in months.",
+          "On the bus you realise you never told her your surname. She used it when she said goodbye."] }) },
+      { label: "Smile, take the cup, get on with your shift.", sub: "You're kind, not available.",
+        go: () => ({ d: { heat: 3 }, text: [
+          "You wipe the bar, change a barrel, serve the five o'clock regulars. When you look up she's still there, watching. She waves.",
+          "She stays until close. She's back at opening the next day."] }) }
+    ]
+  },
+  {
+    when: "Day 6 · Sunday · 13:30", date: "Sunday 14 September", clock: "13:30",
+    title: "A <em>regular</em>",
+    text: () => [
+      "Heather has been in every day since. She never buys anything. You've been giving her free Diet Cokes to make it less weird, and somehow that's made it more weird.",
+      "She's given you a nickname: Puffin. She says it's after a toy she had as a girl, the only thing that ever loved her back. She says it like a joke. She isn't joking.",
+      "Today she slides a napkin and a biro across the bar. <span class=\"her\">\"For my diary. Chambers are very strict about contacts.\"</span>"
+    ],
+    choices: [
+      { label: "Write down your work email.", sub: "It's only email. What's the harm?",
+        go: () => ({ d: { heat: 4 }, flags: { gaveEmail: 1 }, text: [
+          "She folds the napkin into her purse like it's a winning lottery ticket.",
+          "Her first email arrives before she's left the pub. She's sitting four metres away."] }) },
+      { label: "Give her your number.", sub: "Saying no would feel rude.",
+        go: () => ({ d: { heat: 8 }, flags: { gaveNumber: 1 }, text: [
+          "She saves it while you watch, then rings it to check. Your phone buzzes on the bar. She lets it ring out, smiling.",
+          "<span class=\"her\">\"Now you've got mine too.\"</span> You hadn't asked for it."] }) },
+      { label: "Politely say no.", sub: "\"Sorry, I keep work and that separate.\"",
+        go: () => ({ d: { heat: 5, nerve: -3 }, text: [
+          "She laughs as if you've told a joke. By your break she's found the pub's website, your comedy Instagram and the email address on your gig poster.",
+          "<span class=\"her\">\"Silly Puffin. Your easy to find.\"</span>"] }) }
+    ]
+  },
+  {
+    when: "Week 2 · Thursday · 21:40", date: "Thursday 18 September", clock: "21:40", heat: 6,
+    title: "Sent from my <em>iPhone</em>",
+    text: () => [
+      "Then the messages start. Not one or two: dozens a day, at all hours. The spelling is chaos. The tone swings from sweet to sulky inside a sentence.",
+      "Every email ends the same way: <i>Sent from my iPhone</i>. You've seen her phone. It's a cracked flip phone held together with a hair bobble.",
+      "Someone in the kitchen tells you to screenshot the lot, in case. In case of what, you think. It's harmless."
+    ],
+    flood: { tier: 1, dur: 24, calls: 0, span: 9 },
+    tutorial: true,
+    choices: [
+      { label: "Reply kindly: \"You're lovely, but this is a lot. Can we cut back?\"", sub: "Set a boundary, nicely.",
+        go: () => ({ d: { heat: 15, nerve: 2 }, text: [
+          "You feel like a grown-up for about four minutes. Then she replies. Then she replies to her reply. Thirty-one emails in an hour, picking your one message apart word by word.",
+          "<span class=\"her\">\"Cut BACK means you want SOME. I knew it.\"</span>",
+          "Any reply is contact. To her, contact is the relationship."] }) },
+      { label: "Reply \"thanks x\" to the one saying you're the funniest man in London.", sub: "It's true that it felt nice.",
+        go: () => ({ d: { nerve: 8, heat: 18 }, flags: { flattered: 1 }, text: [
+          "It's a lovely feeling, being someone's favourite. You haven't been anyone's favourite for a while.",
+          "That's the bit you won't tell anyone later. She read that x a hundred times. She told you so, across forty emails."] }) },
+      { label: "Write her a reply yourself.", sub: "Say exactly what you want to say.", write: true,
+        placeholder: "Heather, ...", go: t => writeResult(t) },
+      { label: "Don't reply. Make a folder called HEATHER and file everything.", sub: "Keep it, don't answer it.",
+        go: () => ({ d: { evidence: 5, nerve: -4, heat: 3 }, text: [
+          "No reply. You drag every message into the folder. It already holds more mail than your whole inbox from last year.",
+          "She notices the silence. \"r u ok?? worried\" becomes \"fine be like that\" by midnight. But it's on record now, all of it."] }) }
+    ]
+  },
+  {
+    when: "Week 3 · Saturday · 22:15", date: "Saturday 27 September", clock: "22:15", heat: 6,
+    title: "Unknown <em>caller</em>",
+    text: () => [
+      S.flags.gaveNumber ? "Giving her your number turns out to be the end of owning a phone." : "She has your number now. You never gave it to her. She won't say how she got it.",
+      "She rings during shifts, during gigs, at three in the morning. When you don't pick up she leaves voicemails: songs, monologues, long silences full of breathing.",
+      "Your phone has stopped being a phone. It's a door she can walk through whenever she likes."
+    ],
+    flood: { tier: 2, dur: 26, calls: .22, span: 8 },
+    choices: [
+      { label: "Block her number.", sub: "Shut the door.",
+        go: () => ({ d: { heat: 8, nerve: 4 }, flags: { blocked: 1 }, text: [
+          "Blocking feels great for nineteen minutes. Then: No Caller ID. Then a new account. Then another.",
+          "Blocking doesn't stop her. It stops you seeing it, and it sends her looking for other ways in."] }) },
+      { label: "New number. Keep the old SIM in a drawer, switched on.", sub: "Let her talk to a drawer.",
+        go: () => ({ d: { nerve: 6, evidence: 8, life: -4 }, flags: { oldSim: 1 }, text: [
+          "You send your new number to the twelve people you trust. The old phone goes in the kitchen drawer, on charge, on silent.",
+          "It fills up on its own: every call, every voicemail, dated and timed. Evidence that collects itself in a room you don't have to be in.",
+          "Texts and calls to the old phone still reach you through the drawer, but they hit you a lot less."] }) },
+      { label: "Text her yourself.", sub: "Maybe the right words will make her stop.", write: true,
+        placeholder: "Please...", go: t => writeResult(t) },
+      { label: "Leave it. You don't want to provoke her.", sub: "Maybe she'll get bored.",
+        go: () => ({ d: { nerve: -8, heat: 2 }, text: [
+          "She doesn't get bored. Waiting it out just means waiting.",
+          "You start leaving your phone in another room. You start checking it more."] }) }
+    ]
+  },
+  {
+    when: "Week 4 · Friday · 21:00", date: "Friday 3 October", clock: "21:00", heat: 5,
+    title: "Front <em>row</em>",
+    text: () => [
+      "It's your first paid gig in a year: ten minutes in a room above a pub in Kentish Town, forty quid and a drink token.",
+      "She's in the front row. You never told her about it. She's bought the seat next to hers too, and put her coat on it. For you. For afterwards.",
+      "She laughs before every punchline, louder than the room and half a second early, so it lands like a heckle. The promoter is watching from the bar."
+    ],
+    choices: [
+      { label: "Do your set. Don't look at her.", sub: "Ten minutes. You can do ten minutes.",
+        go: () => ({ d: { nerve: -6, life: 6 }, text: [
+          "You don't look at her once. It's the hardest ten minutes you've ever done, and somehow it's good. The promoter offers you another spot.",
+          "She waits by the stage door until two in the morning. You leave through the kitchen."] }) },
+      { label: "Call her out from the stage.", sub: "\"Ladies and gentlemen, my number one fan.\"",
+        go: () => ({ d: { heat: 14, nerve: 4, life: 2 }, flags: { mocked: 1 }, text: [
+          "The room roars. She stands up and takes a bow. For the rest of the night, strangers buy her drinks.",
+          "You've just told forty people she's part of the act. She'll remember that. So will they."] }) },
+      { label: "Cut the set short and walk off.", sub: "You can't do this with her there.",
+        go: () => ({ d: { nerve: -4, life: -8, heat: 4 }, text: [
+          "Four minutes in, you say goodnight. The promoter doesn't book you again.",
+          "<span class=\"her\">\"U were amazing. U were nervous because of me. Thats love Puffin.\"</span>"] }) }
+    ]
+  },
+  {
+    when: "Week 5 · Friday · 23:50", date: "Friday 10 October", clock: "23:50", heat: 6,
+    title: "Just a bit of <em>fun</em>",
+    text: () => [
+      "The lads at the pub think it's the funniest thing that's ever happened. \"You've got a FAN.\" Somebody does her laugh. Everybody does her laugh now.",
+      "Sam, who you've been seeing for three months, has noticed you flinch whenever your phone goes. Heather has noticed Sam.",
+      "You laugh along. It's easier than explaining that you haven't slept properly since September."
+    ],
+    flood: { tier: 2, dur: 24, calls: .18, span: 6, extras: ["alt"] },
+    choices: [
+      { label: "Tell Sam everything, including how much it's got to you.", sub: "Even the bit about the x.",
+        go: () => ({ d: { life: 12, nerve: 10, heat: 6 }, flags: { toldSam: 1 }, text: [
+          "Sam listens all the way through and doesn't laugh once. Then: \"That's stalking. You know that, right?\"",
+          "It's the first time anyone has said the word out loud. Something in your chest unclenches.",
+          "Heather finds out Sam exists the next day. The messages get a second target."] }) },
+      { label: "Laugh along with the lads.", sub: "It is a bit funny. Isn't it?",
+        go: () => ({ d: { life: 3, nerve: -10 }, text: [
+          "Every laugh costs you a bit more. Turning her into a punchline makes it a joke, and nobody reports a joke.",
+          "You do twelve minutes on her at an open mic. It kills. You're sick in the car park afterwards."] }) },
+      { label: "Say nothing. Handle it yourself.", sub: "It's your mess.",
+        go: () => ({ d: { life: -10, nerve: -6 }, text: [
+          "You cancel a weekend with Sam. Then another. You tell yourself you're protecting people. Mostly you're hiding.",
+          "Isolation is what stalking feeds on. You've just handed her the menu."] }) }
+    ]
+  },
+  {
+    when: "Week 6 · Thursday · 11:20", date: "Thursday 16 October", clock: "11:20", heat: 6,
+    title: "A <em>complaint</em>",
+    text: () => [
+      "Gail, who runs the Crown & Feathers, calls you into the back office before your shift. Heather has emailed her. Eleven times. She's also left reviews of the pub. Lots of them.",
+      "The emails say you led her on. That you made her promises. That a man like you shouldn't be trusted behind a bar.",
+      "Gail looks embarrassed for both of you. \"I need to know what's going on, love.\" Your phone buzzes in your pocket. Then again."
+    ],
+    flood: { tier: 2, dur: 22, calls: .15, span: 1, extras: ["review", "alt"] },
+    choices: [
+      { label: "Show Gail your log.", sub: "Let the record speak for you.",
+        req: () => S.evidence >= 15, lock: () => `Locked: you need 15 evidence. You have ${S.evidence}.`,
+        go: () => ({ d: { life: 10, nerve: 6, evidence: 4 }, flags: { workAlly: 1 }, text: [
+          "Gail reads for five minutes without speaking. Then she bans Heather from the pub and prints every email out for you.",
+          "\"Anything she sends here comes straight to you, dated,\" she says. \"I'm not having this.\""] }) },
+      { label: "Tell Gail it's a misunderstanding.", sub: "Keep it small.",
+        go: () => ({ d: { life: -6, nerve: -4 }, text: [
+          "Gail lets it go. Heather doesn't. The emails to the pub double, and now Gail's starting to wonder if there's something in them.",
+          "Shame keeps things small. It also keeps you alone with them."] }) },
+      { label: "Hand in your notice.", sub: "Get her away from everyone else.",
+        go: () => ({ d: { life: -14, nerve: 2, heat: 4 }, text: [
+          "You leave that afternoon. It feels like protecting Gail. It also means losing your only job.",
+          "She finds out where you're temping within a fortnight."] }) }
+    ]
+  },
+  {
+    when: "Week 7 · Monday · 19:05", date: "Monday 27 October", clock: "19:05", heat: 8,
+    title: "The front <em>desk</em>",
+    text: () => [
+      "The messages have changed. She knows your street. She knows your mum's garden. One evening she's at the bus stop opposite your flat, not waiting for a bus.",
+      "You walk to the police station with your phone in your hand. You rehearse it on the way and it sounds mad: a woman sends me a lot of emails.",
+      "Your phone goes before you're halfway there."
+    ],
+    flood: { tier: 3, dur: 28, calls: .2, span: 1.5, extras: ["alt"] },
+    choices: [
+      { label: "Show them your log.", sub: "Dates, times, screenshots. It's all there.",
+        req: () => S.evidence >= 25, lock: () => `Locked: you need 25 evidence. You have ${S.evidence}.`,
+        go: () => ({ d: { heat: -20, evidence: 10, nerve: 8 }, flags: { crimeRef: 1 }, text: [
+          "The officer scrolls for a long time. Her face changes about halfway down.",
+          "You leave with a crime reference number and a named officer. It's the first time someone other than you has written it down."] }) },
+      { label: "Just tell them what's been happening.", sub: "Surely that's enough.",
+        go: () => ({ d: { nerve: -10 }, flags: { brushedOff: 1 }, text: [
+          "\"Has she actually threatened you? Directly?\" You try to explain how it adds up. With nothing to show, it sounds like a funny story told badly.",
+          "\"Keep a diary,\" he says. \"Come back if anything changes.\" Everything is changing."] }) },
+      { label: "Turn round before you reach the desk.", sub: "You'd only be wasting their time.",
+        go: () => ({ d: { nerve: -12, heat: 5 }, text: [
+          "You're back on the street in ninety seconds. A text arrives as you reach your door: <span class=\"her\">\"Nice walk?\"</span>",
+          "You weren't wasting anyone's time. Stalking is a crime. You just didn't believe it was yours to report."] }) }
+    ]
+  },
+  {
+    when: "Week 8 · Thursday · 17:45", date: "Thursday 6 November", clock: "17:45", heat: 4,
+    title: "Someone to <em>talk to</em>",
+    text: () => [
+      "You haven't slept more than four hours in a row since September. Your hands shake when the phone goes, even when it's your mum.",
+      S.flags.toldSam
+        ? "Sam has left a leaflet on the kitchen table: Talking Therapies, self-referral. Sam isn't subtle."
+        : "Someone from the pub has written a GP surgery's number on a beer mat and slipped it into your coat pocket.",
+      "You look at it for a long time."
+    ],
+    choices: [
+      { label: "Book a GP appointment and ask for counselling.", sub: "Admit it's getting to you.",
+        go: () => ({ d: { nerve: 15, life: 4 }, flags: { therapy: 1 }, text: [
+          "The GP doesn't flinch when you say the word stalking. She refers you, and the counsellor asks something you weren't ready for: why do you think you gave her the tea?",
+          "You surprise yourself with the answer. Something about wanting to be seen. Something older than Heather."] }) },
+      { label: "Stay after closing and drink until it goes quiet.", sub: "It works, for a few hours.",
+        go: () => ({ d: { nerve: 8, life: -10, heat: 6 }, text: [
+          "It works until about three. Then the phone goes, and you answer it drunk, and afterwards you can't remember what you said.",
+          "She can. She emails you a transcript."] }) },
+      { label: "Keep going. Other people have it worse.", sub: "Just get on with it.",
+        go: () => ({ d: { nerve: -5 }, text: [
+          "Other people having it worse doesn't make yours smaller. It just makes you quieter about it.",
+          "You start sleeping with your phone under the pillow, so the buzz wakes you before the ringtone does."] }) }
+    ]
+  },
+  {
+    when: "Three years earlier · Friday · 22:30", date: "Friday 14 March", clock: "22:30",
+    gate: {
+      eyebrow: "Content note", title: "Before <em>Heather</em>",
+      text: [
+        "The next scene goes back three years, to an older man in the comedy world. It refers to sexual abuse. Nothing is described in detail.",
+        "It explains a lot about why you couldn't just walk away from Heather. You can skip it and the story carries on."
+      ],
+      enter: "Continue", skip: "Skip this scene"
+    },
+    title: "Before <em>Heather</em>",
+    text: () => [
+      "You were twenty-eight, doing five minutes at a festival, when Ronan found you at the bar. He'd written for television. He said you were the real thing.",
+      "He invited you round to work on a script. There was wine, then other things, and his attention felt like sunlight after years of nobody looking.",
+      "What happened in that flat over the next few months is something you still don't have words for. You didn't agree to it. You kept going back anyway, because he said he could make you, and because leaving would mean admitting what it was.",
+      S.flags.therapy
+        ? "The counsellor is waiting. You realise this is why a stranger's laugh felt so good, and why saying no to Heather has felt impossible."
+        : "Nobody's asking. You think about it anyway, at four in the morning, and realise this is why a stranger's laugh felt so good, and why saying no to Heather has felt impossible."
+    ],
+    choices: [
+      { label: "Tell someone about Ronan.", sub: () => S.flags.therapy ? "The counsellor. Out loud, for the first time." : (S.flags.toldSam ? "Sam. Out loud, for the first time." : "A support line. Out loud, for the first time."),
+        go: () => ({ d: { nerve: -6, life: 6 }, flags: { toldPast: 1 }, text: [
+          "You say his name. Your voice does something strange. Nobody looks shocked. They just say: \"Thank you for telling me. None of that was your fault.\"",
+          "It will get worse before it gets better. But it's out of that flat now."] }) },
+      { label: "Not yet.", sub: "Some things take longer.",
+        go: () => ({ d: { nerve: -3 }, text: [
+          "You put it back where you keep it. You talk about Heather instead, because Heather is easier, which tells you something.",
+          "The door will still be there when you're ready. That's a kind of comfort."] }) }
+    ]
+  },
+  {
+    when: "Week 9 · Wednesday · 03:14", date: "Wednesday 12 November", clock: "03:14", heat: 8,
+    title: "Three-fourteen <em>am</em>",
+    text: () => [
+      "The voicemails come at night now. She sings. She cries. She talks about your mum using her first name. She says she knows which bus your dad gets.",
+      "Things come through your letterbox too: cards, photos, a sock you lost months ago.",
+      "You lie awake waiting for the buzz. When it comes it's almost a relief, because at least you've stopped waiting."
+    ],
+    flood: { tier: 3, dur: 30, calls: .3, span: 3, mode: "dim", extras: ["alt", "card"] },
+    choices: [
+      { label: "Start a stalking diary: every incident, every date, how it made you feel.", sub: "Painful. Useful.",
+        go: () => ({ d: { evidence: 12, nerve: -6 }, flags: { diary: 1 }, text: [
+          "Writing it down means living it twice. But on paper it stops being a fog and becomes a pattern.",
+          "Fixated. Obsessive. Unwanted. Repeated. You read those four words on a charity's website and recognise every one."] }) },
+      { label: "Ring the National Stalking Helpline.", sub: "Talk to someone who deals with this every day.",
+        go: () => ({ d: { nerve: 12, evidence: 6 }, flags: { helpline: 1 }, text: [
+          "The woman on the line doesn't laugh, and doesn't ask why you gave her a cup of tea. She asks how you're sleeping.",
+          "She tells you to keep everything, not to engage, and that what's happening to you has a name and a law. You put the phone down and cry for the first time."] }) },
+      { label: "Go round to hers and tell her to stop, to her face.", sub: "Sort it out once and for all.",
+        go: () => ({ d: { heat: 25, nerve: -5 }, flags: { confronted: 1 }, text: [
+          "She opens the door before you knock. She cries, then laughs, then hugs you, and you can't get out of the hug.",
+          "By morning she's told everyone you came round. In her head it's a love story now, and you've just written the next chapter."] }) }
+    ]
+  },
+  {
+    when: "Week 10 · Sunday · 14:00", date: "Sunday 23 November", clock: "14:00", heat: 6,
+    title: "Sunday <em>dinner</em>",
+    text: () => [
+      "You go home to your mum and dad's for a roast, the first in months. You switch your phone off at the door.",
+      "Halfway through the potatoes, the landline rings. Your mum answers. Her face goes very still. <span class=\"her\">\"She says she's your fiancée.\"</span>",
+      "You switch your phone back on."
+    ],
+    flood: { tier: 3, dur: 26, calls: .25, span: 5, extras: ["card", "alt"] },
+    choices: [
+      { label: "Tell them everything.", sub: "All of it, right here at the table.",
+        go: () => ({ d: { nerve: 6, life: 8, heat: 2 }, text: [
+          "Your dad goes quiet the way he does when he's angry. Not at you. Your mum holds your hand across the gravy.",
+          "You've been protecting them from this for three months. All it did was leave them unprepared."] }) },
+      { label: "Ask them to write down every call and never answer her.", sub: "Give them a job, not a fright.",
+        go: () => ({ d: { evidence: 8, life: 4 }, flags: { familyLog: 1 }, text: [
+          "Your mum starts a notebook by the phone: date, time, what was said. Your dad wants to change the number but agrees to keep it until you've spoken to the police.",
+          "Three people keeping records instead of one. Small, organised, enormous."] }) },
+      { label: "Say it's a misunderstanding.", sub: "They've got enough on.",
+        go: () => ({ d: { nerve: -8, life: -6 }, text: [
+          "Your mum believes you, because she wants to. So the next time Heather rings, she's polite. They chat for twenty minutes.",
+          "Heather now knows all about your nan's hip."] }) }
+    ]
+  },
+  {
+    when: "Week 12 · Saturday · 23:31", date: "Saturday 6 December", clock: "23:31", heat: 10,
+    title: "She's <em>outside</em>",
+    text: () => S.flags.toldSam ? [
+      "You and Sam walk back from a gig. She's under the streetlight across the road.",
+      "She starts shouting before you reach the door. Sam steps between you. Heather shoves Sam hard into the railings.",
+      "You get inside. The phone won't stop."
+    ] : [
+      "You walk back alone from a gig. She's under the streetlight across the road.",
+      "She follows you to the door, close enough that you feel her breath on your neck while you fumble the key. You get inside and slam it.",
+      "She hammers on the glass. The phone won't stop."
+    ],
+    flood: { tier: 4, dur: 24, calls: .25, span: .5, extras: ["alt"] },
+    choices: [
+      { label: "Ring 999.", sub: "This is an emergency.",
+        go: () => S.evidence >= 55 ? ({ d: { heat: -40, nerve: 6 }, flags: { charged: 1 }, text: [
+          "Police arrive in eleven minutes. This time you hand over months of logs, your records, the crime reference number if you have one.",
+          "She's arrested on the pavement. Two weeks later the CPS charges her with stalking."] })
+          : ({ d: { heat: -15, nerve: -4 }, flags: { cautioned: 1 }, text: [
+          "She's gone by the time the police arrive. They take a statement, but with so little on record it's treated as a one-off.",
+          "She gets a caution. The messages start again within the week, angrier."] }) },
+      { label: "Lock the door, turn the lights off, wait it out.", sub: "She'll go eventually.",
+        go: () => ({ d: { heat: 15, nerve: -15, life: -8 }, text: [
+          "She goes at four. She's back at six.",
+          "Waiting in the dark teaches her one thing: that you'll wait in the dark."] }) },
+      { label: "Open the door and try to calm her down.", sub: "Maybe she just needs to be heard.",
+        go: () => ({ d: { heat: 30, nerve: -10 }, text: [
+          "She's in the hallway before you've finished a sentence. It takes an hour and a neighbour to get her back out.",
+          "She was heard. She took it as an invitation."] }) }
+    ]
+  },
+  {
+    when: "Interlude · the same night · 04:20", date: "Sunday 7 December", clock: "04:20",
+    gate: {
+      eyebrow: "Optional scene", title: "Her <em>side</em>",
+      text: [
+        "This short scene follows Heather on the same night. It doesn't change your story or your stats.",
+        "It might change how you see it."
+      ],
+      enter: "See her night", skip: "Skip it"
+    },
+    title: "Her <em>side</em>",
+    text: () => [
+      "You aren't there for this. Nobody is.",
+      "Heather's flat is a bedsit above a launderette. The bed is covered in newspapers she hasn't read and letters she hasn't opened, most of them from the council. There is no chambers. There never was.",
+      "On the pillow is a toy puffin with one eye missing. She tells it about her day: the judge she didn't have lunch with, the barman who looked at her like she was a person.",
+      "She writes an email. Deletes it. Writes it again. Nine times. On the tenth she presses send, then sits very still, waiting for the phone to light up.",
+      "It doesn't. It never does, for her. She lies down with the puffin on her chest and watches the ceiling until it gets light."
+    ],
+    choices: [
+      { label: "Go back to your own life.", sub: "None of this excuses anything. Both things are true.",
+        go: () => ({ d: {}, flags: { sawHerSide: 1 }, text: [
+          "You'll never know this happened. If you did, it wouldn't make the messages stop.",
+          "It might make them harder to hate."] }) }
+    ]
+  },
+  {
+    when: "Month 5 · Tuesday · 08:10", date: "Tuesday 20 January", clock: "08:10",
+    title: "The <em>letter</em>",
+    text: () => [
+      S.flags.charged
+        ? "She's on bail. One of the conditions is no contact with you, by any means."
+        : "Things have gone quieter since the police got involved. Not silent. Quieter.",
+      "For five weeks, almost nothing. You check your phone more than you did when it never stopped."
+    ],
+    flood: { tier: 2, dur: 20, calls: 0, span: 24 * 5, mode: "quiet" },
+    after: () => [
+      "On a Tuesday morning a parcel arrives with no return address. Inside are a hundred and six handwritten pages, numbered, in green ink.",
+      "The first line says: <span class=\"her\">Puffin, I forgive you.</span>"
+    ],
+    choices: [
+      { label: "Hand it to the police unread.", sub: "It's evidence, not a letter.",
+        go: () => ({ d: { evidence: 10, nerve: 4, heat: -6 }, flags: { letterIn: 1 }, text: S.flags.charged ? [
+          "Your officer bags it in front of you. \"That's a breach of her bail,\" she says. \"That's her mistake, not yours.\""] : [
+          "The officer adds it to your file. \"This helps,\" she says. \"It shows she isn't stopping.\""] }) },
+      { label: "Read every page.", sub: "You need to know what she's thinking.",
+        go: () => ({ d: { nerve: -14, evidence: 4 }, flags: { letterIn: 1 }, text: [
+          "It takes four hours. Some of it is lovely, which is the worst part. Some of it is about what she'd do if she saw you with someone else.",
+          "You can't un-read it. You hand it in the next morning, with your fingerprints on every page."] }) },
+      { label: "Burn it in the sink.", sub: "Get it out of the flat.",
+        go: () => ({ d: { nerve: 6, evidence: -6 }, text: [
+          "It feels incredible for exactly as long as it takes paper to burn.",
+          "Then you realise you've just destroyed the best evidence you'll get all year."] }) }
+    ]
+  },
+  {
+    when: "Six months later · 09:45", date: "Monday 8 June", clock: "09:45",
+    title: "Courtroom <em>three</em>",
+    text: () => {
+      const p = S.flags.charged ? [
+        "Heather pleads not guilty. Then, on the morning of the trial, she changes her plea.",
+        "She doesn't look at you once. She's wearing the coat she wore the day you made her a cup of tea."
+      ] : [
+        "The police have applied to the magistrates for a Stalking Protection Order. Whether it's granted depends on what you can show.",
+        "Heather speaks for herself. She's very good at it."
+      ];
+      if (S.replies.length) p.push(`She has printed out your own message and reads it aloud: <span class="mine">“${esc(S.replies[0])}”</span> <span class="her">"Does that sound like a man who wanted no contact?"</span>`);
+      if (S.flags.mocked) p.push("She tells the court you made her part of your act. \"He introduced me. On stage. To forty people.\" It's true, and it hurts to hear.");
+      if (S.flags.confronted) p.push("She says you came to her flat at night. That's true too. It takes your officer ten minutes to explain why it doesn't mean what she says it means.");
+      if (S.flags.workAlly) p.push("Gail is in the public gallery in her good coat, with a ring binder of every email the pub received.");
+      if (S.flags.familyLog) p.push("Your mum's notebook from beside the phone is exhibit fourteen.");
+      if (S.flags.oldSim) p.push("The old phone from the kitchen drawer sits in an evidence bag on the clerk's desk. You never let its battery die.");
+      if (S.flags.therapy) p.push("Your counsellor's letter is in the bundle. You haven't read it. You don't need to.");
+      p.push("You're asked whether you want to read a statement.");
+      return p;
+    },
+    choices: [
+      { label: "Tell the truth, including the part where you liked it at first.", sub: "The hardest sentence you'll ever say.",
+        go: () => ({ d: { nerve: 5 }, flags: { honest: 1 }, ending: true }) },
+      { label: "Stick to what she did.", sub: "Dates, times, facts.",
+        go: () => ({ d: {}, ending: true }) }
+    ]
+  }
+];
+
+/* ---------- HUD ---------- */
+function hud() {
+  const set = (k, pct, txt) => {
+    const m = document.querySelector(`.m-${k}`);
+    if (!m) return;
+    m.querySelector("i").style.width = clamp(pct) + "%";
+    m.querySelector("output").textContent = txt;
+  };
+  set("nerve", S.nerve, Math.round(S.nerve));
+  set("evidence", S.evidence / 75 * 100, S.evidence);
+  set("heat", S.heat, Math.round(S.heat));
+  set("life", S.life, Math.round(S.life));
+  const n = document.querySelector(".m-nerve");
+  if (n) n.classList.toggle("low", S.nerve < 25);
+  $("ph-nerve").textContent = Math.round(S.nerve);
+  $("ph-ev").textContent = S.evidence;
+  $("ph-heat").textContent = Math.round(S.heat);
+  $("ph-nerve-wrap").classList.toggle("low", S.nerve < 25);
+}
+const hudHTML = () => `
+  <div class="hud" role="group" aria-label="Your state">
+    <div class="meter m-nerve"><div class="meter-top"><label>Nerve</label><output></output></div><div class="bar"><i></i></div></div>
+    <div class="meter m-evidence"><div class="meter-top"><label>Evidence</label><output></output></div><div class="bar"><i></i></div></div>
+    <div class="meter m-heat"><div class="meter-top"><label>Her fixation</label><output></output></div><div class="bar"><i></i></div></div>
+    <div class="meter m-life"><div class="meter-top"><label>Your life</label><output></output></div><div class="bar"><i></i></div></div>
+  </div>`;
+
+/* ---------- Settings: sound, vibration, pace ---------- */
+const PACES = [[1, "normal"], [.6, "slow"], [.35, "slowest"]];
+function paintSettings() {
+  $("sound").setAttribute("aria-pressed", settings.sound);
+  $("sound").textContent = settings.sound ? "Sound on" : "Sound off";
+  $("haptics").setAttribute("aria-pressed", settings.haptics);
+  $("haptics").textContent = settings.haptics ? "Vibrate on" : "Vibrate off";
+  const p = PACES.find(x => x[0] === settings.pace) || PACES[0];
+  $("pace").setAttribute("aria-pressed", p[0] !== 1);
+  $("pace").textContent = "Pace: " + p[1];
+}
+function saveSettings() { lsSet(SET_KEY, { haptics: settings.haptics, pace: settings.pace }); }
+$("sound").addEventListener("click", () => {
+  settings.sound = !settings.sound;
+  if (settings.sound && !audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} }
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  paintSettings();
+});
+$("haptics").addEventListener("click", () => {
+  settings.haptics = !settings.haptics;
+  if (settings.haptics) vibrate([60]);
+  paintSettings(); saveSettings();
+});
+$("pace").addEventListener("click", () => {
+  const i = PACES.findIndex(x => x[0] === settings.pace);
+  settings.pace = PACES[(i + 1) % PACES.length][0];
+  paintSettings(); saveSettings();
+});
+function vibrate(pattern) {
+  if (!settings.haptics) return;
+  try { navigator.vibrate && navigator.vibrate(pattern); } catch (_) {}
+}
+
+/* Each channel has its own buzz: shape of the vibration, pitch and rhythm of the sound */
+const BUZZ = {
+  sms:    { vib: [60, 40, 60],             tones: [[0, 85, .12], [.16, 85, .12]] },
+  email:  { vib: [120],                    tones: [[0, 70, .2]] },
+  dm:     { vib: [40],                     tones: [[0, 110, .08]] },
+  alt:    { vib: [40, 40, 40],             tones: [[0, 110, .06], [.1, 120, .06], [.2, 130, .06]] },
+  call:   { vib: [400, 200, 400],          tones: [[0, 90, .35], [.5, 90, .35]] },
+  vm:     { vib: [30, 30, 30, 30, 30],     tones: [[0, 60, .05], [.08, 60, .05], [.16, 60, .05]] },
+  review: { vib: [150],                    tones: [[0, 140, .1]] },
+  card:   { vib: [20],                     tones: [[0, 55, .25]] }
+};
+function buzz(ch = "sms") {
+  phone.classList.remove("buzz");
+  void phone.offsetWidth;
+  phone.classList.add("buzz");
+  const b = BUZZ[ch] || BUZZ.sms;
+  vibrate(b.vib);
+  if (settings.sound && audioCtx) {
+    const t = audioCtx.currentTime;
+    for (const [off, freq, len] of b.tones) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "sawtooth"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t + off);
+      g.gain.exponentialRampToValueAtTime(0.05, t + off + .02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + off + len);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(t + off); o.stop(t + off + len + .01);
+    }
+  }
+}
+
+/* ---------- Phone ---------- */
+let clockMin = 0;
+const fmt = m => { m = ((Math.floor(m) % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
+function setClock(str, date) {
+  const [h, m] = str.split(":").map(Number);
+  clockMin = h * 60 + m;
+  paintClock();
+  if (date) $("ph-date").textContent = date;
+}
+function paintClock() { $("ph-clock").textContent = fmt(clockMin); $("sb-time").textContent = fmt(clockMin); }
+function paintCount() { $("ph-count").textContent = `${S.received} from Heather`; }
+
+const LABEL = { sms: "Messages", email: "Mail", dm: "DM", alt: "DM", vm: "Voicemail", call: "Phone", review: "Reviews", card: "Letterbox", typing: "Messages" };
+const GLYPH = { sms: "TXT", email: "@", dm: "DM", alt: "DM", vm: "VM", call: "☎", review: "★", card: "✉", typing: "…" };
+function noteHTML(n) {
+  const from = n.from || (n.anon ? "No Caller ID" : "Heather");
+  return `<li class="note ch-${n.ch}${n.logged ? " is-logged" : ""}${n.old ? " is-old" : ""}" data-id="${n.id}">
+    <div class="note-head"><span class="app" aria-hidden="true">${GLYPH[n.ch]}</span><span>${LABEL[n.ch]}</span>${n.old ? '<span class="tag">OLD PHONE</span>' : ""}<span class="from">${esc(from)}</span><time>${n.time}</time></div>
+    ${n.subject ? `<p class="note-body"><b>${esc(n.subject)}</b></p>` : ""}
+    <p class="note-body">${esc(n.text)}</p>
+    ${n.ch === "email" ? '<div class="note-foot">Sent from my iPhone</div>' : ""}
+    ${n.loggable ? `<div class="note-row"><button class="log-btn" data-log="${n.id}" ${n.logged || !n.live ? "disabled" : ""}>${n.logged ? "✓ Logged" : "Log it"}</button></div>` : ""}
+  </li>`;
+}
+let noteSeq = 0;
+const notes = new Map();
+function addNote(n) {
+  n.id = ++noteSeq;
+  n.time = fmt(clockMin);
+  n.live = !!F;
+  n.loggable = n.loggable !== false;
+  notes.set(n.id, n);
+  notesEl.insertAdjacentHTML("afterbegin", noteHTML(n));
+  while (notesEl.children.length > 60) {
+    const last = notesEl.lastElementChild;
+    notes.delete(Number(last.dataset.id));
+    last.remove();
+  }
+  notesEl.scrollTop = 0;
+  return n;
+}
+function removeNote(id) {
+  notes.delete(id);
+  const el = notesEl.querySelector(`[data-id="${id}"]`);
+  if (el) el.remove();
+}
+function clearNotes() { notes.clear(); notesEl.innerHTML = ""; }
+
+notesEl.addEventListener("click", e => {
+  const b = e.target.closest("[data-log]");
+  if (!b || !F || F.paused) return;
+  const n = notes.get(Number(b.dataset.log));
+  if (!n || n.logged) return;
+  n.logged = true;
+  S.logged++;
+  F.logged++;
+  adj({ evidence: 1, nerve: -.15 });
+  b.textContent = "✓ Logged";
+  b.disabled = true;
+  b.closest(".note").classList.add("is-logged");
+});
+
+/* ---------- Flood ---------- */
+const DRAIN = [0, .35, .55, .8, 1.0];
+const BASE_GAP = [0, 1.7, 1.3, 1.0, .8];
+function nextGap(cfg) {
+  if (cfg.mode === "quiet") return 3.5 + Math.random() * 3;
+  return BASE_GAP[cfg.tier] * (1 - S.heat / 260) * (.6 + Math.random() * .8);
+}
+
+function startFlood(cfg) {
+  clearNotes();
+  F = { cfg, t: 0, next: cfg.mode === "quiet" ? 2.5 : .6, count: 0, logged: 0, call: null, paused: false, ghost: null,
+        startClock: clockMin, perSec: cfg.span * 60 / cfg.dur, quietTurn: 0 };
+  document.body.classList.add("flooding");
+  phone.classList.toggle("dim", cfg.mode === "dim");
+  $("timer").hidden = false;
+  $("phone-foot").hidden = false;
+  $("pause").textContent = "Pause";
+  F.iv = setInterval(tick, 100);
+}
+
+function tick() {
+  if (!F || F.paused) return;
+  const dt = .1 * settings.pace;
+  F.t += dt;
+  clockMin += F.perSec * dt;
+  paintClock();
+  $("timer-bar").style.width = Math.min(100, F.t / F.cfg.dur * 100) + "%";
+  if (F.cfg.mode === "quiet") adj({ nerve: -.55 * dt });   // the silence is its own kind of pressure
+  if (F.call) {
+    F.call.t += dt;
+    adj({ nerve: -1.2 * dt * (F.call.old ? .4 : 1) });
+    if (F.call.t >= 3.6) missCall();
+  }
+  if (F.ghost && F.t >= F.ghost.until) { removeNote(F.ghost.id); F.ghost = null; }
+  if (F.t >= F.next) {
+    spawn();
+    F.next = F.t + nextGap(F.cfg);
+  }
+  if (S.nerve <= 0) return endFlood(false, "burnout");
+  if (F.t >= F.cfg.dur) endFlood(false);
+}
+
+function pickChannel(cfg) {
+  const w = { sms: .38, email: .4, dm: .14 };
+  for (const x of cfg.extras || []) w[x] = x === "alt" && S.flags.blocked ? .35 : .14;
+  const total = Object.values(w).reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (const [k, v] of Object.entries(w)) { if ((r -= v) <= 0) return k; }
+  return "sms";
+}
+
+function spawn() {
+  const cfg = F.cfg;
+  if (cfg.mode === "quiet") {
+    // Mostly "Heather is typing..." that comes to nothing. Now and then, something real.
+    F.quietTurn++;
+    if (F.quietTurn % 3 !== 0) {
+      if (F.ghost) removeNote(F.ghost.id);
+      const g = addNote({ ch: "typing", text: "Heather is typing…", loggable: false, from: S.flags.blocked ? rnd(ALT_NAMES) : "Heather" });
+      F.ghost = { id: g.id, until: F.t + 2.4 };
+      adj({ nerve: -.6 });
+      return;
+    }
+  }
+  const tier = Math.random() < .7 ? cfg.tier : Math.max(1, cfg.tier - 1 - Math.floor(Math.random() * 2));
+  if (Math.random() < cfg.calls && !F.call) return ring(tier);
+  const ch = pickChannel(cfg);
+  let text, from, subject = "";
+  if (ch === "review") { text = rnd(REVIEWS); from = "Crown & Feathers · new review"; }
+  else if (ch === "card") { text = rnd(CARDS); from = "Through your door"; }
+  else {
+    text = S.replies.length && Math.random() < .16 ? rnd(QUOTES)(rnd(S.replies)) : draw(tier);
+    if (ch === "alt") from = rnd(ALT_NAMES);
+    if (ch === "email") subject = rnd(EMAIL_SUBJECTS);
+  }
+  const old = !!S.flags.oldSim && ch === "sms";
+  S.received++; F.count++;
+  addNote({ ch, text, from, old, subject, anon: ch === "sms" && !!S.flags.blocked });
+  adj({ nerve: -DRAIN[tier] * (old ? .4 : 1) });
+  paintCount();
+  buzz(ch);
+}
+
+function ring(tier) {
+  const old = !!S.flags.oldSim;
+  F.call = { tier, t: 0, old };
+  S.received++; F.count++;
+  paintCount();
+  $("call-name").textContent = S.flags.blocked ? "No Caller ID" : "Heather";
+  $("call-sub").textContent = old ? "old phone · in the drawer" : "mobile";
+  $("call").hidden = false;
+  buzz("call");
+}
+function closeCall() { F.call = null; $("call").hidden = true; }
+function missCall() {
+  const c = F.call; closeCall();
+  S.voicemails++;
+  addNote({ ch: "vm", anon: !!S.flags.blocked, old: c.old, text: `${Math.floor(20 + Math.random() * 100)}s · ${rnd(VOICEMAIL[c.tier])}` });
+  buzz("vm");
+}
+$("decline").addEventListener("click", () => {
+  if (!F || !F.call) return;
+  const c = F.call; closeCall();
+  S.declined++;
+  addNote({ ch: "call", anon: !!S.flags.blocked, old: c.old, text: "Declined call." });
+});
+$("answer").addEventListener("click", () => {
+  if (!F || !F.call) return;
+  const c = F.call; closeCall();
+  S.answered++;
+  adj({ heat: 4, nerve: -4 });
+  addNote({ ch: "call", anon: !!S.flags.blocked, old: c.old, text: `Call answered · ${20 + Math.floor(Math.random() * 40)} min. You said six words. She'll quote all of them back to you.` });
+});
+$("facedown").addEventListener("click", () => { if (F) { S.faceDowns++; endFlood(true); } });
+$("pause").addEventListener("click", () => {
+  if (!F) return;
+  F.paused = !F.paused;
+  phone.classList.toggle("paused", F.paused);
+  $("pause").textContent = F.paused ? "Resume" : "Pause";
+});
+
+function stopFloodUI() {
+  document.body.classList.remove("flooding");
+  phone.classList.remove("dim", "paused");
+  $("timer").hidden = true;
+  $("phone-foot").hidden = true;
+  $("call").hidden = true;
+}
+function endFlood(early, ending) {
+  clearInterval(F.iv);
+  if (F.call) missCall();
+  if (F.ghost) removeNote(F.ghost.id);
+  const done = F;
+  F = null;
+  notes.forEach(n => n.live = false);
+  notesEl.querySelectorAll("[data-log]:not(:disabled)").forEach(b => { b.disabled = true; b.textContent = "Not logged"; });
+  stopFloodUI();
+  if (ending) { S.lostAt = plain(CH[S.ch].title); return showEnding(ending); }
+  afterFlood(done, early);
+}
+
+/* ---------- Saving ---------- */
+function saveGame() { lsSet(SAVE_KEY, { S: checkpoint }); }
+function loadSave() {
+  const s = lsGet(SAVE_KEY);
+  return s && s.S && CH[s.S.ch] ? s : null;
+}
+
+/* ---------- Scenes ---------- */
+function sceneHead(c) {
+  return `${hudHTML()}<div class="scene">
+    <div class="eyebrow">${c.when}</div>
+    <h1>${c.title}</h1>`;
+}
+function proseHTML(arr, quiet) { return `<div class="prose">${arr.map(p => `<p${quiet ? ' class="quiet"' : ""}>${p}</p>`).join("")}</div>`; }
+
+function goChapter(i, restoring) {
+  S.ch = i;
+  const c = CH[i];
+  if (!restoring) {
+    checkpoint = copy(S);
+    saveGame();
+    if (c.heat) adj({ heat: c.heat });
+  }
+  setClock(c.clock, c.date);
+  paintCount();
+  if (S.heat >= 100) { S.lostAt = plain(c.title); return showEnding("door"); }
+  if (c.gate && !restoring) return showGate(i);
+  renderScene(c);
+}
+
+function showGate(i) {
+  const c = CH[i], g = c.gate;
+  stage.innerHTML = `${hudHTML()}<div class="scene">
+    <div class="eyebrow">${g.eyebrow}</div>
+    <h1>${g.title}</h1>
+    ${proseHTML(g.text, true)}
+    <div class="row-buttons"><button class="primary" id="gate-in">${g.enter}</button><button class="ghost" id="gate-skip">${g.skip}</button></div>
+  </div>`;
+  hud();
+  $("gate-in").addEventListener("click", () => renderScene(c));
+  $("gate-skip").addEventListener("click", () => goChapter(i + 1));
+  stage.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderScene(c) {
+  stage.innerHTML = sceneHead(c) + proseHTML(c.text()) +
+    (c.flood ? `<button class="primary" id="go">Check your phone</button>` : choicesHTML(c)) + `</div>`;
+  hud();
+  if (c.flood) $("go").addEventListener("click", () => showFloodBrief(c));
+  else bindChoices(c);
+  stage.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function showFloodBrief(c) {
+  const mode = c.flood.mode;
+  const lines = c.tutorial ? [
+    "Messages will pour in. Tap <b>Log it</b> on anything you want on record. Each one counts as evidence, but reading them costs you nerve.",
+    "Calls ring for a few seconds: decline them, answer them, or let them go to voicemail and log that.",
+    "When it gets too much, turn the phone face down. It stops the damage, but anything that arrives after that goes unrecorded. If you need a moment, Pause stops the clock. You can slow everything down with the Pace button at the top."
+  ] : mode === "dim" ? [
+    "It's the middle of the night. The screen is dimmed and your eyes won't focus. Log what you can."
+  ] : mode === "quiet" ? [
+    "Five weeks, squashed into a few seconds. Watch the phone. Log anything real."
+  ] : [
+    "Your phone is going. Log what you can. Turn it face down when you've had enough."
+  ];
+  stage.innerHTML = sceneHead(c) + proseHTML(lines, true) + `<button class="primary" id="pickup">Pick up the phone</button></div>`;
+  hud();
+  $("pickup").addEventListener("click", () => {
+    $("pickup").hidden = true;
+    startFlood(c.flood);
+  });
+}
+
+function afterFlood(f, early) {
+  const c = CH[S.ch];
+  const mins = clockMin - f.startClock;
+  const span = mins >= 2 * 1440 ? `${Math.round(mins / 1440)} days` : mins >= 120 ? `${Math.round(mins / 60)} hours` : "under two hours";
+  let summary;
+  if (c.flood.mode === "quiet") summary = `Silence, mostly. ${f.count} real messages in ${span}, and a lot of typing that came to nothing. You logged ${f.logged}. The quiet was the loudest it's been.`;
+  else if (early) summary = `You turn the phone face down. It keeps vibrating against the table. ${f.count} messages arrived before you stopped looking. You logged ${f.logged}.`;
+  else summary = `${f.count} messages in ${span}. You logged ${f.logged}.`;
+  stage.innerHTML = sceneHead(c) + proseHTML([summary], true) + (c.after ? proseHTML(c.after()) : "") + choicesHTML(c) + `</div>`;
+  hud();
+  bindChoices(c);
+}
+
+function choicesHTML(c) {
+  return `<div class="choices">${c.choices.map((o, k) => {
+    const ok = !o.req || o.req();
+    return `<button class="choice${o.write ? " write" : ""}" data-k="${k}" ${ok ? "" : "disabled"}><b>${val(o.label)}</b><span>${ok ? val(o.sub) : o.lock()}</span></button>`;
+  }).join("")}</div>`;
+}
+function bindChoices(c) {
+  stage.querySelectorAll(".choice").forEach(b => b.addEventListener("click", () => {
+    const o = c.choices[+b.dataset.k];
+    o.write ? openComposer(c, o) : pick(c, o);
+  }));
+}
+
+function openComposer(c, o) {
+  const box = stage.querySelector(".choices");
+  const wrap = document.createElement("div");
+  wrap.className = "composer";
+  wrap.innerHTML = `
+    <label for="reply-text">To: ${S.flags.blocked ? "the number you blocked" : "Heather"}. She will keep whatever you write.</label>
+    <textarea id="reply-text" maxlength="160" rows="3" placeholder="${esc(o.placeholder || "")}"></textarea>
+    <div class="composer-row">
+      <span class="count" id="reply-count">0/160</span>
+      <button class="ghost" id="reply-cancel">Don't send</button>
+      <button class="primary" id="reply-send" disabled>Send</button>
+    </div>`;
+  box.replaceWith(wrap);
+  const ta = $("reply-text");
+  ta.focus();
+  ta.addEventListener("input", () => {
+    $("reply-count").textContent = `${ta.value.length}/160`;
+    $("reply-send").disabled = !ta.value.trim();
+  });
+  $("reply-cancel").addEventListener("click", () => {
+    wrap.outerHTML = choicesHTML(c);
+    bindChoices(c);
+  });
+  $("reply-send").addEventListener("click", () => {
+    const t = ta.value.trim();
+    if (t) pick(c, o, t);
+  });
+}
+
+function pick(c, o, typed) {
+  const r = typed != null ? o.go(typed) : o.go();
+  Object.assign(S.flags, r.flags || {});
+  adj(r.d);
+  S.log.push({ when: c.when, scene: plain(c.title), pick: typed != null ? `You wrote: “${typed}”` : plain(val(o.label)), d: r.d || {} });
+  if (S.nerve <= 0) { S.lostAt = plain(c.title); return showEnding("burnout"); }
+  if (S.heat >= 100) { S.lostAt = plain(c.title); return showEnding("door"); }
+  if (r.ending) return showEnding(finalEnding());
+  stage.innerHTML = sceneHead(c) + proseHTML(r.text) + `<button class="primary" id="next">Carry on</button></div>`;
+  hud();
+  $("next").addEventListener("click", () => { adj({ nerve: 3 }); goChapter(S.ch + 1); });
+}
+
+function finalEnding() {
+  if (S.evidence >= 75 || (S.flags.charged && S.evidence >= 55)) return "order";
+  if (S.evidence >= 45) return "warning";
+  return "nfa";
+}
+
+/* ---------- Endings ---------- */
+const pastLine = () => S.flags.toldPast
+  ? "Months later, with help, you make a second statement. About Ronan. It's the harder one, and the one that finally lets you sleep."
+  : "There's another statement you haven't made yet, about a flat three years ago. Maybe one day.";
+const herLine = () => S.flags.sawHerSide
+  ? "Sometimes you think about her, alone somewhere, waiting for a phone to light up. You don't know why. You don't reply."
+  : "";
+
+const ENDINGS = {
+  order: {
+    eyebrow: "Ending · Protected",
+    title: "The phone is <em>quiet</em>",
+    text: () => [
+      S.flags.charged
+        ? "She's convicted of stalking. The judge gives her a suspended sentence and a restraining order with no end date: no contact, by any means, ever."
+        : "The Stalking Protection Order is granted. She's banned from contacting you by any means, from your street, your work and every venue on your gig list.",
+      `The judge reads a number aloud: ${S.received}, the contacts in your bundle. Somebody in the public gallery gasps.`,
+      S.flags.honest ? "You told them about the flattery, and how good it felt to be someone's favourite. It was the hardest sentence you have ever said, and the first in months that felt like yours." : "You kept your statement to the facts. There's a part you still haven't said out loud. Maybe one day, on a stage.",
+      pastLine(),
+      herLine(),
+      "The phone is quiet now. You still check it. Some nights the quiet is worse. But you start writing again, and it isn't about her. It's about why a free cup of tea felt like the kindest thing you'd done in a year."
+    ].filter(Boolean)
+  },
+  warning: {
+    eyebrow: "Ending · Harassment warning",
+    title: "Did u <em>miss</em> me",
+    text: () => [
+      "There's enough to show a pattern, but not enough to win the order. She gets a formal warning and is told not to contact you.",
+      "It goes quiet for five weeks. You start sleeping. You go to the pub as a customer.",
+      pastLine(),
+      herLine(),
+      "Then, at 02:47 on a Tuesday: <span class=\"her\">\"Did u miss me. Sent from my iPhone.\"</span>",
+      "You open the HEATHER folder and start logging again. This time you know how, and you know it counts."
+    ].filter(Boolean)
+  },
+  nfa: {
+    eyebrow: "Ending · No further action",
+    title: "Your word against <em>hers</em>",
+    text: () => [
+      "Without a record, it's your word against hers, and she is very, very good with words.",
+      "The case is closed. The emails are not.",
+      "Every message you logged was a brick. You needed a wall. Try again, and build it."
+    ]
+  },
+  burnout: {
+    eyebrow: "Ending · Switched off",
+    title: "You stop <em>answering</em> anything",
+    text: () => [
+      "One morning you can't get out of bed. Then it's three weeks. Your manager stops ringing. Your mates stop texting. She doesn't stop.",
+      "This isn't weakness. It's what being hunted does to a person. Nerve isn't infinite, for anybody.",
+      "Next time: lean on people sooner, get support, and turn the phone face down when it gets too much. You don't have to read every message to survive this."
+    ]
+  },
+  door: {
+    eyebrow: "Ending · Escalation",
+    title: "On the <em>doorstep</em>",
+    text: () => [
+      "Every reply, every visit, every open door told her the same thing: keep going, it's working.",
+      "One night she's not across the street. She's inside your building, sitting on the stairs outside your flat with a carrier bag of your post.",
+      "The police come. Afterwards someone asks why you didn't report it sooner. You have no good answer, and you shouldn't need one.",
+      "Next time: don't engage, don't confront, don't open the door. Log everything and take it to the police early."
+    ]
+  }
+};
+
+const STAT_NAMES = { nerve: "Nerve", evidence: "Evidence", heat: "Fixation", life: "Life" };
+function chipsHTML(d) {
+  const parts = Object.entries(d).filter(([, v]) => v).map(([k, v]) => {
+    const good = k === "heat" ? v < 0 : v > 0;
+    return `<span class="chip ${good ? "good" : "bad"}">${STAT_NAMES[k]} ${v > 0 ? "+" : "−"}${Math.abs(v)}</span>`;
+  });
+  return parts.length ? `<div class="chips">${parts.join("")}</div>` : "";
+}
+function verdictLine(key) {
+  if (key === "burnout") return `Your nerve ran out during “${esc(S.lostAt)}”. Turning the phone face down, pausing, and choices that bring people in all protect it.`;
+  if (key === "door") return `Her fixation reached 100 during “${esc(S.lostAt)}”. Replying, answering calls, confronting her and opening the door all push it up. Going to the police with evidence brings it down.`;
+  return `You finished with ${S.evidence} evidence. The best ending needs 75, or 55 if she was charged on the night she turned up outside. The middle ending needs 45.`;
+}
+
+function showEnding(key) {
+  if (F) { clearInterval(F.iv); F = null; stopFloodUI(); }
+  const e = ENDINGS[key];
+  const lost = key === "burnout" || key === "door";
+  S.ended = key;
+  lsSet(SAVE_KEY, lost ? { S: checkpoint } : null);
+  stage.innerHTML = `${hudHTML()}<div class="scene">
+    <div class="eyebrow">${e.eyebrow}</div>
+    <h1>${e.title}</h1>
+    ${proseHTML(e.text())}
+    <div class="row-buttons">
+      ${lost && checkpoint ? `<button class="primary" id="retry">Retry “${esc(plain(CH[checkpoint.ch].title))}”</button>` : ""}
+      <button class="${lost ? "ghost" : "primary"}" id="again">Play from the start</button>
+    </div>
+    <div class="panel">
+      <h3>What decided it</h3>
+      <p>${verdictLine(key)}</p>
+    </div>
+    <div class="panel">
+      <h3>Your tally</h3>
+      <div class="tally">
+        <div><strong>${S.received}</strong><span>contacts from Heather</span></div>
+        <div><strong>${S.logged}</strong><span>you logged</span></div>
+        <div><strong>${S.voicemails}</strong><span>voicemails</span></div>
+        <div><strong>${S.declined + S.answered}</strong><span>calls you picked up or declined</span></div>
+        <div><strong>${S.replies.length + S.answered}</strong><span>times you engaged</span></div>
+        <div><strong>${S.evidence}</strong><span>evidence score</span></div>
+      </div>
+      <p class="small">For scale: in <i>Baby Reindeer</i>, Donny's count reaches 41,071 emails, 350 hours of voicemail, 744 tweets, 46 Facebook messages and 106 pages of letters.</p>
+    </div>
+    ${S.log.length ? `<div class="panel">
+      <h3>Your choices</h3>
+      <ol class="recap">${S.log.map(l => `<li><span class="when">${esc(l.when)}</span><div class="what"><span class="scene-name">${esc(l.scene)}</span><span class="pick">${esc(l.pick)}</span>${chipsHTML(l.d)}</div></li>`).join("")}</ol>
+    </div>` : ""}
+    <div class="panel">
+      <h3>If this is happening to you</h3>
+      <p>Stalking is fixated, obsessive, unwanted and repeated behaviour. It's a crime. You don't have to wait until it gets worse.</p>
+      <div class="help-list">
+        <div><span>National Stalking Helpline (UK)</span><code>0808 802 0300</code></div>
+        <div><span>Samaritans (UK and Ireland), any time</span><code>116 123</code></div>
+        <div><span>SurvivorsUK: support for men who've experienced sexual abuse</span><code>survivorsuk.org</code></div>
+        <div><span>Police, if you're in danger</span><code>999</code></div>
+        <div><span>Police, to report it</span><code>101</code></div>
+      </div>
+      <p class="small">Don't reply. Keep everything. Write down dates, times and how it affected you. Outside the UK, contact your local police or a victim support service.</p>
+    </div>
+  </div>`;
+  hud();
+  $("again").addEventListener("click", restart);
+  if ($("retry")) $("retry").addEventListener("click", retry);
+  stage.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function retry() {
+  S = copy(checkpoint);
+  clearNotes();
+  goChapter(S.ch);
+}
+
+/* ---------- Title ---------- */
+function title() {
+  S = fresh();
+  setClock("02:47", "Tuesday 9 December");
+  clearNotes();
+  S.received = 41;
+  [
+    { ch: "email", subject: "Re: Re: Re: us", text: "Your a fake. A fake little nothing man. sorry. love u. sorry" },
+    { ch: "card", from: "Through your door", text: "Your own gig flyer, with every date circled in green ink." },
+    { ch: "vm", text: "52s · She sings the whole of 'Islands in the Stream'. Both parts." },
+    { ch: "sms", text: "Is that ur window on the left" }
+  ].forEach(n => addNote({ ...n, loggable: false }));
+  paintCount();
+  S.received = 0;
+  const save = loadSave();
+  stage.innerHTML = `<div class="scene">
+    <div class="eyebrow">A game in sixteen scenes</div>
+    <h1>Sent from my <em>iPhone</em></h1>
+    ${proseHTML([
+      "It started with a cup of tea. One kind thing, on a slow afternoon, for a stranger who was crying.",
+      "Now your phone won't stop. Texts, emails, calls, voicemails at three in the morning, things through the letterbox. You want it to end.",
+      "Keep your nerve. Keep a record. Choose who to tell, and what to say to her, if anything at all."
+    ])}
+    <p class="warn">Contains depictions of stalking, harassment, threats and their effect on mental health, and a skippable scene referring to sexual abuse.</p>
+    <div class="row-buttons">
+      ${save ? `<button class="primary" id="continue">Continue: ${esc(plain(CH[save.S.ch].title))}</button>` : ""}
+      <button class="${save ? "ghost" : "primary"}" id="start">${save ? "Start again" : "Make her a cup of tea"}</button>
+    </div>
+  </div>`;
+  $("start").addEventListener("click", () => {
+    if (settings.sound && audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    restart();
+  });
+  if (save) $("continue").addEventListener("click", () => {
+    S = Object.assign(fresh(), save.S);
+    clearNotes();
+    goChapter(S.ch);
+  });
+}
+function restart() { S = fresh(); checkpoint = null; lsSet(SAVE_KEY, null); clearNotes(); goChapter(0); }
+
+/* ---------- Boot (keeps progress across live updates) ---------- */
+const stored = lsGet(SET_KEY);
+if (stored) { settings.haptics = !!stored.haptics; if (PACES.some(p => p[0] === stored.pace)) settings.pace = stored.pace; }
+paintSettings();
+
+window.claude?.hot?.snapshot?.(() => ({ S: copy(S), checkpoint }));
+function start(data) {
+  if (data && data.S && data.S.ch >= 0 && !data.S.ended && CH[data.S.ch]) {
+    S = Object.assign(fresh(), data.S);
+    checkpoint = data.checkpoint || copy(S);
+    goChapter(S.ch, true);
+  } else title();
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
