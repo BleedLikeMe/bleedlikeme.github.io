@@ -732,7 +732,7 @@ function update(dt){
       const lockChance = 0.10 + activeCount*0.16;
       if(Math.random()<lockChance){
         G.spiritBoxText = EVP_PHRASES[Math.floor(Math.random()*EVP_PHRASES.length)];
-        G.spiritBoxLockUntil = t+1700;
+        G.spiritBoxLockUntil = t+8000;
         addLog(`Spirit box: "${G.spiritBoxText}"`);
         playSound("evp");
       } else {
