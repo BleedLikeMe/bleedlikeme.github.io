@@ -616,7 +616,7 @@ function renderCard() {
       <div class="dinfo"><b>${dlink(d)}${d.fav ? '<span class="fav">FAV</span>' : ''}</b>
         <small>${d.form} · (${d.style}) · ${d.sex} · best ${d.best}${d.trainer ? ' · ' + tlink(d.trainer, true) : ''}</small></div>
       <div class="odds"><b>${d.odds.toFixed(2)}</b><small>≈${d.frac} · ${(d.p * 100).toFixed(1)}%</small></div>
-      <div class="btns"><button data-bet="win" data-dog="${i}" ${dis}>Win</button><button data-bet="ew" data-dog="${i}" ${dis}>E/W</button></div>
+      <div class="btns"><button data-bet="win" data-i="${i}" ${dis}>Win</button><button data-bet="ew" data-i="${i}" ${dis}>E/W</button></div>
     </div>`).join('');
 }
 function renderSlip() {
@@ -1031,7 +1031,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-mback]')) { modalStack.pop(); return paintModal(); }
   if (e.target.closest('[data-close]')) return closeModal();
   if (e.target.closest('#modal [data-hist]')) { closeModal(); return watchArchive(+e.target.closest('[data-hist]').dataset.hist); }
-  const b = e.target.closest('[data-bet]'); if (b) return addBet(+b.dataset.dog, b.dataset.bet);
+  const b = e.target.closest('[data-bet]'); if (b) return addBet(+b.dataset.i, b.dataset.bet);
   const rm = e.target.closest('[data-rm]'); if (rm && phase === 'betting') { slip.splice(+rm.dataset.rm, 1); renderSlip(); renderHeader(); return; }
   const c = e.target.closest('[data-chip]'); if (c) { $('stake').value = c.dataset.chip; renderFC(); return; }
   if (phase === 'betting') {
