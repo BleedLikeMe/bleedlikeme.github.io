@@ -692,7 +692,7 @@ function startGame() {
   hood.heading = 180 + rnd(-20,20);
 
   log('Battlestations! Bismarck has broken out into the North Sea.', 'rdio');
-  log('Multiple contacts detected. IFF before engaging. [A/D=helm W/S=speed G/T/C/I=weapons]', 'sys');
+  log('Multiple contacts detected. IFF before engaging. [A/D/←/→=helm W/S/↑/↓=speed G/T/C/I=weapons]', 'sys');
 
   if (rafId) cancelAnimationFrame(rafId);
   rafId = requestAnimationFrame(gameLoop);
@@ -2108,11 +2108,12 @@ function setupInput() {
   document.addEventListener('keydown', e => {
     if(G.phase!=='playing'||e.repeat) return;
     const ts=()=>G.player.steeringDmg?8:15;
+    if(e.key.startsWith('Arrow')) e.preventDefault(); // stop page scrolling
     switch(e.key.toLowerCase()) {
-      case 'a': G.player.heading=(G.player.heading-ts()+360)%360; break;
-      case 'd': G.player.heading=(G.player.heading+ts())%360;     break;
-      case 'w': G.spdIdx=Math.min(G.spdIdx+1,SPEEDS.length-1);   break;
-      case 's': G.spdIdx=Math.max(G.spdIdx-1,0);                  break;
+      case 'a': case 'arrowleft':  G.player.heading=(G.player.heading-ts()+360)%360; break;
+      case 'd': case 'arrowright': G.player.heading=(G.player.heading+ts())%360;     break;
+      case 'w': case 'arrowup':    G.spdIdx=Math.min(G.spdIdx+1,SPEEDS.length-1);   break;
+      case 's': case 'arrowdown':  G.spdIdx=Math.max(G.spdIdx-1,0);                  break;
       case 'g': fireGuns();        break;
       case 't': fireTorpedo();     break;
       case 'c': fireDepthCharge(); break;

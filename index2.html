@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarot</title>
+    <style>
+        html, body {
+            overflow-x: hidden;
+        }
+
+        /* Card-table felt. For dark red instead: --felt: #5a1414; --felt-edge: #1f0505; */
+        :root {
+            --felt: #5a1414;
+            --felt-edge: #1f0505;
+            --ink: #f3e9d2;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            background-color: var(--felt-edge);
+            background-image: radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-edge) 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* One loose pile of cards instead of neat rows */
+        .spread {
+            --scatter: 1;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 16px 80px;
+            box-sizing: border-box;
+        }
+
+        .spread a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            width: var(--w, 200px);
+            margin-top: calc(var(--dy, 0px) * var(--scatter));
+            transform:
+                translateX(calc(var(--dx, 0px) * var(--scatter)))
+                rotate(calc(var(--rot, 0deg) * var(--scatter)));
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            z-index: 1;
+        }
+
+        .spread a:hover,
+        .spread a:focus-visible {
+            transform: translateX(calc(var(--dx, 0px) * var(--scatter))) rotate(0deg) scale(1.08);
+            z-index: 10;
+            outline: none;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .container img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.5);
+        }
+
+        .spread a:hover img,
+        .spread a:focus-visible img {
+            box-shadow: 0px 12px 28px rgba(0, 0, 0, 0.7);
+        }
+
+        .text {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+            letter-spacing: 0.03em;
+            color: var(--ink);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Phones: two loosely jumbled columns, gentler scatter so nothing runs off screen */
+        @media (max-width: 599px) {
+            .spread {
+                --scatter: 0.45;
+                gap: 6px;
+                padding: 24px 8px 60px;
+            }
+
+            .spread a {
+                width: calc(var(--wm, 44vw));
+            }
+
+            .text {
+                font-size: 15px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .spread a {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="spread">
+    <a href="spirit/ondex.html">
+        <div class="container">
+            <img src="spirit/images/The_Magician.jpg" alt="The Magician Tarot Card">
+            <div class="text">3 Card Daily Tarot</div>
+        </div>
+    </a>
+    <a href="spirit/index.html">
+        <div class="container">
+            <img src="spirit/images/The_Fool.jpg" alt="The Fool Tarot Card">
+            <div class="text">Spirit Tarot</div>
+        </div>
+    </a>
+    <a href="trainer.html">
+        <div class="container">
+            <img src="spirit/images/The_Chariot.jpg" alt="Under Starters Orders!">
+            <div class="text">The Guv'nor</div>
+        </div>
+    </a>
+    <a href="atc_simulator.html">
+        <div class="container">
+            <img src="spirit/images/The_Tower.jpg" alt="Control Tower">
+            <div class="text">ATC Tower</div>
+        </div>
+    </a>
+    <a href="blood.html">
+        <div class="container">
+            <img src="spirit/images/Ace_of_Cups.jpg" alt="Sip from the chalice!">
+            <div class="text">Reign of Blood</div>
+        </div>
+    </a>
+    <a href="apollo.html">
+        <div class="container">
+            <img src="spirit/images/The_Moon.jpg" alt="Houston we have a problem">
+            <div class="text">Moon Mission</div>
+        </div>
+    </a>
+    <a href="bismark.html">
+        <div class="container">
+            <img src="spirit/images/King_of_Swords.jpg" alt="Sink The Bismarck">
+            <div class="text">Sink The Bismarck!</div>
+        </div>
+    </a>
+    <a href="battle.html">
+        <div class="container">
+            <img src="spirit/images/The_Devil.jpg" alt="Freeedommm!!!!">
+            <div class="text">War Of Attrition</div>
+        </div>
+    </a>
+    <a href="pharma.html">
+        <div class="container">
+            <img src="spirit/images/The_Hanged_Man.jpg" alt="Medication time!">
+            <div class="text">HUB Pharmacy</div>
+        </div>
+    </a>
+    <a href="lse.html">
+        <div class="container">
+            <img src="spirit/images/King_of_Pentacles.jpg" alt="Crash!!!!">
+            <div class="text">Stock Crash</div>
+        </div>
+    </a>
+    <a href="kanban.html">
+        <div class="container">
+            <img src="spirit/images/Temperance.jpg" alt="Asana clone">
+            <div class="text">Kanban</div>
+        </div>
+    </a>
+    <a href="exorcist.html">
+        <div class="container">
+            <img src="spirit/images/Three_of_Pentacles.jpg" alt="Desmos!">
+            <div class="text">Exorcist</div>
+        </div>
+    </a>
+    <a href="book_of_shadows.html">
+        <div class="container">
+            <img src="spirit/images/Queen_of_Wands.jpg" alt="grimoire">
+            <div class="text">Book of Shadows</div>
+        </div>
+    </a>
+    <a href="buffy.html">
+        <div class="container">
+            <img src="spirit/images/Ace_of_Swords.jpg" alt="Vampire Slayer">
+            <div class="text">Buffy the Vampire Slayer</div>
+        </div>
+    </a>
+    <a href="f1_race.html">
+        <div class="container">
+            <img src="spirit/images/Queen_of_Cups.jpg" alt="trophy">
+            <div class="text">Pit Lane</div>
+        </div>
+    </a>
+    <a href="cricket.html">
+        <div class="container">
+            <img src="spirit/images/Two_of_Wands.jpg" alt="T20">
+            <div class="text">Captain's Toss</div>
+        </div>
+    </a>
+    <a href="party_leader.html">
+        <div class="container">
+            <img src="spirit/images/Ten_of_Pentacles.jpg" alt="election">
+            <div class="text">Manifesto</div>
+        </div>
+    </a>
+    <a href="multi_lottery_draw.html">
+        <div class="container">
+            <img src="spirit/images/The_Sun.jpg" alt="Spondooley">
+            <div class="text">National Lottery</div>
+        </div>
+    </a>
+    <a href="coastguard.html">
+        <div class="container">
+            <img src="spirit/images/The_Star.jpg" alt="rescue">
+            <div class="text">Coastguard</div>
+        </div>
+    </a>
+    <a href="svengali.html">
+        <div class="container">
+            <img src="spirit/images/Temperance.jpg" alt="Cash From Chaos">
+            <div class="text">Pop Idol</div>
+        </div>
+    </a>
+    <a href="minicab.html">
+        <div class="container">
+            <img src="spirit/images/Judgement.jpg" alt="the road to Hell">
+            <div class="text">Minicab</div>
+        </div>
+    </a>
+    <a href="empire.html">
+        <div class="container">
+            <img src="spirit/images/Strength.jpg" alt="Hash From Chaos">
+            <div class="text">Gangland</div>
+        </div>
+    </a>
+    <a href="battle_of_britain.html">
+        <div class="container">
+            <img src="spirit/images/Four_of_Swords.jpg" alt="their finest hour">
+            <div class="text">BOB</div>
+        </div>
+    </a>
+    <a href="ceefax_news.html">
+        <div class="container">
+            <img src="spirit/images/Three_of_Wands.jpg" alt="placeholder">
+            <div class="text">CEEFAX</div>
+        </div>
+    </a>
+    <a href="hogwarts.html">
+        <div class="container">
+            <img src="spirit/images/Nine_of_Swords.jpg" alt="Harry Potter">
+            <div class="text">Hogwarts</div>
+        </div>
+    </a>
+    <a href="ceefax_pharmacy.html">
+        <div class="container">
+            <img src="spirit/images/Ace_of_Pentacles.jpg" alt="placeholder">
+            <div class="text">Medicines</div>
+        </div>
+    </a>
+    <a href="acrowley.html">
+        <div class="container">
+            <img src="spirit/images/Seven_of_Swords.jpg" alt="Alisteir Crowley">
+            <div class="text">Crowley</div>
+        </div>
+    </a>
+    <a href="https://tastethewhip.github.io/web/">
+        <div class="container">
+            <img src="spirit/images/Page_of_Pentacles.jpg" alt="placeholder">
+            <div class="text">Music</div>
+        </div>
+    </a>
+    <a href="baby.html">
+        <div class="container">
+            <img src="spirit/images/Queen_of_Cups.jpg" alt="Baby">
+            <div class="text">Reindeer</div>
+        </div>
+    </a>
+    <a href="hounds.html">
+        <div class="container">
+            <img src="spirit/images/The_Hermit.jpg" alt="placeholder">
+            <div class="text">Hounds</div>
+        </div>
+    </a>
+</div>
+
+<script>
+    // Scatter the cards like they've been thrown on the table: shuffle the
+    // order, then give each one a random tilt, nudge and size. Fresh every load.
+    (function () {
+        var spread = document.querySelector('.spread');
+        var cards = Array.prototype.slice.call(spread.children);
+        var rand = function (min, max) { return Math.random() * (max - min) + min; };
+
+        for (var i = cards.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = cards[i]; cards[i] = cards[j]; cards[j] = tmp;
+        }
+
+        // Deal a different face from spirit/images to every card, no repeats.
+        var deck = ['The_Fool', 'The_Magician', 'The_High_Priestess', 'The_Empress',
+            'The_Emperor', 'The_Hierophant', 'The_Lovers', 'The_Chariot', 'Strength',
+            'The_Hermit', 'Wheel_of_Fortune', 'Justice', 'The_Hanged_Man', 'Death',
+            'Temperance', 'The_Devil', 'The_Tower', 'The_Star', 'The_Moon', 'The_Sun',
+            'Judgement', 'The_World'];
+        ['Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+            'Page', 'Knight', 'Queen', 'King'].forEach(function (rank) {
+            ['Cups', 'Pentacles', 'Swords', 'Wands'].forEach(function (suit) {
+                deck.push(rank + '_of_' + suit);
+            });
+        });
+        for (var k = deck.length - 1; k > 0; k--) {
+            var m = Math.floor(Math.random() * (k + 1));
+            var t = deck[k]; deck[k] = deck[m]; deck[m] = t;
+        }
+
+        cards.forEach(function (card, n) {
+            card.querySelector('img').src = 'spirit/images/' + deck[n % deck.length] + '.jpg';
+
+            card.style.setProperty('--rot', rand(-18, 18).toFixed(1) + 'deg');
+            card.style.setProperty('--dx', rand(-30, 30).toFixed(0) + 'px');
+            card.style.setProperty('--dy', rand(-10, 70).toFixed(0) + 'px');
+            card.style.setProperty('--w', rand(140, 230).toFixed(0) + 'px');
+            card.style.setProperty('--wm', rand(38, 46).toFixed(1) + 'vw');
+            spread.appendChild(card);
+        });
+    })();
+</script>
+</body>
+</html>
