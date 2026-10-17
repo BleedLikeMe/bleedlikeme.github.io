@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kelvin Park Greyhounds</title>
+<style>
+:root{--bg:#0b111b;--panel:#141e2d;--panel2:#1b2840;--ink:#e8eef6;--mute:#8fa1b8;--line:#28384f;--accent:#f5c542;--win:#4ade80;--lose:#f87171;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 16px;background:#0f1828;border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:18px;letter-spacing:.5px}
+.brand span{color:var(--accent)}
+.hstats{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.hstats b{font-size:17px}
+.pos{color:var(--win)}.neg{color:var(--lose)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:6px;padding:6px 10px}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.4;cursor:default}
+button.go{background:var(--accent);color:#1a1300;font-weight:800;border-color:var(--accent);padding:9px 14px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:14px;padding:14px 16px;max-width:1500px;margin:0 auto}
+@media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px}
+h2,h3{margin:0 0 8px}h2{font-size:16px}h3{font-size:14px;color:var(--mute);text-transform:uppercase;letter-spacing:1px}
+canvas{display:block;width:100%;aspect-ratio:1000/540;touch-action:manipulation;border-radius:10px;border:1px solid var(--line);background:#0b1220}
+.comm{margin:10px 0 14px;padding:10px 12px;background:#06090f;border:1px solid var(--line);border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;color:#ffd96a;min-height:42px}
+.trap{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;font-weight:800;flex:0 0 auto;border:1px solid #0006}
+.t1{background:#d62828;color:#fff}.t2{background:#1d4ed8;color:#fff}.t3{background:#f4f4f4;color:#111}
+.t4{background:#111;color:#fff;border-color:#666}.t5{background:#f77f00;color:#111}
+.t6{background:repeating-linear-gradient(90deg,#111 0 4px,#f4f4f4 4px 8px);color:#d62828;text-shadow:0 0 2px #fff,0 0 2px #fff}
+.cardhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.book{font-size:12px;color:var(--win)}
+.row{display:grid;grid-template-columns:24px minmax(0,1fr) 64px auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.dinfo b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dinfo small,.odds small{color:var(--mute);font-size:11.5px}
+.odds{text-align:right}.odds b{display:block;font-size:15px}
+.btns{display:flex;gap:4px}.btns button{padding:5px 8px;font-size:12.5px}
+.fav{color:var(--accent);font-size:10px;font-weight:700;margin-left:4px}
+.stakeRow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0 8px}
+.stakeRow input{width:80px;font:inherit;padding:5px 6px;border-radius:6px;border:1px solid var(--line);background:#0b111b;color:var(--ink)}
+.stakeRow button{padding:4px 8px;font-size:12px}
+.bet{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.bet .bx{flex:1;min-width:0}.bet small{color:var(--mute);display:block}
+.bet .x{padding:2px 7px}
+.tot{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);font-weight:700}
+.runrow{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+select{font:inherit;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:5px 6px;border-top:1px solid var(--line);text-align:left}
+th{color:var(--mute);font-weight:600;font-size:12px}
+td.r,th.r{text-align:right}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:10px}
+.stat{background:var(--panel2);border-radius:8px;padding:8px}.stat small{color:var(--mute);display:block;font-size:11px}.stat b{font-size:16px}
+.note{color:var(--mute);font-size:12px;margin-top:8px}
+.empty{color:var(--mute);padding:8px 0}
+.strip{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;min-height:24px;align-items:center}
+.strip span.o{color:var(--mute);font-size:11px;margin-right:3px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:5px 10px;font-size:12.5px}
+.seg button.on{background:var(--accent);color:#1a1300;font-weight:700}
+.chk{display:flex;gap:6px;align-items:center;margin:8px 0;cursor:pointer;user-select:none}
+.fcgrid{display:grid;grid-template-columns:44px repeat(6,minmax(0,1fr));gap:5px;align-items:center;margin:6px 0}
+.fcgrid .lbl{color:var(--mute);font-size:12px;font-weight:700}
+.fcgrid .hd{display:flex;justify-content:center}
+.cell{height:36px;padding:0;font-weight:800;font-size:13px}
+.cell.on{background:var(--accent);color:#1a1300;border-color:var(--accent)}
+.fcinfo{padding:6px 0;font-size:13px}
+.fcinfo b{color:var(--accent)}
+.tag{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 4px;border-radius:4px;font-size:10.5px;font-weight:800;background:#5b3fd1;color:#fff;flex:0 0 auto}
+.photo{margin:4px 0 10px}.photo canvas{display:block;width:100%;aspect-ratio:auto;border-radius:6px;border:1px solid #000;background:#222}
+.photo small{color:var(--mute);font-size:11.5px}
+body.watching .o3,body.watching .o4,body.watching .o5{opacity:.4;pointer-events:none}
+.hbtn{padding:2px 8px;font-size:12px}
+.dlink{color:inherit;text-decoration:none;border-bottom:1px dotted var(--mute);cursor:pointer}
+.dlink:hover{color:var(--accent);border-color:var(--accent)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:24px 12px}
+.modal[hidden]{display:none}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:780px;width:100%;padding:16px;position:relative}
+.sheet .close{position:absolute;top:10px;right:10px}
+.phead{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:16px;align-items:center;margin-bottom:12px}
+.phead canvas{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block}
+.phead h2{font-size:21px;margin:0 0 4px;padding-right:40px}
+.facts{color:var(--mute);font-size:13px;line-height:1.6}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{width:24px;height:24px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;background:var(--panel2);color:var(--mute)}
+.chip.p1{background:var(--accent);color:#1a1300}.chip.p2{background:#c9d4e3;color:#111}.chip.p3{background:#b07a4a;color:#fff}
+.oncard{background:#1f3a24;border:1px solid #2e6b34;border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13px}
+.tscroll{overflow-x:auto}
+.tscroll table{min-width:560px}
+@media (max-width:640px){.modal{padding:0}.sheet{border-radius:0;min-height:100%;border:0}.phead{grid-template-columns:1fr}}
+.div{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:13px}
+@media (max-width:980px){
+  main{display:flex;flex-direction:column;gap:0}
+  section,aside{display:contents}
+  .o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}
+}
+@media (max-width:640px){
+  header{padding:8px 12px;gap:6px}.brand{font-size:15px}.hstats{gap:12px}.hstats b{font-size:15px}
+  main{padding:10px 10px}
+  .panel{padding:10px}
+  .row{grid-template-columns:24px minmax(0,1fr) 56px auto;gap:6px}
+  .btns{flex-direction:column}.btns button{padding:6px 10px}
+  .comm{font-size:12.5px;margin:8px 0 10px}
+  td,th{padding:5px 3px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🐕 KELVIN PARK <span>GREYHOUNDS</span></div>
+  <div class="hstats">
+    <div>Bank <b id="bank"></b></div>
+    <div>P/L <b id="pl"></b></div>
+    <button id="kennelBtn" title="Dogs and trainers">🐕 Kennel</button>
+    <button id="snd" title="Sound on/off">🔊</button>
+    <button id="reset">Reset to £1,000</button>
+  </div>
+</header>
+<main>
+  <section>
+    <div class="o1">
+      <canvas id="cv"></canvas>
+      <div id="strip" class="strip"></div>
+      <div id="comm" class="comm">Place your bets…</div>
+    </div>
+    <div id="results" class="panel o2" hidden></div>
+    <div class="panel o6">
+      <h3>Your record</h3>
+      <div id="stats"></div>
+      <div id="spark"></div>
+      <div id="hist"></div>
+    </div>
+  </section>
+  <aside>
+    <div class="panel o3">
+      <div class="cardhead"><h2 id="raceTitle"></h2><span id="book" class="book"></span></div>
+      <div class="stakeRow">Stake £<input id="stake" type="number" min="1" step="1" value="10">
+        <button data-chip="5">5</button><button data-chip="10">10</button><button data-chip="25">25</button><button data-chip="50">50</button><button data-chip="100">100</button>
+      </div>
+      <div id="card"></div>
+      <div class="note">Fair book: the prices are each dog's true chance of winning, and they add up to exactly 100%. The result is drawn using those same chances, so there's no bookmaker's margin. Each-way means two bets of your stake, one to win and one to place. The place part pays at ¼ of the odds if the dog finishes 1st or 2nd.</div>
+    </div>
+    <div class="panel o5">
+      <h3>Bet slip</h3>
+      <div id="slip"></div>
+    </div>
+    <div class="panel o4">
+      <div class="cardhead"><h3>Forecast / Tricast</h3>
+        <div class="seg"><button data-fct="fc">Forecast</button><button data-fct="tc">Tricast</button></div></div>
+      <label class="chk"><input type="checkbox" id="anyOrder"> Any order (reverse forecast / combination tricast)</label>
+      <div id="fcGrid"></div>
+      <div id="fcInfo" class="fcinfo"></div>
+      <div class="note">A forecast picks 1st and 2nd in the right order, and a tricast picks 1st, 2nd and 3rd. Pick more than one dog in a row (or tick Any order) to cover every combination; each line costs your stake from the box above. Payouts are the exact fair odds of that finishing order, worked out from the same chances as the win prices.</div>
+    </div>
+  </aside>
+</main>
+<div id="modal" class="modal" hidden><div class="sheet"><button class="close" data-close>✕</button><div id="modalBody"></div></div></div>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const rand = (a, b) => a + Math.random() * (b - a);
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const money = n => (n < -0.004 ? '-' : '') + '£' + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const smooth = x => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
+const lerp = (a, b, k) => a + (b - a) * k;
+const ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th'];
+
+// ── TRACK GEOMETRY (logical units; dogs run anticlockwise) ──
+const LW = 1000, LH = 540, CX = 500, CY = 250, A = 270, R = 150, TW = 60;
+const LAP = 4 * A + 2 * Math.PI * R;
+const D = Math.round(LAP * 0.92);          // race distance in track units = 480m
+const METRES = 480;
+const FINISH_S = 2 * A * 0.55;
+const START_S = ((FINISH_S - D) % LAP + LAP) % LAP;
+const NOSE = 20;
+const PHOTO_GAP = 0.03;                     // seconds: a neck or less (~0.08 s a length) goes to the photo                            // dog centre sits this far behind its nose
+const dAt = s => ((s - START_S) % LAP + LAP) % LAP;
+const MARKS = [
+  { d: dAt(2 * A), msg: l => `Into the first bend, ${l[0]} leads from ${l[1]}` },
+  { d: dAt(2 * A + Math.PI * R), msg: l => `Down the back straight, ${l[0]} in front, ${l[1]} chasing` },
+  { d: dAt(4 * A + Math.PI * R), msg: l => `On to the final bend, ${l[0]} from ${l[1]} and ${l[2]}` },
+  { d: LAP - START_S, msg: l => `Into the home straight! ${l[0]}… ${l[1]} closing!` },
+];
+
+function pt(s, w) {
+  s = ((s % LAP) + LAP) % LAP; const r = R + w;
+  if (s < 2 * A) return [CX - A + s, CY + r];
+  s -= 2 * A;
+  if (s < Math.PI * R) { const th = Math.PI / 2 - s / R; return [CX + A + r * Math.cos(th), CY + r * Math.sin(th)]; }
+  s -= Math.PI * R;
+  if (s < 2 * A) return [CX + A - s, CY - r];
+  s -= 2 * A;
+  const th = -Math.PI / 2 - s / R; return [CX - A + r * Math.cos(th), CY + r * Math.sin(th)];
+}
+function heading(s, w) { const a = pt(s - 1, w), b = pt(s + 1, w); return Math.atan2(b[1] - a[1], b[0] - a[0]); }
+function ring(ctx, w) { ctx.beginPath(); for (let s = 0; s <= LAP; s += 5) { const p = pt(s, w); s ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); } ctx.closePath(); }
+const trapLane = i => 6 + i * 9.6;
+
+// ── DATA ──
+const TRAPS = [
+  { bg: '#d62828', fg: '#fff' }, { bg: '#1d4ed8', fg: '#fff' }, { bg: '#f4f4f4', fg: '#111' },
+  { bg: '#111111', fg: '#fff' }, { bg: '#f77f00', fg: '#111' }, { bg: 'stripe', fg: '#d62828' },
+];
+const PRE = ['Swift', 'Ballymac', 'Droopys', 'Kilmore', 'Clyde', 'Govan', 'Midnight', 'Rapid', 'Silver', 'Lucky', 'Wee', 'Bonnie', 'Highland', 'Dusty', 'Rocket', 'Shadow', 'Thunder', 'Velvet', 'Copper', 'Misty', 'Blazing', 'Southside', 'Partick', 'Gorbals', 'Barra', 'Kelvin', 'Paisley', 'Brave'];
+const SUF = ['Flyer', 'Arrow', 'Dancer', 'Bolt', 'Lass', 'Laddie', 'Comet', 'Storm', 'Jack', 'Rose', 'Echo', 'Dash', 'Spirit', 'Legend', 'Bullet', 'Breeze', 'Fox', 'Blue', 'Gem', 'Rascal', 'Major', 'Tiger', 'Jet', 'Duchess', 'Rocket', 'Pearl'];
+const COATS = ['#2b2018', '#6b4a2b', '#c8a27a', '#3d3d3d', '#8a5a3a', '#d9c3a0', '#161616', '#9c7b5b', '#54402f'];
+const STYLE_LANE = { R: 8, M: 28, W: 48 };
+const STYLE_NAME = { R: 'Railer', M: 'Middle runner', W: 'Wide runner' };
+const COAT_NAMES = ['Black brindle', 'Brindle', 'Fawn', 'Blue', 'Red brindle', 'Light fawn', 'Black', 'Fawn brindle', 'Dark brindle'];
+// Trainers are flavour only: they never change a dog's chances, so the prices stay exactly fair.
+const TRAINER_INFO = [
+  { name: 'J. McGregor', full: 'Jim McGregor', base: 'Kilsyth', since: 1996 },
+  { name: 'A. Kerr', full: 'Angela Kerr', base: 'Larkhall', since: 2009 },
+  { name: 'P. Doherty', full: 'Paddy Doherty', base: 'Coatbridge', since: 1991 },
+  { name: 'S. Boyle', full: 'Siobhan Boyle', base: 'Barrhead', since: 2014 },
+  { name: 'M. Fraser', full: 'Murdo Fraser', base: 'Cumbernauld', since: 2003 },
+  { name: 'K. Walsh', full: 'Kevin Walsh', base: 'Airdrie', since: 2011 },
+  { name: 'R. Lennon', full: 'Rab Lennon', base: 'Dumbarton', since: 1988 },
+  { name: 'C. Quinn', full: 'Catriona Quinn', base: 'Bothwell', since: 2017 },
+  { name: 'L. Gallacher', full: 'Lorraine Gallacher', base: 'Kirkintilloch', since: 2006 },
+  { name: 'T. Rafferty', full: 'Tam Rafferty', base: 'Shotts', since: 1999 },
+];
+const TRAINERS = TRAINER_INFO.map(t => t.name);
+const trainerInfo = n => TRAINER_INFO.find(t => t.name === n) || { name: n, full: n, base: '–', since: '–' };
+const KENNEL_SIZE = 30, RUNS_KEPT = 40;
+const FRACS = ['1/5', '2/9', '1/4', '2/7', '1/3', '4/11', '2/5', '4/9', '1/2', '8/15', '4/7', '8/13', '4/6', '8/11', '4/5', '5/6', '10/11', 'Evs', '11/10', '6/5', '5/4', '11/8', '6/4', '13/8', '7/4', '15/8', '2/1', '9/4', '5/2', '11/4', '3/1', '10/3', '7/2', '4/1', '9/2', '5/1', '11/2', '6/1', '13/2', '7/1', '15/2', '8/1', '9/1', '10/1', '11/1', '12/1', '14/1', '16/1', '20/1', '25/1', '33/1', '40/1', '50/1', '66/1', '100/1'];
+const fracVal = f => f === 'Evs' ? 1 : f.split('/').reduce((n, d) => n / d);
+function nearestFrac(dec) {
+  const t = Math.log(dec - 1); let best = FRACS[0], bd = 1e9;
+  for (const f of FRACS) { const d = Math.abs(Math.log(fracVal(f)) - t); if (d < bd) { bd = d; best = f; } }
+  return best;
+}
+
+// ── SAVE ──
+const SAVE_KEY = 'greyhoundSave';
+// ── KENNEL ──
+// The same 30 dogs race again and again. Each has a hidden rating `r` that sets its true chance in any
+// field (so the prices stay exactly fair) and drifts a little after every run. Form, best times and
+// profiles all come from races the dog has really run, starting with some simulated earlier meetings.
+const chancesOf = rs => { const ex = rs.map(r => Math.exp(0.85 * r)), t = ex.reduce((a, b) => a + b, 0); return ex.map(e => e / t); };
+function plOrder(ps) {     // Plackett–Luce: winner in proportion to the chances, then each later place among those left
+  const left = ps.map((_, i) => i), order = [];
+  while (left.length) {
+    const tot = left.reduce((a, i) => a + ps[i], 0);
+    let x = Math.random() * tot, k = 0;
+    for (; k < left.length - 1; k++) { x -= ps[left[k]]; if (x <= 0) break; }
+    order.push(left.splice(k, 1)[0]);
+  }
+  return order;
+}
+function finishTimes(order) {
+  const T = [], pos = [];
+  let tm = 28.15 + Math.random() * 0.75;
+  order.forEach((di, k) => { if (k) tm += 0.015 + Math.pow(Math.random(), 1.6) * 0.55; T[di] = tm; pos[di] = k + 1; });
+  return { T, pos };
+}
+function makeDog(id, used) {
+  let name; do { name = PRE[Math.floor(Math.random() * PRE.length)] + ' ' + SUF[Math.floor(Math.random() * SUF.length)]; } while (used.has(name));
+  used.add(name);
+  const c = Math.floor(Math.random() * COATS.length);
+  return {
+    id, name, r: gauss(), style: Math.random() < 0.38 ? 'R' : Math.random() < 0.55 ? 'M' : 'W',
+    coat: COATS[c], coatName: COAT_NAMES[c], sex: Math.random() < 0.55 ? 'd' : 'b',
+    age: 20 + Math.floor(Math.random() * 30), trainer: TRAINERS[Math.floor(Math.random() * TRAINERS.length)],
+    last: 0, runs: [],
+  };
+}
+// One run for every dog in a field. `fieldDogs` are kennel dogs (or card dogs carrying an `id`).
+function recordRuns(kennel, fieldDogs, traps, ps, order, T, raceNo, you) {
+  const w = fieldDogs[order[0]], s2 = fieldDogs[order[1]];
+  fieldDogs.forEach((d, i) => {
+    const k = kennel.find(x => x.id === d.id); if (!k) return;
+    const pos = order.indexOf(i) + 1;
+    const run = { n: raceNo, t: traps[i], p: pos, tm: +T[i].toFixed(2), o: +(1 / ps[i]).toFixed(2),
+      g: +(pos === 1 ? T[order[1]] - T[i] : T[i] - T[order[0]]).toFixed(3), wn: pos === 1 ? s2.name : w.name, wid: pos === 1 ? s2.id : w.id };
+    if (you && you[i]) run.y = you[i];
+    k.runs.push(run); if (k.runs.length > RUNS_KEPT) k.runs.shift();
+    k.last = raceNo;
+  });
+  // Ratings wander between runs but are pulled gently back to average, so the spread stays about N(0,1)
+  // for ever instead of a few dogs drifting into unbeatable (or hopeless) extremes over a long game.
+  kennel.forEach(k => { if (fieldDogs.some(d => d.id === k.id)) k.r = k.r * 0.995 + gauss() * 0.1; });
+}
+function seedKennel() {
+  const used = new Set(), kennel = [];
+  for (let i = 0; i < KENNEL_SIZE; i++) kennel.push(makeDog(i + 1, used));
+  const ts = [...TRAINERS].sort(() => Math.random() - 0.5);     // deal the dogs out evenly, three per trainer
+  kennel.forEach((k, i) => { k.trainer = ts[i % ts.length]; });
+  for (let m = 0; m < 45; m++) {           // earlier meetings, before you arrived (race number 0)
+    const field = [...kennel].sort(() => Math.random() - 0.5).slice(0, 6), ps = chancesOf(field.map(d => d.r));
+    const order = plOrder(ps), { T } = finishTimes(order);
+    recordRuns(kennel, field, [1, 2, 3, 4, 5, 6], ps, order, T, 0);
+  }
+  return kennel;
+}
+const formOf = k => k.runs.slice(-5).map(r => r.p).join('') || '–';
+const bestOf = k => k.runs.length ? Math.min(...k.runs.map(r => r.tm)).toFixed(2) : '–';
+
+function fresh() { return { kennel: seedKennel(), bank: 1000, raceNo: 1, history: [], bankHist: [1000], stats: { races: 0, bets: 0, staked: 0, returned: 0, winners: 0 } }; }
+function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && typeof s.bank === 'number') return s; } catch (e) {} return null; }
+function save() {
+  for (;;) {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); return; }
+    catch (e) { if (!S.archive || !S.archive.length) return; S.archive = S.archive.slice(0, Math.floor(S.archive.length / 2)); }
+  }
+}
+let S = load() || fresh();
+if (!S.kennel) S.kennel = seedKennel();   // saves from before the kennel existed
+
+// ── RACE CARD ──
+let card, slip = [], race, phase = 'betting', speed = 1.5, settledBets = null;
+const FC = { type: 'fc', any: false, sel: [] };   // forecast/tricast builder: sel[row][dog] booleans
+const clearFC = () => { FC.sel = [0, 1, 2].map(() => [false, false, false, false, false, false]); };
+
+function newCard() {
+  if (card) SND.chime();
+  // Six dogs, favouring those that haven't run for a while; seeded to traps by running style like a real grader.
+  const pick = [...S.kennel].sort((x, y) => (x.last - y.last) + (Math.random() - 0.5) * 6).slice(0, 6)
+    .sort((x, y) => STYLE_LANE[x.style] + rand(-14, 14) - (STYLE_LANE[y.style] + rand(-14, 14)));
+  const ps = chancesOf(pick.map(k => k.r));
+  const dogs = pick.map((k, i) => ({
+    id: k.id, trap: i + 1, name: k.name, trainer: k.trainer, r: k.r, style: k.style, sex: k.sex, coat: k.coat,
+    form: formOf(k), best: bestOf(k),
+    a1: rand(-0.05, 0.05), a2: rand(-0.035, 0.035), a3: rand(-0.02, 0.02),
+    gaitOff: rand(0, 6.28), lane: STYLE_LANE[k.style] + rand(-3, 3),
+    // True chances: the price IS the chance, so the book is exactly 100%
+    p: ps[i], odds: 1 / ps[i], frac: nearestFrac(1 / ps[i]),
+  }));
+  const favP = Math.max(...dogs.map(d => d.p));
+  dogs.forEach(d => d.fav = d.p === favP);
+  card = { raceNo: S.raceNo, dogs };
+  slip = []; settledBets = null; phase = 'betting'; clearFC();
+  race = { t: -3, d: dogs.map(() => 0), w: dogs.map((_, i) => trapLane(i)), T: null };
+  $('results').hidden = true;
+  say(`Race ${card.raceNo}. Six runners over ${METRES} metres. Place your bets.`);
+  renderAll();
+}
+
+// ── RUN ──
+function sc(t) { const tau = 1.0; return t - tau * (1 - Math.exp(-t / tau)); }
+function h(u, g) { return u + g.a1 * Math.sin(Math.PI * u) + g.a2 * Math.sin(2 * Math.PI * u) + g.a3 * Math.sin(3 * Math.PI * u); }
+
+function startRace() {
+  if (phase !== 'betting') return;
+  const cost = slipCost();
+  if (cost > S.bank + 1e-9) return;
+  S.bank -= cost;
+  const dogs = card.dogs;
+  // Finishing order drawn from the true chances (Plackett–Luce): the winner exactly per the prices,
+  // then each later place proportionally among the dogs still left.
+  const order = plOrder(dogs.map(d => d.p)), { T, pos } = finishTimes(order);
+  const v = dogs.map((g, i) => {
+    const dh = 1 - Math.PI * g.a1 + 2 * Math.PI * g.a2 - 3 * Math.PI * g.a3;
+    return D * dh * (1 - Math.exp(-T[i])) / sc(T[i]);
+  });
+  race = { t: -2.5, d: dogs.map(() => 0), w: dogs.map((_, i) => trapLane(i)), T, v, order, pos, fired: 0, leader: -1, lastCall: -9, settled: false, track: [], gait: dogs.map(() => Math.random()) };
+  phase = 'running';
+  SND.hareOn();
+  say('The hare is running…');
+  renderAll();
+  if (cam.follow) cv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function distAt(i, t) {
+  if (t <= 0) return 0;
+  const T = race.T[i];
+  if (t < T) return D * h(sc(t) / sc(T), card.dogs[i]);
+  const x = Math.min(4, t - T), v = race.v[i];
+  return D + v * x - v * x * x / 8;
+}
+
+function stepRace(dt) {
+  const r = race, dogs = card.dogs;
+  const wasNeg = r.t < 0;
+  r.t += dt; const t = r.t;
+  if (wasNeg && t >= 0) { say("They're away!"); SND.gates(); }
+  for (let i = 0; i < 6; i++) r.d[i] = distAt(i, t);
+  if (t > 0) {
+    const tgt = dogs.map((g, i) => {
+      let w = lerp(trapLane(i), g.lane, smooth(t / 3.5)) + 3.5 * Math.sin(t * 0.8 + g.gaitOff);
+      if (t > r.T[i]) w = lerp(w, 46, smooth((t - r.T[i]) / 3));
+      return w;
+    });
+    for (let it = 0; it < 3; it++) for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
+      if (Math.abs(r.d[i] - r.d[j]) > 30) continue;
+      const dw = tgt[i] - tgt[j];
+      if (Math.abs(dw) >= 11) continue;
+      const s = dw > 0 || (dw === 0 && i > j) ? 1 : -1, push = (11 - Math.abs(dw)) / 2;
+      tgt[i] += s * push; tgt[j] -= s * push;
+    }
+    if (r.replay) laneFromTrack(r, t);
+    else {
+      for (let i = 0; i < 6; i++) {
+        const w = Math.max(5, Math.min(55, tgt[i]));
+        r.w[i] += (w - r.w[i]) * Math.min(1, dt * 4);
+      }
+      r.track.push([t, ...r.w]);
+    }
+    // Commentary
+    const run = [...r.d.keys()].sort((a, b) => r.d[b] - r.d[a]);
+    const lead = run[0], nm = run.map(i => `${dogs[i].trap} ${dogs[i].name}`);
+    if (r.fired < MARKS.length && r.d[lead] >= MARKS[r.fired].d) { say(MARKS[r.fired].msg(nm)); r.fired++; r.lastCall = t; r.leader = lead; }
+    else if (lead !== r.leader && r.d[lead] < D) {
+      if (t - r.lastCall > 1.4) { say(r.leader < 0 ? `${nm[0]} breaks best from the traps!` : `${nm[0]} hits the front!`); r.lastCall = t; r.leader = lead; }
+    }
+    const w0 = r.order[0];
+    if (!r.calledWin && t >= r.T[w0]) {
+      r.calledWin = true;
+      SND.finish(r.T[r.order[1]] - r.T[w0]);
+      const g = r.T[r.order[1]] - r.T[w0];
+      const a = dogs[w0], b = dogs[r.order[1]];
+      if (g < PHOTO_GAP && !r.replay) say(`Photo! ${a.trap} ${a.name} and ${b.trap} ${b.name} hit the line together…`);
+      else say(`${a.trap} ${a.name} wins it${g < PHOTO_GAP ? ' on the photo' : ' by ' + lengths(g)}! ${b.name} second.`);
+    }
+    if (!r.settled && t >= r.T[r.order[5]] + 1.2) settle();
+    else if (r.replay && t >= r.T[r.order[5]] + 1.2) { r.replay = false; renderResults(); renderHistory(); }
+  }
+}
+
+// ── REPLAY ──
+// Distances come from distAt() (a pure function of time), and the lanes were recorded during the
+// live race, so a replay shows exactly the same race. It never settles bets again.
+function laneFromTrack(r, t) {
+  const tr = r.track;
+  if (!tr.length) return;
+  while (r.ti < tr.length - 1 && tr[r.ti + 1][0] <= t) r.ti++;
+  const a = tr[r.ti], b = tr[Math.min(r.ti + 1, tr.length - 1)];
+  const k = b[0] > a[0] ? Math.max(0, Math.min(1, (t - a[0]) / (b[0] - a[0]))) : 0;
+  for (let i = 0; i < 6; i++) r.w[i] = lerp(a[i + 1], b[i + 1], k);
+}
+function startReplay() {
+  if ((phase !== 'result' && phase !== 'history') || race.replay) return;
+  Object.assign(race, { t: -2.5, d: race.d.map(() => 0), w: race.d.map((_, i) => trapLane(i)), fired: 0, leader: -1, lastCall: -9, calledWin: false, replay: true, ti: 0 });
+  SND.hareOn();
+  say(`${phase === 'history' ? `Race ${card.raceNo} replay` : 'Replay'}. The hare is running…`);
+  renderResults(); renderHistory();
+  if (cam.follow) cv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// ── RACE HISTORY ──
+// Each settled race is archived with everything a replay needs: the card, finish times and the recorded
+// lanes, thinned to one sample per 0.1 s so 20 races fit comfortably in localStorage. Watching one swaps
+// it in as `card`/`race` with phase 'history'; the current race is parked in `held` until you go back.
+const ARCHIVE_MAX = 20;
+let held = null;
+function packTrack(tr) {
+  const out = []; let next = -Infinity;
+  tr.forEach((e, k) => {
+    if (e[0] >= next || k === tr.length - 1) { out.push(e.map((v, j) => Math.round(v * (j ? 10 : 100)) / (j ? 10 : 100))); next = e[0] + 0.1; }
+  });
+  return out;
+}
+function archiveEntry() {
+  const r = race;
+  return {
+    race: card.raceNo, dogs: card.dogs, T: r.T, v: r.v, order: r.order, pos: r.pos, gait: r.gait, track: packTrack(r.track),
+    bets: settledBets.map(b => ({ dog: b.dog, type: b.type, stake: b.stake, lines: b.lines, any: b.any, rows: b.rows, ret: b.ret, cost: b.cost, pos: b.pos })),
+  };
+}
+function watchArchive(no) {
+  if (phase === 'running' || race.replay) return;
+  const a = (S.archive || []).find(x => x.race === no);
+  if (!a) return;
+  if (!held) held = { card, race, phase, comm: $('comm').textContent };
+  card = { raceNo: a.race, dogs: a.dogs, bets: a.bets };
+  race = { t: 0, d: a.dogs.map(() => 0), w: a.dogs.map((_, i) => trapLane(i)), T: a.T, v: a.v, order: a.order, pos: a.pos, gait: a.gait, track: a.track, settled: true };
+  phase = 'history';
+  document.body.classList.add('watching');
+  renderHeader(); renderHistory();
+  startReplay();
+}
+function leaveArchive() {
+  if (!held) return;
+  ({ card, race, phase } = held);
+  $('comm').textContent = held.comm;
+  held = null;
+  document.body.classList.remove('watching');
+  renderAll();
+}
+function pastBets() {
+  const bs = card.bets || [], dogs = card.dogs;
+  if (!bs.length) return '<div class="note">You had no bets on this race.</div>';
+  const st = bs.reduce((a, b) => a + b.cost, 0), rt = bs.reduce((a, b) => a + b.ret, 0);
+  return '<h3 style="margin-top:12px">Your bets</h3>' + bs.map(b => `<div class="bet">${b.lines ? `<span class="tag">${b.type.toUpperCase()}</span>` : badge(dogs[b.dog].trap)}
+      <div class="bx"><b>${b.lines ? fcName(b) : dogs[b.dog].name}</b><small>${b.lines ? fcDesc(b) + ' · ' + money(b.stake) + (b.lines.length > 1 ? ' a line' : '')
+        : (b.type === 'ew' ? 'E/W ' + money(b.stake) + ' ×2' : 'Win ' + money(b.stake)) + ' · finished ' + ORD[b.pos - 1]}</small></div>
+      <b class="${b.ret > 0 ? 'pos' : 'neg'}">${b.ret > 0 ? money(b.ret) : 'lost'}</b></div>`).join('') +
+    `<div class="tot"><span>Staked ${money(st)} · Returned ${money(rt)}</span><span class="${rt - st >= 0 ? 'pos' : 'neg'}">${rt - st >= 0 ? '+' : ''}${money(rt - st)}</span></div>`;
+}
+// Replays drop to slow motion from just before the winner reaches the line until 3rd is past it.
+const slowMo = () => race.replay && race.t > race.T[race.order[0]] - 1.2 && race.t < race.T[race.order[2]] + 0.4;
+
+function lengths(g) {
+  const L = g / 0.08;
+  if (L < 0.1) return 'a short head'; if (L < 0.2) return 'a head'; if (L < 0.35) return 'a neck';
+  return lenStr(L) + (L >= 1.13 ? ' lengths' : ' length');
+}
+function lenStr(L) {
+  if (L < 0.1) return 'shd'; if (L < 0.2) return 'hd'; if (L < 0.35) return 'nk';
+  if (L >= 4) return String(Math.round(L));
+  const q = Math.round(L * 4) / 4, w = Math.floor(q), f = ['', '¼', '½', '¾'][Math.round((q - w) * 4)];
+  return (w || '') + f;
+}
+
+// ── BETS ──
+const betCost = b => b.stake * (b.lines ? b.lines.length : b.type === 'ew' ? 2 : 1);
+const slipCost = () => slip.reduce((a, b) => a + betCost(b), 0);
+// Chance of an exact finishing order (Plackett–Luce, the same model the result is drawn from)
+function lineProb(line) {
+  let p = 1, used = 0;
+  for (const d of line) { const q = card.dogs[d].p; p *= q / (1 - used); used += q; }
+  return p;
+}
+const lineOdds = line => 1 / lineProb(line);
+function fcLines() {
+  const n = FC.type === 'fc' ? 2 : 3, out = [];
+  const rows = FC.any ? Array(n).fill(FC.sel[0]) : FC.sel.slice(0, n);
+  const walk = (k, line) => {
+    if (k === n) { out.push(line); return; }
+    rows[k].forEach((on, d) => { if (on && !line.includes(d)) walk(k + 1, [...line, d]); });
+  };
+  walk(0, []);
+  return out;
+}
+function fcName(b) {
+  const n = b.type === 'fc' ? 'forecast' : 'tricast', L = b.lines.length;
+  if (L === 1) return 'Straight ' + n;
+  if (b.any && b.type === 'fc' && L === 2) return 'Reverse forecast';
+  return 'Combination ' + n + ` (${L} lines)`;
+}
+const trapsOf = ds => ds.map(d => card.dogs[d].trap).join('-');
+function fcDesc(b) {
+  if (b.lines.length === 1) return trapsOf(b.lines[0]);
+  if (b.any) return [...new Set(b.lines.flat())].sort((x, y) => x - y).map(d => card.dogs[d].trap).join(', ') + ' any order';
+  return b.rows.map((r, k) => ORD[k] + ': ' + r.map(d => card.dogs[d].trap).join(',')).join(' · ');
+}
+function addFC() {
+  if (phase !== 'betting') return;
+  const lines = fcLines(), stake = Math.floor(+$('stake').value * 100) / 100;
+  if (!lines.length || !(stake > 0)) return;
+  if (slipCost() + stake * lines.length > S.bank + 1e-9) { say(`Not enough in the bank for that. You have ${money(S.bank - slipCost())} left to bet.`); return; }
+  const n = FC.type === 'fc' ? 2 : 3;
+  const rows = FC.sel.slice(0, FC.any ? 1 : n).map(r => r.map((on, d) => on ? d : -1).filter(d => d >= 0));
+  slip.push({ type: FC.type, any: FC.any, rows, lines, stake });
+  SND.click();
+  clearFC(); renderFC(); renderSlip(); renderHeader();
+}
+const placeOdds = o => 1 + (o - 1) / 4;
+function addBet(dog, type) {
+  if (phase !== 'betting') return;
+  const stake = Math.floor(+$('stake').value * 100) / 100;
+  if (!(stake > 0)) return;
+  const cost = stake * (type === 'ew' ? 2 : 1);
+  if (slipCost() + cost > S.bank + 1e-9) { say(`Not enough in the bank for that. You have ${money(S.bank - slipCost())} left to bet.`); return; }
+  const ex = slip.find(b => b.dog === dog && b.type === type);
+  if (ex) ex.stake += stake; else slip.push({ dog, type, stake });
+  SND.click();
+  renderSlip(); renderHeader();
+}
+
+function settle() {
+  const r = race; r.settled = true; phase = 'result';
+  const dogs = card.dogs;
+  let staked = 0, returned = 0;
+  settledBets = slip.map(b => {
+    if (b.lines) {
+      const top = r.order.slice(0, b.lines[0].length);
+      const hit = b.lines.find(l => l.every((d, k) => d === top[k]));
+      const ret = hit ? b.stake * lineOdds(hit) : 0, cost = betCost(b);
+      staked += cost; returned += ret;
+      return { ...b, ret, cost };
+    }
+    const g = dogs[b.dog], p = r.pos[b.dog];
+    let ret = 0;
+    if (p === 1) ret += b.stake * g.odds;
+    if (b.type === 'ew' && p <= 2) ret += b.stake * placeOdds(g.odds);
+    const cost = b.stake * (b.type === 'ew' ? 2 : 1);
+    staked += cost; returned += ret;
+    return { ...b, pos: p, ret, cost };
+  });
+  S.bank += returned;
+  S.stats.races++; S.stats.bets += slip.length; S.stats.staked += staked; S.stats.returned += returned;
+  S.stats.winners += settledBets.filter(b => b.ret > 0).length;
+  const w = dogs[r.order[0]];
+  S.history.unshift({ race: card.raceNo, trap: w.trap, name: w.name, id: w.id, frac: w.frac, odds: w.odds, staked, returned });
+  const you = [];
+  settledBets.forEach(b => { if (b.lines) return; const y = you[b.dog] || (you[b.dog] = { s: 0, r: 0 }); y.s += b.cost; y.r += b.ret; });
+  recordRuns(S.kennel, dogs, dogs.map(d => d.trap), dogs.map(d => d.p), r.order, r.T, card.raceNo, you);
+  S.history = S.history.slice(0, 50);
+  S.archive = [archiveEntry(), ...(S.archive || [])].slice(0, ARCHIVE_MAX);
+  S.bankHist.push(Math.round(S.bank * 100) / 100); if (S.bankHist.length > 300) S.bankHist.shift();
+  S.raceNo++;
+  save();
+  SND.settled(staked, returned);
+  const g = r.T[r.order[1]] - r.T[r.order[0]];
+  if (g < PHOTO_GAP) say(`Result of the photograph: 1st ${w.trap} ${w.name}, by ${lengths(g)}. 2nd ${dogs[r.order[1]].trap} ${dogs[r.order[1]].name}.`);
+  renderAll();
+}
+
+// ── RENDER: DOM ──
+function say(m) { $('comm').textContent = m; }
+const badge = t => `<span class="trap t${t}">${t}</span>`;
+function renderHeader() {
+  const avail = S.bank - ((held ? held.phase : phase) === 'betting' ? slipCost() : 0);
+  $('bank').textContent = money(avail);
+  const pl = S.bank - 1000;
+  $('pl').textContent = (pl >= 0 ? '+' : '') + money(pl);
+  $('pl').className = pl >= 0 ? 'pos' : 'neg';
+}
+function renderCard() {
+  $('raceTitle').textContent = `Race ${card.raceNo} · ${METRES}m flat`;
+  const book = card.dogs.reduce((a, d) => a + 1 / d.odds, 0) * 100;
+  $('book').textContent = `Book ${book.toFixed(2)}% ✓ fair`;
+  const dis = phase !== 'betting' ? 'disabled' : '';
+  $('card').innerHTML = card.dogs.map((d, i) => `
+    <div class="row">${badge(d.trap)}
+      <div class="dinfo"><b>${dlink(d)}${d.fav ? '<span class="fav">FAV</span>' : ''}</b>
+        <small>${d.form} · (${d.style}) · ${d.sex} · best ${d.best}${d.trainer ? ' · ' + tlink(d.trainer, true) : ''}</small></div>
+      <div class="odds"><b>${d.odds.toFixed(2)}</b><small>≈${d.frac} · ${(d.p * 100).toFixed(1)}%</small></div>
+      <div class="btns"><button data-bet="win" data-dog="${i}" ${dis}>Win</button><button data-bet="ew" data-dog="${i}" ${dis}>E/W</button></div>
+    </div>`).join('');
+}
+function renderSlip() {
+  const dogs = card.dogs;
+  if (phase === 'result' && settledBets) {
+    const st = settledBets.reduce((a, b) => a + b.cost, 0), rt = settledBets.reduce((a, b) => a + b.ret, 0);
+    $('slip').innerHTML = (settledBets.length ? settledBets.map(b => b.lines ? `
+      <div class="bet"><span class="tag">${b.type.toUpperCase()}</span><div class="bx"><b>${fcName(b)}</b>
+        <small>${fcDesc(b)} · ${money(b.stake)}${b.lines.length > 1 ? ' a line' : ''} · result ${trapsOf(race.order.slice(0, b.lines[0].length))}</small></div>
+        <b class="${b.ret > 0 ? 'pos' : 'neg'}">${b.ret > 0 ? money(b.ret) : 'lost'}</b></div>` : `
+      <div class="bet">${badge(dogs[b.dog].trap)}<div class="bx"><b>${dogs[b.dog].name}</b>
+        <small>${b.type === 'ew' ? 'E/W ' + money(b.stake) + ' ×2' : 'Win ' + money(b.stake)} · finished ${ORD[b.pos - 1]}</small></div>
+        <b class="${b.ret > 0 ? 'pos' : 'neg'}">${b.ret > 0 ? money(b.ret) : 'lost'}</b></div>`).join('')
+      : '<div class="empty">No bets this race.</div>') +
+      `<div class="tot"><span>Staked ${money(st)} · Returned ${money(rt)}</span><span class="${rt - st >= 0 ? 'pos' : 'neg'}">${rt - st >= 0 ? '+' : ''}${money(rt - st)}</span></div>
+       <div class="runrow"><span></span><button class="go" id="next">Next race ▶</button></div>`;
+    $('next').onclick = newCard;
+    return;
+  }
+  const running = phase === 'running';
+  $('slip').innerHTML = (slip.length ? slip.map((b, k) => {
+    const x = running ? '' : `<button class="x" data-rm="${k}">✕</button>`;
+    if (b.lines) {
+      const os = b.lines.map(lineOdds), lo = Math.min(...os), hi = Math.max(...os);
+      const pays = b.lines.length === 1 ? `@ ${lo.toFixed(2)} · returns ${money(b.stake * lo)}`
+        : `${b.lines.length} × ${money(b.stake)} = ${money(betCost(b))} · returns ${money(b.stake * lo)}–${money(b.stake * hi)}`;
+      return `<div class="bet"><span class="tag">${b.type.toUpperCase()}</span><div class="bx"><b>${fcName(b)}</b>
+        <small>${fcDesc(b)} · ${pays}</small></div>${x}</div>`;
+    }
+    const g = dogs[b.dog];
+    const pot = b.type === 'ew'
+      ? `wins: ${money(b.stake * g.odds + b.stake * placeOdds(g.odds))} · 2nd: ${money(b.stake * placeOdds(g.odds))}`
+      : `returns ${money(b.stake * g.odds)}`;
+    return `<div class="bet">${badge(g.trap)}<div class="bx"><b>${g.name}</b>
+      <small>${b.type === 'ew' ? `E/W ${money(b.stake)} ×2 = ${money(b.stake * 2)}` : 'Win ' + money(b.stake)} @ ${g.odds.toFixed(2)} · ${pot}</small></div>
+      ${x}</div>`;
+  }).join('') : `<div class="empty">${running ? 'No bets. Just watching this one.' : 'Tap Win or E/W on a dog to add a bet.'}</div>`) +
+    `<div class="tot"><span>Total stake</span><span>${money(slipCost())}</span></div>
+     <div class="runrow">
+       <label>Speed <select id="speed"><option value="1">1× (real time)</option><option value="1.5">1.5×</option><option value="3">3×</option></select></label>
+       <button class="go" id="run" ${running ? 'disabled' : ''}>${running ? 'Running…' : slip.length ? 'Bet & run ▶' : 'Run without betting ▶'}</button>
+     </div>`;
+  $('speed').value = String(speed);
+  $('speed').onchange = e => speed = +e.target.value;
+  $('run').onclick = startRace;
+}
+function renderResults() {
+  const el = $('results');
+  if (phase !== 'result' && phase !== 'history') { el.hidden = true; return; }
+  const r = race, dogs = card.dogs;
+  el.hidden = false;
+  const gap = r.T[r.order[1]] - r.T[r.order[0]];
+  el.innerHTML = `<h3>${phase === 'history' ? 'Past race' : 'Result'} · Race ${card.raceNo}</h3>
+    <div class="photo"><canvas id="photo"></canvas><small>${gap < PHOTO_GAP ? 'PHOTO FINISH · ' : ''}Finish-line camera. Time runs right to left, so the picture shows each dog at the instant its nose reached the line.</small></div><table><tr><th>Pos</th><th>Dog</th><th class="r">Dist</th><th class="r">Time</th><th class="r">SP</th></tr>` +
+    r.order.map((i, k) => `<tr><td>${ORD[k]}</td><td>${badge(dogs[i].trap)} ${dlink(dogs[i])}</td>
+      <td class="r">${k ? lenStr((r.T[i] - r.T[r.order[k - 1]]) / 0.08) : ''}</td><td class="r">${r.T[i].toFixed(2)}</td>
+      <td class="r">${dogs[i].frac} (${dogs[i].odds.toFixed(2)})</td></tr>`).join('') + '</table>' +
+    `<div class="div"><span>Forecast ${trapsOf(r.order.slice(0, 2))} paid <b>${lineOdds(r.order.slice(0, 2)).toFixed(2)}</b></span>
+      <span>Tricast ${trapsOf(r.order.slice(0, 3))} paid <b>${lineOdds(r.order.slice(0, 3)).toFixed(2)}</b></span></div>
+     <div class="runrow" style="margin-top:10px"><span class="note" style="margin:0">Fair odds, returned per £1 staked</span><span style="display:flex;gap:8px"><button data-replay ${race.replay ? 'disabled' : ''}>${race.replay ? 'Replaying…' : '↺ Replay'}</button>${phase === 'history'
+      ? `<button class="go" data-back>Back to race ${held.card.raceNo} ▶</button>` : '<button class="go" data-next>Next race ▶</button>'}</span></div>` +
+    (phase === 'history' ? pastBets() : '');
+  drawPhoto($('photo'));
+}
+
+// ── PHOTO FINISH ──
+// A finish camera is a slit camera: it only ever photographs the finish line, column after column, so
+// the picture's x axis is time, not space. Every dog appears exactly as it was when it crossed the line;
+// the static background smears into horizontal streaks; the judge reads times off the hairline at each nose.
+function laneAt(i, t) {
+  const tr = race.track;
+  if (!tr || !tr.length) return race.w[i];
+  let lo = 0, hi = tr.length - 1;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (tr[m][0] < t) lo = m + 1; else hi = m; }
+  return tr[lo][i + 1];
+}
+function drawPhoto(el) {
+  if (!el) return;
+  const r = race, dogs = card.dogs, dpr = window.devicePixelRatio || 1;
+  const W = Math.max(280, el.clientWidth || 700), H = Math.round(Math.max(170, Math.min(300, W * 0.4)));
+  el.width = Math.round(W * dpr); el.height = Math.round(H * dpr); el.style.height = H + 'px';
+  const c = el.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const K = Math.max(W * 1.75, 950);                    // pixels per second of race time (zoomed in on narrow screens)
+  const X0 = W - Math.max(40, W * 0.08), T1 = r.T[r.order[0]];
+  const xOf = T => X0 - (T - T1) * K, tOf = x => T1 + (X0 - x) / K;
+  const rnd = seeded(card.raceNo * 7919 + 17);
+  const top = Math.round(H * 0.3), bot = H - 24;
+  // streaked background: stands, rail, then sand
+  const crowd = ['#262b36', '#3a3228', '#4b4136', '#1d2230', '#5a4a3a', '#2f3644', '#6b2a2a', '#28406b'];
+  for (let y = 0; y < bot; y++) {
+    let col;
+    if (y < top - 6) col = crowd[Math.floor(rnd() * crowd.length)];
+    else if (y < top - 4) col = '#f0f0f0';
+    else if (y < top) col = '#7a7f87';
+    else { const k = (y - top) / (bot - top), v = 12 * (rnd() - 0.5) - k * 22; col = `rgb(${201 + v | 0},${156 + v | 0},${106 + v | 0})`; }
+    c.fillStyle = col; c.fillRect(0, y, W, 1);
+  }
+  // dogs, far (inside rail) first
+  const unit = K * 0.08 / 130;                          // a length is 0.08s; the drawn dog is ~130 units long
+  const items = dogs.map((g, i) => ({ g, i, x: xOf(r.T[i]), w: laneAt(i, r.T[i]) }))
+    .filter(o => o.x > 0 && o.x - 140 * unit * 1.2 < W).sort((a, b) => a.w - b.w);
+  for (const o of items) {
+    const k = Math.max(0, Math.min(1, o.w / 60)), s = unit * (0.62 + 0.55 * k);
+    drawSideDog(c, o.x, top + 16 + k * (bot - top - 22), s, o.g, r.gait ? r.gait[o.i] : 0.5);
+  }
+  // warm photographic tone + vignette
+  c.globalCompositeOperation = 'multiply'; c.fillStyle = '#f4e6cc'; c.fillRect(0, 0, W, bot);
+  c.globalCompositeOperation = 'source-over';
+  const vg = c.createRadialGradient(W / 2, bot / 2, Math.min(W, bot) * 0.3, W / 2, bot / 2, Math.max(W, bot) * 0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.35)'); c.fillStyle = vg; c.fillRect(0, 0, W, bot);
+  // time scale
+  c.fillStyle = '#0a0a0a'; c.fillRect(0, bot, W, H - bot);
+  c.strokeStyle = '#ddd'; c.fillStyle = '#ddd'; c.font = '600 10px ui-monospace,Menlo,Consolas,monospace'; c.textAlign = 'center'; c.textBaseline = 'top';
+  for (let h = Math.floor(tOf(W) * 100); h <= Math.ceil(tOf(0) * 100); h++) {
+    const x = xOf(h / 100) + 0.5, big = h % 5 === 0;
+    c.beginPath(); c.moveTo(x, bot); c.lineTo(x, bot + (big ? 7 : 3)); c.stroke();
+    if (h % 10 === 0) c.fillText((h / 100).toFixed(2), x, bot + 9);
+  }
+  // judge's hairlines at each nose, labels staggered so close finishes stay readable
+  let shown = 0;
+  r.order.forEach((i, k) => {
+    const x = Math.round(xOf(r.T[i])) + 0.5;
+    if (x < 0 || x > W) return;
+    const tr = TRAPS[i === undefined ? 0 : dogs[i].trap - 1], col = tr.bg === 'stripe' ? '#f4f4f4' : tr.bg;
+    c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 3; c.beginPath(); c.moveTo(x, 18); c.lineTo(x, bot); c.stroke();
+    c.strokeStyle = col; c.lineWidth = 1; c.beginPath(); c.moveTo(x, 18); c.lineTo(x, bot); c.stroke();
+    const label = `${ORD[k]} ${r.T[i].toFixed(2)}`;
+    c.font = '700 10.5px system-ui,sans-serif'; c.textBaseline = 'middle';
+    const lw = c.measureText(label).width + 20, ly = 4 + (shown % 2) * 15, lx = Math.max(2, Math.min(W - lw - 2, x - lw / 2));
+    c.fillStyle = 'rgba(0,0,0,.75)'; c.fillRect(lx, ly, lw, 14);
+    c.fillStyle = col; c.fillRect(lx + 2, ly + 2, 10, 10);
+    c.fillStyle = tr.fg; c.font = '800 8px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(dogs[i].trap, lx + 7, ly + 7.5);
+    c.fillStyle = '#fff'; c.font = '700 10.5px system-ui,sans-serif'; c.textAlign = 'left'; c.fillText(label, lx + 15, ly + 7.5);
+    shown++;
+  });
+  c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '700 10px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.fillText(`KELVIN PARK · RACE ${card.raceNo} · ${METRES}m`, 8, bot - 7);
+}
+// Side-on greyhound, facing right, nose at the origin, paws on y = 0; phase 0 = legs stretched, 1 = gathered.
+function drawSideDog(c, x, y, s, g, ph) {
+  const tr = TRAPS[(g.trap || 1) - 1];
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(-62, 1, 58, 4, 0, 0, 7); c.fill();
+  const leg = (from, paw, bend, back) => {
+    const mx = (from[0] + paw[0]) / 2 + bend[0], my = (from[1] + paw[1]) / 2 + bend[1];
+    c.beginPath(); c.moveTo(from[0], from[1]); c.lineTo(mx, my); c.lineTo(paw[0], paw[1]); c.stroke();
+    c.beginPath(); c.ellipse(paw[0] + (back ? -2 : 2), paw[1] - 1, 4, 2, 0, 0, 7); c.fill();
+  };
+  const L = (a, b) => [lerp(a[0], b[0], ph), lerp(a[1], b[1], ph)];
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  // far-side legs a touch darker
+  c.strokeStyle = shade(g.coat, -0.25); c.fillStyle = c.strokeStyle; c.lineWidth = 6;
+  leg([-46, -22], L([-4, -3], [-52, -1]), [6, -3]);
+  leg([-94, -28], L([-136, -5], [-70, -2]), [-8, 6], true);
+  c.strokeStyle = g.coat; c.fillStyle = g.coat; c.lineWidth = 7;
+  leg([-42, -22], L([-12, -1], [-60, -1]), [4, -4]);
+  leg([-90, -28], L([-128, -3], [-62, -1]), [-10, 5], true);
+  // tail
+  c.lineWidth = 3.5; c.beginPath(); c.moveTo(-100, -34); c.quadraticCurveTo(-120, -22, -134, -30 + ph * 8); c.stroke();
+  // body
+  const body = () => {
+    c.beginPath(); c.moveTo(0, -44);
+    c.quadraticCurveTo(-10, -53, -22, -55); c.quadraticCurveTo(-31, -56, -37, -50);
+    c.quadraticCurveTo(-43, -44, -50, -44); c.quadraticCurveTo(-76, -51, -101, -38);
+    c.quadraticCurveTo(-107, -29, -100, -20); c.quadraticCurveTo(-90, -15, -80, -27);
+    c.quadraticCurveTo(-66, -31, -56, -14); c.quadraticCurveTo(-43, -6, -34, -22);
+    c.quadraticCurveTo(-28, -36, -18, -40); c.quadraticCurveTo(-8, -41, 0, -44); c.closePath();
+  };
+  body(); c.fillStyle = g.coat; c.fill();
+  // racing jacket, clipped to the body
+  if (g.trap) {
+  c.save(); body(); c.clip();
+  if (tr.bg === 'stripe') { c.fillStyle = '#f4f4f4'; c.fillRect(-94, -56, 48, 50); c.fillStyle = '#111'; for (let k = -94; k < -46; k += 8) c.fillRect(k, -56, 4, 50); }
+  else { c.fillStyle = tr.bg; c.fillRect(-94, -56, 48, 50); }
+  c.restore();
+  c.font = '900 17px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.lineWidth = 3; c.strokeStyle = tr.bg === 'stripe' || tr.bg === '#f4f4f4' ? '#fff' : 'rgba(0,0,0,.35)';
+  c.strokeText(g.trap, -70, -31); c.fillStyle = tr.fg; c.fillText(g.trap, -70, -31);
+  }
+  // ear, eye, muzzle
+  c.fillStyle = shade(g.coat, -0.3); c.beginPath(); c.moveTo(-26, -54); c.lineTo(-38, -58); c.lineTo(-33, -51); c.closePath(); c.fill();
+  c.fillStyle = '#111'; c.beginPath(); c.arc(-15, -49, 1.6, 0, 7); c.fill();
+  c.strokeStyle = 'rgba(240,240,230,.85)'; c.lineWidth = 1.3;
+  c.beginPath(); c.moveTo(2, -44); c.lineTo(-14, -53); c.moveTo(1, -44); c.lineTo(-14, -40);
+  for (const x0 of [-4, -9, -14]) { c.moveTo(x0, -51 + (x0 + 14) * 0.45); c.lineTo(x0, -41 + (x0 + 14) * -0.05); }
+  c.stroke();
+  c.restore();
+}
+function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(v * (1 + k))));
+  return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
+}
+function renderHistory() {
+  const st = S.stats, pl = st.returned - st.staked;
+  $('stats').innerHTML = `<div class="statgrid">
+    <div class="stat"><small>Races</small><b>${st.races}</b></div>
+    <div class="stat"><small>Bets / winners</small><b>${st.bets} / ${st.winners}</b></div>
+    <div class="stat"><small>Staked</small><b>${money(st.staked)}</b></div>
+    <div class="stat"><small>Returned</small><b>${money(st.returned)}</b></div>
+    <div class="stat"><small>Return on stake</small><b class="${pl >= 0 ? 'pos' : 'neg'}">${st.staked ? ((st.returned / st.staked) * 100).toFixed(1) + '%' : '–'}</b></div></div>`;
+  const h = S.bankHist;
+  if (h.length > 1) {
+    const W = 600, H = 90, lo = Math.min(0, ...h, 1000), hi = Math.max(...h, 1000) * 1.05;
+    const X = i => i / (h.length - 1) * W, Y = v => H - 6 - (v - lo) / (hi - lo || 1) * (H - 12);
+    const pts = h.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    const end = h[h.length - 1];
+    $('spark').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="display:block;margin-bottom:8px">
+      <line x1="0" x2="${W}" y1="${Y(1000)}" y2="${Y(1000)}" stroke="#8fa1b8" stroke-dasharray="4 4" stroke-width="1" vector-effect="non-scaling-stroke"/>
+      <polyline points="${pts}" fill="none" stroke="${end >= 1000 ? '#4ade80' : '#f87171'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+      <div class="note" style="margin:-4px 0 8px">Bank after each race (dashed line = £1,000 start)</div>`;
+  } else $('spark').innerHTML = '';
+  const can = new Set((S.archive || []).map(a => a.race)), busy = phase === 'running' || race.replay;
+  $('hist').innerHTML = S.history.length ? `<table><tr><th>Race</th><th>Winner</th><th class="r">Staked</th><th class="r">P/L</th><th></th></tr>` +
+    S.history.slice(0, 10).map(x => { const p = x.returned - x.staked; return `<tr><td>${x.race}</td><td>${badge(x.trap)} ${dlink(x)} <small style="color:var(--mute)">${x.frac}</small></td>
+      <td class="r">${money(x.staked)}</td><td class="r ${x.staked ? (p >= 0 ? 'pos' : 'neg') : ''}">${x.staked ? (p >= 0 ? '+' : '') + money(p) : '–'}</td>
+      <td class="r">${can.has(x.race) ? `<button class="hbtn" data-hist="${x.race}" title="Watch race ${x.race} again" ${busy ? 'disabled' : ''}>↺ Watch</button>` : ''}</td></tr>`; }).join('') + '</table>' +
+    (S.archive && S.archive.length ? `<div class="note">The last ${ARCHIVE_MAX} races are kept and can be watched again.</div>` : '')
+    : '<div class="empty">No races yet.</div>';
+}
+function renderFC() {
+  const n = FC.type === 'fc' ? 2 : 3, rows = FC.any ? 1 : n, dis = phase !== 'betting' ? 'disabled' : '';
+  document.querySelectorAll('[data-fct]').forEach(b => b.classList.toggle('on', b.dataset.fct === FC.type));
+  $('anyOrder').checked = FC.any; $('anyOrder').disabled = !!dis;
+  let h = '<div class="lbl"></div>' + card.dogs.map(d => `<div class="hd">${badge(d.trap)}</div>`).join('');
+  for (let k = 0; k < rows; k++) {
+    h += `<div class="lbl">${FC.any ? 'Any' : ORD[k]}</div>` +
+      card.dogs.map((d, i) => `<button class="cell${FC.sel[k][i] ? ' on' : ''}" data-cell="${k},${i}" ${dis}>${d.trap}</button>`).join('');
+  }
+  $('fcGrid').innerHTML = `<div class="fcgrid">${h}</div>`;
+  const lines = fcLines(), stake = Math.max(0, +$('stake').value || 0);
+  let info;
+  if (!lines.length) info = FC.any ? `Pick at least ${n} dogs.` : `Pick a dog for each of the ${n} places.`;
+  else {
+    const os = lines.map(lineOdds), lo = Math.min(...os), hi = Math.max(...os);
+    info = lines.length === 1
+      ? `${trapsOf(lines[0])} pays <b>${lo.toFixed(2)}</b> (${(100 / lo).toFixed(2)}% chance) · ${money(stake)} returns ${money(stake * lo)}`
+      : `${lines.length} lines × ${money(stake)} = <b>${money(stake * lines.length)}</b> · pays ${lo.toFixed(2)}–${hi.toFixed(2)} on the winning line · ${(lines.reduce((a, l) => a + lineProb(l), 0) * 100).toFixed(1)}% chance to land`;
+  }
+  $('fcInfo').innerHTML = `<div>${info}</div><div class="runrow" style="margin-top:8px"><button data-fcclear ${dis}>Clear</button>
+    <button class="go" data-fcadd ${dis || !lines.length ? 'disabled' : ''}>Add to slip</button></div>`;
+}
+let stripKey = '';
+function renderStrip() {
+  let run = null;
+  if ((phase === 'result' || phase === 'history') && !race.replay) run = race.order;
+  else if (race.t > 0) run = [...race.d.keys()].sort((a, b) => race.d[b] - race.d[a]);
+  const key = run ? run.join('') + phase + !!race.replay : 'none';
+  if (key === stripKey) return;
+  stripKey = key;
+  $('strip').innerHTML = run ? run.map((i, k) => `<span><span class="o">${ORD[k]}</span>${badge(card.dogs[i].trap)}</span>`).join('') : '';
+}
+function renderAll() { renderHeader(); renderCard(); renderFC(); renderSlip(); renderResults(); renderHistory(); }
+
+// ── DOG PROFILES ──
+const dlink = d => d.id ? `<a class="dlink" data-dog="${d.id}">${d.name}</a>` : d.name;
+const tlink = (n, short) => `<a class="dlink" data-trainer="${n}">${short ? n : trainerInfo(n).full}</a>`;
+// The overlay keeps a stack of views (kennel list → trainer → dog …) so ◀ Back retraces your steps.
+let modalStack = [];
+function showModal(view, push) {
+  if (!push || $('modal').hidden) modalStack = [];
+  modalStack.push(view);
+  paintModal();
+}
+function paintModal() {
+  const v = modalStack[modalStack.length - 1];
+  const html = v.type === 'dog' ? profileHTML(v.id) : v.type === 'trainer' ? trainerHTML(v.name) : listHTML(v.type);
+  if (html == null) return;
+  $('modalBody').innerHTML = (modalStack.length > 1 ? '<button data-mback style="margin-bottom:10px">◀ Back</button>' : '') + html;
+  $('modal').hidden = false;
+  $('modal').scrollTop = 0;
+  if (v.type === 'dog') drawPortrait(v.id);
+}
+function closeModal() { $('modal').hidden = true; modalStack = []; }
+const openProfile = id => showModal({ type: 'dog', id }, true);
+const chip = p => `<span class="chip p${p}">${p}</span>`;
+function dogStats(k) {
+  const runs = k.runs, n = runs.length, wins = runs.filter(r => r.p === 1).length, pl = runs.filter(r => r.p <= 2).length;
+  const ys = runs.filter(r => r.y), st = ys.reduce((a, r) => a + r.y.s, 0), rt = ys.reduce((a, r) => a + r.y.r, 0);
+  return { n, wins, pl, avg: n ? runs.reduce((a, r) => a + r.p, 0) / n : 0, st, rt, ys: ys.length };
+}
+function profileHTML(id) {
+  const k = S.kennel.find(x => x.id === id);
+  if (!k) return null;
+  const st = dogStats(k), onCard = card.dogs.find(d => d.id === id) && phase !== 'history' ? card.dogs.find(d => d.id === id) : null;
+  const archived = new Set((S.archive || []).map(a => a.race)), busy = phase === 'running' || race.replay;
+  const runs = [...k.runs].reverse();
+  const recent = k.runs.slice(-20);
+  const W = phoneQ.matches ? 340 : 560, H = 110, X = i => 20 + i * (W - 40) / Math.max(1, recent.length - 1), Y = p => 12 + (p - 1) * (H - 24) / 5;
+  const chart = recent.length > 1 ? `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="display:block">
+      ${[1, 2, 3, 4, 5, 6].map(p => `<line x1="14" x2="${W - 10}" y1="${Y(p)}" y2="${Y(p)}" stroke="#28384f"/><text x="2" y="${Y(p) + 4}" fill="#8fa1b8" font-size="11">${p}</text>`).join('')}
+      <polyline points="${recent.map((r, i) => `${X(i)},${Y(r.p)}`).join(' ')}" fill="none" stroke="#f5c542" stroke-width="2"/>
+      ${recent.map((r, i) => `<circle cx="${X(i)}" cy="${Y(r.p)}" r="4" fill="${r.p === 1 ? '#f5c542' : r.p === 2 ? '#c9d4e3' : '#1b2840'}" stroke="#f5c542"/>`).join('')}
+    </svg><div class="note" style="margin:0 0 10px">Finishing position, last ${recent.length} runs (oldest left)</div>` : '';
+  const html = `
+    <div class="phead"><canvas id="pdog" width="600" height="260"></canvas>
+      <div><h2>${k.name}</h2>
+        <div class="facts">${k.sex === 'd' ? 'Dog' : 'Bitch'} · ${k.coatName} · ${Math.floor(k.age / 12)}y ${k.age % 12}m<br>
+          ${STYLE_NAME[k.style]} · Trainer ${tlink(k.trainer)}<br>
+          Form <b style="color:var(--ink)">${formOf(k)}</b> <small>(latest on the right)</small> · Best ${bestOf(k)}</div>
+        ${onCard ? `<div class="oncard">Running in race ${card.raceNo} from trap ${onCard.trap} at <b>${onCard.odds.toFixed(2)}</b> (≈${onCard.frac}, ${(onCard.p * 100).toFixed(1)}% chance)</div>` : ''}
+      </div></div>
+    <div class="statgrid">
+      <div class="stat"><small>Runs</small><b>${st.n}</b></div>
+      <div class="stat"><small>Wins</small><b>${st.wins}</b></div>
+      <div class="stat"><small>1st or 2nd</small><b>${st.pl}</b></div>
+      <div class="stat"><small>Win rate</small><b>${st.n ? Math.round(st.wins / st.n * 100) + '%' : '–'}</b></div>
+      <div class="stat"><small>Average finish</small><b>${st.n ? st.avg.toFixed(1) : '–'}</b></div>
+      <div class="stat"><small>You on this dog</small><b class="${st.rt - st.st >= 0 ? 'pos' : 'neg'}">${st.ys ? (st.rt - st.st >= 0 ? '+' : '') + money(st.rt - st.st) : '–'}</b></div>
+    </div>
+    <div class="chips" style="margin-bottom:10px">${k.runs.slice(-10).map(r => chip(r.p)).join('')}</div>
+    ${chart}
+    <h3>Race history</h3>
+    <div class="tscroll"><table><tr><th>Race</th><th>Trap</th><th>Pos</th><th class="r">Dist</th><th class="r">Time</th><th class="r">SP</th><th>Winner / 2nd</th><th class="r">You</th><th></th></tr>
+    ${runs.map(r => `<tr><td>${r.n || '<span style="color:var(--mute)">earlier</span>'}</td><td>${badge(r.t)}</td><td>${ORD[r.p - 1]}</td>
+      <td class="r">${r.p === 1 ? (r.g < 0.012 ? 'shd' : '+' + lenStr(r.g / 0.08)) : lenStr(r.g / 0.08)}</td><td class="r">${r.tm.toFixed(2)}</td>
+      <td class="r">${nearestFrac(r.o)}</td><td>${S.kennel.some(x => x.id === r.wid) ? `<a class="dlink" data-dog="${r.wid}">${r.wn}</a>` : r.wn}</td>
+      <td class="r ${r.y ? (r.y.r - r.y.s >= 0 ? 'pos' : 'neg') : ''}">${r.y ? (r.y.r - r.y.s >= 0 ? '+' : '') + money(r.y.r - r.y.s) : ''}</td>
+      <td class="r">${r.n && archived.has(r.n) ? `<button class="hbtn" data-hist="${r.n}" ${busy ? 'disabled' : ''}>↺ Watch</button>` : ''}</td></tr>`).join('')}
+    </table></div>
+    <div class="note">Dist is lengths behind the winner, or (+) the winning margin. Races marked "earlier" were run before you arrived.</div>`;
+  return html;
+}
+// portrait: in its trap jacket if it's on today's card, otherwise plain
+function drawPortrait(id) {
+  const k = S.kennel.find(x => x.id === id), onCard = phase !== 'history' && card.dogs.find(d => d.id === id);
+  const cvp = $('pdog'), c = cvp.getContext('2d');
+  const sky = c.createLinearGradient(0, 0, 0, 260); sky.addColorStop(0, '#2e6b34'); sky.addColorStop(0.55, '#3d7d42'); sky.addColorStop(0.56, '#c99c6a'); sky.addColorStop(1, '#a87d50');
+  c.fillStyle = sky; c.fillRect(0, 0, 600, 260);
+  c.fillStyle = 'rgba(255,255,255,.9)'; c.fillRect(0, 138, 600, 4);
+  drawSideDog(c, 470, 235, 2.6, { ...k, trap: onCard ? onCard.trap : 0 }, 0.35);
+}
+const tabs = on => `<div class="seg" style="margin-bottom:10px"><button data-mtab="dogs" class="${on === 'dogs' ? 'on' : ''}">Dogs</button><button data-mtab="trainers" class="${on === 'trainers' ? 'on' : ''}">Trainers</button></div>`;
+const signed = (v, dp) => (v >= 0 ? '+' : '') + v.toFixed(dp);
+function listHTML(type) {
+  const on = new Map(phase !== 'history' ? card.dogs.map(d => [d.id, d]) : []);
+  if (type === 'trainers') {
+    const rows = TRAINERS.map(n => ({ n, t: trainerStats(n) })).filter(x => x.t.dogs.length).sort((a, b) => b.t.wins - a.t.wins || b.t.wins / (b.t.n || 1) - a.t.wins / (a.t.n || 1));
+    return tabs('trainers') + `<h2>Trainers</h2><div class="note" style="margin:0 0 10px">"vs exp" is wins compared with what their dogs' prices said they should have won: luck, since trainers don't change a dog's chances.</div>
+      <div class="tscroll"><table><tr><th>Trainer</th><th>Base</th><th class="r">Dogs</th><th class="r">Runs</th><th class="r">Wins</th><th class="r">Win %</th><th class="r">vs exp</th><th>Last 10</th><th>Today</th></tr>
+      ${rows.map(({ n, t }) => `<tr><td>${tlink(n)}</td><td>${trainerInfo(n).base}</td><td class="r">${t.dogs.length}</td><td class="r">${t.n}</td><td class="r">${t.wins}</td>
+        <td class="r">${t.n ? Math.round(t.wins / t.n * 100) + '%' : '–'}</td><td class="r ${t.wins - t.exp >= 0 ? 'pos' : 'neg'}">${signed(t.wins - t.exp, 1)}</td>
+        <td>${t.last10.map(r => r.p).join('') || '–'}</td><td>${t.dogs.filter(k => on.has(k.id)).map(k => badge(on.get(k.id).trap)).join(' ')}</td></tr>`).join('')}
+      </table></div>`;
+  }
+  const rows = S.kennel.map(k => ({ k, st: dogStats(k) })).sort((a, b) => b.st.wins - a.st.wins || a.st.avg - b.st.avg);
+  return tabs('dogs') + `<h2>The kennel</h2><div class="note" style="margin:0 0 10px">${KENNEL_SIZE} dogs race here. Tap one for its profile and race history.</div>
+    <div class="tscroll"><table><tr><th>Dog</th><th>Trainer</th><th>Style</th><th>Form</th><th class="r">Runs</th><th class="r">Wins</th><th class="r">Win %</th><th class="r">Best</th><th>Today</th></tr>
+    ${rows.map(({ k, st }) => `<tr><td><a class="dlink" data-dog="${k.id}">${k.name}</a></td><td>${tlink(k.trainer, true)}</td><td>${STYLE_NAME[k.style].split(' ')[0]}</td><td>${formOf(k)}</td>
+      <td class="r">${st.n}</td><td class="r">${st.wins}</td><td class="r">${st.n ? Math.round(st.wins / st.n * 100) + '%' : '–'}</td><td class="r">${bestOf(k)}</td>
+      <td>${on.has(k.id) ? badge(on.get(k.id).trap) : ''}</td></tr>`).join('')}
+    </table></div>`;
+}
+function trainerStats(name) {
+  const dogs = S.kennel.filter(k => k.trainer === name);
+  const runs = dogs.flatMap(k => k.runs.map(r => ({ ...r, dog: k })));
+  const recent = runs.filter(r => r.n).sort((a, b) => b.n - a.n);
+  const ys = runs.filter(r => r.y);
+  return {
+    dogs, runs, recent, n: runs.length, wins: runs.filter(r => r.p === 1).length, pl: runs.filter(r => r.p <= 2).length,
+    exp: runs.reduce((a, r) => a + 1 / r.o, 0), last10: recent.slice(0, 10),
+    ys: ys.length, st: ys.reduce((a, r) => a + r.y.s, 0), rt: ys.reduce((a, r) => a + r.y.r, 0),
+  };
+}
+function trainerHTML(name) {
+  const ti = trainerInfo(name), t = trainerStats(name);
+  const on = new Map(phase !== 'history' ? card.dogs.map(d => [d.id, d]) : []);
+  const archived = new Set((S.archive || []).map(a => a.race)), busy = phase === 'running' || race.replay;
+  const initials = ti.full.split(' ').map(w => w[0]).join('');
+  const l10w = t.last10.filter(r => r.p === 1).length;
+  return `
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:12px;padding-right:40px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--panel2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:var(--accent);flex:0 0 auto">${initials}</div>
+      <div><h2 style="margin:0 0 4px;font-size:21px">${ti.full}</h2>
+        <div class="facts">Kennels at ${ti.base} · Licensed since ${ti.since} · ${t.dogs.length} dog${t.dogs.length === 1 ? '' : 's'} at Kelvin Park</div></div>
+    </div>
+    ${t.dogs.some(k => on.has(k.id)) ? `<div class="oncard">Runners in race ${card.raceNo}: ${t.dogs.filter(k => on.has(k.id)).map(k => { const d = on.get(k.id); return `${badge(d.trap)} ${dlink(d)} at <b>${d.odds.toFixed(2)}</b>`; }).join(' · ')}</div>` : ''}
+    <div class="statgrid">
+      <div class="stat"><small>Runners</small><b>${t.n}</b></div>
+      <div class="stat"><small>Wins</small><b>${t.wins}</b></div>
+      <div class="stat"><small>1st or 2nd</small><b>${t.pl}</b></div>
+      <div class="stat"><small>Win rate</small><b>${t.n ? Math.round(t.wins / t.n * 100) + '%' : '–'}</b></div>
+      <div class="stat"><small>Expected wins</small><b>${t.exp.toFixed(1)} <span class="${t.wins - t.exp >= 0 ? 'pos' : 'neg'}" style="font-size:12px">${signed(t.wins - t.exp, 1)}</span></b></div>
+      <div class="stat"><small>Last 10 runners</small><b>${t.last10.length ? l10w + ' win' + (l10w === 1 ? '' : 's') : '–'}</b></div>
+      <div class="stat"><small>You on their dogs</small><b class="${t.rt - t.st >= 0 ? 'pos' : 'neg'}">${t.ys ? (t.rt - t.st >= 0 ? '+' : '') + money(t.rt - t.st) : '–'}</b></div>
+    </div>
+    <h3>Dogs</h3>
+    <div class="tscroll"><table><tr><th>Dog</th><th>Style</th><th>Form</th><th class="r">Runs</th><th class="r">Wins</th><th class="r">Win %</th><th class="r">Best</th><th>Today</th></tr>
+    ${t.dogs.map(k => ({ k, st: dogStats(k) })).sort((a, b) => b.st.wins - a.st.wins).map(({ k, st }) => `<tr><td><a class="dlink" data-dog="${k.id}">${k.name}</a></td>
+      <td>${STYLE_NAME[k.style].split(' ')[0]}</td><td>${formOf(k)}</td><td class="r">${st.n}</td><td class="r">${st.wins}</td>
+      <td class="r">${st.n ? Math.round(st.wins / st.n * 100) + '%' : '–'}</td><td class="r">${bestOf(k)}</td><td>${on.has(k.id) ? badge(on.get(k.id).trap) : ''}</td></tr>`).join('')}
+    </table></div>
+    <h3 style="margin-top:14px">Recent runners</h3>
+    ${t.recent.length ? `<div class="tscroll"><table><tr><th>Race</th><th>Dog</th><th>Trap</th><th>Pos</th><th class="r">Time</th><th class="r">SP</th><th class="r">You</th><th></th></tr>
+    ${t.recent.slice(0, 15).map(r => `<tr><td>${r.n}</td><td><a class="dlink" data-dog="${r.dog.id}">${r.dog.name}</a></td><td>${badge(r.t)}</td><td>${ORD[r.p - 1]}</td>
+      <td class="r">${r.tm.toFixed(2)}</td><td class="r">${nearestFrac(r.o)}</td>
+      <td class="r ${r.y ? (r.y.r - r.y.s >= 0 ? 'pos' : 'neg') : ''}">${r.y ? (r.y.r - r.y.s >= 0 ? '+' : '') + money(r.y.r - r.y.s) : ''}</td>
+      <td class="r">${archived.has(r.n) ? `<button class="hbtn" data-hist="${r.n}" ${busy ? 'disabled' : ''}>↺ Watch</button>` : ''}</td></tr>`).join('')}
+    </table></div>` : '<div class="empty">No runners since you arrived yet.</div>'}
+    <div class="note">Stats include the dogs' earlier runs from before you arrived. Expected wins add up each runner's chance from its price.</div>`;
+}
+$('kennelBtn').onclick = () => showModal({ type: 'dogs' });
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });
+
+document.addEventListener('click', e => {
+  const dl = e.target.closest('[data-dog]');
+  if (dl) { e.preventDefault(); return showModal({ type: 'dog', id: +dl.dataset.dog }, true); }
+  const tl = e.target.closest('[data-trainer]');
+  if (tl) { e.preventDefault(); return showModal({ type: 'trainer', name: tl.dataset.trainer }, true); }
+  const mt = e.target.closest('[data-mtab]');
+  if (mt) { modalStack[modalStack.length - 1] = { type: mt.dataset.mtab }; return paintModal(); }
+  if (e.target.closest('[data-mback]')) { modalStack.pop(); return paintModal(); }
+  if (e.target.closest('[data-close]')) return closeModal();
+  if (e.target.closest('#modal [data-hist]')) { closeModal(); return watchArchive(+e.target.closest('[data-hist]').dataset.hist); }
+  const b = e.target.closest('[data-bet]'); if (b) return addBet(+b.dataset.dog, b.dataset.bet);
+  const rm = e.target.closest('[data-rm]'); if (rm && phase === 'betting') { slip.splice(+rm.dataset.rm, 1); renderSlip(); renderHeader(); return; }
+  const c = e.target.closest('[data-chip]'); if (c) { $('stake').value = c.dataset.chip; renderFC(); return; }
+  if (phase === 'betting') {
+    const cell = e.target.closest('[data-cell]');
+    if (cell) { const [k, i] = cell.dataset.cell.split(',').map(Number); FC.sel[k][i] = !FC.sel[k][i]; return renderFC(); }
+    const t = e.target.closest('[data-fct]'); if (t) { FC.type = t.dataset.fct; return renderFC(); }
+    if (e.target.closest('[data-fcclear]')) { clearFC(); return renderFC(); }
+    if (e.target.closest('[data-fcadd]')) return addFC();
+  }
+  if (e.target.closest('[data-replay]')) return startReplay();
+  const hb = e.target.closest('[data-hist]'); if (hb) return watchArchive(+hb.dataset.hist);
+  if (e.target.closest('[data-back]')) return leaveArchive();
+  if (e.target.closest('[data-next]') && phase === 'result') newCard();
+});
+$('anyOrder').onchange = e => { FC.any = e.target.checked; clearFC(); renderFC(); };
+$('stake').oninput = () => renderFC();
+$('reset').onclick = () => {
+  if (phase === 'running' || phase === 'history') return;
+  if (!confirm('Reset your bank to £1,000 and clear your record?')) return;
+  S = fresh(); save(); newCard();
+};
+
+// ── SOUND (all synthesised with WebAudio; nothing is loaded) ──
+const SND = (() => {
+  let ac = null, master, noise, crowd, bands = [], hare = null;
+  let on = true, ex = 0.12, spike = 0, babbleT = 0;
+  const pawT = [0, 0, 0, 0, 0, 0];
+  try { on = localStorage.getItem('greyhoundSound') !== 'off'; } catch (e) {}
+
+  function init() {
+    if (!on) return;
+    if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ac = new AC();
+    master = ac.createGain(); master.gain.value = 0.7; master.connect(ac.destination);
+    noise = ac.createBuffer(1, ac.sampleRate * 4, ac.sampleRate);
+    const nd = noise.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    // Crowd: looped noise through a few voice-range bands whose levels and pitch wander (a babble);
+    // excitement brightens it towards the upper bands, which is what cheering sounds like.
+    crowd = ac.createGain(); crowd.gain.value = 0; crowd.connect(master);
+    const src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
+    for (const [f, q] of [[260, 0.9], [650, 1.4], [1300, 1.6], [2500, 1.8]]) {
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;
+      const g = ac.createGain(); g.gain.value = 0;
+      src.connect(bp); bp.connect(g); g.connect(crowd);
+      bands.push({ f, bp, g });
+    }
+    src.start();
+  }
+  function setOn(v) {
+    on = v;
+    try { localStorage.setItem('greyhoundSound', v ? 'on' : 'off'); } catch (e) {}
+    if (v) init(); else if (ac) ac.suspend();
+  }
+  const ok = () => ac && on && ac.state === 'running';
+
+  function tone(f, t0, dur, vol, type, dest) {
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + t0;
+    o.type = type || 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || master); o.start(t); o.stop(t + dur + 0.05);
+    return o;
+  }
+  function burst(t0, dur, vol, type, freq, q, pan) {
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), t = ac.currentTime + t0;
+    s.buffer = noise; f.type = type; f.frequency.value = freq; if (q) f.Q.value = q;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    let out = g;
+    if (pan && ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); out = p; }
+    s.connect(f); f.connect(g); out.connect(master);
+    s.start(t, Math.random() * 3, dur + 0.05);
+    return f;
+  }
+
+  function hareOn() {
+    if (!ok() || hare) return;
+    const o1 = ac.createOscillator(), o2 = ac.createOscillator(), lp = ac.createBiquadFilter(), g = ac.createGain();
+    o1.type = 'sawtooth'; o2.type = 'square'; o1.frequency.value = 40; o2.frequency.value = 40.7;
+    lp.type = 'lowpass'; lp.frequency.value = 700; lp.Q.value = 2;
+    g.gain.value = 0;
+    o1.connect(lp); o2.connect(lp); lp.connect(g);
+    let out = g;
+    if (ac.createStereoPanner) { const p = ac.createStereoPanner(); g.connect(p); out = p; hare = { p }; } else hare = {};
+    out.connect(master);
+    o1.start(); o2.start();
+    Object.assign(hare, { o1, o2, g, lp });
+  }
+  function hareOff() {
+    if (!hare) return;
+    const h = hare, t = ac.currentTime; hare = null;
+    h.g.gain.setTargetAtTime(0, t, 0.4);
+    h.o1.stop(t + 2); h.o2.stop(t + 2);
+  }
+
+  function gates() {
+    if (!ok()) return;
+    burst(0, 0.18, 0.5, 'highpass', 1800);                 // rattle of the traps
+    [173, 261, 419, 587].forEach((f, i) => tone(f, i * 0.004, 0.32, 0.07, 'square'));
+    const o = tone(110, 0, 0.3, 0.45, 'sine'); o.frequency.exponentialRampToValueAtTime(45, ac.currentTime + 0.3);
+    spike = Math.max(spike, 0.35);
+  }
+  function finish(gap) { spike = gap < PHOTO_GAP ? 1.1 : gap < 0.3 ? 0.85 : 0.6; }
+  function click() { if (ok()) { tone(2400, 0, 0.04, 0.12, 'square'); tone(1600, 0.03, 0.05, 0.08, 'square'); } }
+  function chime() {
+    if (!ok()) return;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1100; bp.Q.value = 0.6; bp.connect(master);
+    [[659.3, 0], [523.3, 0.42], [392, 0.84]].forEach(([f, t]) => { tone(f, t, 1.4, 0.35, 'sine', bp); tone(f * 2, t, 0.8, 0.08, 'sine', bp); });
+  }
+  function settled(staked, returned) {
+    if (!ok() || !staked) return;
+    if (returned > 0) {
+      [1568, 2093, 2637, 3136].forEach((f, i) => tone(f, 0.15 + i * 0.07, 0.5, 0.16, 'triangle'));
+      burst(0.15, 0.6, 0.12, 'highpass', 6500);
+      spike = Math.max(spike, returned > staked ? 0.6 : 0.3);
+    } else {                                               // "awww": a falling, muffled groan
+      const f = burst(0.1, 1.4, 0.35, 'bandpass', 700, 1.2);
+      f.frequency.setValueAtTime(700, ac.currentTime + 0.1);
+      f.frequency.exponentialRampToValueAtTime(220, ac.currentTime + 1.5);
+    }
+  }
+
+  function excitement() {
+    if ((phase !== 'running' && !race.replay) || race.t <= 0) return 0.14;
+    const lead = Math.max(...race.d), prog = Math.min(1, lead / D);
+    if (lead >= D) return 0.3;
+    const sorted = [...race.d].sort((a, b) => b - a), gap = sorted[0] - sorted[1];
+    return 0.25 + 0.45 * smooth((prog - 0.55) / 0.45) + 0.3 * Math.max(0, 1 - gap / 40) * prog;
+  }
+  function update(dt) {
+    if (!ok()) return;
+    const now = ac.currentTime;
+    spike *= Math.exp(-dt / 2.2);
+    ex += (excitement() + spike - ex) * Math.min(1, dt * 2.5);
+    const e = Math.min(1.4, ex);
+    crowd.gain.setTargetAtTime(0.05 + 0.32 * e, now, 0.1);
+    babbleT -= dt;
+    if (babbleT <= 0) {
+      babbleT = 0.09 + Math.random() * 0.08;
+      const base = [0.55, 0.55 + 0.35 * e, 0.15 + 0.85 * e, 0.03 + 0.55 * e];
+      bands.forEach((b, i) => {
+        b.g.gain.setTargetAtTime(base[i] * (0.55 + Math.random() * 0.9), now, 0.06);
+        b.bp.frequency.setTargetAtTime(b.f * (0.85 + Math.random() * 0.3) * (1 + 0.15 * e), now, 0.08);
+      });
+    }
+    if (!race.T) { if (hare) hareOff(); return; }
+    const t = race.t, tEnd = race.T[race.order[5]];
+    if (hare) {
+      const k = t < 0 ? smooth((t + 2.5) / 2.5) : 1, fade = t > tEnd + 2 ? 0 : 1;
+      hare.o1.frequency.setTargetAtTime(40 + 55 * k, now, 0.15);
+      hare.o2.frequency.setTargetAtTime(40.7 + 55.5 * k, now, 0.15);
+      hare.g.gain.setTargetAtTime(0.09 * k * fade, now, 0.2);
+      if (hare.p) {
+        const s = START_S + 70 + (t < 0 ? t * 200 : Math.max(...race.d)), x = pt(s, 0)[0];
+        hare.p.pan.setTargetAtTime(Math.max(-1, Math.min(1, (x - cam.x - cam.vw / 2) / (cam.vw / 2))), now, 0.1);
+      }
+      if (t > tEnd + 4) hareOff();
+    }
+    // Paws: two footfalls per stride, about 3.5 strides a second in race time
+    if (phase !== 'betting' && t > 0) for (let i = 0; i < 6; i++) {
+      const left = race.T[i] + 4 - t;
+      if (left <= 0) continue;
+      pawT[i] -= dt * speed;
+      if (pawT[i] <= 0) {
+        pawT[i] += 0.14 + Math.random() * 0.03;
+        const x = pt(START_S + race.d[i] - NOSE, race.w[i])[0];
+        const pan = Math.max(-1, Math.min(1, (x - cam.x - cam.vw / 2) / (cam.vw / 2)));
+        burst(0, 0.05, 0.22 * Math.min(1, left / 3), 'lowpass', 260 + Math.random() * 120, 0, pan * 0.8);
+      }
+    }
+  }
+  return { init, setOn, isOn: () => on, hareOn, gates, finish, click, chime, settled, update };
+})();
+// Browsers only allow audio after a user gesture, so start it on the first tap or key.
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => SND.init(), true));
+const sndBtn = $('snd');
+const showSnd = () => { sndBtn.textContent = SND.isOn() ? '🔊' : '🔇'; };
+sndBtn.onclick = () => { SND.setOn(!SND.isOn()); showSnd(); };
+showSnd();
+
+// ── RENDER: CANVAS ──
+const cv = $('cv'), ctx = cv.getContext('2d');
+const bg = document.createElement('canvas'), bctx = bg.getContext('2d');
+let scale = 1;
+// On phones the whole track is too small to follow, so the view zooms in and tracks the pack.
+const phoneQ = window.matchMedia('(max-width:640px)');
+const cam = { x: 0, y: 0, vw: LW, vh: LH, follow: false };
+function resize() {
+  cam.follow = phoneQ.matches;
+  cam.vw = cam.follow ? 560 : LW; cam.vh = cam.follow ? 420 : LH;
+  cv.style.aspectRatio = `${cam.vw} / ${cam.vh}`;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth || cam.vw;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(w * cam.vh / cam.vw * dpr);
+  scale = cv.width / cam.vw;
+  bg.width = Math.round(LW * scale); bg.height = Math.round(LH * scale);
+  drawBackground();
+  moveCam(1);
+}
+function moveCam(k) {
+  if (!cam.follow) { cam.x = cam.y = 0; return; }
+  let tx, ty;
+  if (race.t <= 0) [tx, ty] = pt(START_S, 30);
+  else {   // halfway between the leader and the middle of the pack
+    const ps = card.dogs.map((_, i) => pt(START_S + race.d[i] - NOSE, race.w[i]));
+    const li = race.d.indexOf(Math.max(...race.d));
+    tx = (ps.reduce((a, p) => a + p[0], 0) / 6 + ps[li][0]) / 2;
+    ty = (ps.reduce((a, p) => a + p[1], 0) / 6 + ps[li][1]) / 2;
+  }
+  const nx = Math.max(0, Math.min(LW - cam.vw, tx - cam.vw / 2)), ny = Math.max(0, Math.min(LH - cam.vh, ty - cam.vh / 2));
+  cam.x += (nx - cam.x) * k; cam.y += (ny - cam.y) * k;
+}
+function seeded(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function drawBackground() {
+  const c = bctx, rnd = seeded(42);
+  c.setTransform(scale, 0, 0, scale, 0, 0);
+  const sky = c.createLinearGradient(0, 0, 0, LH); sky.addColorStop(0, '#0a1222'); sky.addColorStop(1, '#101a2a');
+  c.fillStyle = sky; c.fillRect(0, 0, LW, LH);
+  // apron grass
+  c.fillStyle = '#1f3a24'; ring(c, TW + 18); c.fill();
+  // floodlight pools
+  for (const [x, y] of [[60, 30], [940, 30], [60, 480], [940, 480], [500, 10]]) {
+    const g = c.createRadialGradient(x, y, 0, x, y, 420); g.addColorStop(0, 'rgba(255,245,210,.16)'); g.addColorStop(1, 'rgba(255,245,210,0)');
+    c.fillStyle = g; c.fillRect(0, 0, LW, LH);
+  }
+  // sand track
+  c.save(); ring(c, TW); c.fillStyle = '#c99c6a'; c.fill(); c.clip();
+  for (let i = 0; i < 2600; i++) { c.fillStyle = rnd() < 0.5 ? 'rgba(90,55,25,.18)' : 'rgba(255,230,190,.16)'; c.fillRect(rnd() * LW, rnd() * LH, 1.4, 1.4); }
+  c.restore();
+  // hare rail strip + infield
+  c.fillStyle = '#5b5f66'; ring(c, -1); c.fill();
+  c.save(); ring(c, -8); c.fillStyle = '#2e6b34'; c.fill(); c.clip();
+  for (let x = 0; x < LW; x += 40) { c.fillStyle = (x / 40) % 2 ? 'rgba(255,255,255,.035)' : 'rgba(0,0,0,.05)'; c.fillRect(x, 0, 40, LH); }
+  c.restore();
+  // rails
+  c.lineWidth = 2.5; c.strokeStyle = '#f2f2f2'; ring(c, TW + 1); c.stroke();
+  c.lineWidth = 1.5; c.strokeStyle = '#d0d4da'; ring(c, -8); c.stroke();
+  c.strokeStyle = '#9aa0a8'; ring(c, -1); c.stroke();
+  // distance posts every 80m
+  for (let m = 80; m < METRES; m += 80) {
+    const s = START_S + m / METRES * D, p = pt(s, TW + 6);
+    c.fillStyle = '#fff'; c.fillRect(p[0] - 1.5, p[1] - 1.5, 3, 3);
+  }
+  // finish line + judge's box
+  const f0 = pt(FINISH_S, 0), f1 = pt(FINISH_S, TW);
+  c.strokeStyle = '#fff'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(f0[0], f0[1]); c.lineTo(f1[0], f1[1]); c.stroke();
+  c.fillStyle = '#e8e8e8'; c.fillRect(f1[0] - 9, f1[1] + 4, 18, 9);
+  c.fillStyle = '#d62828'; c.beginPath(); c.arc(f1[0], f1[1] + 2, 3, 0, 7); c.fill();
+  // grandstand with crowd
+  c.fillStyle = '#161f2e'; c.fillRect(0, 486, LW, 54);
+  c.fillStyle = '#243149'; c.fillRect(0, 486, LW, 4);
+  const crowd = ['#d9c3a0', '#e0b090', '#8a5a3a', '#f4f4f4', '#d62828', '#1d4ed8', '#f5c542', '#3d3d3d', '#4ade80'];
+  for (let row = 0; row < 4; row++) for (let x = 6 + (row % 2) * 5; x < LW; x += 10 + rnd() * 3) {
+    if (rnd() < 0.18) continue;
+    c.fillStyle = crowd[Math.floor(rnd() * crowd.length)]; c.beginPath(); c.arc(x, 498 + row * 11, 3.2, 0, 7); c.fill();
+  }
+  c.fillStyle = 'rgba(255,255,255,.75)'; c.font = '700 13px system-ui,sans-serif'; c.textAlign = 'left';
+  c.fillText('KELVIN PARK STADIUM', 14, 22);
+}
+
+function jacketPath(c) { c.beginPath(); c.roundRect ? c.roundRect(-9, -5.2, 15, 10.4, 2.5) : c.rect(-9, -5.2, 15, 10.4); }
+function drawDog(g, x, y, ang, gait, moving) {
+  const c = ctx, tr = TRAPS[g.trap - 1];
+  c.save(); c.translate(x, y); c.rotate(ang);
+  c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(2, 3.5, 17, 5.5, 0, 0, 7); c.fill();
+  const sw = moving ? Math.sin(gait) * 6.5 : 0, sw2 = moving ? Math.sin(gait + 0.9) * 6.5 : 0;
+  c.strokeStyle = g.coat; c.lineWidth = 2.2; c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(8, -3.5); c.lineTo(8 + sw, -6.5); c.moveTo(8, 3.5); c.lineTo(8 + sw * 0.8, 6.5);
+  c.moveTo(-8, -3.5); c.lineTo(-8 - sw2, -6.5); c.moveTo(-8, 3.5); c.lineTo(-8 - sw2 * 0.8, 6.5);
+  c.stroke();
+  c.lineWidth = 1.6; c.beginPath(); c.moveTo(-13, 0); c.quadraticCurveTo(-19, moving ? Math.sin(gait * 0.5) * 4 : 2, -24, moving ? Math.sin(gait * 0.5 + 1) * 3 : 4); c.stroke();
+  c.fillStyle = g.coat; c.beginPath(); c.ellipse(0, 0, 14, 4.8, 0, 0, 7); c.fill();
+  c.beginPath(); c.ellipse(14.5, 0, 4.8, 3, 0, 0, 7); c.fill();
+  c.beginPath(); c.ellipse(19.5, 0, 3.4, 1.8, 0, 0, 7); c.fill();
+  c.fillStyle = '#111'; c.beginPath(); c.arc(22.6, 0, 0.9, 0, 7); c.fill();
+  c.fillStyle = g.coat; c.beginPath(); c.ellipse(12.5, -2.6, 2.2, 1, -0.5, 0, 7); c.ellipse(12.5, 2.6, 2.2, 1, 0.5, 0, 7); c.fill();
+  // racing jacket
+  jacketPath(c);
+  if (tr.bg === 'stripe') { c.save(); c.clip(); c.fillStyle = '#f4f4f4'; c.fillRect(-9, -6, 15, 12); c.fillStyle = '#111'; for (let k = -9; k < 6; k += 4) c.fillRect(k, -6, 2, 12); c.restore(); }
+  else { c.fillStyle = tr.bg; c.fill(); }
+  c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 0.8; jacketPath(c); c.stroke();
+  c.restore();
+  // upright trap number on the jacket
+  const jx = x + Math.cos(ang) * -1.5, jy = y + Math.sin(ang) * -1.5;
+  c.font = '800 8.5px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.lineWidth = 2; c.strokeStyle = tr.bg === '#f4f4f4' || tr.bg === 'stripe' ? '#fff' : 'rgba(0,0,0,.5)';
+  c.strokeText(g.trap, jx, jy + 0.5); c.fillStyle = tr.fg; c.fillText(g.trap, jx, jy + 0.5);
+}
+
+function drawTraps(t) {
+  const c = ctx, off = t < 3 ? 0 : (t - 3) * 30, alpha = 1 - off / 60;
+  if (alpha <= 0) return;
+  c.save(); c.globalAlpha = alpha;
+  for (let i = 0; i < 6; i++) {
+    const wl = trapLane(i) + off, q = [pt(START_S - 36, wl - 4.8), pt(START_S + 2, wl - 4.8), pt(START_S + 2, wl + 4.8), pt(START_S - 36, wl + 4.8)];
+    c.fillStyle = 'rgba(40,44,52,.55)'; c.strokeStyle = '#aab'; c.lineWidth = 1;
+    c.beginPath(); q.forEach((p, k) => k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); c.fill(); c.stroke();
+    const tr = TRAPS[i], rear = pt(START_S - 33, wl);
+    c.fillStyle = tr.bg === 'stripe' ? '#f4f4f4' : tr.bg; c.fillRect(rear[0] - 3, rear[1] - 3, 6, 6);
+    if (t < 0) { c.strokeStyle = '#ddd'; c.lineWidth = 2; c.beginPath(); c.moveTo(q[1][0], q[1][1]); c.lineTo(q[2][0], q[2][1]); c.stroke(); }
+  }
+  c.restore();
+}
+
+function drawHare(t, lead) {
+  if (t < -2.5) return;
+  let s = START_S + 70 + (t < 0 ? t * 200 : lead);
+  if (race.T && t > race.T[race.order[0]]) s += (t - race.T[race.order[0]]) * 160;
+  const p = pt(s, -4.5), a = heading(s, -4.5), c = ctx;
+  c.save(); c.translate(p[0], p[1]); c.rotate(a);
+  c.fillStyle = '#ddd'; c.fillRect(-2, -5, 3, 4);
+  c.fillStyle = '#e9e2d5'; c.beginPath(); c.ellipse(0, 0, 7, 3.6, 0, 0, 7); c.fill();
+  c.beginPath(); c.ellipse(5, -2.4, 3.5, 1, -0.4, 0, 7); c.fill();
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(-7, 0, 2, 0, 7); c.fill();
+  c.restore();
+}
+
+function drawTote(t) {
+  const c = ctx, x = CX - 175, y = CY - 78, w = 350, hgt = 156, dogs = card.dogs;
+  c.fillStyle = '#05080d'; c.strokeStyle = '#3b4a63'; c.lineWidth = 2;
+  c.beginPath(); c.roundRect ? c.roundRect(x, y, w, hgt, 6) : c.rect(x, y, w, hgt); c.fill(); c.stroke();
+  c.textBaseline = 'middle'; c.font = '700 13px ui-monospace,Menlo,Consolas,monospace';
+  const amber = '#ffcf4a';
+  const tag = (tn, bx, by) => {
+    const tr = TRAPS[tn - 1];
+    if (tr.bg === 'stripe') { c.fillStyle = '#f4f4f4'; c.fillRect(bx, by - 8, 16, 16); c.fillStyle = '#111'; for (let k = 0; k < 16; k += 4) c.fillRect(bx + k, by - 8, 2, 16); }
+    else { c.fillStyle = tr.bg; c.fillRect(bx, by - 8, 16, 16); }
+    c.fillStyle = tr.fg; c.textAlign = 'center'; c.font = '800 11px system-ui,sans-serif'; c.fillText(tn, bx + 8, by + 0.5);
+    c.font = '700 13px ui-monospace,Menlo,Consolas,monospace';
+  };
+  c.textAlign = 'left'; c.fillStyle = amber;
+  if (phase === 'betting') {
+    c.fillText(`RACE ${card.raceNo}  ${METRES}m   BETTING`, x + 14, y + 18);
+    dogs.forEach((g, i) => {
+      const col = i < 3 ? 0 : 1, row = i % 3, bx = x + 14 + col * 170, by = y + 50 + row * 32;
+      tag(g.trap, bx, by); c.textAlign = 'left'; c.fillStyle = amber;
+      c.fillText(g.frac.padStart(5), bx + 24, by); c.fillStyle = '#8fa1b8'; c.fillText((g.p * 100).toFixed(0) + '%', bx + 86, by);
+    });
+  } else {
+    const done = (phase === 'result' || phase === 'history') && !race.replay;
+    const run = done ? race.order : [...race.d.keys()].sort((a, b) => race.d[b] - race.d[a]);
+    c.fillText(done ? `RESULT  RACE ${card.raceNo}` : `RACE ${card.raceNo}  ${race.replay ? 'REPLAY' : 'RUNNING'}`, x + 14, y + 18);
+    c.textAlign = 'right';
+    const clock = done ? race.T[race.order[0]] : Math.max(0, Math.min(t, race.T[race.order[0]]));
+    c.fillText(clock.toFixed(2), x + w - 14, y + 18);
+    run.forEach((i, k) => {
+      const col = k < 3 ? 0 : 1, row = k % 3, bx = x + 14 + col * 170, by = y + 50 + row * 32;
+      c.textAlign = 'left'; c.fillStyle = amber; c.fillText(ORD[k], bx, by);
+      tag(dogs[i].trap, bx + 40, by);
+      c.textAlign = 'left'; c.fillStyle = '#c9d4e3'; c.font = '600 11px system-ui,sans-serif';
+      c.fillText(dogs[i].name.slice(0, 13), bx + 62, by); c.font = '700 13px ui-monospace,Menlo,Consolas,monospace';
+    });
+  }
+}
+
+function draw() {
+  moveCam(0.08);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(bg, cam.x * scale, cam.y * scale, cv.width, cv.height, 0, 0, cv.width, cv.height);
+  ctx.setTransform(scale, 0, 0, scale, -cam.x * scale, -cam.y * scale);
+  const t = race.t, dogs = card.dogs;
+  drawTote(t);
+  drawTraps(t);
+  drawHare(t, Math.max(...race.d));
+  const items = dogs.map((g, i) => {
+    const s = START_S + race.d[i] - NOSE + (t < 0 ? -12 : 0), w = race.w[i], p = pt(s, w);
+    return { g, i, p, ang: heading(s, w), moving: t > 0 && (!race.T || t < race.T[i] + 4) };
+  }).sort((a, b) => a.p[1] - b.p[1]);
+  for (const it of items) drawDog(it.g, it.p[0], it.p[1], it.ang, race.d[it.i] * 0.23 + it.g.gaitOff, it.moving);
+  if (race.replay) {
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    const label = slowMo() ? '● REPLAY · SLOW MOTION' : '● REPLAY';
+    ctx.font = '800 15px system-ui,sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const w = ctx.measureText(label).width + 20;
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(cam.vw - w - 10, 10, w, 26);
+    ctx.fillStyle = Math.floor(performance.now() / 600) % 2 ? '#ff4d4d' : '#ffffff'; ctx.fillText(label, cam.vw - 20, 23.5);
+  }
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (race.T && race.t < race.T[race.order[5]] + 6) stepRace(dt * speed * (slowMo() ? 0.3 : 1));
+  draw();
+  renderStrip();
+  SND.update(dt);
+  requestAnimationFrame(frame);
+}
+
+window.addEventListener('resize', () => { resize(); if (phase === 'result') drawPhoto($('photo')); });
+newCard();
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
