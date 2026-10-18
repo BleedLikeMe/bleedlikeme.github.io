@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yoker Village Chronicles</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#080810;color:#c8a84b;font-family:'Palatino Linotype',Georgia,serif;height:100vh;height:100dvh;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+button,.class-card,.inv-slot,.dpad-btn{touch-action:manipulation}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;display:none;z-index:100}
+.screen.active{display:flex}
+
+#s-title{flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,#1a0d2e 0%,#080810 70%)}
+.title-logo{font-size:3rem;color:#f0c040;text-shadow:0 0 30px #f0c04088;letter-spacing:4px;margin-bottom:.3rem}
+.title-sub{font-size:.9rem;color:#8870a0;letter-spacing:8px;margin-bottom:3rem}
+
+#s-chargen{flex-direction:column;overflow-y:auto;
+  background:radial-gradient(ellipse at center,#1a0d2e 0%,#080810 70%)}
+.chargen-inner{max-width:680px;margin:0 auto;padding:2rem;width:100%}
+
+#s-gameover,#s-victory{align-items:center;justify-content:center}
+#s-gameover{background:radial-gradient(ellipse at center,#2a0000 0%,#080810 70%)}
+#s-victory{background:radial-gradient(ellipse at center,#1a1000 0%,#080810 70%)}
+.end-icon{font-size:5rem;margin-bottom:1rem}
+.end-title{font-size:2.5rem;color:#f0c040;margin-bottom:.5rem}
+.end-sub{color:#8870a0;margin-bottom:2rem}
+
+/* ── GAME LAYOUT ── */
+#s-game{display:none;height:100vh;height:100dvh;grid-template-columns:1fr 295px}
+#s-game.active{display:grid}
+#map-wrap{position:relative;overflow:hidden;background:#000;touch-action:none}
+#map-canvas{image-rendering:pixelated;display:block}
+
+/* ── SIDEBAR ── */
+#sidebar{background:#0a0a18;border-left:2px solid #3a2800;display:flex;flex-direction:column;overflow:hidden}
+.ss{padding:.65rem .75rem;border-bottom:1px solid #161428}
+.slabel{font-size:.62rem;letter-spacing:3px;color:#504080;text-transform:uppercase;margin-bottom:.4rem}
+.char-row{display:flex;align-items:center;gap:.6rem}
+.portrait{font-size:2.2rem;width:44px;text-align:center}
+.char-name{font-size:.95rem;color:#f0c040}
+.char-sub{font-size:.75rem;color:#8870a0}
+.badges{display:flex;gap:.3rem;margin-top:.3rem}
+.badge{background:#161428;border:1px solid #3a2800;border-radius:4px;padding:.15rem .4rem;font-size:.7rem;color:#c8a84b}
+
+.bar-wrap{border-radius:3px;height:11px;margin-top:.35rem;overflow:hidden;border:1px solid #2a1520}
+.hp-wrap{background:#140008}
+.hp-fill{height:100%;background:linear-gradient(90deg,#802020,#c04040);transition:width .3s;border-radius:2px}
+.xp-wrap{background:#0a0a20;border-color:#1e1840}
+.xp-fill{height:100%;background:linear-gradient(90deg,#4a20a0,#7040f0);transition:width .4s}
+.bar-label{font-size:.7rem;color:#c8a84b;margin-top:.15rem}
+
+.stats6{display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;font-size:.7rem}
+.sbox{background:#0d0d20;border-radius:4px;padding:.3rem;text-align:center}
+.sbox-l{color:#504080}.sbox-v{color:#f0c040;font-size:.95rem}
+.stat-row{display:flex;gap:.6rem;margin-top:.4rem;font-size:.72rem;color:#8870a0}
+.stat-row span{color:#c8a84b}
+
+.inv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem}
+.inv-slot{background:#0d0d20;border:1px solid #221e38;border-radius:4px;aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  cursor:pointer;transition:all .15s;position:relative}
+.inv-slot:hover{border-color:#f0c040;background:#1a1430}
+.inv-slot.empty{opacity:.25;font-size:.7rem;color:#504080}
+
+#game-log{flex:1;overflow-y:auto;padding:.4rem .7rem;font-size:.76rem;line-height:1.5;
+  scrollbar-width:thin;scrollbar-color:#3a2800 #0a0a18}
+.le{padding:.1rem 0;border-bottom:1px solid #0e0e1e}
+.le.combat{color:#e05050}.le.loot{color:#f0c040}.le.heal{color:#50c878}
+.le.info{color:#8870a0}.le.imp{color:#fff;font-weight:bold}.le.death{color:#ff3030}
+.hint{padding:.35rem;font-size:.62rem;color:#352850;border-top:1px solid #161428;text-align:center}
+
+/* ── BUTTONS ── */
+.btn{background:linear-gradient(135deg,#2a1a00,#4a3000);border:2px solid #f0c040;
+  color:#f0c040;font-family:inherit;font-size:.9rem;padding:.5rem 1.2rem;
+  border-radius:6px;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.btn:hover{background:linear-gradient(135deg,#4a3000,#6a5000);box-shadow:0 0 12px #f0c04044}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-lg{font-size:1.05rem;padding:.65rem 1.8rem}
+.btn-red{border-color:#c04040;color:#c04040;background:linear-gradient(135deg,#1e0808,#360f0f)}
+.btn-red:hover{background:linear-gradient(135deg,#360f0f,#5a1818);box-shadow:0 0 12px #c0404044}
+
+/* ── CHARGEN ── */
+.screen-h{font-size:1.7rem;color:#f0c040;text-align:center;margin-bottom:1.5rem;text-shadow:0 0 20px #f0c04055}
+.class-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;margin-bottom:1.5rem}
+.class-card{background:#0d0d20;border:2px solid #221e38;border-radius:8px;padding:.85rem;cursor:pointer;transition:all .2s}
+.class-card:hover,.class-card.sel{border-color:#f0c040;background:#161230;box-shadow:0 0 12px #f0c04033}
+.cc-icon{font-size:1.8rem;margin-bottom:.3rem}
+.cc-name{font-size:1rem;color:#f0c040;margin-bottom:.2rem}
+.cc-desc{font-size:.75rem;color:#8870a0;line-height:1.4}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:1rem 0}
+.stat-box{background:#0d0d20;border:1px solid #221e38;border-radius:6px;padding:.6rem;text-align:center}
+.sb-label{font-size:.72rem;color:#8870a0;letter-spacing:2px}
+.sb-val{font-size:1.7rem;color:#f0c040;font-weight:bold}
+.sb-mod{font-size:.8rem;color:#c8a84b}
+.name-in{background:#0d0d20;border:2px solid #221e38;border-radius:6px;color:#f0c040;
+  font-family:inherit;font-size:1rem;padding:.5rem .9rem;width:100%;outline:none;transition:border-color .2s}
+.name-in:focus{border-color:#f0c040}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#0a0a18}::-webkit-scrollbar-thumb{background:#3a2800;border-radius:2px}
+
+/* ── COMBAT OVERLAY ── */
+#combat-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.87);z-index:200;align-items:center;justify-content:center}
+#combat-overlay.active{display:flex}
+.cpanel{background:#0c0c1c;border:2px solid #6a3800;border-radius:12px;padding:1.3rem;width:550px;max-width:95vw;box-shadow:0 0 60px #00000099}
+.ctitle{font-size:1.3rem;color:#e05050;text-align:center;margin-bottom:1rem;text-shadow:0 0 12px #e0505055}
+.combatants{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.8rem;margin-bottom:1.2rem}
+.ccard{background:#090918;border-radius:8px;padding:.65rem;text-align:center}
+.cicon{font-size:2.2rem;margin-bottom:.2rem}
+.cname{font-size:.85rem;color:#f0c040;margin-bottom:.35rem}
+.chpbar{background:#140008;height:9px;border-radius:5px;overflow:hidden}
+.chpfill{height:100%;border-radius:5px;transition:width .4s}
+.p-fill{background:linear-gradient(90deg,#802020,#c04040)}
+.e-fill{background:linear-gradient(90deg,#800000,#ff2020)}
+.chptxt{font-size:.7rem;color:#c8a84b;margin-top:.15rem}
+.vs{font-size:1.3rem;color:#504080}
+.dice-area{background:#090918;border-radius:8px;padding:.85rem;margin-bottom:.85rem;
+  min-height:75px;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;justify-content:center}
+.die{width:46px;height:46px;background:#141228;border:2px solid #3a2800;border-radius:7px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:.55rem;color:#504080}
+.die-val{font-size:1.3rem;color:#f0c040;font-weight:bold;line-height:1}
+.die.spin{animation:spin .55s ease-out;border-color:#f0c040}
+@keyframes spin{0%{transform:rotate(0) scale(.4);opacity:0}55%{transform:rotate(180deg) scale(1.15)}100%{transform:rotate(360deg) scale(1);opacity:1}}
+.dice-msg{width:100%;text-align:center;font-size:.82rem;color:#c8a84b;margin-top:.3rem}
+#clog{background:#090918;border-radius:6px;padding:.4rem .65rem;height:90px;overflow-y:auto;font-size:.76rem;margin-bottom:.85rem;scrollbar-width:thin}
+.cl{padding:.08rem 0}.cl.hit{color:#e05050}.cl.miss{color:#504080}.cl.heal{color:#50c878}.cl.info{color:#c8a84b}
+.cactions{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem}
+
+/* ── ANNOUNCE ── */
+#announce{position:fixed;top:.8rem;left:50%;transform:translateX(-50%);
+  background:#0c0c1cdd;border:1px solid #4a3800;border-radius:8px;padding:.4rem 1.3rem;
+  font-size:.88rem;color:#f0c040;z-index:50;opacity:0;transition:opacity .45s;pointer-events:none}
+#announce.show{opacity:1}
+
+/* ── TOUCH CONTROLS ── */
+#dpad{display:none;position:absolute;right:12px;bottom:12px;width:150px;height:150px;
+  grid-template:repeat(3,1fr)/repeat(3,1fr);gap:4px;opacity:.85}
+.dpad-btn{background:#141228cc;border:2px solid #6a3800;border-radius:10px;color:#f0c040;
+  font-size:1.3rem;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.dpad-btn:active,.dpad-btn.held{background:#4a3000;border-color:#f0c040}
+.dp-u{grid-area:1/2}.dp-l{grid-area:2/1}.dp-r{grid-area:2/3}.dp-d{grid-area:3/2}
+#map-potion{display:none;position:absolute;left:12px;bottom:12px;width:56px;height:56px;border-radius:50%;
+  background:#141228cc;border:2px solid #50c878;color:#50c878;font-size:1.5rem;align-items:center;justify-content:center}
+#map-potion:disabled{opacity:.3}
+.hint-touch{display:none}
+@media (pointer:coarse){
+  #dpad{display:grid}
+  #map-potion{display:flex}
+  .hint-keys,.key-hint{display:none}.hint-touch{display:inline}
+}
+
+/* ── SMALL SCREENS ── */
+@media (max-width:760px){
+  .title-logo{font-size:1.7rem;letter-spacing:2px;text-align:center;padding:0 16px}
+  .title-sub{font-size:.75rem;letter-spacing:4px;text-align:center;padding:0 16px;margin-bottom:2rem}
+  #s-title p{text-align:center;padding:0 16px}
+  .chargen-inner{padding:1.2rem 16px}
+  .screen-h{font-size:1.35rem;margin-bottom:1rem}
+  .class-grid{gap:.5rem;margin-bottom:1rem}
+  .class-card{padding:.6rem}
+  .cc-desc{font-size:.8rem}
+  .chargen-row{flex-wrap:wrap;gap:.5rem}
+  .btn{min-height:44px}
+  .end-title{font-size:1.8rem;text-align:center}
+  .end-sub{text-align:center;padding:0 16px}
+
+  #s-game{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
+  #sidebar{border-left:none;border-top:2px solid #3a2800;max-height:42dvh;overflow-y:auto;
+    display:grid;grid-template-columns:1fr 1fr;align-content:start}
+  #sidebar>.ss:first-child{grid-column:1/-1}
+  #sidebar>.log-label,#game-log,#sidebar>.hint{grid-column:1/-1}
+  #game-log{flex:none;height:110px;font-size:.85rem}
+  .ss{padding:.5rem 16px}
+  .slabel{font-size:.7rem}
+  .stats6{font-size:.75rem}
+  .stat-row{flex-wrap:wrap;font-size:.8rem}
+  .hint{font-size:.75rem;color:#504080}
+  .inv-slot{font-size:1.3rem}
+  #dpad{width:132px;height:132px}
+  #announce{width:max-content;max-width:calc(100vw - 32px);text-align:center}
+
+  .cpanel{padding:1rem;max-height:95dvh;overflow-y:auto}
+  .cicon{font-size:1.8rem}
+  .cactions .btn{font-size:.95rem;min-height:48px}
+  #clog{font-size:.85rem}
+}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="s-title" class="screen active">
+  <div class="title-logo">⚔ YOKER VILLAGE CHRONICLES ⚔</div>
+  <div class="title-sub">A TALE OF SWORDS AND SORCERY</div>
+  <p style="color:#504080;margin-bottom:2.5rem;font-size:.88rem">Three floors. One Dragon Lord. Survive.</p>
+  <button class="btn btn-lg" onclick="showChargen()">Begin Your Adventure</button>
+</div>
+
+<!-- CHARGEN -->
+<div id="s-chargen" class="screen">
+  <div class="chargen-inner">
+    <div class="screen-h">⚔ Create Your Hero ⚔</div>
+    <div style="margin-bottom:1.2rem">
+      <div class="slabel">Hero Name</div>
+      <input class="name-in" id="hero-name" type="text" placeholder="Enter your name…" maxlength="20">
+    </div>
+    <div class="slabel">Choose Class</div>
+    <div class="class-grid">
+      <div class="class-card" onclick="pickClass('fighter',this)"><div class="cc-icon">⚔️</div><div class="cc-name">Fighter</div><div class="cc-desc">High HP, strong melee. Second Wind to self-heal.</div></div>
+      <div class="class-card" onclick="pickClass('wizard',this)"><div class="cc-icon">🔮</div><div class="cc-name">Wizard</div><div class="cc-desc">Arcane master. Casts Fireball (3 uses per floor).</div></div>
+      <div class="class-card" onclick="pickClass('rogue',this)"><div class="cc-icon">🗡️</div><div class="cc-name">Rogue</div><div class="cc-desc">High DEX, sneak attack for massive burst damage.</div></div>
+      <div class="class-card" onclick="pickClass('cleric',this)"><div class="cc-icon">✨</div><div class="cc-name">Cleric</div><div class="cc-desc">Divine warrior. Cure Wounds to restore HP.</div></div>
+    </div>
+    <div class="chargen-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+      <div class="slabel" style="margin:0">Ability Scores (4d6 drop lowest)</div>
+      <button class="btn" onclick="rollStats()">🎲 Roll Stats</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="sb-label">STR</div><div class="sb-val" id="sv-STR">—</div><div class="sb-mod" id="sm-STR"></div></div>
+      <div class="stat-box"><div class="sb-label">DEX</div><div class="sb-val" id="sv-DEX">—</div><div class="sb-mod" id="sm-DEX"></div></div>
+      <div class="stat-box"><div class="sb-label">CON</div><div class="sb-val" id="sv-CON">—</div><div class="sb-mod" id="sm-CON"></div></div>
+      <div class="stat-box"><div class="sb-label">INT</div><div class="sb-val" id="sv-INT">—</div><div class="sb-mod" id="sm-INT"></div></div>
+      <div class="stat-box"><div class="sb-label">WIS</div><div class="sb-val" id="sv-WIS">—</div><div class="sb-mod" id="sm-WIS"></div></div>
+      <div class="stat-box"><div class="sb-label">CHA</div><div class="sb-val" id="sv-CHA">—</div><div class="sb-mod" id="sm-CHA"></div></div>
+    </div>
+    <div style="text-align:center;margin-top:1.3rem">
+      <button class="btn btn-lg" id="start-btn" onclick="startGame()" disabled>Enter the Dungeon ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="s-game">
+  <div id="map-wrap"><canvas id="map-canvas"></canvas>
+    <button id="map-potion" aria-label="Drink potion" onclick="drinkPotion()">🧪</button>
+    <div id="dpad">
+      <button class="dpad-btn dp-u" data-dx="0" data-dy="-1" aria-label="Up">▲</button>
+      <button class="dpad-btn dp-l" data-dx="-1" data-dy="0" aria-label="Left">◀</button>
+      <button class="dpad-btn dp-r" data-dx="1" data-dy="0" aria-label="Right">▶</button>
+      <button class="dpad-btn dp-d" data-dx="0" data-dy="1" aria-label="Down">▼</button>
+    </div>
+  </div>
+  <div id="sidebar">
+    <div class="ss">
+      <div class="char-row">
+        <div class="portrait" id="portrait">⚔️</div>
+        <div>
+          <div class="char-name" id="cname">Hero</div>
+          <div class="char-sub" id="cclass">Fighter · Lv 1</div>
+          <div class="badges"><span class="badge" id="b-floor">Floor 1</span><span class="badge" id="b-xp">0 XP</span><span class="badge" id="b-gold">0 🪙</span></div>
+        </div>
+      </div>
+      <div class="bar-wrap xp-wrap"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+      <div class="bar-wrap hp-wrap"><div class="hp-fill" id="hp-fill" style="width:100%"></div></div>
+      <div class="bar-label" id="hp-txt">HP: — / —</div>
+    </div>
+    <div class="ss">
+      <div class="stats6">
+        <div class="sbox"><div class="sbox-l">STR</div><div class="sbox-v" id="g-STR">—</div></div>
+        <div class="sbox"><div class="sbox-l">DEX</div><div class="sbox-v" id="g-DEX">—</div></div>
+        <div class="sbox"><div class="sbox-l">CON</div><div class="sbox-v" id="g-CON">—</div></div>
+        <div class="sbox"><div class="sbox-l">INT</div><div class="sbox-v" id="g-INT">—</div></div>
+        <div class="sbox"><div class="sbox-l">WIS</div><div class="sbox-v" id="g-WIS">—</div></div>
+        <div class="sbox"><div class="sbox-l">CHA</div><div class="sbox-v" id="g-CHA">—</div></div>
+      </div>
+      <div class="stat-row">
+        <span style="color:#8870a0">AC <span id="g-ac">—</span></span>
+        <span style="color:#8870a0">ATK <span id="g-atk">—</span></span>
+        <span style="color:#8870a0" id="sp-row">Slots <span id="g-sp" style="color:#7040f0">—</span></span>
+      </div>
+    </div>
+    <div class="ss">
+      <div class="slabel">Inventory <span style="color:#504080" class="hint-keys">(I = use potion)</span><span style="color:#504080" class="hint-touch">(tap potion to drink)</span></div>
+      <div class="inv-grid" id="inv-grid"></div>
+    </div>
+    <div class="slabel log-label" style="padding:.35rem .7rem 0;color:#504080;font-size:.62rem;letter-spacing:3px">ADVENTURE LOG</div>
+    <div id="game-log"></div>
+    <div class="hint"><span class="hint-keys">WASD / Arrows — move &nbsp;·&nbsp; I — use potion &nbsp;·&nbsp; step on enemy — fight</span><span class="hint-touch">D-pad or swipe map — move &nbsp;·&nbsp; 🧪 — drink potion &nbsp;·&nbsp; step on enemy — fight</span></div>
+  </div>
+</div>
+
+<!-- COMBAT -->
+<div id="combat-overlay">
+  <div class="cpanel">
+    <div class="ctitle" id="ctitle">⚔ Combat ⚔</div>
+    <div class="combatants">
+      <div class="ccard">
+        <div class="cicon" id="p-icon">⚔️</div>
+        <div class="cname" id="p-cname">Hero</div>
+        <div class="chpbar"><div class="chpfill p-fill" id="p-chp" style="width:100%"></div></div>
+        <div class="chptxt" id="p-chptxt">—</div>
+      </div>
+      <div class="vs">⚔</div>
+      <div class="ccard">
+        <div class="cicon" id="e-icon">👺</div>
+        <div class="cname" id="e-cname">Enemy</div>
+        <div class="chpbar"><div class="chpfill e-fill" id="e-chp" style="width:100%"></div></div>
+        <div class="chptxt" id="e-chptxt">—</div>
+      </div>
+    </div>
+    <div class="dice-area" id="dice-area"><span style="color:#403060;font-size:.83rem">Roll the dice…</span></div>
+    <div id="clog"></div>
+    <div class="cactions">
+      <button class="btn" id="ba" onclick="doAction('attack')">⚔ Attack<span class="key-hint"> [1]</span></button>
+      <button class="btn" id="bs" onclick="doAction('special')">✨ Special<span class="key-hint"> [2]</span></button>
+      <button class="btn" id="bi" onclick="doAction('item')">🧪 Use Item<span class="key-hint"> [3]</span></button>
+      <button class="btn btn-red" id="bf" onclick="doAction('flee')">💨 Flee<span class="key-hint"> [4]</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- END SCREENS -->
+<div id="s-gameover" class="screen">
+  <div style="text-align:center;padding:2rem">
+    <div class="end-icon">💀</div>
+    <div class="end-title">YOU HAVE FALLEN</div>
+    <div class="end-sub" id="go-sub">The dungeon claims another soul…</div>
+    <button class="btn btn-lg" onclick="location.reload()">Try Again</button>
+  </div>
+</div>
+<div id="s-victory" class="screen">
+  <div style="text-align:center;padding:2rem">
+    <div class="end-icon">🏆</div>
+    <div class="end-title" style="color:#f0c040">VICTORY!</div>
+    <div class="end-sub" id="vic-sub">The Dragon Lord is slain!</div>
+    <button class="btn btn-lg" onclick="location.reload()">Play Again</button>
+  </div>
+</div>
+
+<div id="announce"></div>
+
+<script>
+'use strict';
+// ── CONFIG ──────────────────────────────────────────────────
+const TS=20, MW=56, MH=38, MAX_FLOOR=3;
+
+const ROOM_DESCS=[
+  'The chamber reeks of mildew and old bones.',
+  'Torchlight flickers across ancient stone carvings.',
+  'Puddles of dark water pool in the corners.',
+  'A draft of cold air chills you to the bone.',
+  'Chains hang from the ceiling, swaying gently.',
+  'Crude drawings mark the walls — warnings, perhaps.',
+  'The floor is littered with the remnants of old battles.',
+  'An eerie silence fills this place.',
+  'Something stirs in the shadows, then is still.',
+  'The smell of sulphur hangs in the air.',
+  'Ancient runes are etched into the doorframe.',
+  'Bones crunch underfoot as you enter.',
+  'A steady dripping echoes from somewhere unseen.',
+  'The room has the unmistakable feeling of being watched.',
+  'A cold wind comes from nowhere and is gone.',
+];
+const T={W:0,F:1,C:2,S:3}; // wall, floor, corridor, stairs
+
+// ── DICE ────────────────────────────────────────────────────
+const d=(n)=>1+Math.floor(Math.random()*n);
+const dN=(n,s)=>{let t=0,r=[];for(let i=0;i<n;i++){const v=d(s);r.push(v);t+=v;}return{t,r};};
+const mod=(v)=>Math.floor((v-10)/2);
+const mstr=(v)=>(mod(v)>=0?'+':'')+mod(v);
+function roll4d6(){const a=[d(6),d(6),d(6),d(6)].sort((a,b)=>a-b);return a[1]+a[2]+a[3];}
+
+async function showDice(area,label,rolls,sides){
+  area.innerHTML='';
+  const lbl=document.createElement('div');
+  lbl.style.cssText='width:100%;text-align:center;color:#8870a0;font-size:.78rem;margin-bottom:.4rem';
+  lbl.textContent=label; area.appendChild(lbl);
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center';
+  area.appendChild(row);
+  for(let i=0;i<rolls.length;i++){
+    await sleep(i*100);
+    const die=document.createElement('div');
+    die.className='die spin';
+    die.innerHTML=`<div style="font-size:.55rem;color:#504080">d${sides}</div><div class="die-val">${rolls[i]}</div>`;
+    row.appendChild(die);
+  }
+  const msg=document.createElement('div'); msg.className='dice-msg'; area.appendChild(msg);
+  await sleep(180);
+}
+const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
+
+// ── CLASSES ─────────────────────────────────────────────────
+const CLASSES={
+  fighter:{name:'Fighter',icon:'⚔️',hp:12,hpLv:10,ac:16,pri:'STR',wDie:8,
+    special:'Second Wind',spDesc:'Heal 1d10+level HP',slots:0},
+  wizard: {name:'Wizard', icon:'🔮',hp:6, hpLv:6, ac:12,pri:'INT',wDie:4,
+    special:'Fireball',   spDesc:'8d6 fire damage', slots:3},
+  rogue:  {name:'Rogue',  icon:'🗡️',hp:8, hpLv:8, ac:14,pri:'DEX',wDie:6,
+    special:'Sneak Atk',  spDesc:'3d6 extra damage',slots:0},
+  cleric: {name:'Cleric', icon:'✨',hp:10,hpLv:8, ac:17,pri:'WIS',wDie:6,
+    special:'Cure Wounds',spDesc:'2d8+WIS heal',     slots:3},
+};
+
+// ── ENEMIES ─────────────────────────────────────────────────
+const ENEMIES={
+  goblin:  {name:'Goblin',     icon:'👺',hp:7,  ac:13,atk:3, dDie:6, xp:50},
+  skeleton:{name:'Skeleton',   icon:'💀',hp:13, ac:13,atk:4, dDie:6, xp:100},
+  orc:     {name:'Orc',        icon:'👹',hp:18, ac:13,atk:5, dDie:12,xp:150},
+  troll:   {name:'Troll',      icon:'🧌',hp:40, ac:15,atk:7, dDie:8, xp:700,regen:10},
+  vampire: {name:'Vampire',    icon:'🧛',hp:35, ac:16,atk:8, dDie:8, xp:1100,drain:3},
+  dragon:  {name:'Dragon Lord',icon:'🐉',hp:120,ac:19,atk:11,dDie:10,xp:5000,boss:true,breath:true},
+};
+const FLOOR_POOL=[
+  ['goblin','goblin','skeleton','orc'],
+  ['orc','skeleton','orc','troll'],
+  ['troll','vampire','vampire','dragon'],
+];
+
+// ── ITEMS ────────────────────────────────────────────────────
+const ITEMS={
+  hp_potion:{name:'Health Potion',icon:'🧪',desc:'Restore 2d8+2 HP',eff:'heal',n:2,die:8,bon:2},
+  gr_potion:{name:'Greater Potion',icon:'🫙',desc:'Restore 4d8+8 HP',eff:'heal',n:4,die:8,bon:8},
+  str_scroll:{name:'Power Scroll',icon:'📜',desc:'+2 ATK this combat',eff:'atk_buff',val:2},
+  fire_scroll:{name:'Fire Scroll',icon:'🔥',desc:'Deal 8d6 fire damage',eff:'damage',n:8,die:6},
+  shield:{name:'Mithril Shield',icon:'🛡️',desc:'+2 AC (permanent)',eff:'equip_ac',val:2},
+  ring:{name:'Ring of Power',icon:'💍',desc:'+2 ATK (permanent)',eff:'equip_atk',val:2},
+};
+const ITEM_KEYS=Object.keys(ITEMS);
+
+// ── MAP GENERATION ───────────────────────────────────────────
+function genMap(floor){
+  const map=[];
+  for(let y=0;y<MH;y++) map.push(new Uint8Array(MW).fill(T.W));
+
+  const rooms=[], maxR=10+floor*2;
+  for(let att=0;att<300&&rooms.length<maxR;att++){
+    const rw=4+d(7), rh=4+d(6);
+    const rx=1+Math.floor(Math.random()*(MW-rw-2));
+    const ry=1+Math.floor(Math.random()*(MH-rh-2));
+    let ok=true;
+    for(const r of rooms){
+      if(rx<r.x+r.w+1&&rx+rw+1>r.x&&ry<r.y+r.h+1&&ry+rh+1>r.y){ok=false;break;}
+    }
+    if(!ok) continue;
+    for(let y=ry;y<ry+rh;y++) for(let x=rx;x<rx+rw;x++) map[y][x]=T.F;
+    if(rooms.length>0){
+      const p=rooms[rooms.length-1];
+      corridor(map,p.cx,p.cy,rx+Math.floor(rw/2),ry+Math.floor(rh/2));
+    }
+    rooms.push({x:rx,y:ry,w:rw,h:rh,cx:rx+Math.floor(rw/2),cy:ry+Math.floor(rh/2)});
+  }
+  // Stairs in last room
+  const last=rooms[rooms.length-1];
+  map[last.cy][last.cx]=T.S;
+  return{map,rooms};
+}
+
+function corridor(map,x1,y1,x2,y2){
+  let cx=x1,cy=y1;
+  if(Math.random()<.5){
+    while(cx!==x2){map[cy][cx]=T.C;cx+=cx<x2?1:-1;}
+    while(cy!==y2){map[cy][cx]=T.C;cy+=cy<y2?1:-1;}
+  }else{
+    while(cy!==y2){map[cy][cx]=T.C;cy+=cy<y2?1:-1;}
+    while(cx!==x2){map[cy][cx]=T.C;cx+=cx<x2?1:-1;}
+  }
+  map[cy][cx]=T.C;
+}
+
+// ── FOG OF WAR ───────────────────────────────────────────────
+function calcVis(map,px,py,rad){
+  const v=new Uint8Array(MW*MH);
+  for(let i=0;i<360;i++){
+    const ang=(i/360)*Math.PI*2;
+    let rx=px+.5,ry=py+.5;
+    const dx=Math.cos(ang)*.32,dy=Math.sin(ang)*.32;
+    for(let step=0;step<rad;step++){
+      const tx=Math.floor(rx),ty=Math.floor(ry);
+      if(tx<0||tx>=MW||ty<0||ty>=MH) break;
+      v[ty*MW+tx]=1;
+      if(map[ty][tx]===T.W) break;
+      rx+=dx;ry+=dy;
+    }
+  }
+  return v;
+}
+
+// ── GAME STATE ───────────────────────────────────────────────
+let G={};
+
+function newFloor(floor){
+  const{map,rooms}=genMap(floor);
+  const entities=spawnEntities(rooms,floor);
+  const start=rooms[0];
+  G.map=map; G.rooms=rooms; G.entities=entities; G.floor=floor;
+  G.explored=new Uint8Array(MW*MH);
+  G.vis=new Uint8Array(MW*MH);
+  G.player.x=start.cx; G.player.y=start.cy;
+  G.combat=null; G.busy=false; G.combatAtk=0;
+  G.player.spLeft=G.player.sp;
+  refreshVis();
+  announce(floor===MAX_FLOOR?'⚠ Final floor — face the Dragon Lord!':'Floor '+floor+' — find the stairs ▽');
+  glog('— Floor '+floor+' —','imp');
+  updateUI();
+}
+
+function spawnEntities(rooms,floor){
+  const ents=[];
+  const pool=FLOOR_POOL[floor-1]||FLOOR_POOL[0];
+  for(let i=1;i<rooms.length;i++){
+    const r=rooms[i];
+    const isBoss=i===rooms.length-1&&floor===MAX_FLOOR;
+    if(isBoss){
+      ents.push(mkMon('dragon',r.cx,r.cy));
+    }else{
+      const cnt=1+Math.floor(Math.random()*(Math.min(floor,2)));
+      for(let j=0;j<cnt;j++){
+        const key=pool[Math.floor(Math.random()*pool.length)];
+        const ex=r.x+1+Math.floor(Math.random()*(r.w-2));
+        const ey=r.y+1+Math.floor(Math.random()*(r.h-2));
+        ents.push(mkMon(key,ex,ey));
+      }
+    }
+    if(!isBoss&&Math.random()<.38){
+      const key=ITEM_KEYS[Math.floor(Math.random()*ITEM_KEYS.length)];
+      ents.push({type:'item',key,...ITEMS[key],x:r.cx,y:r.cy,picked:false,id:Math.random()});
+    }
+  }
+  return ents;
+}
+
+function mkMon(key,x,y){
+  const def=ENEMIES[key];
+  const hp=def.hp+d(4)-1;
+  return{type:'monster',key,...def,hp,maxHp:hp,x,y,alive:true,id:Math.random()};
+}
+
+// ── RENDERING ────────────────────────────────────────────────
+const canvas=document.getElementById('map-canvas');
+const ctx=canvas.getContext('2d');
+
+function resizeCanvas(){
+  const w=document.getElementById('map-wrap');
+  canvas.width=w.clientWidth; canvas.height=w.clientHeight;
+}
+
+const COL={
+  bg:'#000',wall:'#181424',wallE:'#26203a',floor:'#2c2318',floorE:'#3b3025',
+  corr:'#232030',corrE:'#322e40',stairs:'#80b0ff',water:'#182850',
+};
+
+function render(){
+  if(!G.player) return;
+  ctx.fillStyle=COL.bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+  const{map,vis,explored,player,entities}=G;
+  const px=player.x,py=player.y;
+  const camX=Math.max(0,Math.min(MW*TS-canvas.width,  px*TS-canvas.width/2));
+  const camY=Math.max(0,Math.min(MH*TS-canvas.height, py*TS-canvas.height/2));
+  G.camX=camX; G.camY=camY;
+  const x0=Math.floor(camX/TS),y0=Math.floor(camY/TS);
+  const x1=Math.min(MW,x0+Math.ceil(canvas.width/TS)+2);
+  const y1=Math.min(MH,y0+Math.ceil(canvas.height/TS)+2);
+
+  ctx.save(); ctx.translate(-camX,-camY);
+
+  for(let y=y0;y<y1;y++){
+    for(let x=x0;x<x1;x++){
+      const idx=y*MW+x;
+      const iv=vis[idx], ie=explored[idx];
+      if(!ie&&!iv) continue;
+      const tile=map[y][x]; const dim=!iv;
+      let col=COL.bg;
+      if(tile===T.W) col=dim?COL.wallE:COL.wall;
+      else if(tile===T.F) col=dim?COL.floorE:COL.floor;
+      else if(tile===T.C) col=dim?COL.corrE:COL.corr;
+      else if(tile===T.S) col=dim?'#3a5080':COL.stairs;
+      ctx.fillStyle=col; ctx.fillRect(x*TS,y*TS,TS,TS);
+      if(!dim&&tile===T.S){
+        ctx.fillStyle='#fff'; ctx.font=(TS-5)+'px serif';
+        ctx.textAlign='center'; ctx.fillText('▽',x*TS+TS/2,y*TS+TS-3);
+      }
+    }
+  }
+
+  ctx.font=TS+'px serif'; ctx.textAlign='center';
+  for(const e of entities){
+    if(e.x<x0||e.x>=x1||e.y<y0||e.y>=y1) continue;
+    if(!vis[e.y*MW+e.x]) continue;
+    if(e.type==='monster'&&e.alive){
+      ctx.fillText(e.icon,e.x*TS+TS/2,e.y*TS+TS-2);
+      const pct=e.hp/e.maxHp;
+      ctx.fillStyle='#400000'; ctx.fillRect(e.x*TS,e.y*TS-4,TS,3);
+      ctx.fillStyle=pct>.5?'#00b000':pct>.25?'#b0b000':'#c00000';
+      ctx.fillRect(e.x*TS,e.y*TS-4,TS*pct,3);
+    }else if(e.type==='item'&&!e.picked){
+      ctx.fillText(e.icon,e.x*TS+TS/2,e.y*TS+TS-2);
+    }
+  }
+
+  ctx.fillText(player.cls.icon,px*TS+TS/2,py*TS+TS-2);
+  const g=ctx.createRadialGradient(px*TS+TS/2,py*TS+TS/2,0,px*TS+TS/2,py*TS+TS/2,TS*2);
+  g.addColorStop(0,'rgba(64,255,128,.1)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g; ctx.fillRect((px-3)*TS,(py-3)*TS,TS*7,TS*7);
+  ctx.restore();
+}
+
+function loop(){render();requestAnimationFrame(loop);}
+
+// ── UI ───────────────────────────────────────────────────────
+function updateUI(){
+  const p=G.player; if(!p) return;
+  const hpPct=Math.max(0,p.hp/p.maxHp*100);
+  const xpPct=Math.min(100,p.xp/xpNeeded(p.level+1)*100);
+  const hpBar=document.getElementById('hp-fill');
+  hpBar.style.width=hpPct+'%';
+  hpBar.style.background=hpPct>60?'linear-gradient(90deg,#206020,#40a040)':hpPct>30?'linear-gradient(90deg,#806020,#b08030)':'linear-gradient(90deg,#802020,#c04040)';
+  document.getElementById('xp-fill').style.width=xpPct+'%';
+  document.getElementById('hp-txt').textContent=`HP: ${p.hp} / ${p.maxHp}`;
+  document.getElementById('cname').textContent=p.name;
+  document.getElementById('cclass').textContent=`${p.cls.name} · Lv ${p.level}`;
+  document.getElementById('b-floor').textContent='Floor '+G.floor;
+  document.getElementById('b-xp').textContent=p.xp+' XP';
+  document.getElementById('b-gold').textContent=(p.gold||0)+' 🪙';
+  for(const s of['STR','DEX','CON','INT','WIS','CHA'])
+    document.getElementById('g-'+s).textContent=p.stats[s];
+  document.getElementById('g-ac').textContent=p.ac;
+  document.getElementById('g-atk').textContent=(p.atkBonus>=0?'+':'')+p.atkBonus;
+  if(p.sp>0){document.getElementById('sp-row').style.display='';
+    document.getElementById('g-sp').textContent=p.spLeft+'/'+p.sp;}
+  else document.getElementById('sp-row').style.display='none';
+  renderInv();
+}
+
+function renderInv(){
+  const grid=document.getElementById('inv-grid'); grid.innerHTML='';
+  for(let i=0;i<8;i++){
+    const sl=document.createElement('div');
+    sl.className='inv-slot';
+    if(i<G.player.inventory.length){
+      const it=G.player.inventory[i];
+      sl.textContent=it.icon; sl.title=it.name+': '+it.desc;
+      sl.onclick=()=>useInvItem(i);
+    }else{sl.classList.add('empty');sl.textContent='·';}
+    grid.appendChild(sl);
+  }
+  const mp=document.getElementById('map-potion');
+  if(mp) mp.disabled=!G.player.inventory.some(i=>i.eff==='heal');
+}
+
+function useInvItem(idx){
+  const it=G.player.inventory[idx]; if(!it||G.combat) return;
+  if(it.eff==='heal') drinkPotion(idx);
+  else glog(it.icon+' '+it.name+': '+it.desc+' (use in combat)','info');
+}
+
+function drinkPotion(idx){
+  if(!G.player||G.combat) return;
+  if(idx===undefined) idx=G.player.inventory.findIndex(i=>i.eff==='heal');
+  if(idx<0){glog('No potions to drink.','info');return;}
+  const it=G.player.inventory.splice(idx,1)[0];
+  const{t}=dN(it.n,it.die); const h=t+(it.bon||0);
+  G.player.hp=Math.min(G.player.maxHp,G.player.hp+h);
+  glog('Used '+it.name+': healed '+h+' HP','heal'); updateUI();
+}
+
+let annTimer;
+function announce(txt){
+  const el=document.getElementById('announce');
+  el.textContent=txt; el.classList.add('show');
+  clearTimeout(annTimer); annTimer=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+function glog(txt,type='info'){
+  const el=document.getElementById('game-log');
+  const d=document.createElement('div'); d.className='le '+type; d.textContent=txt;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+  while(el.children.length>120) el.removeChild(el.firstChild);
+}
+
+function clog(txt,type='info'){
+  const el=document.getElementById('clog');
+  const d=document.createElement('div'); d.className='cl '+type; d.textContent=txt;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+
+function xpNeeded(lv){
+  return[0,300,900,2700,6500,14000,23000,34000,48000,64000][Math.min(lv-1,9)]||64000;
+}
+
+// ── CHARGEN ──────────────────────────────────────────────────
+let chClass=null, chStats=null;
+
+function showChargen(){
+  document.getElementById('s-title').classList.remove('active');
+  document.getElementById('s-chargen').classList.add('active');
+}
+
+function pickClass(cls,el){
+  chClass=cls;
+  document.querySelectorAll('.class-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); checkReady();
+}
+
+function rollStats(){
+  chStats={};
+  for(const s of['STR','DEX','CON','INT','WIS','CHA']){
+    const v=roll4d6(); chStats[s]=v;
+    document.getElementById('sv-'+s).textContent=v;
+    document.getElementById('sm-'+s).textContent=mstr(v);
+  }
+  checkReady();
+}
+
+function checkReady(){
+  const name=document.getElementById('hero-name').value.trim();
+  document.getElementById('start-btn').disabled=!(chClass&&chStats&&name);
+}
+document.getElementById('hero-name').addEventListener('input',checkReady);
+
+// ── START GAME ───────────────────────────────────────────────
+function startGame(){
+  const name=document.getElementById('hero-name').value.trim()||'Hero';
+  const cls=CLASSES[chClass];
+  const conMod=mod(chStats.CON);
+  const maxHp=cls.hp+conMod;
+  const priMod=mod(chStats[cls.pri]);
+  const atkBonus=2+priMod;
+
+  G.player={
+    name,cls,class:chClass,level:1,xp:0,gold:0,
+    stats:{...chStats},
+    maxHp,hp:maxHp,ac:cls.ac,atkBonus,
+    sp:cls.slots,spLeft:cls.slots,
+    inventory:[{...ITEMS.hp_potion}],
+    x:0,y:0,
+  };
+
+  document.getElementById('portrait').textContent=cls.icon;
+  document.getElementById('s-chargen').classList.remove('active');
+  document.getElementById('s-game').classList.add('active');
+  resizeCanvas();
+  newFloor(1);
+  glog(name+' the '+cls.name+' enters the dungeon…','imp');
+  glog(matchMedia('(pointer:coarse)').matches?'Use the D-pad or swipe to move. Step on monsters to fight!':'Use WASD/arrows to move. Step on monsters to fight!','info');
+  loop();
+}
+
+// ── MOVEMENT ─────────────────────────────────────────────────
+function refreshVis(){
+  const v=calcVis(G.map,G.player.x,G.player.y,9);
+  G.vis=v;
+  for(let i=0;i<v.length;i++) if(v[i]) G.explored[i]=1;
+}
+
+function tryMove(dx,dy){
+  if(G.combat||G.busy) return;
+  const nx=G.player.x+dx, ny=G.player.y+dy;
+  if(nx<0||nx>=MW||ny<0||ny>=MH||G.map[ny][nx]===T.W) return;
+  const mon=G.entities.find(e=>e.type==='monster'&&e.alive&&e.x===nx&&e.y===ny);
+  if(mon){startCombat(mon);return;}
+  const itm=G.entities.find(e=>e.type==='item'&&!e.picked&&e.x===nx&&e.y===ny);
+  if(itm) pickUp(itm);
+  G.player.x=nx; G.player.y=ny;
+  if(G.map[ny][nx]===T.S){
+    if(G.floor<MAX_FLOOR){glog('You descend deeper…','info');newFloor(G.floor+1);}
+    else showVic();
+    return;
+  }
+  refreshVis();
+  // room announcement
+  const rm=G.rooms.find(r=>nx>=r.x&&nx<r.x+r.w&&ny>=r.y&&ny<r.y+r.h);
+  if(rm&&!rm.seen){
+    rm.seen=true;
+    glog(ROOM_DESCS[Math.floor(Math.random()*ROOM_DESCS.length)],'info');
+    const ms=G.entities.filter(e=>e.type==='monster'&&e.alive&&inRoom(e,rm));
+    if(ms.length) announce('⚠ '+ms.map(m=>m.name).join(', ')+'!');
+    else{const is=G.entities.filter(e=>e.type==='item'&&!e.picked&&inRoom(e,rm));
+      if(is.length) announce('✨ '+is.map(i=>i.name).join(', ')+'!');}
+  }
+}
+
+function inRoom(e,r){return e.x>=r.x&&e.x<r.x+r.w&&e.y>=r.y&&e.y<r.y+r.h;}
+
+function pickUp(item){
+  item.picked=true;
+  const eff=item.eff||'';
+  if(eff==='equip_ac'){G.player.ac+=item.val;glog('Equipped '+item.name+'! AC +'+item.val,'loot');announce('🛡 Equipped: '+item.name+'!');}
+  else if(eff==='equip_atk'){G.player.atkBonus+=item.val;glog('Equipped '+item.name+'! ATK +'+item.val,'loot');announce('💍 Equipped: '+item.name+'!');}
+  else if(G.player.inventory.length<8){G.player.inventory.push({...item});glog('Picked up '+item.name+'!','loot');announce('🎒 Got: '+item.name+'!');}
+  else glog('Inventory full!','info');
+  updateUI();
+}
+
+// ── COMBAT ───────────────────────────────────────────────────
+function startCombat(enemy){
+  G.combat={enemy,round:1};
+  G.busy=false; G.combatAtk=0;
+  const pi=d(20)+mod(G.player.stats.DEX);
+  const ei=d(20)+Math.floor(enemy.ac/4);
+  G.turn=pi>=ei?'player':'enemy';
+  document.getElementById('ctitle').textContent=(enemy.boss?'🐉 BOSS ':'')+'⚔ Combat — Round 1 ⚔';
+  document.getElementById('p-icon').textContent=G.player.cls.icon;
+  document.getElementById('p-cname').textContent=G.player.name;
+  document.getElementById('e-icon').textContent=enemy.icon;
+  document.getElementById('e-cname').textContent=enemy.name;
+  document.getElementById('clog').innerHTML='';
+  document.getElementById('dice-area').innerHTML='<span style="color:#403060;font-size:.83rem">Roll the dice…</span>';
+  refreshCombatHP();
+  setBtns(false);
+  document.getElementById('combat-overlay').classList.add('active');
+  glog('Combat with '+enemy.name+'!','combat');
+  clog('Initiative: '+(G.turn==='player'?'You go first!':'Enemy goes first!'),'info');
+  if(G.turn==='enemy') setTimeout(enemyTurn,1000);
+}
+
+function refreshCombatHP(){
+  const p=G.player,e=G.combat.enemy;
+  const pPct=Math.max(0,p.hp/p.maxHp*100);
+  const pBar=document.getElementById('p-chp');
+  pBar.style.width=pPct+'%';
+  pBar.style.background=pPct>60?'linear-gradient(90deg,#206020,#40a040)':pPct>30?'linear-gradient(90deg,#806020,#b08030)':'linear-gradient(90deg,#802020,#c04040)';
+  document.getElementById('p-chptxt').textContent=`${p.hp}/${p.maxHp} HP`;
+  document.getElementById('e-chp').style.width=Math.max(0,e.hp/e.maxHp*100)+'%';
+  document.getElementById('e-chptxt').textContent=`${e.hp}/${e.maxHp} HP`;
+  updateUI();
+}
+
+function setBtns(busy){
+  const pt=!busy&&G.turn==='player';
+  const p=G.player,cls=p.cls;
+  document.getElementById('ba').disabled=!pt;
+  document.getElementById('bf').disabled=!pt;
+  const canSpec=cls.slots===0||(p.spLeft>0);
+  document.getElementById('bs').disabled=!pt||!canSpec;
+  document.getElementById('bs').innerHTML='✨ '+cls.special+(cls.slots>0?' ('+p.spLeft+')':'')+'<span class="key-hint"> [2]</span>';
+  document.getElementById('bi').disabled=!pt||p.inventory.length===0;
+}
+
+async function doAction(act){
+  if(G.busy||G.turn!=='player') return;
+  G.busy=true; setBtns(true);
+  const p=G.player,e=G.combat.enemy;
+  const da=document.getElementById('dice-area');
+  if(act==='attack') await playerAttack(p,e,da);
+  else if(act==='special') await playerSpecial(p,e,da);
+  else if(act==='item') await playerItem(p,e,da);
+  else if(act==='flee'){
+    const fr=d(20)+mod(p.stats.DEX), dc=8+Math.floor(e.atk/2);
+    clog('Flee: '+fr+' vs DC '+dc,'info');
+    if(fr>=dc){clog('Escaped!','info');glog('You flee from '+e.name+'!','info');endCombat();return;}
+    else clog('Failed to flee!','miss');
+  }
+  if(e.hp<=0){await endCombatWin();return;}
+  G.turn='enemy'; G.busy=false; setBtns(true);
+  G.combat.round++;
+  document.getElementById('ctitle').textContent=(e.boss?'🐉 BOSS ':'')+'⚔ Combat — Round '+G.combat.round+' ⚔';
+  await sleep(650);
+  await enemyTurn();
+}
+
+async function playerAttack(p,e,da){
+  const ar=d(20), ab=p.atkBonus+G.combatAtk, tot=ar+ab;
+  const crit=ar===20, fumble=ar===1;
+  await showDice(da,'Attack (d20'+mstr(p.atkBonus+(G.combatAtk?G.combatAtk:0))+') vs AC '+e.ac,[ar],20);
+  clog('Roll '+ar+(ab>=0?'+':'')+ab+'='+tot+' vs AC '+e.ac,'info');
+  const msg=da.querySelector('.dice-msg');
+  if(fumble){clog('Critical miss!','miss');msg.textContent='💥 Critical Miss!';}
+  else if(crit||tot>=e.ac){
+    const nd=crit?2:1;
+    const{t:dmg,r:dr}=dN(nd,p.cls.wDie);
+    const pm=mod(p.stats[p.cls.pri]);
+    const total=Math.max(1,dmg+pm);
+    await sleep(350);
+    await showDice(da,(crit?'💥 CRIT! ':'')+'Damage ('+nd+'d'+p.cls.wDie+(pm>=0?'+':'')+pm+')',dr,p.cls.wDie);
+    e.hp-=total;
+    da.querySelector('.dice-msg').textContent=(crit?'💥 ':'')+'Hit for '+total+' damage!';
+    clog((crit?'💥 CRIT! ':'')+'Hit for '+total+'!','hit');
+    if(e.regen&&e.hp>0){e.hp=Math.min(e.maxHp,e.hp+e.regen);clog('Troll regenerates '+e.regen+' HP!','heal');}
+  }else{clog('Miss!','miss');msg.textContent='⚔ Miss!';}
+  refreshCombatHP();
+}
+
+async function playerSpecial(p,e,da){
+  if(p.cls.slots>0) p.spLeft--;
+  if(p.class==='fighter'){
+    const{t,r}=dN(1,10); const h=t+p.level;
+    await showDice(da,'Second Wind (1d10+'+p.level+')',r,10);
+    p.hp=Math.min(p.maxHp,p.hp+h);
+    da.querySelector('.dice-msg').textContent='Healed '+h+' HP!';
+    clog('Second Wind: +'+h+' HP!','heal'); glog('Healed '+h+' HP','heal');
+  }else if(p.class==='wizard'){
+    const{t,r}=dN(8,6);
+    await showDice(da,'🔥 Fireball! (8d6 fire)',r,6);
+    e.hp-=t; da.querySelector('.dice-msg').textContent='🔥 '+t+' fire damage!';
+    clog('🔥 Fireball: '+t+' fire damage!','hit');
+  }else if(p.class==='rogue'){
+    const ar=d(20)+p.atkBonus+G.combatAtk;
+    if(ar>=e.ac){
+      const{t:s,r:sr}=dN(3,6),{t:w,r:wr}=dN(1,p.cls.wDie);
+      const tot=s+w+mod(p.stats.DEX);
+      await showDice(da,'🗡 Sneak Attack! (3d6+weapon)',[...sr,...wr],6);
+      e.hp-=tot; da.querySelector('.dice-msg').textContent='🗡 '+tot+' sneak damage!';
+      clog('🗡 Sneak attack: '+tot+' damage!','hit');
+    }else{clog('Sneak attack missed!','miss');}
+  }else if(p.class==='cleric'){
+    const{t,r}=dN(2,8); const h=t+mod(p.stats.WIS);
+    await showDice(da,'✨ Cure Wounds (2d8+'+mod(p.stats.WIS)+')',r,8);
+    p.hp=Math.min(p.maxHp,p.hp+h);
+    da.querySelector('.dice-msg').textContent='✨ Healed '+h+' HP!';
+    clog('Cure Wounds: +'+h+' HP!','heal'); glog('Healed '+h+' HP','heal');
+  }
+  refreshCombatHP(); updateUI();
+}
+
+async function playerItem(p,e,da){
+  const idx=p.inventory.findIndex(i=>['heal','atk_buff','damage'].includes(i.eff));
+  if(idx<0){clog('No usable items!','miss');return;}
+  const it=p.inventory.splice(idx,1)[0];
+  if(it.eff==='heal'){
+    const{t,r}=dN(it.n,it.die); const h=t+(it.bon||0);
+    await showDice(da,it.icon+' '+it.name+' ('+it.n+'d'+it.die+'+'+(it.bon||0)+')',r,it.die);
+    p.hp=Math.min(p.maxHp,p.hp+h);
+    da.querySelector('.dice-msg').textContent='Healed '+h+' HP!';
+    clog('Used '+it.name+': +'+h+' HP!','heal');
+  }else if(it.eff==='atk_buff'){
+    G.combatAtk+=it.val;
+    da.innerHTML='<span style="color:#f0c040">'+it.icon+' '+it.name+' — ATK +'+it.val+' this combat!</span>';
+    clog(it.name+': ATK +'+it.val,'heal');
+  }else if(it.eff==='damage'){
+    const{t,r}=dN(it.n,it.die);
+    await showDice(da,it.icon+' '+it.name+' ('+it.n+'d'+it.die+')',r,it.die);
+    e.hp-=t; da.querySelector('.dice-msg').textContent=t+' damage!';
+    clog(it.name+': '+t+' damage to '+e.name+'!','hit');
+  }
+  refreshCombatHP(); updateUI();
+}
+
+async function enemyTurn(){
+  if(!G.combat) return;
+  const e=G.combat.enemy, p=G.player;
+  const da=document.getElementById('dice-area');
+
+  if(e.breath&&Math.random()<.3){
+    clog('🔥 '+e.name+' uses Dragon Breath!','hit');
+    const{t,r}=dN(12,6);
+    await showDice(da,'🔥 Dragon Breath! (12d6)',r,6);
+    const save=d(20)+mod(p.stats.DEX);
+    const dc=17, actual=save>=dc?Math.floor(t/2):t;
+    da.querySelector('.dice-msg').textContent=(save>=dc?'🛡 Saved — half damage: ':'💥 Failed save: ')+actual+' fire damage!';
+    clog('DEX save '+save+' vs DC '+dc+': '+(save>=dc?'half!':'full!'),'info');
+    p.hp-=actual;
+  }else{
+    const ar=d(20), tot=ar+e.atk;
+    await showDice(da,e.name+' attacks! (d20+'+e.atk+') vs AC '+p.ac,[ar],20);
+    clog(e.name+' rolls '+ar+'+'+e.atk+'='+tot+' vs AC '+p.ac,'info');
+    const msg=da.querySelector('.dice-msg');
+    if(ar===20||(ar!==1&&tot>=p.ac)){
+      const nd=ar===20?2:1;
+      const{t,r}=dN(nd,e.dDie);
+      const total=Math.max(1,t+Math.floor(e.atk/3));
+      await sleep(320);
+      await showDice(da,(ar===20?'💥 CRIT! ':'')+e.name+' damage ('+nd+'d'+e.dDie+')',r,e.dDie);
+      if(e.drain){p.maxHp=Math.max(1,p.maxHp-e.drain);clog('🧛 Vampiric drain: max HP -'+e.drain,'hit');}
+      p.hp-=total;
+      da.querySelector('.dice-msg').textContent=(ar===20?'💥 ':'')+'You take '+total+' damage!';
+      clog((ar===20?'💥 CRIT! ':'')+e.name+' hits for '+total+'!','hit');
+    }else{msg.textContent='🛡 Enemy missed!';clog(e.name+' misses!','miss');}
+  }
+
+  refreshCombatHP();
+  if(p.hp<=0){p.hp=0;await sleep(700);endCombat();showDead();return;}
+  G.turn='player'; G.busy=false; setBtns(false);
+}
+
+async function endCombatWin(){
+  const e=G.combat.enemy;
+  e.alive=false; e.hp=0;
+  clog(e.name+' is defeated!','info');
+  await sleep(550);
+  G.player.xp+=e.xp;
+  const goldDrop=Math.floor(e.xp/10)+d(6);
+  G.player.gold+=goldDrop;
+  glog('Defeated '+e.name+'! +'+e.xp+' XP  +'+goldDrop+'🪙','loot');
+  const xpN=xpNeeded(G.player.level+1);
+  if(G.player.xp>=xpN&&G.player.level<10) levelUp();
+  if(Math.random()<.38){
+    const key=ITEM_KEYS[Math.floor(Math.random()*ITEM_KEYS.length)];
+    const it={...ITEMS[key]};
+    if(it.eff&&it.eff.startsWith('equip')){pickUp({...it,x:0,y:0,picked:false,id:0});}
+    else if(G.player.inventory.length<8){G.player.inventory.push(it);glog('Looted '+it.name+'!','loot');announce('✨ Looted: '+it.name+'!');}
+  }
+  endCombat();
+  if(e.boss) showVic();
+}
+
+function endCombat(){
+  G.combat=null; G.busy=false; G.combatAtk=0;
+  document.getElementById('combat-overlay').classList.remove('active');
+  refreshVis(); updateUI();
+}
+
+function levelUp(){
+  const p=G.player;
+  p.level++;
+  const hg=Math.max(1,d(p.cls.hpLv)+mod(p.stats.CON));
+  p.maxHp+=hg; p.hp=Math.min(p.hp+hg,p.maxHp);
+  p.atkBonus++; p.sp=Math.min(p.cls.slots+Math.floor(p.level/3),9); p.spLeft=p.sp;
+  glog('⬆ LEVEL UP! Now level '+p.level+'! +'+hg+' HP','loot');
+  announce('⬆ Level '+p.level+'!');
+}
+
+function showDead(){
+  document.getElementById('go-sub').textContent=
+    'Slain by '+(G.combat?.enemy?.name||'darkness')+' on Floor '+G.floor+'…';
+  document.getElementById('s-gameover').classList.add('active');
+}
+function showVic(){
+  document.getElementById('vic-sub').textContent=
+    G.player.name+' the '+G.player.cls.name+' has conquered the dungeon!';
+  document.getElementById('s-victory').classList.add('active');
+}
+
+// ── INPUT ────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(!G.player) return;
+  if(document.getElementById('combat-overlay').classList.contains('active')){
+    if(e.key==='1') doAction('attack');
+    if(e.key==='2') doAction('special');
+    if(e.key==='3') doAction('item');
+    if(e.key==='4') doAction('flee');
+    return;
+  }
+  const k=e.key.toLowerCase();
+  let dx=0,dy=0;
+  if(k==='arrowup'||k==='w') dy=-1;
+  if(k==='arrowdown'||k==='s') dy=1;
+  if(k==='arrowleft'||k==='a') dx=-1;
+  if(k==='arrowright'||k==='d') dx=1;
+  if(dx||dy){e.preventDefault();tryMove(dx,dy);}
+  if(k==='i'&&!G.combat) drinkPotion();
+});
+
+// Touch swipe (map only, so scrolling the sidebar doesn't move the hero)
+let tx=null,ty=null;
+const mapWrap=document.getElementById('map-wrap');
+mapWrap.addEventListener('touchstart',e=>{
+  if(e.target.closest('#dpad,#map-potion')){tx=null;return;}
+  tx=e.touches[0].clientX;ty=e.touches[0].clientY;
+},{passive:true});
+mapWrap.addEventListener('touchend',e=>{
+  if(tx===null) return;
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.max(Math.abs(dx),Math.abs(dy))<20) return;
+  if(Math.abs(dx)>Math.abs(dy)) tryMove(dx>0?1:-1,0);
+  else tryMove(0,dy>0?1:-1);
+  tx=ty=null;
+},{passive:true});
+
+// D-pad: tap to step, hold to keep walking
+let dpTimer=null;
+function dpStop(){clearTimeout(dpTimer);dpTimer=null;document.querySelectorAll('.dpad-btn.held').forEach(b=>b.classList.remove('held'));}
+document.querySelectorAll('.dpad-btn').forEach(b=>{
+  const dx=+b.dataset.dx, dy=+b.dataset.dy;
+  b.addEventListener('pointerdown',e=>{
+    e.preventDefault(); dpStop(); b.classList.add('held');
+    tryMove(dx,dy);
+    const rep=()=>{if(G.combat){dpStop();return;}tryMove(dx,dy);dpTimer=setTimeout(rep,140);};
+    dpTimer=setTimeout(rep,320);
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,dpStop));
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+});
+
+window.addEventListener('resize',resizeCanvas);
+window.addEventListener('orientationchange',()=>setTimeout(resizeCanvas,200));
+</script>
+</body>
+</html>
