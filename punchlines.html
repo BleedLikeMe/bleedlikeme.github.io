@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1b2e">
+<title>Punchlines</title>
+<style>
+  :root {
+    --bg: #f6f3ec;
+    --card: #ffffff;
+    --ink: #1d1b2e;
+    --muted: #6b6878;
+    --accent: #e0512f;
+    --accent-ink: #ffffff;
+    --shadow: 0 10px 30px rgba(29, 27, 46, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15141f;
+      --card: #211f30;
+      --ink: #f2efe8;
+      --muted: #a09cb0;
+      --accent: #ff7a54;
+      --accent-ink: #15141f;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+             max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    -webkit-tap-highlight-color: transparent;
+  }
+  header {
+    text-align: center;
+    font-size: .8rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-top: 8px;
+  }
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  #card {
+    width: 100%;
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 40px 24px;
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  #line {
+    margin: 0;
+    font-size: clamp(1.4rem, 6vw, 2rem);
+    line-height: 1.3;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  #line.placeholder { color: var(--muted); font-weight: 400; font-size: 1.1rem; }
+  #line.pop { animation: pop .35s ease-out; }
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(8px) scale(.97); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { #line.pop { animation: none; } }
+  footer {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    padding-bottom: 8px;
+  }
+  button {
+    width: 100%;
+    min-height: 60px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: inherit;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform .08s;
+  }
+  button:active { transform: scale(.98); }
+  button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  #count { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <header>Punchlines</header>
+  <main>
+    <div id="card"><p id="line" class="placeholder" aria-live="polite">Tap the button for a punchline.</p></div>
+  </main>
+  <footer>
+    <button id="next" type="button">Give me one</button>
+    <div id="count"></div>
+  </footer>
+<script>
+const LINES = [
+"Because if they fell forwards, they'd still be in the boat.",
+"They don't have the guts.",
+"An impasta.",
+"Because he was outstanding in his field.",
+"It was two-tired.",
+"A carrot.",
+"A gummy bear.",
+"Because then it would be a foot.",
+"It's a shame they'll never meet.",
+"Because every play has a cast.",
+"Nacho cheese.",
+"Because it saw the salad dressing.",
+"Because they make up everything.",
+"Put a little boogie in it.",
+"Nothing, it just waved.",
+"In case he got a hole in one.",
+"You planet.",
+"A bulldozer.",
+"A satisfactory.",
+"Because they are shellfish.",
+"I'll meet you at the corner.",
+"Because the 'P' is silent.",
+"Sofishticated.",
+"Because it had too many problems.",
+"A meowtain.",
+"A nervous wreck.",
+"It got mugged.",
+"They work on so many levels.",
+"An investigator.",
+"Supplies!",
+"Because it was framed.",
+"Between you and me, something smells.",
+"All of the fans left.",
+"A waist of time.",
+"A stick.",
+"He couldn't see himself doing it.",
+"To cover their butt quacks.",
+"A can't opener.",
+"They'd crack each other up.",
+"Nice belt!",
+"Because it felt crumby.",
+"A pork chop.",
+"To get to the other slide.",
+"Frostbite.",
+"Igloos it together.",
+"Because it wasn't peeling well.",
+"Because you can see right through them.",
+"Re-Morse code.",
+"Pop music.",
+"Because 7 ate 9.",
+"A Labracadabrador.",
+"To get to the Shell station.",
+"No eye deer.",
+"Still no eye deer.",
+"Dinner is on me.",
+"Aye matey!",
+"For holding up a pair of pants.",
+"A dino-snore.",
+"Roberto.",
+"A barberqueue.",
+"His car got toad.",
+"Hi, bud!",
+"It goes chew, chew.",
+"Because it's too far to walk.",
+"A garbage truck.",
+"A receding hare-line.",
+"Because she will let it go.",
+"You're under a vest.",
+"It left its Windows open.",
+"Sneakers.",
+"With ten-tacles.",
+"Tyrannosaurus Wrecks.",
+"For fowl play.",
+"A watchdog.",
+"A little hoarse.",
+"Tooth pics.",
+"Because they use honeycombs.",
+"An abdominal snowman.",
+"Because they are a pain in the neck.",
+"He let out a little wine.",
+"Stay here, I'm going on ahead.",
+"It needed a root canal.",
+"They read the moos-paper.",
+"You go on ahead, I'll hang around.",
+"An irrelephant.",
+"She kept running away from the ball.",
+"Reality.",
+"A monkey.",
+"Because he's a fun-gi.",
+"You look flushed.",
+"Because he was sitting on the deck.",
+"Spoiled milk.",
+"Why the long face?",
+"Then don't do that.",
+"The backstroke.",
+"With bookworms.",
+"A laboratory retriever.",
+"A humbug.",
+"Aaaah! A talking muffin!",
+"To get to the other side.",
+"Because he had no body to go with.",
+"Orange you glad I didn't say banana?",
+"Lettuce in, it's cold out here!",
+"Ouch.",
+"I'll deal with you later.",
+"Fruit flies like a banana.",
+"I lost interest.",
+"Because it's pointless.",
+"Because their horns don't work.",
+"Attire.",
+"A thesaurus.",
+"It was full of fans.",
+"They're always up to something.",
+"The teacher said it was a piece of cake.",
+"It over-swept.",
+"Prime mates.",
+"Because if they flew over the bay, they'd be bagels.",
+"You'd think it's R, but it's the C.",
+"Climb a tree and act like a nut.",
+"Bison.",
+"It had a virus.",
+"A pouch potato.",
+"Hi hungry, I'm Dad.",
+"Because light attracts bugs.",
+"Those who understand binary and those who don't.",
+"She looked surprised.",
+"I see food and I eat it.",
+"Then it grew on me.",
+"I don't know y.",
+"Then it hit me.",
+"I know I wouldn't get a reaction.",
+"I kneaded dough.",
+"Velcro: what a rip-off!",
+"They ended up in a tie.",
+"He just needed a little space.",
+"What's the word on the street?",
+"It's a huge missed steak.",
+"The rotation of Earth really makes my day.",
+"Because he couldn't see that well.",
+"I didn't want to interrupt her.",
+"Take my wife… please.",
+"To go with the traffic jam.",
+"A puddle.",
+"She took a rhombus.",
+"To see the moooon.",
+"A maybe.",
+"Because he found his honey.",
+"Thunderwear.",
+"Ground beef.",
+"It already had a million degrees.",
+"Because pepper makes them sneeze.",
+"Put it on my bill.",
+"Don't cry, it's only a joke.",
+"You can't wash your hands in a buffalo."
+];
+
+// Shuffle-bag: every punchline is shown once before any repeats.
+let bag = [];
+let last = null;
+function draw() {
+  if (!bag.length) {
+    bag = LINES.slice();
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    // Don't repeat the last one across a reshuffle.
+    if (bag.length > 1 && bag[bag.length - 1] === last) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+  }
+  return (last = bag.pop());
+}
+
+const lineEl = document.getElementById('line');
+const countEl = document.getElementById('count');
+let seen = 0;
+document.getElementById('next').addEventListener('click', () => {
+  lineEl.textContent = draw();
+  lineEl.className = '';
+  void lineEl.offsetWidth; // restart the animation
+  lineEl.className = 'pop';
+  seen++;
+  const round = Math.ceil(seen / LINES.length);
+  countEl.textContent = `${(seen - 1) % LINES.length + 1} of ${LINES.length}` + (round > 1 ? ` · round ${round}` : '');
+});
+</script>
+</body>
+</html>
