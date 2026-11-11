@@ -2740,7 +2740,7 @@ function gridPath(g, sx, sy, tx, ty){
   const H = g.length, W = g[0].length, prev = new Int32Array(W * H).fill(-1), s = sy * W + sx, t = ty * W + tx, q = [s]; prev[s] = s;
   for (let h = 0; h < q.length; h++){ const cur = q[h]; if (cur === t) break; const cx = cur % W, cy = (cur / W) | 0;
     for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H || g[ny][nx] === 1) continue; const n = ny * W + nx; if (prev[n] !== -1) continue; prev[n] = cur; q.push(n); } }
-  if (prev[t] === -1) return null; const path = []; let cur = t; while (cur !== s){ path.push([cur % W, (cur / W) | 0]); cur = prev[cur]; } return path.reverse();
+  if (tx < 0 || ty < 0 || tx >= W || ty >= H || prev[t] === -1) return null; const path = []; let cur = t; while (cur !== s){ path.push([cur % W, (cur / W) | 0]); cur = prev[cur]; } return path.reverse();
 }
 GAMES.maze = (cfg, wrap, done) => {
   const shelob = cfg.map === 'shelob';
