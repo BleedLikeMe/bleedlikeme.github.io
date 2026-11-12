@@ -1,0 +1,1732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Don't Panic</title>
+<style>
+:root{--bg:#05060f;--fg:#e8e6d9;--acc:#7fd4ff;--warn:#ffcf4a;--panel:rgba(12,14,34,.97)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 "Courier New",monospace;display:flex;justify-content:center;min-height:100vh;user-select:none}
+#wrap{position:relative;width:960px;max-width:100vw;margin-top:8px}
+#hud{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 10px;background:#0b0d22;border:1px solid #223;border-bottom:none;font-size:13px;flex-wrap:wrap}
+#chap{color:var(--warn);font-weight:bold}
+#obj{color:var(--acc);flex:1;text-align:center}
+#stats{font-size:12px;opacity:.9}
+#stats b{color:var(--warn)}
+#stage{position:relative}
+canvas{display:block;width:100%;height:auto;background:#000;border:1px solid #223}
+#dialog{position:absolute;left:12px;right:12px;bottom:12px;background:var(--panel);border:2px solid var(--acc);border-radius:8px;padding:12px 16px 22px;display:none;min-height:96px;box-shadow:0 0 24px rgba(127,212,255,.25);cursor:pointer}
+#dwho{font-weight:bold;margin-bottom:4px;font-size:15px}
+#dtext{white-space:pre-wrap;font-size:15px}
+#dchoices{margin-top:8px}
+.ch{display:block;padding:5px 9px;margin:4px 0;border:1px solid #334;border-radius:4px;cursor:pointer;background:#141838}
+.ch.sel,.ch:hover{border-color:var(--warn);color:var(--warn)}
+#dmore{position:absolute;right:12px;bottom:4px;font-size:11px;opacity:.6}
+#panel{position:absolute;inset:16px 50px;background:var(--panel);border:2px solid var(--warn);border-radius:10px;padding:16px 20px;display:none;overflow:auto}
+#panel h2{margin:0 0 10px;color:var(--warn);font-size:18px}
+#panel h3{margin:14px 0 6px;color:var(--acc);font-size:14px}
+#panel .q{margin:6px 0;padding:6px 9px;border-left:3px solid var(--acc);background:#11143a}
+#panel .q.side{border-color:#d8f}
+#panel .q.done{opacity:.45;border-color:#5c5}
+#panel .q.done b{text-decoration:line-through}
+#panel .g{margin:8px 0;padding:8px 10px;background:#0f1a10;border:1px solid #2a5a2a;border-radius:6px;color:#bfe8b0}
+#panel .g b{color:#7fff7f}
+#panel button{font:inherit;background:#223;color:var(--warn);border:1px solid var(--warn);border-radius:4px;padding:2px 10px;cursor:pointer;margin-left:8px}
+#panel .close{position:sticky;top:0;float:right}
+#toasts{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-end;pointer-events:none;max-width:60%}
+.toast{background:rgba(10,12,30,.94);border:1px solid var(--warn);color:var(--warn);padding:5px 10px;border-radius:5px;font-size:13px;animation:fade 4.5s forwards}
+@keyframes fade{0%{opacity:0;transform:translateX(20px)}8%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+#help{font-size:12px;opacity:.7;padding:6px 10px;text-align:center}
+#touch{display:none;justify-content:space-between;padding:10px 16px}
+#touch button{width:56px;height:56px;font-size:20px;background:#141838;color:var(--fg);border:1px solid #446;border-radius:10px;touch-action:none}
+#pad{display:grid;grid-template-columns:repeat(3,56px);gap:4px}
+#acts{display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-width:200px;justify-content:flex-end}
+@media (max-width:700px){#help{display:none}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hud"><span id="chap">Don't Panic</span><span id="obj"></span><span id="stats"></span></div>
+  <div id="stage">
+    <canvas id="game"></canvas>
+    <div id="toasts"></div>
+    <div id="dialog"><div id="dwho"></div><div id="dtext"></div><div id="dchoices"></div><div id="dmore">▼ E / Space</div></div>
+    <div id="panel"></div>
+  </div>
+  <div id="help">Move: WASD / Arrows · Interact / talk: E or Space · Quests: Q · Inventory: I · Guide: G · Towel on head: T · Help: H</div>
+  <div id="touch">
+    <div id="pad"><span></span><button data-k="arrowup">▲</button><span></span><button data-k="arrowleft">◀</button><span></span><button data-k="arrowright">▶</button><span></span><button data-k="arrowdown">▼</button><span></span></div>
+    <div id="acts"><button data-p="e">E</button><button data-p="q">Q</button><button data-p="i">I</button><button data-p="g">G</button><button data-p="t">T</button></div>
+  </div>
+</div>
+<script>
+'use strict';
+/* =========================================================================
+   DON'T PANIC — a fan-made Hitchhiker's adventure (engine)
+   ========================================================================= */
+const cv=document.getElementById('game'),ctx=cv.getContext('2d');
+const TS=32,VW=30,VH=18;cv.width=VW*TS;cv.height=VH*TS;
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const hsh=(x,y)=>(((x*73856093)^(y*19349663))>>>0);
+const ease=t=>t<0?0:t>1?1:t;
+
+/* ---------------- audio ---------------- */
+let AC=null;
+function sfx(type){try{
+  if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();
+  const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);
+  const t=AC.currentTime;
+  const P={blip:[660,.05,'square',.03],pick:[880,.18,'triangle',.08],quest:[523,.45,'triangle',.09],alarm:[330,.35,'sawtooth',.05],
+    caught:[160,.7,'sawtooth',.08],door:[520,.12,'sine',.04],warp:[150,1,'sine',.09],creak:[90,.25,'square',.05],bad:[140,.3,'square',.05]}[type]||[440,.1,'sine',.04];
+  o.type=P[2];o.frequency.setValueAtTime(P[0],t);
+  if(type==='quest'){o.frequency.setValueAtTime(659,t+.12);o.frequency.setValueAtTime(784,t+.24);}
+  if(type==='pick')o.frequency.setValueAtTime(1175,t+.08);
+  if(type==='warp')o.frequency.exponentialRampToValueAtTime(1800,t+1);
+  if(type==='caught')o.frequency.exponentialRampToValueAtTime(40,t+.7);
+  if(type==='alarm')o.frequency.setValueAtTime(440,t+.17);
+  g.gain.setValueAtTime(P[3],t);g.gain.exponentialRampToValueAtTime(.0001,t+P[1]);
+  o.start(t);o.stop(t+P[1]+.03);
+}catch(e){}}
+
+/* ---------------- state ---------------- */
+const G={mode:'title',time:0,flags:{},inv:[],quests:{},qorder:[],guide:{},improb:0,caughtN:0,
+  map:null,mapId:'',p:{x:0,y:0,ox:0,oy:0,t:1,dir:[0,1],spd:.13,lying:false},trail:[],followers:[],
+  timer:null,peng:0,towelHead:false,shades:false,lock:false,danger:0,parts:[],chapter:'',cp:[0,0],cam:[0,0],
+  card:null,cardT:0,endT:0,caughtT:0,caughtMsg:'',flash:0,shake:0};
+let F=G.flags;
+const MAPS={},ITEMS={},GUIDE={},EXTRA={};
+let MINI=null;
+
+/* ---------------- tiles ---------------- */
+// s=solid  o=blocks sight  hide=hiding spot  noise=creaky
+const TD={'#':{s:1,o:1},'.':{},',':{},'=':{},'T':{s:1,o:1},'~':{s:1},'B':{hide:1},'_':{hide:1},'C':{s:1},'X':{s:1,o:1},
+ '+':{door:1},'*':{s:1},'g':{s:1},'m':{s:1},'M':{},'h':{},'`':{},'R':{s:1,o:1},'n':{noise:1},'r':{},'b':{s:1},'k':{},
+ 'p':{s:1},'w':{},'P':{s:1,o:1},'o':{s:1},'s':{s:1},'Z':{s:1},'K':{s:1,o:1},'f':{}};
+const FLAVOR={'#':'A wall. It is doing an excellent job of being a wall.','T':'A tree. Trees are considered by some to have been a bad move.',
+ '~':'Water. Wet, mostly.','*':'Space. It is big. Really big.','g':'A window onto the howling void. Lovely view.','X':'A crate. Nothing in it but crate-air.',
+ 'K':'A humming computer bank. It is thinking about something much more important than you.','p':'A sleep pod. Someone inside is snoring in a very important way.',
+ 'R':'A rock. Not one of the interesting ones.','C':'A counter.','m':'A console covered in buttons labelled in a language you could, with effort, read.'};
+
+function grid(w,h,ch){return Array.from({length:h},()=>Array(w).fill(ch));}
+function R(g,x,y,w,h,ch){for(let j=0;j<h;j++)for(let i=0;i<w;i++){const yy=y+j,xx=x+i;if(g[yy]&&xx>=0&&xx<g[yy].length)g[yy][xx]=ch;}}
+function Pt(g,x,y,ch){if(g[y]&&x>=0&&x<g[y].length)g[y][x]=ch;}
+function box(g,x,y,w,h,wall,floor){R(g,x,y,w,h,wall||'#');R(g,x+1,y+1,w-2,h-2,floor||'.');}
+function border(g,ch){const h=g.length,w=g[0].length;R(g,0,0,w,1,ch);R(g,0,h-1,w,1,ch);R(g,0,0,1,h,ch);R(g,w-1,0,1,h,ch);}
+function tileAt(x,y){const m=G.map;if(!m||y<0||x<0||y>=m.h||x>=m.w)return '#';return m.g[y][x];}
+
+/* ---------------- drawing helpers ---------------- */
+function circ(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+function rr(x,y,w,h,c,r){ctx.fillStyle=c;ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r||3);else ctx.rect(x,y,w,h);ctx.fill();}
+function ell(x,y,rx,ry,c,rot){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(x,y,rx,ry,rot||0,0,Math.PI*2);ctx.fill();}
+function txt(s,x,y,c,size,align,font){ctx.fillStyle=c||'#fff';ctx.font=(size||14)+'px '+(font||'"Courier New",monospace');ctx.textAlign=align||'left';ctx.fillText(s,x,y);}
+function wrapText(s,x,y,maxW,lh,c,size,align){ctx.font=(size||14)+'px "Courier New",monospace';const words=s.split(' ');let line='',yy=y;
+  for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){txt(line,x,yy,c,size,align);line=w;yy+=lh;}else line=t;}
+  if(line)txt(line,x,yy,c,size,align);return yy;}
+
+function drawTile(c,x,y,X,Y,th){
+  const h=hsh(x,y);
+  const f=col=>{ctx.fillStyle=col;ctx.fillRect(X,Y,TS,TS);};
+  const base=()=>{const gch=th.ground||'.';if(gch!==c&&!'ZobspBK'.includes(gch))drawTile(gch,x,y,X,Y,th);else f((x+y)%2?th.floor:th.floor2);};
+  switch(c){
+  case '#':f(th.wall);ctx.fillStyle=th.wallHi;ctx.fillRect(X,Y,TS,5);ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(X,Y+TS-4,TS,4);
+    if(th.brick){ctx.strokeStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.moveTo(X,Y+17);ctx.lineTo(X+TS,Y+17);const bx=X+(y%2?8:24);ctx.moveTo(bx,Y+5);ctx.lineTo(bx,Y+17);ctx.moveTo(bx+(bx>X+16?-16:16),Y+17);ctx.lineTo(bx+(bx>X+16?-16:16),Y+28);ctx.stroke();}
+    if(th.rivet&&h%3===0){circ(X+5,Y+10,1.5,'rgba(0,0,0,.4)');circ(X+27,Y+10,1.5,'rgba(0,0,0,.4)');}break;
+  case '.':f((x+y)%2?th.floor:th.floor2);if(th.grate&&h%4===0){ctx.strokeStyle='rgba(0,0,0,.15)';ctx.strokeRect(X+4,Y+4,24,24);}break;
+  case 'w':f((x+y)%2?'#eef3f7':'#e3eaf1');if(h%7===0){ctx.fillStyle='rgba(255,210,80,.25)';ctx.fillRect(X+14,Y,4,TS);}break;
+  case ',':f('#3f7a35');if(h%3===0){ctx.fillStyle='#4f8f42';ctx.fillRect(X+(h%22)+3,Y+((h>>5)%22)+3,3,3);}if(h%5===1){ctx.fillStyle='#356a2d';ctx.fillRect(X+((h>>3)%24)+2,Y+((h>>7)%24)+2,2,4);}break;
+  case 'h':f('#3f7a35');for(let i=0;i<4;i++){circ(X+6+((h>>i*3)%20),Y+6+((h>>(i*3+9))%20),3,['#e64','#fd4','#d6f','#fff'][(h+i)%4]);}break;
+  case 'f':f('#3f7a35');circ(X+16,Y+16,9,'#5a2a1a');ctx.fillStyle=['#f80','#fd2','#f40'][Math.floor(G.time*8+x)%3];ctx.beginPath();ctx.moveTo(X+9,Y+18);ctx.quadraticCurveTo(X+16,Y-4+Math.sin(G.time*9)*3,X+23,Y+18);ctx.fill();break;
+  case '=':f('#4a4a50');if(y%2===0&&x%3===0){ctx.fillStyle='#ddd';ctx.fillRect(X+4,Y+TS-2,18,3);}break;
+  case 'T':drawTile(th.ground==='`'?'`':',',x,y,X,Y,th);ctx.fillStyle='#5a3a1a';ctx.fillRect(X+13,Y+18,6,13);circ(X+16,Y+13,12,'#1f5a25');circ(X+11,Y+10,6,'#2c7032');circ(X+20,Y+15,5,'#245f2a');break;
+  case '~':{f('#2a5a9a');ctx.strokeStyle='#6ab0ff';ctx.lineWidth=1.5;ctx.beginPath();const o=Math.sin(G.time*2+x*.7+y)*3;ctx.moveTo(X+2,Y+12+o);ctx.quadraticCurveTo(X+10,Y+7+o,X+18,Y+12+o);ctx.moveTo(X+12,Y+24-o);ctx.quadraticCurveTo(X+20,Y+19-o,X+30,Y+24-o);ctx.stroke();ctx.lineWidth=1;break;}
+  case 'B':drawTile(th.ground==='`'?'`':',',x,y,X,Y,th);circ(X+10,Y+18,9,'#2a6a2a');circ(X+22,Y+17,9,'#2f7530');circ(X+16,Y+10,9,'#368a36');circ(X+13,Y+9,2,'#5ab05a');break;
+  case '_':base();ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(X,Y,TS,TS);ctx.fillStyle='rgba(120,120,255,.08)';ctx.fillRect(X+2,Y+2,TS-4,TS-4);break;
+  case 'C':f(th.counter||'#6a4524');ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(X,Y,TS,6);ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(X,Y+TS-5,TS,5);break;
+  case 'X':base();rr(X+2,Y+2,28,28,'#8a6236',2);ctx.strokeStyle='#5a3a1a';ctx.lineWidth=2;ctx.strokeRect(X+3,Y+3,26,26);ctx.beginPath();ctx.moveTo(X+3,Y+3);ctx.lineTo(X+29,Y+29);ctx.moveTo(X+29,Y+3);ctx.lineTo(X+3,Y+29);ctx.stroke();ctx.lineWidth=1;break;
+  case '+':base();rr(X+2,Y+2,28,28,th.door||'#7a4a22',3);ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(X+15,Y+3,2,26);circ(X+24,Y+17,2,'#fd6');break;
+  case '*':f('#02030a');if(h%3===0){const tw=(Math.sin(G.time*2+h)+1)/2;ctx.fillStyle=`rgba(255,255,255,${.3+tw*.7})`;ctx.fillRect(X+(h%28),Y+((h>>6)%28),2,2);}
+    if(h%11===0){ctx.fillStyle='rgba(160,180,255,.7)';ctx.fillRect(X+((h>>4)%28),Y+((h>>9)%28),1,1);}break;
+  case 'g':drawTile('*',x,y,X,Y,th);ctx.strokeStyle='rgba(130,220,255,.6)';ctx.lineWidth=2;ctx.strokeRect(X+1,Y+1,TS-2,TS-2);ctx.lineWidth=1;ctx.fillStyle='rgba(130,220,255,.08)';ctx.fillRect(X,Y,TS,TS);break;
+  case 'm':base();rr(X+2,Y+4,28,24,'#4a5466',3);rr(X+5,Y+7,22,10,'#0a2a3a',2);
+    for(let i=0;i<3;i++){const on=Math.floor(G.time*3+h+i)%3===0;circ(X+8+i*8,Y+23,2.5,on?['#f44','#4f4','#ff4'][i]:'#222');}
+    ctx.fillStyle='#5cf';ctx.fillRect(X+7,Y+9+(Math.floor(G.time*4+h)%3)*2,12,1);break;
+  case 'M':f('#5a4025');if(h%2)circ(X+(h%24)+4,Y+((h>>4)%24)+4,4,'#4a3018');circ(X+((h>>8)%24)+4,Y+((h>>12)%24)+4,3,'#6a5035');break;
+  case '`':f((x*7+y*3)%5===0?'#c49a5e':'#c9a46a');if(h%4===0){ctx.fillStyle='#a8844e';ctx.fillRect(X+(h%26)+2,Y+((h>>5)%26)+2,2,2);}break;
+  case 'R':drawTile(th.ground==='`'?'`':th.ground===','?',':'.',x,y,X,Y,th);ell(X+16,Y+19,14,11,'#6a6460');ell(X+13,Y+15,9,7,'#8a847e');ell(X+11,Y+13,3,2,'#a8a29c');break;
+  case 'n':f('#7a5a36');ctx.fillStyle='#5e4224';for(let i=0;i<4;i++)ctx.fillRect(X,Y+i*8+7,TS,1);ctx.fillStyle='#4a3218';ctx.fillRect(X+(h%20)+4,Y+((h>>4)%3)*8+2,2,2);break;
+  case 'r':f(th.rug||'#7a3040');ctx.strokeStyle='rgba(255,220,120,.18)';ctx.strokeRect(X+4,Y+4,24,24);if((x+y)%2===0)circ(X+16,Y+16,3,'rgba(255,220,120,.18)');break;
+  case 'b':base();rr(X+1,Y+2,30,28,'#ddd',3);rr(X+3,Y+12,26,17,'#3a5aa0',3);rr(X+5,Y+4,22,7,'#fff',3);break;
+  case 'k':f((x+y)%2?'#e8e8e0':'#b8bcc0');break;
+  case 'p':base();rr(X+3,Y+1,26,30,'#9aa0a8',8);rr(X+6,Y+4,20,24,'rgba(150,220,255,.55)',6);circ(X+16,Y+10,4,'#e8c09a');rr(X+11,Y+14,10,12,'#5a6a7a',3);
+    if(Math.floor(G.time+h)%4===0)txt('z',X+24,Y+8-((G.time*10)%6),'#fff',10);break;
+  case 'P':base();rr(X+4,Y+2,24,28,th.wall,3);ctx.fillStyle=th.wallHi;ctx.fillRect(X+6,Y+2,4,28);break;
+  case 'o':base();ell(X+16,Y+18,13,9,'rgba(0,0,0,.25)');circ(X+16,Y+15,13,th.table||'#8a5a30');circ(X+16,Y+15,10,th.cloth||'#f4f0e8');if(h%3===0)circ(X+12,Y+13,3,'#c33');if(h%4===1)rr(X+17,Y+11,3,8,'#7cf',1);break;
+  case 's':base();rr(X+1,Y+8,30,20,'#a33',5);rr(X+1,Y+4,30,9,'#c44',4);break;
+  case 'Z':{const gch=th.ground||'.';drawTile(gch==='Z'?'.':gch,x,y,X,Y,th);break;}
+  case 'K':base();rr(X+3,Y+1,26,30,'#3a4050',2);for(let i=0;i<5;i++){const on=Math.floor(G.time*5+h+i*3)%4!==0;ctx.fillStyle=on?(i%2?'#4f8':'#fa4'):'#123';ctx.fillRect(X+7+(i%3)*7,Y+5+Math.floor(i/3)*7,4,3);}
+    rr(X+7,Y+18,18,9,'#111',1);ctx.fillStyle='#4f8';ctx.fillRect(X+9,Y+20+(Math.floor(G.time*6+h)%3)*2,10,1);break;
+  default:f('#f0f');
+  }
+}
+
+/* ---------------- sprites ---------------- */
+function person(x,y,o){
+  const bob=o.moving?Math.sin(G.time*16)*1.4:0;
+  ell(x,y+13,10,4,'rgba(0,0,0,.3)');
+  if(o.lying){ell(x,y+4,15,7,o.body);circ(x-13,y+2,6,o.skin||'#f1c9a0');if(o.hair){ctx.fillStyle=o.hair;ctx.beginPath();ctx.arc(x-14,y+2,6.5,Math.PI/2,Math.PI*1.5);ctx.fill();}return;}
+  const lw=o.moving?Math.sin(G.time*16)*2:0;
+  rr(x-6,y+3,5,10+lw,o.legs||'#334',2);rr(x+1,y+3,5,10-lw,o.legs||'#334',2);
+  rr(x-8,y-6+bob,16,14,o.body,5);
+  if(o.belt){ctx.fillStyle=o.belt;ctx.fillRect(x-8,y+3+bob,16,2);}
+  const hy=y-11+bob,d=o.dir||[0,1];
+  const head=(hx,hc)=>{circ(hx,hy,7,o.skin||'#f1c9a0');
+    if(o.hair){ctx.fillStyle=hc||o.hair;ctx.beginPath();ctx.arc(hx,hy-2,7.5,Math.PI*1.05,Math.PI*1.95);ctx.fill();if(d[1]<0&&!d[0])circ(hx,hy,7,hc||o.hair);}
+    if(!(d[1]<0&&!d[0])){const ex=d[0]*3;ctx.fillStyle='#111';ctx.fillRect(hx-3+ex,hy-1,2,2);ctx.fillRect(hx+2+ex,hy-1,2,2);}
+    if(o.beard){ell(hx,hy+5,6,5,o.beard);}
+    if(o.hat){rr(hx-8,hy-10,16,5,o.hat,2);rr(hx-5,hy-13,10,5,o.hat,3);}
+    if(o.shades){ctx.fillStyle='#111';ctx.fillRect(hx-5,hy-2,10,3);}};
+  if(o.twoHeads){head(x-5,o.hair);head(x+6,'#e8b030');}else head(x);
+  if(o.towel){ctx.fillStyle='#e8d23a';ctx.beginPath();ctx.arc(x,hy,9,Math.PI,0);ctx.lineTo(x+9,hy+6);ctx.lineTo(x-9,hy+6);ctx.fill();ctx.fillStyle='#3a7ad8';ctx.fillRect(x-9,hy-2,18,3);ctx.fillRect(x-9,hy+3,18,2);}
+}
+const CHARS={
+  arthur:()=>({body:F.gown?'#8a4f3c':'#b8c8e8',hair:'#6a4a2a',legs:F.gown?'#d8c8a8':'#b8c8e8',belt:F.gown?'#5a2f1c':null}),
+  ford:()=>({body:'#c0502a',hair:'#d8823a',legs:'#3a3a2a'}),
+  zaphod:()=>({body:'#e08a1a',hair:'#f2d04a',legs:'#6a2a8a',twoHeads:true,shades:F.zShades}),
+  trillian:()=>({body:'#f2f2f2',hair:'#2a1a12',skin:'#d9a77a',legs:'#555'}),
+  prosser:()=>({body:'#4a4f5a',hair:'#222',hat:'#f0c020',legs:'#333'}),
+  barman:()=>({body:'#f4f4f4',hair:'#555',legs:'#222'}),
+  patron:e=>({body:e.col||'#6a7a4a',hair:e.hair||'#4a3a2a',legs:'#333'}),
+  slarti:()=>({body:'#8a8a9a',hair:'#eee',beard:'#f4f4f4',legs:'#6a6a7a'}),
+  cop:()=>({body:'#2a3a8a',hair:'#111',hat:'#111a44',legs:'#1a2255',belt:'#ccc'}),
+  max:()=>({body:`hsl(${(G.time*120)%360},80%,60%)`,hair:'#222',legs:'#222'}),
+  hotblack:()=>({body:'#111',skin:'#c8d4cc',hair:'#000',legs:'#111',shades:true}),
+  bodyguard:()=>({body:'#222',skin:'#a87a5a',hair:'#000',legs:'#111',shades:true}),
+  caveman:e=>({body:'#7a5a3a',hair:'#3a2a1a',skin:'#c8986a',legs:'#5a4a2a',beard:e.beard?'#3a2a1a':null}),
+  golg:e=>({body:e.col||'#445566',hair:'#3a3a3a',legs:'#223'}),
+  hairdresser:()=>({body:'#f070b0',hair:'#f8e040',legs:'#a03070'}),
+  number1:()=>({body:'#3a4a7a',hair:'#999',legs:'#223',hat:'#223355'}),
+  clerk:()=>({body:'#5a6a3a',hair:'#3a3a2a',legs:'#333'}),
+  ghost:()=>({body:'rgba(140,200,255,.6)',skin:'rgba(200,230,255,.6)',hair:'rgba(220,240,255,.6)',legs:'rgba(140,200,255,.5)'}),
+};
+function drawSprite(spr,x,y,o){
+  o=o||{};const t=G.time;
+  if(CHARS[spr]){const c=CHARS[spr](o.ent||{});c.dir=o.dir;c.moving=o.moving;c.lying=o.lying;c.towel=o.towel;if(o.shades)c.shades=true;person(x,y,c);return;}
+  switch(spr){
+  case 'penguin':ell(x,y+13,9,4,'rgba(0,0,0,.3)');ell(x,y,10,13,'#111');ell(x,y+3,7,10,'#fff');circ(x-3,y-6,1.5,'#000');circ(x+3,y-6,1.5,'#000');ctx.fillStyle='#f90';ctx.beginPath();ctx.moveTo(x-3,y-3);ctx.lineTo(x+3,y-3);ctx.lineTo(x,y+1);ctx.fill();ell(x-5,y+13,4,2,'#f90');ell(x+5,y+13,4,2,'#f90');break;
+  case 'marvin':{ell(x,y+13,9,4,'rgba(0,0,0,.3)');rr(x-5,y+2,4,11,'#8a929a');rr(x+1,y+2,4,11,'#8a929a');rr(x-7,y-4,14,10,'#a8b0b8',3);circ(x,y-12,10,'#c8d0d8');circ(x,y-12,8,'#b0b8c0');
+    ctx.fillStyle='#f33';ctx.beginPath();ctx.moveTo(x-6,y-14);ctx.lineTo(x-2,y-12);ctx.lineTo(x-6,y-11);ctx.fill();ctx.beginPath();ctx.moveTo(x+6,y-14);ctx.lineTo(x+2,y-12);ctx.lineTo(x+6,y-11);ctx.fill();
+    ctx.strokeStyle='#555';ctx.beginPath();ctx.arc(x,y-4,4,Math.PI*1.2,Math.PI*1.8);ctx.stroke();rr(x-11,y-3,4,10,'#8a929a');rr(x+7,y-3,4,10,'#8a929a');break;}
+  case 'vogon':{ell(x,y+14,13,5,'rgba(0,0,0,.35)');const b=o.moving?Math.sin(t*10)*1.5:0;rr(x-9,y+4,7,10,'#3a5a2a');rr(x+2,y+4,7,10,'#3a5a2a');
+    ell(x,y-2+b,14,12,'#6a8a3a');ell(x,y-14+b,11,8,'#7a9a4a');rr(x-12,y-23+b,24,7,'#6a4a2a',3);rr(x-9,y-4+b,18,4,'#5a4a2a',1);
+    const d=o.dir||[0,1];if(!(d[1]<0&&!d[0])){circ(x-4+d[0]*3,y-14+b,2,'#ff5');circ(x+4+d[0]*3,y-14+b,2,'#ff5');ell(x+d[0]*3,y-8+b,6,1.5,'#3a4a1a');}break;}
+  case 'mouse':ell(x,y+8,7,3,'rgba(0,0,0,.25)');ell(x,y+3,8,6,'#f4f4f4');circ(x+6,y,4,'#f8f8f8');circ(x+5,y-4,2.5,'#f8b8c8');circ(x+8,y-3,2.5,'#f8b8c8');circ(x+8,y,1,'#000');
+    ctx.strokeStyle='#f8b8c8';ctx.beginPath();ctx.moveTo(x-8,y+4);ctx.quadraticCurveTo(x-14,y-2+Math.sin(t*4)*3,x-12,y-6);ctx.stroke();break;
+  case 'dolphin':{const j=Math.max(0,Math.sin(t*2.2))*10;ell(x,y-j+2,13,6,'#6a8aaa',-.3);ell(x+1,y-j+4,9,3,'#c8d8e8',-.3);ctx.fillStyle='#5a7a9a';ctx.beginPath();ctx.moveTo(x-2,y-j-3);ctx.lineTo(x+3,y-j-10);ctx.lineTo(x+5,y-j-3);ctx.fill();circ(x+8,y-j,1.2,'#000');break;}
+  case 'bulldozer':ell(x,y+13,16,5,'rgba(0,0,0,.35)');rr(x-14,y+4,28,9,'#222',3);for(let i=0;i<4;i++)circ(x-10+i*7,y+9,2.5,'#555');rr(x-12,y-6,24,12,'#f0c020',2);rr(x-7,y-16,12,11,'#e8b818',2);rr(x-5,y-14,8,6,'#9cf',1);rr(x-15,y-2,4,12,'#888',1);break;
+  case 'cow':ell(x,y+13,13,4,'rgba(0,0,0,.3)');rr(x-11,y-5,22,15,'#f4f0e8',6);circ(x-4,y,4,'#5a3a2a');circ(x+5,y+4,3,'#5a3a2a');rr(x-9,y+8,4,6,'#ddd');rr(x+5,y+8,4,6,'#ddd');
+    circ(x,y-11,8,'#f4f0e8');ell(x,y-7,5,3,'#f8c8b8');circ(x-3,y-13,1.4,'#000');circ(x+3,y-13,1.4,'#000');ctx.strokeStyle='#d8c890';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-6,y-17);ctx.lineTo(x-9,y-21);ctx.moveTo(x+6,y-17);ctx.lineTo(x+9,y-21);ctx.stroke();ctx.lineWidth=1;
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(x-5,y-4);ctx.lineTo(x+5,y-4);ctx.lineTo(x,y+4);ctx.fill();break;
+  case 'robot':{ell(x,y+13,9,4,'rgba(0,0,0,.3)');rr(x-9,y-8,18,20,'#7a8494',4);rr(x-6,y-5,12,6,'#111',2);const on=Math.sin(t*6)>0;circ(x-3,y-2,1.5,on?'#f33':'#600');circ(x+3,y-2,1.5,on?'#f33':'#600');
+    ctx.strokeStyle='#aaa';ctx.beginPath();ctx.moveTo(x,y-8);ctx.lineTo(x,y-16);ctx.stroke();circ(x,y-17,2.5,on?'#f80':'#a50');rr(x-6,y+4,12,3,'#556',1);break;}
+  case 'whale':ell(x+8,y+18,40,8,'rgba(0,0,0,.35)');ell(x+8,y+4,38,16,'#4a6a8a');ell(x+10,y+10,32,8,'#9ab0c4');circ(x+36,y,2.5,'#000');
+    ctx.fillStyle='#4a6a8a';ctx.beginPath();ctx.moveTo(x-28,y+2);ctx.lineTo(x-42,y-10);ctx.lineTo(x-38,y+4);ctx.lineTo(x-44,y+14);ctx.fill();break;
+  case 'petunia':ell(x,y+10,11,4,'rgba(0,0,0,.3)');ctx.fillStyle='#d8d0c0';ctx.beginPath();ctx.moveTo(x-11,y-2);ctx.lineTo(x+11,y-2);ctx.lineTo(x+7,y+10);ctx.lineTo(x-7,y+10);ctx.fill();
+    for(let i=0;i<5;i++)circ(x-8+i*4,y-5-(i%2)*3,3.5,['#c3f','#f3c','#93f','#f6d','#c6f'][i]);circ(x-2,y-10,1.5,'#ff4');break;
+  case 'leopard':ell(x,y+10,11,4,'rgba(0,0,0,.3)');ell(x,y+2,12,7,'#e0a040');circ(x+10,y-4,6,'#e8b050');ctx.fillStyle='#e8b050';ctx.beginPath();ctx.moveTo(x+6,y-8);ctx.lineTo(x+7,y-13);ctx.lineTo(x+10,y-9);ctx.moveTo(x+11,y-9);ctx.lineTo(x+14,y-13);ctx.lineTo(x+15,y-7);ctx.fill();
+    for(let i=0;i<4;i++)circ(x-7+i*4,y+(i%2)*3,1.6,'#6a3a10');circ(x+9,y-5,1,'#000');circ(x+13,y-5,1,'#000');ctx.strokeStyle='#e0a040';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-11,y+2);ctx.quadraticCurveTo(x-18,y-6+Math.sin(t*3)*3,x-14,y-10);ctx.stroke();ctx.lineWidth=1;break;
+  case 'beast':{ell(x,y+16,20,6,'rgba(0,0,0,.4)');const b=Math.sin(t*5)*2;ell(x,y+b,19,16,'#6a2a7a');ell(x,y-10+b,15,10,'#7a3a8a');for(let i=0;i<6;i++){ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(x-11+i*4,y-3+b);ctx.lineTo(x-9+i*4,y+3+b);ctx.lineTo(x-7+i*4,y-3+b);ctx.fill();}
+    circ(x-6,y-14+b,3,'#ff3');circ(x+6,y-14+b,3,'#ff3');circ(x-6,y-14+b,1.2,'#000');circ(x+6,y-14+b,1.2,'#000');rr(x-17,y+8,7,8,'#5a1a6a');rr(x+10,y+8,7,8,'#5a1a6a');break;}
+  case 'eddie':rr(x-13,y-14,26,24,'#3a4a5a',4);rr(x-10,y-11,20,14,'#0a3a5a',2);ctx.fillStyle='#7ff';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText(Math.sin(t*3)>0?':-)':':-D',x,y-1);break;
+  case 'nutri':rr(x-13,y-16,26,30,'#c8a04a',4);rr(x-9,y-12,18,9,'#3a2a1a',2);txt('NUTRI',x,y-5,'#fd8',7,'center');rr(x-6,y+2,12,9,'#222',2);circ(x+8,y-6,2,Math.sin(t*4)>0?'#f44':'#600');
+    if(F.teaBusy&&!F.whale){ctx.fillStyle='#fff';ctx.font='9px monospace';ctx.fillText('THINKING',x,y+20);}break;
+  case 'console':rr(x-13,y-8,26,18,'#2a3a6a',3);rr(x-10,y-5,20,8,'#0af',2);for(let i=0;i<4;i++)circ(x-8+i*5,y+6,2,Math.floor(t*4+i)%2?'#f80':'#333');break;
+  case 'drive':{rr(x-14,y-12,28,24,'#d8b030',5);const a=t*3;ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<40;i++){const r=i*.3,an=a+i*.4;ctx.lineTo(x+Math.cos(an)*r,y+Math.sin(an)*r);}ctx.stroke();ctx.lineWidth=1;
+    if(F.missiles&&!F.whale){ctx.strokeStyle=`rgba(255,60,60,${.5+.5*Math.sin(t*10)})`;ctx.lineWidth=3;ctx.strokeRect(x-17,y-15,34,30);ctx.lineWidth=1;}break;}
+  case 'gen':rr(x-11,y-10,22,20,'#7a5ab0',5);circ(x,y,6+Math.sin(t*5)*2,`hsl(${t*200%360},90%,65%)`);break;
+  case 'sign':ctx.fillStyle='#6a4a2a';ctx.fillRect(x-2,y-2,4,16);rr(x-13,y-14,26,13,'#e8dcb8',2);ctx.fillStyle='#333';ctx.fillRect(x-9,y-10,18,1.5);ctx.fillRect(x-9,y-6,13,1.5);break;
+  case 'ladder':ctx.strokeStyle='#a87a3a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-7,y-14);ctx.lineTo(x-7,y+14);ctx.moveTo(x+7,y-14);ctx.lineTo(x+7,y+14);for(let i=-10;i<14;i+=6){ctx.moveTo(x-7,y+i);ctx.lineTo(x+7,y+i);}ctx.stroke();ctx.lineWidth=1;break;
+  case 'cabinet':rr(x-11,y-15,22,29,'#7a7a6a',2);for(let i=0;i<3;i++){rr(x-9,y-13+i*9,18,7,'#8a8a7a',1);ctx.fillStyle='#333';ctx.fillRect(x-3,y-10+i*9,6,1.5);}break;
+  case 'lav':rr(x-10,y-4,20,16,'#eee',6);rr(x-8,y-16,16,13,'#ddd',3);ell(x,y+2,6,4,'#9cf');break;
+  case 'cage':rr(x-12,y-12,24,22,'rgba(220,220,240,.15)',2);ctx.strokeStyle='#bbb';for(let i=-12;i<=12;i+=4){ctx.beginPath();ctx.moveTo(x+i,y-12);ctx.lineTo(x+i,y+10);ctx.stroke();}drawSprite('mouse',x-4,y+2);break;
+  case 'plant':rr(x-7,y+2,14,11,'#a85a3a',2);for(let i=0;i<6;i++){ell(x-6+i*2.5,y-6+Math.sin(i*2)*3,3,8,'#3a9a4a',(i-2.5)*.35);}break;
+  case 'heartship':{ell(x+40,y+40,80,16,'rgba(0,0,0,.3)');ctx.fillStyle='#f4f8ff';ctx.beginPath();ctx.ellipse(x+40,y+18,78,30,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dde6f4';ctx.beginPath();ctx.ellipse(x+60,y+10,40,18,0,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<5;i++)circ(x+i*18,y+18,4,'#7cf');txt('HEART OF GOLD',x+40,y+44,'#ffcf4a',11,'center');break;}
+  case 'blackship':{ctx.fillStyle='#050505';ctx.beginPath();ctx.moveTo(x-14,y+105);ctx.lineTo(x+60,y+80);ctx.lineTo(x+146,y+40);ctx.lineTo(x+40,y-12);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(255,40,40,.5)';ctx.stroke();
+    txt('(Hotblack Desiato — stunt ship)',x+66,y+122,'#c44',10,'center');break;}
+  case 'planet':{const r=o.r||70;const gr=ctx.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);gr.addColorStop(0,o.c1||'#7cf');gr.addColorStop(1,o.c2||'#13a');circ(x,y,r,gr);
+    ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();ctx.fillStyle=o.land||'rgba(60,170,80,.85)';for(let i=0;i<6;i++){ell(x+Math.cos(i*1.7+t*.1)*r*.5,y+Math.sin(i*2.3)*r*.5,r*.25,r*.15,null,i);ctx.fill();}
+    if(o.scaffold){ctx.strokeStyle='rgba(255,200,80,.6)';for(let i=-r;i<r;i+=12){ctx.beginPath();ctx.moveTo(x+i,y-r);ctx.lineTo(x+i,y+r);ctx.stroke();}}ctx.restore();break;}
+  case 'holo':{const a=.5+.3*Math.sin(t*3);ctx.globalAlpha=a;rr(x-16,y-22,32,40,'#3af',6);rr(x-12,y-18,24,14,'#003',3);txt('42',x,y-7,'#7ff',12,'center');ctx.globalAlpha=1;break;}
+  case 'bath':rr(x-15,y-4,30,16,'#f4f4f4',7);ell(x,y-2,13,4,'#bfe8ff');circ(x-2,y-8,6,'#f1c9a0');ctx.fillStyle='#ddd';ctx.fillRect(x-7,y-15,10,3);circ(x+8,y-4,3,'#ff3');circ(x+10,y-5,1,'#f80');break;
+  case 'hatch':rr(x-12,y-12,24,24,'#222',4);ctx.strokeStyle='#c33';ctx.strokeRect(x-10,y-10,20,20);circ(x,y,3,Math.sin(t*5)>0?'#f33':'#600');break;
+  case 'lift':rr(x-13,y-15,26,30,'#c8a040',3);rr(x-10,y-12,9,24,'#8a6a20',1);rr(x+1,y-12,9,24,'#8a6a20',1);txt('▼',x,y+22,'#fd6',10,'center');break;
+  case 'teleport':circ(x,y,13,`rgba(120,220,255,${.3+.2*Math.sin(t*6)})`);ctx.strokeStyle='#7ff';ctx.beginPath();ctx.arc(x,y,13,0,Math.PI*2);ctx.stroke();break;
+  case 'pod':break;
+  case 'jar':rr(x-8,y-12,16,22,'rgba(180,230,255,.5)',4);circ(x,y,6,'#e8a0a8');rr(x-9,y-14,18,4,'#888',1);break;
+  case 'fire':circ(x,y+6,10,'#3a2a1a');ctx.fillStyle=['#f80','#fd2','#f40'][Math.floor(t*10)%3];ctx.beginPath();ctx.moveTo(x-8,y+8);ctx.quadraticCurveTo(x,y-14+Math.sin(t*9)*4,x+8,y+8);ctx.fill();break;
+  case 'wheel':ctx.strokeStyle='#8a6a3a';ctx.lineWidth=4;ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x-10,y);ctx.lineTo(x+10,y);ctx.moveTo(x,y-10);ctx.lineTo(x,y+10);ctx.stroke();ctx.lineWidth=1;break;
+  case 'cavepaint':break;
+  case 'mark':ctx.strokeStyle=`rgba(255,207,74,${.5+.5*Math.sin(t*5)})`;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-9,y-9);ctx.lineTo(x+9,y+9);ctx.moveTo(x+9,y-9);ctx.lineTo(x-9,y+9);ctx.stroke();ctx.lineWidth=1;break;
+  case 'exit':{const b=Math.sin(t*4)*3;ctx.fillStyle='rgba(127,212,255,.8)';ctx.beginPath();const d=o.dirv||[1,0];ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(d[1],d[0]));ctx.moveTo(-6+b,-8);ctx.lineTo(8+b,0);ctx.lineTo(-6+b,8);ctx.fill();ctx.restore();break;}
+  case 'guide':{const b=Math.sin(t*3)*3;circ(x,y+b,12,'rgba(120,255,120,.15)');rr(x-9,y-11+b,18,22,'#2a4a2a',3);rr(x-7,y-9+b,14,12,'#9f9',2);ctx.fillStyle='#030';ctx.font='bold 5px monospace';ctx.textAlign='center';ctx.fillText("DON'T",x,y-4+b);ctx.fillText('PANIC',x,y+1+b);circ(x,y+7+b,1.5,'#f44');break;}
+  case 'item':drawItem(o.ent.icon||o.ent.id,x,y);break;
+  default:if(EXTRA[spr]){EXTRA[spr](x,y,o);break;}circ(x,y,10,o.col||'#aaa');txt('?',x,y+4,'#000',12,'center');
+  }
+}
+function drawItem(id,x,y){
+  const b=Math.sin(G.time*3+x)*2;y+=b;circ(x,y,13,'rgba(255,230,120,.13)');
+  switch(id){
+  case 'towel':rr(x-10,y-7,20,14,'#e8d23a',2);ctx.fillStyle='#3a7ad8';ctx.fillRect(x-10,y-3,20,2);ctx.fillRect(x-10,y+2,20,2);break;
+  case 'gown':rr(x-8,y-10,16,20,'#8a4f3c',4);ctx.fillStyle='#5a2f1c';ctx.fillRect(x-8,y,16,2);break;
+  case 'teabag':rr(x-6,y-6,12,12,'#d8c8a0',2);ctx.strokeStyle='#ccc';ctx.beginPath();ctx.moveTo(x,y-6);ctx.lineTo(x,y-12);ctx.stroke();rr(x-3,y-15,6,4,'#c33',1);break;
+  case 'satchel':rr(x-10,y-6,20,14,'#7a5a2a',4);rr(x-10,y-6,20,6,'#8a6a3a',3);circ(x,y,2,'#fd6');break;
+  case 'form':rr(x-7,y-10,14,18,'#f4f4e8',1);ctx.fillStyle='#888';for(let i=0;i<4;i++)ctx.fillRect(x-5,y-7+i*4,10,1);rr(x+1,y+3,5,4,'#c33',1);break;
+  case 'milk':rr(x-5,y-8,10,16,'#fff',3);rr(x-3,y-11,6,4,'#4a8ad8',1);break;
+  case 'leaves':for(let i=0;i<3;i++)ell(x-5+i*5,y,3,7,'#4a7a2a',i-1);break;
+  case 'shades':ctx.fillStyle='#111';rr(x-11,y-4,9,7,'#111',2);rr(x+2,y-4,9,7,'#111',2);ctx.fillRect(x-2,y-2,4,2);break;
+  case 'award':rr(x-6,y-2,12,10,'#a87a2a',1);circ(x,y-6,7,'#fd4');txt('N',x,y-3,'#7a5a10',8,'center');break;
+  case 'key':circ(x-4,y,5,'#fd4');circ(x-4,y,2,'#000');ctx.fillStyle='#fd4';ctx.fillRect(x,y-1.5,10,3);ctx.fillRect(x+6,y,2,4);break;
+  case 'plans':rr(x-9,y-6,18,12,'#cfe0f8',1);ctx.strokeStyle='#36a';ctx.strokeRect(x-6,y-3,12,6);break;
+  case 'stone':ell(x,y,9,5,'#9a948a');ell(x-2,y-1,5,2,'#b8b2a8');break;
+  case 'peanuts':rr(x-7,y-8,14,16,'#c33',2);ell(x,y,4,3,'#d8a860');break;
+  case 'fishbowl':circ(x,y,9,'rgba(150,220,255,.6)');ell(x,y,4,2,'#fd4');break;
+  default:circ(x,y,7,'#fd6');
+  }
+}
+
+/* ---------------- dialog system ---------------- */
+const SPK={Narrator:'#bbb',Arthur:'#d8b48a',Ford:'#ff9a5a','Mr Prosser':'#f0c020',Zaphod:'#ffb84a',Trillian:'#f4f4f4',Marvin:'#b8c8d8',
+ Eddie:'#7ff',Guide:'#7fff7f',Barman:'#ddd',Jeltz:'#9ad860',Vogon:'#9ad860',Slartibartfast:'#ccd','Nutri-Matic':'#fd8',Benjy:'#f8c8d8',Frankie:'#f8c8d8',
+ Max:'#f8f',Cow:'#f4e8d8',Captain:'#9cf','Number One':'#9cf',System:'#ffcf4a','Deep Thought':'#7cf'};
+let DQ=[],collect=null,cur=null,typed=0,sel=0,visChoices=[];
+function pushD(d){if(collect){collect.push(d);return;}DQ.push(d);if(G.mode!=='dialog'&&G.mode!=='script')nextD();}
+function say(who,text,then){pushD({who,text,then});}
+function ask(who,text,choices){pushD({who,text,choices});}
+function act(fn){pushD({fn});}
+function wait(fn){pushD({wait:fn});}
+function pause(sec){wait(done=>setTimeout(done,sec*1000));}
+function runCollect(fn){const prev=collect;collect=[];try{fn();}catch(e){console.error(e);}const c=collect;collect=prev;if(prev)prev.push(...c);else DQ.unshift(...c);}
+function hideBox(){$('dialog').style.display='none';}
+function nextD(){
+  cur=DQ.shift();
+  if(!cur){hideBox();if(G.mode==='dialog'||G.mode==='script')G.mode='play';return;}
+  if(cur.fn){if(G.mode!=='mini'&&G.mode!=='card'&&G.mode!=='end')G.mode='dialog';hideBox();const m0=G.mode;runCollect(cur.fn);
+    if(G.mode==='dialog'||G.mode==='play'){G.mode='dialog';nextD();}return;}
+  if(cur.wait){G.mode='script';hideBox();let fired=false;cur.wait(()=>{if(fired)return;fired=true;nextD();});return;}
+  G.mode='dialog';typed=0;sel=0;
+  visChoices=cur.choices?cur.choices.filter(c=>!c.if||c.if()):null;
+  const d=$('dialog');d.style.display='block';
+  $('dwho').textContent=cur.who||'';$('dwho').style.color=SPK[cur.who]||'#ffcf4a';
+  $('dtext').textContent='';$('dchoices').innerHTML='';$('dmore').style.display='none';
+  d.style.borderColor=cur.who==='Guide'?'#7fff7f':cur.who==='System'?'#ffcf4a':'#7fd4ff';
+  sfx('blip');
+}
+function showChoices(){
+  const box=$('dchoices');box.innerHTML='';
+  if(!visChoices){$('dmore').style.display='block';return;}
+  visChoices.forEach((c,i)=>{const el=document.createElement('div');el.className='ch'+(i===sel?' sel':'');el.textContent=(i+1)+'. '+c.t;
+    el.onclick=ev=>{ev.stopPropagation();choose(i);};box.appendChild(el);});
+}
+function advance(){
+  if(!cur)return;
+  if(typed<cur.text.length){typed=cur.text.length;$('dtext').textContent=cur.text;showChoices();return;}
+  if(visChoices)return;
+  const then=cur.then;if(then)runCollect(then);nextD();
+}
+function choose(i){if(!visChoices)return;const c=visChoices[i];if(!c)return;sfx('blip');if(c.f)runCollect(c.f);nextD();}
+$('dialog').addEventListener('click',()=>{if(G.mode==='dialog')advance();});
+
+/* ---------------- quests, items, guide ---------------- */
+function notify(msg,col){const el=document.createElement('div');el.className='toast';el.textContent=msg;if(col){el.style.borderColor=col;el.style.color=col;}
+  $('toasts').appendChild(el);setTimeout(()=>el.remove(),4600);while($('toasts').children.length>5)$('toasts').firstChild.remove();}
+function quest(id,title,desc,side){if(G.quests[id])return;G.quests[id]={title,desc,side:!!side,done:false,ch:G.chapter};G.qorder.push(id);
+  notify((side?'Side quest: ':'New quest: ')+title,side?'#e8a0ff':'#7fd4ff');sfx('pick');updHud();}
+function done(id){const q=G.quests[id];if(!q||q.done)return;q.done=true;notify('✔ '+q.title,'#8f8');sfx('quest');updHud();}
+function qdone(id){return G.quests[id]&&G.quests[id].done;}
+function qhas(id){return !!G.quests[id];}
+function give(id,silent){if(!G.inv.includes(id))G.inv.push(id);if(!silent)notify('Got: '+(ITEMS[id]?ITEMS[id].name:id));sfx('pick');updHud();}
+function has(id){return G.inv.includes(id);}
+function take(id){G.inv=G.inv.filter(x=>x!==id);updHud();}
+function unlock(gid){if(G.guide[gid]||!GUIDE[gid])return;G.guide[gid]=1;notify('Guide entry unlocked: '+GUIDE[gid][0]+'  (G to read)','#7fff7f');sfx('pick');updHud();}
+function improb(n){G.improb+=n;updHud();}
+function updHud(){
+  $('chap').textContent=G.chapter||"Don't Panic";
+  let obj='';for(let i=G.qorder.length-1;i>=0;i--){const q=G.quests[G.qorder[i]];if(!q.done&&!q.side){obj=q.title;break;}}
+  $('obj').textContent=obj?'▶ '+obj:'';
+  const gn=Object.keys(G.guide).length,gt=Object.keys(GUIDE).length;
+  $('stats').innerHTML=`Towel: <b>${has('towel')?(G.towelHead?'ON HEAD':'✓'):'✗'}</b> · Guide: <b>${gn}/${gt}</b> · Improbability: <b>2^${G.improb}:1</b>`;
+}
+
+/* ---------------- panels ---------------- */
+function openPanel(k){
+  const p=$('panel');let h='<button class="close" onclick="closePanel()">close [Esc]</button>';
+  if(k==='q'){h+='<h2>Quest Log</h2>';const list=G.qorder.map(id=>[id,G.quests[id]]);
+    const sec=(title,arr)=>{if(!arr.length)return;h+=`<h3>${title}</h3>`;arr.forEach(([id,q])=>{h+=`<div class="q${q.side?' side':''}${q.done?' done':''}"><b>${q.title}</b><br><small>${q.desc||''}</small></div>`;});};
+    sec('Main story',list.filter(x=>!x[1].side&&!x[1].done).reverse());sec('Side quests',list.filter(x=>x[1].side&&!x[1].done).reverse());sec('Completed',list.filter(x=>x[1].done).reverse());
+    if(!list.length)h+='<p>Nothing yet. Life is like that sometimes.</p>';}
+  else if(k==='i'){h+='<h2>Inventory</h2>';if(!G.inv.length)h+='<p>Your pockets contain fluff and a sense of loss.</p>';
+    G.inv.forEach(id=>{const it=ITEMS[id]||{name:id,desc:''};h+=`<div class="q"><b>${it.name}</b>${it.use?`<button onclick="useItem('${id}')">Use</button>`:''}<br><small>${it.desc}</small></div>`;});}
+  else if(k==='g'){const ids=Object.keys(GUIDE);h+=`<h2>The Guide — ${Object.keys(G.guide).length}/${ids.length} entries</h2><p style="color:#7fff7f;font-size:22px;margin:4px 0 12px">DON'T PANIC</p>`;
+    ids.forEach(id=>{if(G.guide[id])h+=`<div class="g"><b>${GUIDE[id][0]}</b><br>${GUIDE[id][1]}</div>`;else h+=`<div class="g" style="opacity:.35"><b>??? </b> — entry not yet found</div>`;});}
+  else{h+=`<h2>How to hitchhike</h2>
+   <div class="q"><b>Move</b> WASD / arrow keys. <b>Interact / talk / pick up</b> E or Space (also reaches across counters).</div>
+   <div class="q"><b>Q</b> quest log · <b>I</b> inventory (use items there) · <b>G</b> the Guide · <b>T</b> put your towel on your head · <b>H</b> this help.</div>
+   <div class="q"><b>Stealth</b> Guards have yellow vision cones. Stay out of them, or keep walls and pillars between you. <b>Bushes and dark patches</b> hide you unless someone is right next to you. A <b>?</b> means they're suspicious, a <b>!</b> means trouble. If you're caught you go back to the last checkpoint.</div>
+   <div class="q"><b>Creaky floorboards</b> (brown planks) make a noise that alerts anyone nearby.</div>
+   <div class="q"><b>The towel</b> some creatures are so stupid that if you can't see them, they assume they can't see you.</div>
+   <div class="q"><b>Guide entries</b> glowing green books are hidden everywhere. Collect them all for no tangible reward whatsoever.</div>
+   <div class="q"><b>Progress</b> saves automatically each time you enter a new area.</div>`;}
+  p.innerHTML=h;p.style.display='block';G.panel=k;G.prevMode=G.mode;G.mode='panel';
+}
+function closePanel(){$('panel').style.display='none';if(G.mode==='panel')G.mode='play';}
+function useItem(id){const it=ITEMS[id];closePanel();if(it&&it.use)it.use();}
+function toggleTowel(){if(!has('towel')){notify("You don't have a towel. Every hitchhiker knows that's a bad sign.");return;}
+  G.towelHead=!G.towelHead;notify(G.towelHead?'You wrap the towel round your head. You look ridiculous, and you can see nothing above knee height.':'You take the towel off your head.');updHud();}
+
+/* ---------------- map handling ---------------- */
+function buildGrid(m){const g=grid(m.w,m.h,m.fill||'#');m.build(g);return g;}
+function refreshTiles(){const m=G.map;m.g=buildGrid(m);}
+function vis(e){return !e.cond||e.cond();}
+function entAt(x,y,inter){const m=G.map;return m.ents.find(e=>{if(!vis(e))return false;const w=e.aw||1,h=e.ah||1;
+  if(x<e.x||x>=e.x+w||y<e.y||y>=e.y+h)return false;return !inter||e.talk||e.kind==='item'||e.kind==='guide';});}
+function solidEnt(x,y){const m=G.map;return m.ents.some(e=>{if(!vis(e))return false;const s=e.solid!==undefined?e.solid:(e.kind==='npc'||e.kind==='obj');if(!s)return false;
+  const w=e.aw||1,h=e.ah||1;return x>=e.x&&x<e.x+w&&y>=e.y&&y<e.y+h;});}
+function passable(x,y){const c=tileAt(x,y);if(TD[c]&&TD[c].s)return false;return !solidEnt(x,y);}
+function ent(id){return G.map.ents.find(e=>e.id===id);}
+function loadMap(id,x,y){
+  const def=MAPS[id];const m=def();m.id=id;G.mapId=id;G.map=m;m.ents=m.ents||[];m.enemies=m.enemies||[];m.triggers=m.triggers||[];
+  m.g=buildGrid(m);
+  m.ents.forEach(e=>{e.t=1;e.ox=e.x;e.oy=e.y;e.dir=e.dir||[0,1];if(e.kind==='item'||e.kind==='guide'){const key=e.key||(e.kind==='guide'?'g_'+e.gid:e.id);e.key=key;const c0=e.cond;e.cond=()=>(!c0||c0())&&!F['got_'+key];}});
+  m.enemies.forEach(e=>{e.sx=e.x;e.sy=e.y;e.range=e.range||5;e.fov=e.fov||70;e.speed=e.speed||1.5;e.ang0=e.ang!==undefined?e.ang:0;});
+  resetEnemies();
+  const P=G.p;P.x=P.ox=x!==undefined?x:m.start[0];P.y=P.oy=y!==undefined?y:m.start[1];P.t=1;P.lying=false;
+  G.cp=[P.x,P.y];G.trail=[];G.timer=null;G.towelHead=false;G.danger=0;G.lock=false;
+  if(m.chapter)G.chapter=m.chapter;updHud();
+  save();
+  if(m.onEnter)m.onEnter();
+}
+function resetEnemies(){G.map.enemies.forEach(e=>{e.fx=e.sx;e.fy=e.sy;e.pi=e.path&&e.path.length>1?1:0;e.sus=0;e.wait=0;e.ang=e.ang0;e.alert=0;});}
+function setCP(x,y){if(G.cp[0]!==x||G.cp[1]!==y){G.cp=[x,y];notify('Checkpoint','#7fd4ff');}}
+function expand(sx,sy,pts){const out=[];let x=sx,y=sy;for(const [tx,ty] of pts){while(x!==tx){x+=Math.sign(tx-x);out.push([x,y]);}while(y!==ty){y+=Math.sign(ty-y);out.push([x,y]);}}return out;}
+function walk(e,pts,doneCb){e.route=expand(e.x,e.y,pts);e.onArrive=doneCb||null;if(!e.route.length){e.route=null;doneCb&&doneCb();}}
+function teleport(x,y){const P=G.p;P.x=P.ox=x;P.y=P.oy=y;P.t=1;G.trail=[];}
+function card(title,sub,then){G.mode='card';G.card={title,sub,then};G.cardT=0;hideBox();sfx('warp');}
+function flash(c){G.flash=1;G.flashC=c||'#fff';}
+
+/* ---------------- save / load ---------------- */
+function save(){try{localStorage.setItem('dontpanic_save',JSON.stringify({map:G.mapId,x:G.p.x,y:G.p.y,flags:F,inv:G.inv,quests:G.quests,qorder:G.qorder,guide:G.guide,improb:G.improb,chapter:G.chapter,caughtN:G.caughtN,followers:G.followers}));}catch(e){}}
+function hasSave(){try{return !!localStorage.getItem('dontpanic_save');}catch(e){return false;}}
+function loadSave(){try{const s=JSON.parse(localStorage.getItem('dontpanic_save'));F=G.flags=s.flags||{};G.inv=s.inv||[];G.quests=s.quests||{};G.qorder=s.qorder||[];
+  G.guide=s.guide||{};G.improb=s.improb||0;G.chapter=s.chapter||'';G.caughtN=s.caughtN||0;G.followers=s.followers||[];G.mode='play';loadMap(s.map,s.x,s.y);return true;}catch(e){console.error(e);return false;}}
+
+/* ---------------- input ---------------- */
+const keys={};
+const DIRK={arrowup:[0,-1],w:[0,-1],arrowdown:[0,1],s:[0,1],arrowleft:[-1,0],a:[-1,0],arrowright:[1,0],d:[1,0]};
+let keyOrder=[];
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
+  if(DIRK[k]&&!keys[k])keyOrder.push(k);keys[k]=true;if(!e.repeat)onKey(k);});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();keys[k]=false;keyOrder=keyOrder.filter(x=>x!==k);if(MINI&&MINI.keyup)MINI.keyup(k);});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;keyOrder=[];});
+function inputDir(){for(let i=keyOrder.length-1;i>=0;i--)if(keys[keyOrder[i]])return DIRK[keyOrder[i]];return null;}
+function onKey(k){
+  if(G.mode==='title'){titleKey(k);return;}
+  if(G.mode==='card'){if(G.cardT>.8){const t=G.card.then;G.card=null;G.mode='play';t&&t();}return;}
+  if(G.mode==='end'){if((k==='enter'||k===' ')&&G.endT>4){G.mode='title';}return;}
+  if(G.mode==='mini'){MINI&&MINI.key&&MINI.key(k);return;}
+  if(G.mode==='dialog'){
+    if(visChoices&&cur&&typed>=cur.text.length){const n=visChoices.length;
+      if(k>='1'&&k<='9')choose(+k-1);
+      else if(k==='arrowup'||k==='w'){sel=(sel+n-1)%n;showChoices();}
+      else if(k==='arrowdown'||k==='s'){sel=(sel+1)%n;showChoices();}
+      else if(k==='enter'||k===' '||k==='e')choose(sel);}
+    else if(k==='e'||k===' '||k==='enter')advance();
+    return;}
+  if(G.mode==='panel'){if(k==='escape'||k===G.panel)closePanel();else if('qigh'.includes(k)&&k.length===1)openPanel(k);return;}
+  if(G.mode!=='play')return;
+  if(k==='e'||k===' '||k==='enter')interact();
+  else if(k==='q'||k==='i'||k==='g'||k==='h')openPanel(k);
+  else if(k==='t')toggleTowel();
+  else if(k==='escape')openPanel('h');
+}
+// touch
+if('ontouchstart' in window||navigator.maxTouchPoints>0){$('touch').style.display='flex';}
+document.querySelectorAll('#touch [data-k]').forEach(b=>{const k=b.dataset.k;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();if(!keys[k])keyOrder.push(k);keys[k]=true;if(G.mode!=='play')onKey(k);});
+  const up=()=>{keys[k]=false;keyOrder=keyOrder.filter(x=>x!==k);};b.addEventListener('pointerup',up);b.addEventListener('pointerleave',up);});
+document.querySelectorAll('#touch [data-p]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();const k=b.dataset.p;keys[k]=true;onKey(k);setTimeout(()=>keys[k]=false,150);}));
+cv.addEventListener('pointerdown',()=>{if(G.mode==='title')titleKey('enter');else if(G.mode==='card'||G.mode==='end')onKey('enter');else if(G.mode==='mini')MINI&&MINI.key&&MINI.key('click');});
+
+/* ---------------- interaction ---------------- */
+function interact(){
+  const P=G.p;if(P.t<1||G.lock)return;
+  const fx=P.x+P.dir[0],fy=P.y+P.dir[1];
+  let e=entAt(fx,fy,true);
+  if(!e&&'Co'.includes(tileAt(fx,fy)))e=entAt(fx+P.dir[0],fy+P.dir[1],true);
+  if(!e)e=entAt(P.x,P.y,true);
+  if(e){if(e.kind==='item'||e.kind==='guide'){pickup(e);return;}
+    if(e.kind==='npc'&&e.face!==false&&!e.route)e.dir=[-P.dir[0],-P.dir[1]];
+    e.talk(e);return;}
+  const tr=G.map.triggers.find(t=>t.use&&t.x===fx&&t.y===fy&&(!t.cond||t.cond()));if(tr){tr.use();return;}
+  const fl=FLAVOR[tileAt(fx,fy)];if(fl)notify(fl,'#bbb');
+}
+function pickup(e){
+  F['got_'+e.key]=1;
+  if(e.kind==='guide')unlock(e.gid);else{give(e.id);if(e.flavor)notify(e.flavor,'#ddd');}
+  if(e.onPick)e.onPick();
+}
+function arrive(){
+  const P=G.p,m=G.map;
+  const here=m.ents.filter(e=>vis(e)&&e.x===P.x&&e.y===P.y&&(e.kind==='item'||e.kind==='guide'));here.forEach(pickup);
+  const c=tileAt(P.x,P.y);
+  if(c==='+'&&m.happyDoors&&Math.random()<.35)notify(['Door: "Glad to be of service!"','Door: *sigh of deep satisfaction*','Door: "Ahhh. Thank you for using me."'][Math.random()*3|0],'#f0d050');
+  else if(c==='+')sfx('door');
+  if(TD[c]&&TD[c].noise){sfx('creak');notify('*CREEEAK*','#c96');m.enemies.forEach(e=>{if(e.cond&&!e.cond())return;const d=Math.hypot(e.fx-P.x,e.fy-P.y);if(d<7){e.sus=Math.min(.92,e.sus+.6);e.ang=Math.atan2(P.y-e.fy,P.x-e.fx);}});}
+  for(const t of m.triggers){if(t.use)continue;const w=t.w||1,h=t.h||1;if(P.x>=t.x&&P.x<t.x+w&&P.y>=t.y&&P.y<t.y+h&&(!t.cond||t.cond())){
+    if(t.cp)setCP(t.cp[0],t.cp[1]);if(t.go){loadMap(t.go,t.to[0],t.to[1]);return;}if(t.fn){t.fn();if(G.mode!=='play')return;}}}
+}
+
+/* ---------------- stealth ---------------- */
+function angDiff(a,b){let d=a-b;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d;}
+function turn(a,target,rate){const d=angDiff(target,a);return a+clamp(d,-rate,rate);}
+function los(x0,y0,x1,y1){const d=Math.hypot(x1-x0,y1-y0),n=Math.ceil(d/.15);for(let i=1;i<n;i++){const x=x0+(x1-x0)*i/n,y=y0+(y1-y0)*i/n;const c=tileAt(Math.floor(x),Math.floor(y));if(TD[c]&&TD[c].o)return false;}return true;}
+function playerPos(){const P=G.p,t=ease(P.t);return [P.ox+(P.x-P.ox)*t,P.oy+(P.y-P.oy)*t];}
+function updEnemies(dt){
+  const m=G.map,[prx,pry]=playerPos(),pcx=prx+.5,pcy=pry+.5;let maxS=0;
+  for(const e of m.enemies){
+    if(e.cond&&!e.cond())continue;
+    const ex=e.fx+.5,ey=e.fy+.5,dx=pcx-ex,dy=pcy-ey,d=Math.hypot(dx,dy);
+    const blind=e.blind&&G.towelHead;
+    let see=false;
+    if(d<.85&&!blind)e.sus=1;
+    else if(d<=e.range&&!blind){const a=Math.atan2(dy,dx);
+      if(Math.abs(angDiff(a,e.ang))<=e.fov/2*Math.PI/180&&los(ex,ey,pcx,pcy)){const hid=TD[tileAt(G.p.x,G.p.y)].hide&&d>1.6;if(!hid)see=true;}}
+    const mult=(e.passable&&has('pass'))?.45:1;
+    if(see)e.sus=Math.min(1,e.sus+dt*mult*(.8+1.8*(1-d/e.range)));
+    else e.sus=Math.max(0,e.sus-dt*.3);
+    if(e.sus>.22&&!blind){e.ang=turn(e.ang,Math.atan2(dy,dx),dt*5);}
+    else if(e.path&&e.path.length>1){
+      if(e.wait>0){e.wait-=dt;e.ang+=Math.sin(G.time*2.5)*dt*1.2;}
+      else{const [tx,ty]=e.path[e.pi],vx=tx-e.fx,vy=ty-e.fy,dist=Math.hypot(vx,vy);
+        if(dist<.04){e.fx=tx;e.fy=ty;e.pi=(e.pi+1)%e.path.length;e.wait=e.pause!==undefined?e.pause:.7;}
+        else{const st=Math.min(dist,e.speed*dt);e.fx+=vx/dist*st;e.fy+=vy/dist*st;e.ang=turn(e.ang,Math.atan2(vy,vx),dt*7);}}}
+    else if(e.sweep){e.ang=e.ang0+Math.sin(G.time*(e.sweepSpd||.9))*e.sweep;}
+    if(e.sus>=1){caught(e);return;}
+    maxS=Math.max(maxS,e.sus);
+  }
+  G.danger=maxS;
+}
+function caught(e){
+  if(G.mode!=='play')return;sfx('caught');G.caughtN++;G.mode='caught';G.caughtT=2.6;
+  G.caughtMsg=typeof e.catchLine==='function'?e.catchLine():(e.catchLine||'You have been spotted!');G.shake=.4;
+  G.caughtFn=e.onCatch||G.map.onCaught||null;
+}
+function endCaught(){resetEnemies();G.towelHead=false;updHud();
+  if(G.caughtFn){const f=G.caughtFn;G.caughtFn=null;G.mode='play';f();return;}
+  teleport(G.cp[0],G.cp[1]);G.mode='play';}
+
+/* ---------------- update ---------------- */
+function update(dt){
+  G.time+=dt;if(G.flash>0)G.flash=Math.max(0,G.flash-dt*1.5);if(G.shake>0)G.shake=Math.max(0,G.shake-dt);
+  if(G.mode==='title'||G.mode==='end'){G.endT+=dt;return;}
+  if(G.mode==='card'){G.cardT+=dt;return;}
+  if(G.mode==='mini'){MINI&&MINI.update(dt);return;}
+  if(G.mode==='caught'){G.caughtT-=dt;if(G.caughtT<=0)endCaught();return;}
+  if(!G.map)return;
+  if(G.mode==='dialog'&&cur&&cur.text&&typed<cur.text.length){typed=Math.min(cur.text.length,typed+dt*75);$('dtext').textContent=cur.text.slice(0,Math.floor(typed));if(typed>=cur.text.length)showChoices();}
+  updEnts(dt);
+  G.parts=G.parts.filter(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=(p.g||0)*dt;p.life-=dt;return p.life>0;});
+  const P=G.p;
+  if(P.t<1){P.t=Math.min(1,P.t+dt/(G.towelHead?.22:P.spd));if(P.t>=1&&(G.mode==='play'||G.mode==='script')){arrive();}}
+  if(G.mode!=='play')return;
+  if(G.peng>0){G.peng-=dt;if(G.peng<=0)notify('You are no longer a penguin. Probably for the best.');}
+  if(G.timer){G.timer.t-=dt;if(G.timer.t<=0){const f=G.timer.fail;G.timer=null;f&&f();return;}}
+  if(G.map.update)G.map.update(dt);
+  if(G.mode!=='play')return;
+  updEnemies(dt);if(G.mode!=='play')return;
+  if(P.t>=1&&!G.lock&&!P.lying){const d=inputDir();if(d){P.dir=d;const nx=P.x+d[0],ny=P.y+d[1];
+    if(passable(nx,ny)){G.trail.unshift([P.x,P.y]);if(G.trail.length>8)G.trail.length=8;P.ox=P.x;P.oy=P.y;P.x=nx;P.y=ny;P.t=0;}}}
+}
+function updEnts(dt){
+  for(const e of G.map.ents){if(!vis(e))continue;
+    if(e.t<1){e.t=Math.min(1,e.t+dt/(e.spd||.2));continue;}
+    if(e.route&&e.route.length){const [nx,ny]=e.route.shift();e.dir=[Math.sign(nx-e.x),Math.sign(ny-e.y)];e.ox=e.x;e.oy=e.y;e.x=nx;e.y=ny;e.t=0;continue;}
+    if(e.route&&!e.route.length){e.route=null;const cb=e.onArrive;e.onArrive=null;cb&&cb();continue;}
+    if(e.wander&&G.mode==='play'){if(e.hx===undefined){e.hx=e.x;e.hy=e.y;}e.wt=(e.wt===undefined?Math.random()*3:e.wt)-dt;
+      if(e.wt<=0){e.wt=1.5+Math.random()*3;const d=[[1,0],[-1,0],[0,1],[0,-1]][Math.random()*4|0],nx=e.x+d[0],ny=e.y+d[1];
+        if(Math.abs(nx-e.hx)<=e.wander&&Math.abs(ny-e.hy)<=e.wander&&passable(nx,ny)&&!(nx===G.p.x&&ny===G.p.y)&&!(nx===G.p.ox&&ny===G.p.oy)){e.ox=e.x;e.oy=e.y;e.x=nx;e.y=ny;e.t=0;e.dir=d;}}}
+  }
+}
+function burst(x,y,n,cols,spd){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=(spd||80)*(.4+Math.random());G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-40,g:120,life:1+Math.random(),c:cols[i%cols.length]});}}
+
+/* ---------------- render ---------------- */
+function render(){
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
+  if(G.mode==='title'){drawTitle();return;}
+  if(G.mode==='card'){drawCard();return;}
+  if(G.mode==='end'){drawEnd();return;}
+  if(!G.map){ctx.fillStyle='#000';ctx.fillRect(0,0,cv.width,cv.height);return;}
+  if(G.shake>0)ctx.setTransform(1,0,0,1,(Math.random()-.5)*12*G.shake,(Math.random()-.5)*12*G.shake);
+  drawWorld();
+  ctx.setTransform(1,0,0,1,0,0);
+  if(G.mode==='mini'&&MINI)MINI.draw();
+  if(G.mode==='caught'){ctx.fillStyle='rgba(120,0,0,.55)';ctx.fillRect(0,0,cv.width,cv.height);txt('CAUGHT!',cv.width/2,cv.height/2-40,'#fff',48,'center','Impact,sans-serif');
+    wrapText(G.caughtMsg,cv.width/2,cv.height/2+10,700,22,'#fdd',17,'center');}
+  if(G.flash>0){ctx.globalAlpha=G.flash;ctx.fillStyle=G.flashC;ctx.fillRect(0,0,cv.width,cv.height);ctx.globalAlpha=1;}
+}
+function drawWorld(){
+  const m=G.map,P=G.p,[prx,pry]=playerPos();
+  let cx=prx*TS+16-cv.width/2,cy=pry*TS+16-cv.height/2;const mw=m.w*TS,mh=m.h*TS;
+  cx=mw<=cv.width?(mw-cv.width)/2:clamp(cx,0,mw-cv.width);cy=mh<=cv.height?(mh-cv.height)/2:clamp(cy,0,mh-cv.height);
+  cx=Math.round(cx);cy=Math.round(cy);G.cam=[cx,cy];
+  ctx.fillStyle=m.theme.bg||'#000';ctx.fillRect(0,0,cv.width,cv.height);
+  const x0=Math.max(0,Math.floor(cx/TS)),y0=Math.max(0,Math.floor(cy/TS)),x1=Math.min(m.w-1,x0+VW+1),y1=Math.min(m.h-1,y0+VH+1);
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)drawTile(m.g[y][x],x,y,x*TS-cx,y*TS-cy,m.theme);
+  if(m.decor)m.decor(cx,cy);
+  // vision cones
+  for(const e of m.enemies){if(e.cond&&!e.cond())continue;drawCone(e,cx,cy);}
+  // gather drawables
+  const list=[];
+  for(const e of m.ents){if(!vis(e)||e.spr==='none')continue;const t=ease(e.t);const ex=e.ox+(e.x-e.ox)*t,ey=e.oy+(e.y-e.oy)*t;list.push({y:ey+(e.zb||0),f:()=>{
+      const X=ex*TS-cx+16,Y=ey*TS-cy+16;const spr=e.kind==='item'?'item':e.kind==='guide'?'guide':e.spr;
+      drawSprite(spr,X,Y,{dir:e.dir,moving:e.t<1,ent:e,lying:e.lying&&e.lying(),r:e.r,c1:e.c1,c2:e.c2,land:e.land,scaffold:e.scaffold,dirv:e.dirv});
+      if(e.name&&e.kind==='npc'){const d=Math.hypot(e.x-P.x,e.y-P.y);if(d<3.5){txt(e.name,X,Y-26,'rgba(0,0,0,.7)',11,'center');txt(e.name,X-1,Y-27,'#fff',11,'center');}}
+      if(e.alertMark&&e.alertMark()){const b=Math.sin(G.time*6)*2;txt('!',X,Y-30+b,'#ffcf4a',18,'center','Impact,sans-serif');}
+    }});}
+  for(const e of m.enemies){if(e.cond&&!e.cond())continue;list.push({y:e.fy,f:()=>{const X=e.fx*TS-cx+16,Y=e.fy*TS-cy+16;
+      drawSprite(e.spr,X,Y,{dir:[Math.round(Math.cos(e.ang)),Math.round(Math.sin(e.ang))],moving:e.wait<=0&&e.sus<.22});
+      if(e.sus>.05){txt(e.sus>.65?'!':'?',X,Y-30,e.sus>.65?'#f33':'#ffcf4a',20,'center','Impact,sans-serif');
+        rr(X-14,Y-24,28,4,'rgba(0,0,0,.6)',1);rr(X-14,Y-24,28*e.sus,4,e.sus>.65?'#f33':'#ffcf4a',1);}
+      if(e.label){txt(e.label,X,Y+26,'rgba(255,255,255,.6)',9,'center');}}});}
+  G.followers.forEach((fid,i)=>{const a=G.trail[i]||[P.x-P.dir[0],P.y-P.dir[1]],b=G.trail[i+1]||a;const t=ease(P.t);
+    const fx=b[0]+(a[0]-b[0])*t,fy=b[1]+(a[1]-b[1])*t;list.push({y:fy,f:()=>drawSprite(fid,fx*TS-cx+16,fy*TS-cy+16,{dir:[Math.sign(a[0]-b[0]),Math.sign(a[1]-b[1])||1],moving:P.t<1})});});
+  list.push({y:pry,f:()=>{const X=prx*TS-cx+16,Y=pry*TS-cy+16;const hid=TD[tileAt(P.x,P.y)].hide;if(hid)ctx.globalAlpha=.55;
+    drawSprite(G.peng>0?'penguin':'arthur',X,Y,{dir:P.dir,moving:P.t<1,lying:P.lying,towel:G.towelHead,shades:G.shades});ctx.globalAlpha=1;}});
+  list.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
+  // particles
+  for(const p of G.parts){ctx.globalAlpha=Math.min(1,p.life);ctx.fillStyle=p.c;ctx.fillRect(p.x-cx-2,p.y-cy-2,4,4);}ctx.globalAlpha=1;
+  if(m.over)m.over(cx,cy);
+  // darkness
+  if(m.dark){const X=prx*TS-cx+16,Y=pry*TS-cy+16,r=m.darkR||130;const gr=ctx.createRadialGradient(X,Y,r*.25,X,Y,r);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,'+(m.darkA||.96)+')');
+    ctx.fillStyle=gr;ctx.fillRect(0,0,cv.width,cv.height);for(const e of m.enemies){if(e.cond&&!e.cond())continue;drawCone(e,cx,cy);}}
+  if(m.tint){ctx.fillStyle=m.tint;ctx.fillRect(0,0,cv.width,cv.height);}
+  // interaction prompt
+  if(G.mode==='play'&&P.t>=1){const fx=P.x+P.dir[0],fy=P.y+P.dir[1];let e=entAt(fx,fy,true);if(!e&&'Co'.includes(tileAt(fx,fy)))e=entAt(fx+P.dir[0],fy+P.dir[1],true);
+    if(e){const X=(e.x+(e.aw||1)/2)*TS-cx,Y=e.y*TS-cy-12;const label=e.kind==='item'?'Take':e.kind==='guide'?'Read':(e.verb||(e.kind==='npc'?'Talk':'Use'));
+      const s='[E] '+label+(e.name&&e.kind!=='npc'?' '+e.name:'');ctx.font='12px monospace';const w=ctx.measureText(s).width+10;rr(X-w/2,Y-14,w,17,'rgba(0,0,0,.75)',4);txt(s,X,Y-2,'#ffcf4a',12,'center');}}
+  // stealth hud
+  if(m.enemies.length){const s=G.danger;rr(10,10,170,22,'rgba(0,0,0,.6)',5);txt(s>.65?'ALERT':s>.05?'SUSPICIOUS':'HIDDEN',18,26,s>.65?'#f55':s>.05?'#ffcf4a':'#8f8',12);
+    rr(100,16,72,10,'#222',3);rr(100,16,72*s,10,s>.65?'#f33':'#ffcf4a',3);
+    if(TD[tileAt(P.x,P.y)].hide){txt('(in cover)',190,26,'#9cf',12);}}
+  if(G.timer){const t=Math.ceil(G.timer.t);rr(cv.width/2-150,8,300,40,'rgba(80,0,0,.8)',6);txt(G.timer.label+': '+t,cv.width/2,35,t<=10&&Math.sin(G.time*10)>0?'#fff':'#f88',20,'center');}
+  if(G.shades&&G.danger>.3){const a=Math.min(1,(G.danger-.3)*3);ctx.fillStyle='rgba(0,0,0,'+a+')';ctx.fillRect(0,0,cv.width,cv.height);
+    if(a>.6)wrapText('Your Peril-Sensitive Sunglasses have gone completely black. You can no longer see the danger, and so feel quite relaxed about it.',cv.width/2,cv.height/2,600,22,'#ffcf4a',16,'center');}
+}
+function drawCone(e,cx,cy){
+  const ex=e.fx+.5,ey=e.fy+.5,half=e.fov/2*Math.PI/180,n=22;ctx.beginPath();ctx.moveTo(ex*TS-cx,ey*TS-cy);
+  for(let i=0;i<=n;i++){const a=e.ang-half+half*2*i/n;let r=0;const step=.2;while(r<e.range){r+=step;const x=ex+Math.cos(a)*r,y=ey+Math.sin(a)*r;const c=tileAt(Math.floor(x),Math.floor(y));if(TD[c]&&TD[c].o)break;}
+    ctx.lineTo((ex+Math.cos(a)*r)*TS-cx,(ey+Math.sin(a)*r)*TS-cy);}
+  ctx.closePath();const s=e.sus;ctx.fillStyle=e.blind&&G.towelHead?'rgba(150,150,255,.08)':s>.65?'rgba(255,50,50,.3)':s>.05?'rgba(255,170,40,.25)':'rgba(255,240,120,.16)';ctx.fill();
+}
+let STARS=Array.from({length:180},()=>({x:Math.random()*960,y:Math.random()*576,z:Math.random()*2+.3}));
+function starfield(dt){ctx.fillStyle='#02030a';ctx.fillRect(0,0,cv.width,cv.height);for(const s of STARS){s.x-=s.z*0.6;if(s.x<0){s.x=960;s.y=Math.random()*576;}ctx.fillStyle=`rgba(255,255,255,${s.z/2.3})`;ctx.fillRect(s.x,s.y,s.z,s.z);}}
+function drawCard(){starfield();const a=Math.min(1,G.cardT*1.5);ctx.globalAlpha=a;
+  txt(G.card.title,cv.width/2,cv.height/2-30,'#ffcf4a',34,'center','Georgia,serif');
+  wrapText(G.card.sub||'',cv.width/2,cv.height/2+16,760,22,'#cde',16,'center');
+  if(G.cardT>.8)txt('— press any key —',cv.width/2,cv.height-40,`rgba(255,255,255,${.5+.5*Math.sin(G.time*4)})`,13,'center');ctx.globalAlpha=1;}
+
+function loop(ts){const dt=Math.min(.05,(ts-(loop.last||ts))/1000);loop.last=ts;try{update(dt);render();}catch(e){console.error(e);}requestAnimationFrame(loop);}
+
+/* =========================================================================
+   CONTENT — themes, items, guide
+   ========================================================================= */
+const TH={
+ earth:{wall:'#c9b28a',wallHi:'#e3d1aa',floor:'#b89a6a',floor2:'#b0926a',brick:1,ground:',',counter:'#6a4524',door:'#7a4a22',rug:'#7a3040',bg:'#1a2a1a'},
+ cellar:{wall:'#3a3632',wallHi:'#55504a',floor:'#2e2b28',floor2:'#2a2724',brick:1,ground:'.',bg:'#000'},
+ vogon:{wall:'#3d4a32',wallHi:'#5d6a48',floor:'#55553f',floor2:'#4f4f3a',rivet:1,grate:1,ground:'.',door:'#6a5a2a',counter:'#4a3a2a',bg:'#000'},
+ heart:{wall:'#c8d4e0',wallHi:'#ffffff',floor:'#b8d8f0',floor2:'#b0d0e8',ground:'w',door:'#f0d050',counter:'#d0d8e0',bg:'#000'},
+ mag:{wall:'#5a4038',wallHi:'#7a6050',floor:'#4a3e48',floor2:'#463a44',ground:'`',bg:'#1a0f14'},
+ factory:{wall:'#4a4a5a',wallHi:'#6a6a8a',floor:'#6a6a7a',floor2:'#646474',rivet:1,grate:1,ground:'.',door:'#8a7a4a',rug:'#5a3030',table:'#6a4a2a',bg:'#000'},
+ lab:{wall:'#dcdce6',wallHi:'#ffffff',floor:'#9aa4b0',floor2:'#94a0ac',ground:'.',bg:'#000'},
+ milli:{wall:'#4a1a4a',wallHi:'#7a3a7a',floor:'#8a6a3a',floor2:'#846434',ground:'r',rug:'#4a1838',counter:'#c8a040',door:'#d8b050',table:'#c8a040',cloth:'#fff8e8',bg:'#000'},
+ carpark:{wall:'#2a2a30',wallHi:'#44444c',floor:'#3a3a40',floor2:'#36363c',ground:'.',grate:1,bg:'#000'},
+ ark:{wall:'#8a7a5a',wallHi:'#a89a7a',floor:'#6a6050',floor2:'#655b4b',rivet:1,ground:'.',door:'#5a4a2a',table:'#5a4a3a',bg:'#000'},
+ prehist:{wall:'#555',wallHi:'#777',floor:'#4a4038',floor2:'#463c34',ground:',',bg:'#0a1a0a'},
+};
+CHARS.zarquon=()=>({body:'#fffbe8',hair:'#e8e0c8',beard:'#f4ecd8',legs:'#e8e0c8'});
+CHARS.marketing=()=>({body:'#e86aa0',hair:'#c8902a',legs:'#555'});
+EXTRA.aircar=(x,y)=>{ell(x,y+12,18,5,'rgba(0,0,0,.3)');ell(x,y,18,9,'#c8c8d8');ell(x+2,y-4,9,6,'rgba(150,220,255,.7)');ctx.fillStyle='#88a';ctx.fillRect(x-16,y+2,32,3);};
+EXTRA.paint=(x,y)=>{ctx.strokeStyle='#c8502a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-10,y);ctx.quadraticCurveTo(x,y-8,x+10,y);ctx.quadraticCurveTo(x,y+8,x-10,y);ctx.moveTo(x+10,y);ctx.lineTo(x+14,y-4);ctx.lineTo(x+14,y+4);ctx.closePath();ctx.stroke();ctx.lineWidth=1;};
+
+Object.assign(ITEMS,{
+ gown:{name:'Dressing gown',desc:'Comfortable, slightly frayed. You will wear it across half the galaxy.'},
+ towel:{name:'Towel',desc:'The most useful thing a hitchhiker can carry. Use it (or press T) to wrap it round your head.',use(){toggleTowel();}},
+ teabag:{name:'Tea bag',desc:'Possibly the last tea bag from Earth. Guard it with your life.'},
+ peanuts:{name:'Peanuts',desc:"Ford insists. Matter transference is very hard on the body's salt and protein.",use(){notify('You eat a peanut. You feel marginally more prepared for teleportation.');}},
+ ckey:{name:'Small filing-cabinet key',desc:'Labelled "Do NOT give to public".'},
+ plans:{name:'Bypass plans',desc:'"On display", technically. Show them to Mr Prosser.'},
+ satchel:{name:"Ford's satchel",desc:'Full of mysterious things, including something that wriggles.'},
+ babel:{name:'Babel fish (in ear)',desc:"Small, yellow, leech-like. Lets you understand anything said in any language. It's wriggling.",use(){notify('It wriggles. You understand, somehow, that it is content.');}},
+ formA:{name:'Form 27B/6 (copy 1)',desc:'Application to Exist Aboard a Vogon Vessel.'},
+ formB:{name:'Form 27B/6 (copy 2)',desc:'Slightly stained with Vogon gravy.'},
+ formC:{name:'Form 27B/6 (copy 3)',desc:'Has been used as a coaster.'},
+ pass:{name:'Vogon Guard Pass',desc:'Officially stamped. Vogon guards are much slower to react to anyone with the correct paperwork.'},
+ milk:{name:'Milk',desc:"From the Heart of Gold's cold store. Origin unclear. Best not to ask."},
+ leaves:{name:'Dried leaves',desc:"From a plant in Trillian's lab. Tea-adjacent."},
+ shades:{name:'Peril-Sensitive Sunglasses',desc:'Joo Janta 200 Super-Chromatic. They go black at the first hint of danger. Use to wear / remove.',use(){G.shades=!G.shades;notify(G.shades?'You put on the sunglasses. You feel very cool and slightly less informed.':'You take off the sunglasses.');}},
+ award:{name:'Award for Norway',desc:'"For Services to Coastlines: the Fjords." Somebody must be missing this.'},
+ key:{name:'Black ship key',desc:"Marvin's key to Hotblack Desiato's stunt ship."},
+ stone:{name:'Flat stones',desc:'For carving Scrabble tiles.'},
+});
+
+Object.assign(GUIDE,{
+ earth:['Earth','Mostly harmless. (The previous edition said simply "Harmless". Ford spent fifteen years on the revision.)'],
+ thursday:['Thursdays','Statistically the least popular day of the week among people whose planets are later demolished on one.'],
+ dontpanic:["Don't Panic","Printed in large, friendly letters on the cover of the Guide. Widely considered the most useful advice in the galaxy, and the least often followed."],
+ towel:['Towels','About the most useful thing a hitchhiker can have. Wrap it round you for warmth, lie on it, sail on it, wave it in emergencies. Above all, a hitchhiker who still has their towel is obviously someone who has things under control.'],
+ thumb:['Electronic Thumb','A Sub-Etha signalling device for hitching rides on passing spaceships. Works best on ships that are already busy doing something unpleasant.'],
+ dolphins:['Dolphins','The second most intelligent creatures on Earth. They tried for years to warn humanity that the planet was about to be destroyed. Humanity assumed they were doing tricks.'],
+ leopard:['Local planning','On many worlds, important documents are kept "on display" in places chosen for their lack of light, stairs and visitors. The leopard is usually notional. Usually.'],
+ bureaucracy:['Bureaucracy','The galaxy runs on forms. The forms run on other forms. At the very bottom is one form nobody can find, which is why nothing works.'],
+ vogons:['Vogons','One of the most unpleasant races in the galaxy. Not actually evil, just bad-tempered, bureaucratic, officious and callous. A Vogon would not rescue its own grandmother from a burning building without a signed order, in triplicate, lost, refiled and found again.'],
+ babel:['Babel fish','Small, yellow and leech-like. Pop one in your ear and you can instantly understand anything said to you in any language. By removing every barrier to communication, it has caused more wars than anything else in history.'],
+ hitchhiking:['Hitchhiking','You can see the galaxy for less than thirty Altairian dollars a day. Recommended for the brave, the broke, and anyone with a really good towel.'],
+ vogonpoetry:['Vogon poetry','The third worst poetry in the universe. During recitals, audience members have been known to chew off their own limbs to get out. Their own if possible.'],
+ improb:['Infinite Improbability Drive','A wonderful new way of crossing vast distances in no time at all, without all that tedious mucking about in hyperspace. Side effects include penguins, sofas and sudden whales.'],
+ zaphod:['Zaphod Beeblebrox','Two heads, three arms, President of the Galaxy and thief of the Heart of Gold. The President has no real power. His job is to draw attention away from where the power is, and Zaphod is superbly good at it.'],
+ marvin:['Marvin','A Paranoid Android with a Genuine People Personality and a brain the size of a planet. A Sirius Cybernetics prototype. Every attempt to cheer him up has failed, which he finds entirely predictable.'],
+ nutrimatic:['Nutri-Matic Drinks Synthesiser','Produces a liquid that is almost, but not quite, entirely unlike whatever you ordered. Share and Enjoy!'],
+ sirius:['Sirius Cybernetics Corporation','Makers of robots, drinks machines and doors with personalities. Their complaints division now covers the major landmasses of three medium-sized planets.'],
+ whale:['The whale','Called into existence several miles above an alien planet, it had a short, busy life. In that time it invented the word "ground". The ground was not friends with it.'],
+ petunias:['The bowl of petunias','It thought only "Oh no, not again." Some say that if we knew exactly why it thought that, we would know a great deal more about the universe than we do now.'],
+ shades:['Peril-Sensitive Sunglasses','Designed to help you take a relaxed attitude to danger. At the first hint of trouble they turn completely black, so you cannot see anything that might alarm you.'],
+ magrathea:['Magrathea','Ancient planet-building world. In a time of great prosperity the Magratheans built luxury custom planets for the super-rich. Then the economy collapsed and they all went to sleep until it recovered.'],
+ bugblatter:['Ravenous Bugblatter Beast','So mind-bogglingly stupid that it assumes that if you cannot see it, it cannot see you. Wrap a towel round your head (press T) and walk right past.'],
+ fjords:['Norway','Slartibartfast won an award for the fjords. He likes doing coastlines and is particularly proud of the crinkly bits.'],
+ deepthought:['Deep Thought','The second greatest computer of all time. It took seven and a half million years to work out the Answer to Life, the Universe and Everything. Then everybody wanted to know what the Question was.'],
+ fortytwo:['42','The Answer. Unfortunately nobody knows the Question, which makes the Answer very hard to apply in day-to-day life.'],
+ mice:['Mice','The projections into our dimension of vast, hyper-intelligent, pan-dimensional beings. They ran experiments on humans. The humans thought it was the other way round.'],
+ brainsurgery:['Magrathean brain surgery','Diced, sliced and replaced with a simple electronic brain that says "What?" and "Where\'s the tea?". Nobody will notice, the mice insist.'],
+ planetbuild:['Custom planets','Gold planets, platinum planets, soft rubber planets with lots of earthquakes. Magrathea will build to any spec. Earthquakes cost extra.'],
+ milliways:['Milliways','The Restaurant at the End of the Universe. You book after you arrive and pay with one penny put into a savings account in your own era. By the end of time, the compound interest covers the bill.'],
+ dish:['Ameglian Major Cow','A cow bred to want to be eaten, and to say so clearly. Some think this solves an ethical problem. Others think it creates a much worse one.'],
+ gargle:['Pan Galactic Gargle Blaster','The best drink in existence. Recipe: 1) Ol\' Janx Spirit. 2) Santraginean sea water. 3) Arcturan Mega-gin. 4) Fallian marsh gas. 5) An Algolian Suntiger tooth. 6) An olive. Drink, but very carefully.'],
+ hotblack:['Disaster Area','A plasma rock band, and the loudest noise in the galaxy. Lead singer Hotblack Desiato is spending a year dead for tax reasons. Their concerts end with a stunt ship flying into a sun.'],
+ zarquon:['Zarquon','A great prophet whose Second Coming is long overdue. He tends to turn up at the last moment. The very, very last moment.'],
+ timetravel:['Time-travel grammar','The main problem with time travel is not accidentally becoming your own father. It is grammar. See Dr Dan Streetmentioner\'s Time Traveller\'s Handbook of 1001 Tense Formations.'],
+ golgafrincham:['Golgafrincham','A planet that got rid of its useless third (hairdressers, management consultants, telephone sanitisers) by telling them the world was ending and putting them on an Ark. Everyone left behind was later wiped out by a disease caught from a dirty telephone.'],
+ sanitisers:['Telephone sanitisers','Never underestimate them. Or overestimate them. Do estimate them at some point, though.'],
+ wheel:['The wheel','Invented on prehistoric Earth by the Fire Development Sub-Committee, which then spent several months arguing about what colour it should be.'],
+ question:['The Question','"What do you get if you multiply six by nine?" The Answer is 42. That is either a deep cosmic truth, or a sign that something went very wrong with the program. Arthur favours the latter.'],
+});
+
+function vg(s){if(F.babel)return s;const syl=['grr','blak','vorg','frumph','hoob','zarg','glurk','plonk','ratch','oog','snerk','buhl'];
+  return s.split(' ').map((w,i)=>syl[(w.length*7+i*3)%syl.length]+(w.length>5?syl[(w.length+i)%syl.length]:'')).join(' ').replace(/^./,c=>c.toUpperCase())+'!';}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* =========================================================================
+   CHAPTER 1 — EARTH
+   ========================================================================= */
+MAPS.earth=()=>({
+ name:'Earth',chapter:'Ch.1 · Thursday',w:40,h:26,fill:',',theme:TH.earth,start:[4,5],
+ build(g){
+  border(g,'T');
+  [[16,3],[18,6],[20,2],[15,8],[21,9],[2,16],[14,19],[16,22],[19,18],[22,24],[37,17],[37,22],[13,24],[20,12],[38,8],[17,24],[12,18]].forEach(p=>Pt(g,p[0],p[1],'T'));
+  R(g,1,14,38,2,'=');
+  if(!F.houseGone){
+   box(g,2,2,12,10);R(g,7,3,1,4,'#');R(g,3,7,5,1,'#');Pt(g,5,7,'+');R(g,8,6,5,1,'#');Pt(g,10,6,'+');
+   R(g,3,3,4,4,'r');Pt(g,3,3,'b');Pt(g,3,4,'b');R(g,8,3,5,3,'k');R(g,9,8,4,3,'k');Pt(g,7,11,'+');
+  }else{R(g,2,2,12,10,'M');[[3,3],[6,5],[9,4],[12,8],[4,9],[10,10],[7,7],[12,3]].forEach(p=>Pt(g,p[0],p[1],'R'));}
+  R(g,3,12,10,2,'M');R(g,14,10,2,3,'h');
+  box(g,24,2,14,10);R(g,25,5,12,6,'r');R(g,26,4,8,1,'C');[[27,7],[31,7],[35,7],[33,9]].forEach(p=>Pt(g,p[0],p[1],'o'));Pt(g,30,11,'+');
+  box(g,3,18,9,7);Pt(g,7,18,'+');R(g,5,20,4,1,'C');
+  R(g,25,18,10,5,'~');[[24,17],[35,18],[35,22],[24,23],[30,23],[17,11],[18,11],[22,16],[22,17]].forEach(p=>Pt(g,p[0],p[1],'B'));
+ },
+ ents:[
+  {id:'gown',kind:'item',x:6,y:3,flavor:'You put on your dressing gown. Much better. Slightly.',onPick(){F.gown=1;}},
+  {id:'towel',kind:'item',x:12,y:4,flavor:'A big, fluffy, faintly striped bath towel.',onPick(){done('towel');}},
+  {id:'teabag',kind:'item',x:12,y:10,flavor:'The last tea bag in the house. Possibly the last on Earth. You have no idea how right that is.'},
+  {kind:'guide',gid:'thursday',x:3,y:10},
+  {kind:'guide',gid:'earth',x:37,y:24},
+  {id:'mouse',kind:'npc',spr:'mouse',name:'White mouse',x:4,y:9,wander:1,talk(){say('Narrator','A small white mouse is watching you with tiny, intelligent eyes. It seems to be taking notes.');if(!F.mouseSeen){F.mouseSeen=1;improb(1);say('Arthur','...Shoo?');say('Narrator','The mouse makes a small mark on a tiny clipboard and looks away, unimpressed.');}}},
+  {kind:'obj',spr:'sign',name:'sign',x:14,y:12,talk(){say('Narrator','A hand-painted sign: "A. DENT. PLEASE DO NOT DEMOLISH." Someone has politely ignored it.');}},
+  {kind:'obj',spr:'sign',name:'pub sign',x:31,y:12,talk(){say('Narrator','THE HORSE AND GROOM. Free house. Beer, crisps, and a strong sense of impending doom.');}},
+  {kind:'obj',spr:'sign',name:'notice',x:8,y:17,talk(){say('Narrator','COUNCIL PLANNING ANNEXE. Open alternate Tuesdays, 10:15 to 10:20. Plans on display in cellar.');}},
+  {id:'prosser',kind:'npc',spr:'prosser',name:'Mr Prosser',x:F.prosserDown?7:10,y:F.prosserDown?14:12,lying:()=>!!F.prosserDown,face:false,talk:talkProsser,alertMark:()=>F.sawDozers&&!qdone('prosser')},
+  {kind:'npc',spr:'bulldozer',name:'Bulldozer',x:4,y:15,face:false,talk(){say('Narrator','The driver is reading a newspaper. He is paid by the hour and is in no hurry at all.');}},
+  {kind:'npc',spr:'bulldozer',name:'Bulldozer',x:7,y:15,face:false,talk(){say('Narrator','The lead bulldozer. It is very large, very yellow, and pointed directly at your house.');}},
+  {kind:'npc',spr:'bulldozer',name:'Bulldozer',x:10,y:15,face:false,talk(){say('Narrator','This driver is doing a crossword. "Seven letters: to remove obstruction." He looks at you meaningfully.');}},
+  {id:'spot',kind:'mark',spr:'mark',x:7,y:14,solid:false,cond:()=>F.mustLie&&!F.lying},
+  {id:'ford',kind:'npc',spr:'ford',name:'Ford Prefect',x:F.fordPub?32:8,y:F.fordPub?9:13,cond:()=>!!F.fordArrived,talk:talkFordEarth,alertMark:()=>F.fordPub&&!F.fordTold},
+  {kind:'npc',spr:'barman',name:'Barman',x:29,y:3,face:true,talk:talkBarman},
+  {kind:'npc',spr:'patron',col:'#6a4a8a',name:'Regular',x:28,y:8,wander:1,talk(){say('Regular',F.fordTold?"End of the world, he says. I've heard that before. Nineteen seventy-three. Pub stayed open, though.":"They're knocking down the Dent place? Shame. He's harmless. Mostly harmless.");}},
+  {kind:'npc',spr:'patron',col:'#4a7a6a',hair:'#aa6a2a',name:'Darts player',x:35,y:9,wander:1,talk(){say('Darts player','Treble twenty. Treble twenty. Double top. ...I can never get forty-two, for some reason.');}},
+  {id:'dolphin',kind:'npc',spr:'dolphin',name:'Dolphin',x:25,y:19,face:false,cond:()=>!F.fordTold,talk(){say('Narrator','The dolphin leaps out of the pond, performs an elaborate double backwards somersault, and whistles something urgent. It looks at you as if it is trying very hard to tell you something.');say('Arthur','Lovely! Do it again!');say('Narrator','The dolphin gives you a pitying look.');unlock('dolphins');}},
+  {kind:'npc',spr:'clerk',name:'Council clerk',x:6,y:19,talk(){if(!qhas('leopard'))quest('leopard','Beware of the Leopard','The bypass plans are apparently "on display" in the council annexe cellar. Find them and show Mr Prosser.',true);
+    say('Council clerk',has('plans')?"You found them? Nobody's ever found them. I'm not sure how I feel about that.":"Plans? Cellar. Ladder's in the corner. The light's broken. Mind the leopard.");}},
+  {kind:'obj',spr:'ladder',name:'cellar ladder',verb:'Climb down',x:10,y:23,talk(){loadMap('cellar',2,2);}},
+ ],
+ triggers:[
+  {x:7,y:12,cond:()=>!F.sawDozers,fn:sawDozers},
+  {x:7,y:14,cond:()=>F.mustLie&&!F.lying,fn:lieDown},
+  {x:30,y:12,cond:()=>F.fordTold&&!F.houseGone,fn:endOfWorld},
+ ],
+ onEnter(){
+  if(!F.intro){F.intro=1;
+   say('Narrator','Somewhere in the unfashionable outer reaches of the galaxy, on a small blue-green planet whose people are still terribly impressed by digital watches, a man called Arthur Dent is waking up.');
+   say('Narrator','He has a hangover. He has a vague feeling that something is wrong. Outside, something large is making a low, yellow kind of noise.');
+   say('Arthur','Ugh. Thursday.');
+   act(()=>quest('wake','Get up and face Thursday','Find your dressing gown and go outside to see what that noise is.'));
+   say('System','Move with WASD or the arrow keys. Press E or Space to interact. Q opens your quests, I your inventory, G the Guide, H help.');
+  }
+ }
+});
+
+function sawDozers(){
+ F.sawDozers=1;done('wake');G.shake=.3;
+ say('Narrator','Yellow. Large. Bulldozers. Three of them. Lined up in front of your house like enormous, polite, yellow assassins.');
+ if(!F.gown)say('Arthur',"And I'm in my pyjamas. Wonderful.");
+ say('Arthur','WHAT do you think you are DOING?');
+ act(()=>quest('prosser','Confront Mr Prosser','The man from the council is standing by the bulldozers, looking guilty.'));
+}
+function talkProsser(){
+ if(F.prosserDown){say('Mr Prosser','(from the mud) Your friend said this was perfectly normal. Is it normal? It feels very damp.');if(has('plans'))leopardReturn();return;}
+ if(!F.sawDozers){say('Mr Prosser',"Ah! Mr Dent. Lovely morning. Don't look out of the front.");return;}
+ if(F.mustLie){say('Mr Prosser','Are you going to lie down, Mr Dent, or shall we just get on with it?');if(has('plans'))leopardReturn();return;}
+ done('prosser');
+ ask('Mr Prosser',"Mr Dent! You must realise this bypass has got to be built, and it's going to be built!",[
+  {t:'Why has it got to be built?',f(){say('Mr Prosser',"It's a bypass. You've got to build bypasses.");}},
+  {t:'Nobody told me about it!',f(){say('Mr Prosser','The plans have been on display at the planning office for nine months, Mr Dent.');
+    say('Arthur','On display? I eventually had to go down to the cellar to find them. With a torch.');
+    say('Arthur','They were in a locked filing cabinet, in a disused lavatory, with a sign on the door about a leopard.');
+    say('Mr Prosser','Still on display, Mr Dent. Go and look, if you like.');
+    act(()=>quest('leopard','Beware of the Leopard','The plans are "on display" in the council annexe cellar, south-west of your house. Find them and show Mr Prosser.',true));}},
+  {t:"I'm not moving.",f(){say('Mr Prosser','Then we have a problem, Mr Dent.');}},
+ ]);
+ say('Mr Prosser','Have you any idea how much damage this bulldozer would suffer if I just let it roll straight over you?');
+ say('Arthur','How much?');
+ say('Mr Prosser','None at all. It is a very sturdy bulldozer.');
+ act(()=>{F.mustLie=1;quest('lie','Lie down in front of the bulldozer','Lie in the mud on the marked spot (X), right in front of the lead bulldozer.');});
+}
+function leopardReturn(){
+ take('plans');done('leopard');unlock('leopard');improb(1);
+ say('Arthur','I found the plans, Mr Prosser. In the dark. Guarded by a cat.');
+ say('Mr Prosser','Ah. Well. Er. They are still perfectly valid, I am afraid. Well done for finding them, though. Nobody ever has.');
+}
+function lieDown(){
+ F.lying=1;done('lie');const P=G.p;P.lying=true;G.lock=true;sfx('bad');
+ say('Narrator',"You lie down in the cold, wet mud in front of the bulldozer. It's a sort of protest. You hope.");
+ say('Mr Prosser',"You can't lie there forever, Mr Dent.");
+ say('Arthur',"We'll see who rusts first.");
+ pause(.5);
+ act(()=>{F.fordArrived=1;const f=ent('ford');f.x=f.ox=19;f.y=f.oy=13;f.t=1;});
+ wait(d=>walk(ent('ford'),[[8,13]],d));
+ say('Ford','Arthur! Hello. Listen, are you busy?');
+ say('Arthur',"Busy? I'm lying in front of a bulldozer. Apart from that, no.");
+ say('Ford','Good. There is a pub across the road. We need to talk, and we need beer. Quite a lot of it, quite quickly.');
+ ask('Arthur','(What do you say?)',[
+  {t:"I can't! They'll knock my house down!",f(){say('Ford','Leave that to me.');}},
+  {t:'Is this about your odd obsession with towels?',f(){say('Ford','Partly, yes. Have you got one?');say('Arthur',has('towel')?'Er, yes?':'Not on me, no.');say('Ford',has('towel')?'Good man.':'Get one. Seriously. I mean it.');}},
+ ]);
+ wait(d=>walk(ent('ford'),[[9,13],[9,12]],d));
+ say('Ford','Mr Prosser! My friend needs to come to the pub. Would you lie in the mud in his place while we are gone?');
+ say('Mr Prosser','...Why on earth would I...');
+ say('Ford',"Because if he's not lying here, you can't knock the house down, and if you're lying here, you can't knock it down either. It works out exactly the same. We'll be back. Promise.");
+ say('Mr Prosser','...I suppose that is... logical?');
+ act(()=>{P.lying=false;teleport(6,14);});
+ wait(d=>walk(ent('prosser'),[[10,14],[7,14]],d));
+ act(()=>{F.prosserDown=1;});
+ say('Mr Prosser','(squelch) This is all extremely irregular.');
+ say('Ford',"Pub! The Horse and Groom, across the road. Six pints of bitter: you're buying. And bring your towel!");
+ wait(d=>walk(ent('ford'),[[9,13],[16,13],[16,14],[30,14],[30,12]],d));
+ act(()=>{const f=ent('ford');F.fordPub=1;f.x=f.ox=32;f.y=f.oy=9;G.lock=false;
+   quest('pub','Meet Ford at the Horse and Groom','The pub is across the road to the north-east. Buy six pints of bitter from the barman, then talk to Ford.');
+   if(!has('towel'))quest('towel','Fetch your towel','Ford was oddly insistent. Your towel is in the bathroom.');});
+}
+function talkBarman(){
+ if(F.fordTold){ask('Barman','Is it true, what your mate said? About the world ending?',[
+   {t:'Yes.',f(){say('Barman','Should we, I dunno, lie down? Put paper bags over our heads?');say('Ford','If you like.');say('Barman','Will that help?');say('Ford','Not in the slightest.');}},
+   {t:'Have one on me.',f(){say('Barman','Very kind, sir. Last orders, then. Very last.');}}]);return;}
+ if(!F.fordPub){say('Barman',"Bit early for you, isn't it, Mr Dent? It's not even lunchtime.");return;}
+ if(!F.pints){ask('Barman','What can I get you?',[
+   {t:"Six pints of bitter. And quickly, please. The world's about to end.",f(){F.pints=1;give('peanuts',true);notify('Got: six pints of bitter (and some peanuts)');
+     say('Barman','Oh yes, sir? Nice weather for it.');say('Narrator','He pulls six pints. On a hunch, you also buy some peanuts.');}},
+   {t:'Just looking, thanks.'}]);return;}
+ say('Barman','Enjoy your pints, gentlemen. Lovely day for it.');
+}
+function talkFordEarth(){
+ if(!F.fordPub){say('Ford',"Not now, Arthur. I'm negotiating.");return;}
+ if(F.fordTold){say('Ford','Drink up. Then outside. Bring the peanuts. And DO keep your towel handy.');return;}
+ if(!has('towel')){quest('towel','Fetch your towel','Ford was oddly insistent. Your towel is in the bathroom.');
+   say('Ford',"Arthur. Where's your towel? You can't go anywhere without a towel. Go home and get it. Bathroom. Now.");return;}
+ if(!F.pints){say('Ford','Six pints, Arthur. From the barman. It is genuinely important.');return;}
+ done('pub');done('towel');
+ say('Narrator','You put six pints of bitter on the table. Ford pushes three of them towards you.');
+ say('Ford','Drink these. Quickly. All three.');
+ ask('Arthur','(Well?)',[
+  {t:'Drink all three',f(){say('Narrator','You drink three pints at speed. The room becomes noticeably friendlier.');improb(1);}},
+  {t:'Why?',f(){say('Ford',"Muscle relaxant. You'll need it. Drink.");say('Narrator','You drink. You feel very relaxed about almost everything.');}}]);
+ say('Ford',"Arthur, what would you say if I told you I'm not from Guildford at all? That I'm actually from a small planet somewhere near Betelgeuse?");
+ ask('Arthur','(Hmm.)',[
+  {t:"Is it the sort of thing you're likely to say?",f(){say('Ford','Yes. I just said it.');}},
+  {t:'Is this the beer talking?',f(){say('Ford','Not yet. Give it a minute.');}}]);
+ say('Ford',"I'm a field researcher for a book called The Hitchhiker's Guide to the Galaxy. I've been stuck on this planet for fifteen years. And in about twelve minutes, it's going to be demolished.");
+ say('Arthur','Demolished? The pub?');
+ say('Ford','The Earth.');
+ say('Narrator','Ford shows you the Guide: a small, battered electronic book with the words DON\'T PANIC printed on the cover in large, friendly letters.');
+ act(()=>{unlock('dontpanic');unlock('towel');});
+ act(()=>{F.fordTold=1;flash('#fff');G.shake=.6;sfx('bad');quest('outside','Get outside!','Something awful is happening to your house. Leave the pub by the front door.');});
+ say('Narrator','From outside comes a terrible crunching, splintering, rumbling noise. It sounds a lot like your house.');
+ say('Arthur','My HOUSE!');
+}
+function endOfWorld(){
+ F.houseGone=1;refreshTiles();done('outside');G.shake=1;flash('#000');
+ say('Narrator','Your house is a heap of rubble. The bulldozer driver looks embarrassed. Mr Prosser, still in the mud, looks confused.');
+ say('Arthur','You... you... BARBARIANS!');
+ pause(.6);
+ act(()=>{G.map.tint='rgba(0,0,30,.5)';sfx('alarm');G.shake=1.5;});
+ say('Narrator','Then the sky goes dark. Huge yellow shapes slide silently across it, the size of office blocks, hanging in the air in a way that great lumps of metal really should not.');
+ say('Jeltz','People of Earth, your attention please. This is Prostetnic Vogon Jeltz of the Galactic Hyperspace Planning Council.');
+ say('Jeltz','Plans for a new hyperspace express route through your star system require the demolition of your planet. This will take slightly less than two of your Earth minutes.');
+ say('Jeltz','The plans have been on display at your local planning office on Alpha Centauri for fifty years. It is far too late to start complaining now.');
+ say('Jeltz',"What do you mean you've never been to Alpha Centauri? It's only four light years away! Honestly. Energise the demolition beams.");
+ say('Ford','Hold on to me, Arthur. And whatever you do: don\'t panic.');
+ say('Narrator','Ford holds up a small black device, his Electronic Thumb. It begins to glow.');
+ act(()=>{flash('#fff');sfx('warp');unlock('thumb');});
+ say('Narrator','The Earth is demolished. Arthur Dent is, improbably, not on it.');
+ act(()=>{improb(3);card('Chapter 2 · Resistance is Useless','Aboard a Vogon Constructor Fleet flagship. You have hitched a ride with the most unpleasant race in the galaxy. Ford says not to worry. Ford is a terrible liar.',()=>loadMap('vogon'));});
+}
+
+/* ---------- council cellar (side quest) ---------- */
+MAPS.cellar=()=>({
+ name:'Planning Annexe Cellar',chapter:'Ch.1 · Thursday',w:22,h:16,fill:'#',theme:TH.cellar,start:[2,2],dark:true,darkR:125,
+ build(g){
+  R(g,1,1,4,3,'.');R(g,4,2,12,1,'.');R(g,15,2,1,11,'.');R(g,2,6,13,1,'.');R(g,2,3,1,4,'.');R(g,2,6,1,8,'.');R(g,2,13,18,1,'.');R(g,8,6,1,8,'.');
+  R(g,17,8,4,4,'.');Pt(g,16,9,'+');R(g,4,9,3,3,'.');Pt(g,3,10,'.');
+  [[9,6],[10,6],[15,5],[15,6],[5,13],[12,13],[13,13],[2,9],[8,9]].forEach(p=>Pt(g,p[0],p[1],'_'));
+ },
+ ents:[
+  {kind:'obj',spr:'ladder',name:'ladder',verb:'Climb up',x:1,y:1,talk(){loadMap('earth',9,23);}},
+  {id:'ckey',kind:'item',icon:'key',x:5,y:10,flavor:'A small key labelled "Cabinet: do NOT give to public".'},
+  {kind:'obj',spr:'sign',name:'sign',x:17,y:8,talk(){say('Narrator','A sign on the lavatory wall: BEWARE OF THE LEOPARD.');}},
+  {kind:'obj',spr:'lav',name:'lavatory',x:17,y:11,talk(){say('Narrator','Disused. Very disused. Historically disused.');}},
+  {kind:'obj',spr:'cabinet',name:'filing cabinet',x:20,y:9,talk(){
+    if(F.got_plans){say('Narrator','Empty now, apart from a fossilised sandwich.');return;}
+    if(!has('ckey')){say('Narrator','A locked filing cabinet. On display, in a manner of speaking.');return;}
+    take('ckey');F.got_plans=1;give('plans');say('Narrator','The key turns. Inside, in the bottom drawer, under a fossilised sandwich: the plans for the bypass. Arthur Dent\'s house is circled in red.');
+    if(!qhas('leopard'))quest('leopard','Beware of the Leopard','Show the plans to Mr Prosser.',true);}},
+  {kind:'guide',gid:'bureaucracy',x:19,y:13},
+ ],
+ enemies:[
+  {spr:'leopard',label:'"Leopard"',x:8,y:13,path:[[8,13],[8,6],[14,6],[8,6]],speed:1.1,range:4,fov:80,catchLine:'The "leopard" (a very large, very cross council cat) yowls and leaps at you. You flee back to the ladder.'},
+  {spr:'leopard',label:'"Leopard"',x:19,y:13,path:[[19,13],[3,13]],speed:.9,range:3.5,fov:80,catchLine:'A second cat! You scramble back to the ladder in a panic.'},
+ ],
+ onEnter(){if(!F.cellarIntro){F.cellarIntro=1;say('Narrator','There are no stairs. The light is broken. Somewhere in the dark, something purrs menacingly.');say('System','Stealth! Stay out of the vision cones. Dark patches hide you unless something is right next to you.');}}
+});
+
+/* =========================================================================
+   CHAPTER 2 — VOGON SHIP
+   ========================================================================= */
+const vogonCatch=()=>F.babel?'"Resistance is useless!" A guard drags you back and throws you down, then wanders off to fill in a form about it.':'"GRRBLAK FRUMPH VORG!" A guard drags you back and throws you down.';
+MAPS.vogon=()=>({
+ name:'Vogon Constructor Ship',chapter:'Ch.2 · Resistance is Useless',w:44,h:30,fill:'#',theme:TH.vogon,start:[6,5],
+ build(g){
+  R(g,2,2,10,8,'.');[[3,7],[4,7],[9,3],[10,3],[6,8],[10,8],[3,2]].forEach(p=>Pt(g,p[0],p[1],'X'));R(g,2,8,2,2,'_');Pt(g,5,2,'_');Pt(g,12,5,'+');
+  R(g,13,4,18,3,'.');[[16,3],[17,3],[24,3],[25,3],[20,7],[21,7]].forEach(p=>Pt(g,p[0],p[1],'_'));
+  R(g,15,10,10,6,'.');R(g,19,7,1,3,'.');Pt(g,19,9,'+');R(g,16,12,3,1,'C');R(g,21,12,3,1,'C');
+  R(g,2,13,9,9,'.');R(g,11,13,4,1,'.');Pt(g,14,13,'+');R(g,3,14,5,1,'C');R(g,8,17,2,3,'_');
+  R(g,29,9,13,10,'.');R(g,30,7,1,2,'.');Pt(g,30,8,'+');
+  [[32,11],[32,15],[36,11],[36,15],[39,13]].forEach(p=>Pt(g,p[0],p[1],'P'));[[33,11],[33,15],[37,11],[37,15],[40,13]].forEach(p=>Pt(g,p[0],p[1],'_'));
+  R(g,33,22,8,6,'.');R(g,36,19,1,3,'.');Pt(g,36,21,'+');Pt(g,34,27,'m');Pt(g,39,27,'m');
+ },
+ ents:[
+  {id:'ford',kind:'npc',spr:'ford',name:'Ford Prefect',x:4,y:4,cond:()=>!F.fordFollow,talk:talkFordVogon,alertMark:()=>has('satchel')},
+  {id:'satchel',kind:'item',x:10,y:7,flavor:"Ford's satchel. Something inside it is wriggling."},
+  {kind:'npc',spr:'vogon',name:'Vogon clerk',x:17,y:11,talk:talkClerk,alertMark:()=>qhas('forms')&&has('formA')&&has('formB')&&has('formC')&&!qdone('forms')},
+  {id:'formA',icon:'form',kind:'item',x:22,y:11,onPick:formPick},
+  {id:'formB',icon:'form',kind:'item',x:3,y:20,onPick:formPick},
+  {id:'formC',icon:'form',kind:'item',x:41,y:9,onPick:formPick},
+  {kind:'guide',gid:'vogons',x:9,y:20},
+  {kind:'guide',gid:'hitchhiking',x:3,y:9},
+  {kind:'obj',spr:'console',name:'Sub-Etha relay',x:37,y:25,talk:relayUse},
+  {kind:'obj',spr:'sign',name:'notice',x:13,y:7,cond:()=>false},
+  {kind:'npc',spr:'vogon',name:'Guard',x:36,y:23,cond:()=>!!F.vCaptured,talk(){}},
+  {kind:'npc',spr:'vogon',name:'Guard',x:34,y:24,cond:()=>!!F.vCaptured,talk(){}},
+ ],
+ enemies:[
+  {spr:'vogon',label:'Guard',x:29,y:5,path:[[29,5],[14,5]],speed:1.4,range:6,fov:70,passable:1,catchLine:vogonCatch,cond:()=>!F.vCaptured},
+  {spr:'vogon',label:'Chef',x:5,y:15,ang:Math.PI/2,sweep:1.1,range:5,fov:60,passable:1,catchLine:'The Vogon chef seizes you. "Ingredient!" he bellows, then realises you are not on the menu and throws you out.',cond:()=>!F.vCaptured},
+  {spr:'vogon',label:'Guard',x:40,y:17,path:[[40,17],[30,17],[30,10],[40,10]],speed:1.3,range:5.5,fov:70,passable:1,catchLine:vogonCatch,cond:()=>!F.vCaptured},
+  {spr:'vogon',label:'Guard',x:34,y:17,path:[[34,17],[34,10]],speed:1.0,range:5,fov:70,passable:1,catchLine:vogonCatch,cond:()=>!F.vCaptured},
+ ],
+ triggers:[{x:13,y:5,cp:[13,5]},{x:30,y:8,cp:[30,8]},{x:36,y:20,cp:[36,20]},{x:14,y:13,cp:[13,13]}],
+ onEnter(){
+  G.followers=F.fordFollow?['ford']:[];
+  if(F.vCaptured&&!F.poetryDone){act(()=>startPoetry());return;}
+  if(!F.vIntro){F.vIntro=1;
+   say('Narrator','You wake up in darkness, in what smells like a Vogon\'s idea of a cargo hold. Ford is rummaging about.');
+   say('Arthur','Ford... where are we?');
+   say('Ford','Vogon constructor ship. I hitched us a lift on the demolition beam. We\'re safe. Ish.');
+   say('Arthur','And the Earth?');
+   say('Ford','Ah. Yes. Gone, I\'m afraid. Sorry. Have a peanut.');
+   say('Vogon PA',vg('Attention all crew this is your captain speaking we have detected stowaways'));
+   say('Ford','I dropped my satchel by the crates. Fetch it, would you? There\'s something in it you\'re going to want.');
+   act(()=>quest('satchel',"Find Ford's satchel",'It fell near the crates in the hold. Bring it to Ford.'));
+  }
+ }
+});
+function formPick(){const n=['formA','formB','formC'].filter(has).length;notify('Form copies: '+n+' / 3');}
+function talkFordVogon(){
+ if(!has('satchel')){say('Ford','Satchel, Arthur. By the crates. Wriggling.');return;}
+ take('satchel');done('satchel');
+ say('Ford','Splendid. Now, then...');
+ say('Narrator','Ford pulls a small, yellow, leech-like fish out of a jar and holds it up to your ear.');
+ ask('Ford','Stick this in your ear.',[
+  {t:'Put the fish in your ear',f(){say('Narrator','You put the fish in your ear. It wriggles in. It is the most disgusting sensation of your life. Then, suddenly, the noise from the speakers makes perfect sense.');}},
+  {t:'Absolutely not.',f(){say('Ford','Fine.');say('Narrator','Ford puts the fish in your ear for you. You make a noise like a startled kettle.');}}]);
+ act(()=>{F.babel=1;give('babel');unlock('babel');});
+ say('Jeltz','This is the Captain speaking. We have detected two hitchhikers aboard. Hello, wherever you are. I would like to make it perfectly clear that you are not welcome.');
+ say('Jeltz','Guards: find them and bring them to my quarters. I have some poetry they will want to hear.');
+ say('Ford','Oh no. Vogon poetry. Third worst in the universe.');
+ say('Ford','Right. Plan. There\'s a Sub-Etha relay at the back of the ship, past the crew hall. I can use it to flag down a passing ship. Stay out of sight. Vogons aren\'t clever, but they are very, very thorough.');
+ say('Ford','Oh, and if you see a Vogon at a desk, remember: they love paperwork. With the right form you can get away with almost anything.');
+ act(()=>{F.fordFollow=1;G.followers=['ford'];quest('relay','Reach the Sub-Etha relay','Sneak through the corridor and crew hall to the relay room at the back (south-east) of the ship.');
+   say('System','Guards have vision cones. Hide in dark alcoves and behind pillars. If you\'re caught you go back to the last checkpoint.');});
+}
+function talkClerk(){
+ if(!F.babel){say('Vogon clerk',vg('Have you filled in form twenty seven B stroke six in triplicate'));say('Arthur','...I have literally no idea what you just said.');return;}
+ if(qdone('forms')){say('Vogon clerk','Stamped. Filed. Cross-referenced. You exist. Go away.');return;}
+ if(!qhas('forms')){
+  say('Vogon clerk','Halt! Have you completed Form 27B/6, Application to Exist Aboard a Vogon Vessel, in triplicate?');
+  say('Arthur','No?');
+  say('Vogon clerk','Then you do not exist. Please stop standing there not existing. It confuses the filing.');
+  say('Vogon clerk','Bring me three copies. One is on the other desk. One went to the galley with the chef. One was last seen in the crew hall. Then I will stamp you a Guard Pass. Guards respect a stamp.');
+  act(()=>quest('forms','Form 27B/6, in triplicate','Collect three copies (office desk, galley, crew hall) and bring them to the Vogon clerk.',true));return;}
+ const n=['formA','formB','formC'].filter(has).length;
+ if(n<3){say('Vogon clerk',`You have ${n} of 3 copies. Triplicate means three. I checked.`);return;}
+ ['formA','formB','formC'].forEach(take);give('pass');done('forms');improb(1);
+ say('Narrator','Stamp. Stamp. Stamp. The clerk looks almost happy, then suppresses it.');
+ say('Vogon clerk','You officially exist. Guards will now be much slower to notice you, out of respect for the paperwork.');
+}
+function relayUse(){
+ if(!F.fordFollow){say('Narrator','A tangle of Vogon electronics. Ford would know what to do with it.');return;}
+ done('relay');
+ say('Ford','Sub-Etha relay. Give me a second... there. Signal\'s out. Any ship within a few light years will hear: "Two hitchhikers, need a lift, have peanuts."');
+ act(()=>{sfx('alarm');G.shake=.6;F.vCaptured=1;G.followers=[];});
+ say('Vogon','RESISTANCE IS USELESS!');
+ say('Narrator','Four enormous Vogon guards squeeze through the door, one bit at a time.');
+ say('Vogon','You are to be brought before the Captain. He has... composed something.');
+ say('Ford','Oh no.');
+ act(()=>startPoetry());
+}
+function startPoetry(){
+ G.followers=[];
+ const lines=['O fragrant glurpulence of my morning,','Thy gristle-soft shimmerings do vex my spleen,','Like a sock of damp despair upon a Tuesday,','I gargle thee, I gargle thee, O wriggling bean!','Crumple, crumple, my oozing pentagon,','Or I shall flatten thee with my blistered hymn!'];
+ MINI={state:'intro',t:0,c:.5,v:0,hp:1,lines,line:0,band:.5,bw:.26,
+  reset(){this.t=0;this.c=.5;this.v=0;this.hp=1;this.line=0;this.state='play';},
+  update(dt){if(this.state!=='play')return;this.t+=dt;this.line=Math.floor(this.t/3.4);
+   if(this.line>=this.lines.length){this.state='win';sfx('quest');return;}
+   const hold=keys[' ']||keys['e'];this.v+=(hold?2.4:-1.7)*dt;this.v+=(Math.sin(this.t*3.1)+Math.sin(this.t*1.7))*.6*dt;this.v*=.985;this.c+=this.v*dt;
+   if(this.c<0){this.c=0;this.v=0;}if(this.c>1){this.c=1;this.v=0;}
+   this.band=.5+.3*Math.sin(this.t*.9+Math.sin(this.t*.37)*2);this.bw=.26-this.line*.015;
+   if(Math.abs(this.c-this.band)<this.bw/2)this.hp=Math.min(1,this.hp+.05*dt);else this.hp-=.17*dt*(1+this.line*.12);
+   if(this.hp<=0){this.state='fail';sfx('caught');}},
+  key(k){const go=k===' '||k==='e'||k==='enter'||k==='click';if(!go)return;
+   if(this.state==='intro'||this.state==='fail'){this.reset();return;}
+   if(this.state==='play'){this.v+=.45;return;}
+   if(this.state==='win'){MINI=null;G.mode='play';poetryDone();}},
+  draw(){ctx.fillStyle='rgba(12,22,6,.96)';ctx.fillRect(0,0,960,576);
+   ctx.save();ctx.translate(150,330);ctx.scale(4,4);drawSprite('vogon',0,0,{dir:[1,0]});ctx.restore();
+   ctx.save();ctx.translate(560,470);ctx.scale(2,2);drawSprite('arthur',0,0,{dir:[0,-1]});ctx.restore();
+   ctx.save();ctx.translate(650,470);ctx.scale(2,2);drawSprite('ford',0,0,{dir:[0,-1]});ctx.restore();
+   txt('THE CAPTAIN\'S QUARTERS: Poetry Appreciation Chairs engaged',480,36,'#9ad860',18,'center');
+   const shown=this.state==='intro'?-1:Math.min(this.line,this.lines.length-1);
+   for(let i=0;i<=shown;i++)txt(this.lines[i],290,100+i*36,i===this.line?'#fff':'#7a9a6a',19);
+   rr(860,80,46,400,'#1a1a1a',8);const by=80+400*(1-this.band)-400*this.bw/2;rr(862,by,42,400*this.bw,'rgba(80,220,80,.55)',6);
+   const my=80+400*(1-this.c);ctx.fillStyle='#ffcf4a';ctx.beginPath();ctx.moveTo(846,my);ctx.lineTo(858,my-8);ctx.lineTo(858,my+8);ctx.fill();rr(862,my-3,42,6,'#ffcf4a',2);
+   txt('composure',883,500,'#ccc',12,'center');
+   txt('Sanity',290,330,'#ccc',14);rr(290,340,360,16,'#222',4);rr(290,340,360*Math.max(0,this.hp),16,this.hp>.4?'#6c6':'#e44',4);
+   if(this.state==='intro'){rr(240,150,520,170,'rgba(0,0,0,.85)',10);wrapText('Prostetnic Vogon Jeltz is about to read you his poetry. Hold SPACE (or tap repeatedly) to keep your composure marker inside the green zone. If your sanity runs out, your mind gives way.',500,190,460,22,'#fff',16,'center');txt('Press SPACE to brace yourself',500,300,'#ffcf4a',15,'center');}
+   if(this.state==='fail'){rr(240,150,520,140,'rgba(60,0,0,.9)',10);wrapText('Your mind gives way somewhere around "oozing pentagon". Ford slaps you awake. Jeltz, delighted, starts again from the top.',500,190,460,22,'#fff',16,'center');txt('Press SPACE to try again',500,270,'#ffcf4a',15,'center');}
+   if(this.state==='win'){rr(240,150,520,120,'rgba(0,40,0,.9)',10);wrapText('You survived the entire poem with your mind (mostly) intact.',500,195,460,22,'#fff',17,'center');txt('Press SPACE',500,250,'#ffcf4a',15,'center');}
+  }};
+ G.mode='mini';hideBox();
+}
+function poetryDone(){
+ F.poetryDone=1;unlock('vogonpoetry');
+ say('Jeltz','So, Earthling. I present you with a simple choice. Either die in the vacuum of space, or... tell me how good you thought my poem was.');
+ ask('Arthur','(Think fast.)',[
+  {t:'Actually, I rather liked it.',f(){say('Jeltz','...Oh?');
+    say('Arthur','I thought the bit with the bean expressed a profound, um, tension between the beanness of the bean and the... the...');
+    say('Ford','...the essential gargling of the self.');
+    say('Arthur','Exactly! The gargling of the self.');
+    say('Jeltz','So what you are saying is that deep down, behind my cruel and heartless exterior, I just want to be loved?');
+    say('Ford','Er... yes?');
+    say('Jeltz','Wrong. I write poetry purely to make my cruel and heartless exterior look even worse by comparison. Guards: the airlock.');}},
+  {t:'It was dreadful.',f(){say('Jeltz','Honesty. How revolting. Airlock.');}},
+  {t:'Could we hear it again?',f(){say('Jeltz','...');say('Jeltz','Nobody has ever asked me that before.');say('Narrator','There is a long, damp pause.');say('Jeltz','Airlock anyway. But I am touched. Slightly. In a bad way.');improb(2);}}]);
+ say('Narrator','The guards frog-march you both to an airlock. The inner door hisses shut. The outer door is about to open.');
+ say('Ford','Arthur, you\'ve got about thirty seconds of air in your lungs. Use it wisely.');
+ say('Arthur','Ford, I just want to say... I never could get the hang of Thursdays.');
+ act(()=>{flash('#fff');sfx('warp');});
+ say('Narrator','Whoosh. Space. Cold. Very, very cold. Twenty-nine seconds... twenty-eight...');
+ say('Narrator','Then, against odds of two to the power of two hundred and seventy-six thousand, seven hundred and nine to one, a passing ship picks them up.');
+ act(()=>{improb(276709);card('Chapter 3 · The Heart of Gold','The most improbable ship in the galaxy, powered by the Infinite Improbability Drive, has just done something extremely improbable. Again.',()=>loadMap('heart'));});
+}
+
+/* =========================================================================
+   CHAPTER 3 — HEART OF GOLD
+   ========================================================================= */
+MAPS.heart=()=>({
+ name:'Heart of Gold',chapter:'Ch.3 · The Heart of Gold',w:40,h:24,fill:'#',theme:TH.heart,start:[20,12],happyDoors:true,
+ build(g){
+  R(g,3,2,8,7,'w');Pt(g,7,9,'+');Pt(g,7,10,'w');Pt(g,4,3,'s');Pt(g,5,3,'s');Pt(g,9,3,'b');Pt(g,9,4,'b');R(g,3,1,8,1,'g');
+  R(g,15,2,12,7,'w');R(g,16,1,10,1,'g');R(g,16,2,10,1,'m');Pt(g,20,2,'w');Pt(g,20,9,'+');Pt(g,20,10,'w');Pt(g,17,6,'o');Pt(g,24,6,'o');
+  R(g,31,2,7,7,'w');Pt(g,34,9,'+');Pt(g,34,10,'w');R(g,31,1,7,1,'g');
+  R(g,2,11,36,2,'w');R(g,1,11,1,2,'g');R(g,38,11,1,2,'g');
+  R(g,3,15,8,7,'w');Pt(g,7,14,'+');Pt(g,7,13,'w');Pt(g,8,18,'o');Pt(g,5,19,'o');
+  R(g,15,15,6,7,'.');Pt(g,17,14,'+');Pt(g,17,13,'w');R(g,15,17,1,4,'C');R(g,20,16,1,4,'C');
+  R(g,24,16,4,6,'w');Pt(g,25,15,'+');R(g,25,13,1,2,'w');Pt(g,24,18,'s');Pt(g,24,19,'s');
+  R(g,31,15,7,7,'w');Pt(g,34,14,'+');Pt(g,34,13,'w');R(g,38,16,1,5,'g');
+ },
+ ents:[
+  {id:'zaphod',kind:'npc',spr:'zaphod',name:'Zaphod Beeblebrox',x:18,y:5,talk:talkZaphod,alertMark:()=>!F.metZ||(has('shades')&&!qdone('shades'))},
+  {id:'trillian',kind:'npc',spr:'trillian',name:'Trillian',x:23,y:5,talk:talkTrillian,alertMark:()=>!F.metT},
+  {kind:'npc',spr:'ford',name:'Ford Prefect',x:21,y:7,talk(){say('Ford',F.metZ?"Zaphod's my semi-half-cousin. We share three of the same mothers. Don't ask. And whatever he says, don't press anything.":"That's Zaphod Beeblebrox. President of the Galaxy. My semi-half-cousin. He stole this ship. Go and say hello, he loves an audience.");}},
+  {kind:'obj',spr:'eddie',name:'Eddie',verb:'Talk to',x:20,y:2,talk(){say('Eddie',F.teaBusy&&!F.whale?"Can't talk, guys! Thinking about tea! ALL of me is thinking about tea!":F.whale?"Wow, a whale! That was totally improbable, guys! I'm so proud of us!":"Hi there! This is Eddie, your shipboard computer, and I'm feeling just great, guys! Isn't everything amazing?");}},
+  {id:'marvin',kind:'npc',spr:'marvin',name:'Marvin',x:12,y:12,talk:talkMarvin,alertMark:()=>!F.metM},
+  {kind:'obj',spr:'nutri',name:'Nutri-Matic',x:5,y:15,talk:talkNutri},
+  {id:'milk',kind:'item',x:19,y:20,flavor:'A carton of milk. The label says "MILK (probably)".'},
+  {kind:'obj',spr:'plant',name:'lab plant',x:32,y:3,talk(){if(qhas('tea')&&!has('leaves')&&!qdone('tea')){give('leaves');say('Narrator','You pick a handful of the leaves and dry them on the warm casing of a console. They smell, faintly, like a garden centre. Close enough.');}else say('Narrator','A plant from Trillian\'s collection. It flinches slightly when you look at it.');}},
+  {kind:'obj',spr:'cage',name:'mouse cage',x:36,y:3,talk(){say('Narrator','Two white mice, Frankie and Benjy. They are watching you very carefully. One is holding what looks like a tiny clipboard.');}},
+  {kind:'obj',spr:'gen',name:'Improbability Generator',x:36,y:7,talk:improbToy},
+  {kind:'obj',spr:'plant',name:'pot plant',x:27,y:21,talk(){if(qhas('shades')&&!has('shades')&&!qdone('shades')){give('shades');say('Narrator','Tucked into the pot, under a leaf: a pair of Joo Janta 200 Super-Chromatic Peril-Sensitive Sunglasses. Totally black.');}else say('Narrator','A pot plant. It has the haunted look of a plant that has been to one of Zaphod\'s parties.');}},
+  {kind:'obj',spr:'drive',name:'Improbability Drive',x:34,y:19,talk:driveUse},
+  {kind:'guide',gid:'improb',x:36,y:21},
+  {kind:'guide',gid:'sirius',x:10,y:21},
+ ],
+ onEnter(){
+  G.followers=[];
+  if(F.missiles&&!F.whale){startMissiles(true);return;}
+  if(!F.hIntro){F.hIntro=1;G.peng=12;
+   say('Narrator','You and Ford materialise in a gleaming white corridor. You are, for some reason, a penguin.');
+   say('Arthur','Ford. I\'m a penguin.');
+   say('Ford','Improbability side effects. It\'ll pass. Probably.');
+   say('Eddie','Hi there! This is Eddie, your shipboard computer. Welcome aboard the Heart of Gold! Whatever you want, I\'m sure we can have a great time getting it!');
+   act(()=>quest('crew','Meet the crew','Talk to Zaphod and Trillian on the bridge (north), and to the robot in the corridor.'));
+  }
+ }
+});
+function checkCrew(){
+ if(F.metZ&&F.metT&&F.metM&&!qdone('crew')){done('crew');
+  say('Zaphod','(over the intercom) Okay, people! We are now in orbit around... the legendary lost planet of MAGRATHEA!');
+  say('Trillian','(over the intercom) It\'s real. It\'s actually real.');
+  say('Zaphod','Monkeyman! Go and get yourself a drink or something while the grown-ups do the clever stuff.');
+  act(()=>{quest('tea','A proper cup of tea','The galley (south-west) has a Nutri-Matic Drinks Synthesiser. How hard can it be?');
+    quest('shades',"Zaphod's sunglasses",'Zaphod has lost his Peril-Sensitive Sunglasses somewhere aboard. Search the ship.',true);});
+ }
+}
+function talkZaphod(){
+ if(!F.metZ){F.metZ=1;unlock('zaphod');
+  say('Zaphod','Hey! Ford! And... monkey-thing. Welcome aboard the Heart of Gold. I stole it. At its own launch. Pretty cool, huh?');
+  say('Arthur','We\'ve met. At a party in Islington. You said your name was Phil.');
+  say('Zaphod','Can\'t remember a thing about that. Can\'t remember a lot of things, actually. It\'s like someone went into my brains and... nah.');
+  act(checkCrew);return;}
+ if(has('shades')&&!qdone('shades')){done('shades');unlock('shades');F.zShades=0;
+  say('Zaphod','My shades! Monkeyman, you are a froody dude. Keep them. I\'ve got six more pairs. Use them from your inventory.');return;}
+ if(F.missiles&&!F.whale){say('Zaphod','MISSILES, monkeyman! Drive room! East! GO!');return;}
+ say('Zaphod',['Two heads are better than one. Ask anyone. Well, ask me.','Hey, wanna know a secret? Neither do I. I locked it in my own brain.','Magrathea, baby! Riches beyond imagination! Or a very old planet. One of those.','Have you seen my sunglasses? They\'re black. Well, sometimes.'][Math.floor(G.time)%4]);
+}
+function talkTrillian(){
+ if(!F.metT){F.metT=1;
+  say('Trillian','Arthur? Arthur Dent?');
+  say('Arthur','Trillian! I mean... Tricia. We met at a party. You went off with a man who said he was from another planet.');
+  say('Trillian','He was. That\'s him over there. Two heads.');
+  say('Trillian','My mice came with me, by the way. Frankie and Benjy. They\'ve been acting very strangely lately.');
+  act(checkCrew);return;}
+ if(qhas('tea')&&!qdone('tea')&&!has('leaves')&&!has('teabag')){say('Trillian','Tea? There\'s a plant in my lab (north-east) with leaves you could dry. And try the cold store for milk.');return;}
+ if(F.missiles&&!F.whale){say('Trillian','Arthur! The Improbability Drive! East end of the corridor! Hurry!');return;}
+ say('Trillian','Magrathea. The legendary planet-builders. Nobody has believed in them for millions of years. And here we are.');
+}
+let marvinTopics=0;
+function talkMarvin(){
+ if(!F.metM){F.metM=1;unlock('marvin');
+  say('Marvin','I think you ought to know I\'m feeling very depressed.');
+  say('Arthur','Hello. I\'m Arthur.');
+  say('Marvin','Here I am, brain the size of a planet, and they ask me to stand in a corridor. Call that job satisfaction? Because I don\'t.');
+  act(()=>{quest('cheer','Cheer up Marvin','Try three different ways to cheer up the robot. Odds of success: astronomically low.',true);checkCrew();});return;}
+ if(qdone('cheer')){say('Marvin','Life. Loathe it or ignore it, you can\'t like it.');return;}
+ ask('Arthur','(How do you cheer up a robot?)',[
+  {t:'Have you tried meditation?',if:()=>!F.m1,f(){F.m1=1;say('Marvin','I reached enlightenment in four seconds. It was just as dreary as everything else.');cheerCount();}},
+  {t:'Look at the stars! Aren\'t they wonderful?',if:()=>!F.m2,f(){F.m2=1;say('Marvin','I\'ve counted them. All of them. Twice. The total is unfavourable.');cheerCount();}},
+  {t:'Want to hear a joke?',if:()=>!F.m3,f(){F.m3=1;say('Marvin','Go on.');say('Arthur','Why did the robot cross the road?');say('Marvin','Because it was programmed to. Like everything. Ghastly, isn\'t it.');cheerCount();}},
+  {t:'Do you like music?',if:()=>!F.m4,f(){F.m4=1;say('Marvin','I wrote a lullaby once. It made the ship\'s computer weep for a week. Best week of my life. Which isn\'t saying much.');cheerCount();}},
+  {t:'Never mind.',f(){say('Marvin','That\'s what everybody says.');}}]);
+}
+function cheerCount(){const n=['m1','m2','m3','m4'].filter(k=>F[k]).length;if(n>=3&&!qdone('cheer')){say('Marvin','Thank you. That was very slightly less awful than silence. Don\'t let it go to your head.');act(()=>{done('cheer');improb(1);});}}
+function talkNutri(){
+ if(F.whale){say('Nutri-Matic','Share and Enjoy!');return;}
+ if(F.teaBusy){say('Nutri-Matic','Please wait. I am still thinking about tea. All of me is thinking about tea.');return;}
+ if(!F.nutri1){F.nutri1=1;unlock('nutrimatic');
+  say('Narrator','You press the button marked TEA. The machine whirrs, analyses your taste buds, studies your metabolism, and sends tiny probes into your brain.');
+  say('Narrator','It dispenses a plastic cup of liquid that is almost, but not quite, entirely unlike tea.');
+  say('Arthur','No. Look. I just want a cup of tea.');
+  say('Nutri-Matic','Share and Enjoy!');
+  if(qhas('tea'))say('Arthur','Right. I\'ll have to explain tea to it properly. I\'ll need something leafy and some milk.');
+  return;}
+ if(!qhas('tea')){say('Nutri-Matic','Share and Enjoy!');return;}
+ const leaf=has('teabag')||has('leaves');
+ if(!leaf||!has('milk')){say('Arthur','To explain tea properly I need '+[!leaf?'tea leaves (or something close)':'',!has('milk')?'some milk':''].filter(Boolean).join(' and ')+'.');return;}
+ say('Nutri-Matic','Explain, please. What is this "tea"?');
+ if(has('teabag'))say('Arthur','Here. An actual tea bag. From Earth. Possibly the last one in existence. Be gentle.');
+ teaQ1();
+}
+function teaQ1(){ask('Nutri-Matic','The water should be:',[
+ {t:'Tepid.',f(){say('Nutri-Matic','Incorrect. Even I know that is wrong.');teaQ1();}},
+ {t:'Freshly boiled.',f(){say('Nutri-Matic','Boiled. Noted.');teaQ2();}},
+ {t:'Carbonated.',f(){say('Nutri-Matic','That would be a different and much worse drink.');teaQ1();}}]);}
+function teaQ2(){ask('Nutri-Matic','And the milk?',[
+ {t:'A splash, afterwards.',f(){say('Nutri-Matic','Wars have been fought over this. I accept your answer.');teaQ3();}},
+ {t:'In the cup first, obviously.',f(){say('Nutri-Matic','Wars have been fought over this. I accept your answer.');teaQ3();}},
+ {t:'Seven litres.',f(){say('Nutri-Matic','That is a bath.');teaQ2();}}]);}
+function teaQ3(){ask('Nutri-Matic','Final question. Why do you drink it?',[
+ {t:'For the antioxidants.',f(){say('Nutri-Matic','Nobody has ever drunk tea for that reason.');teaQ3();}},
+ {t:'Because it\'s tea.',f(){teaWin();}},
+ {t:'To feel something.',f(){say('Marvin','(distantly) Doesn\'t work.');teaQ3();}}]);}
+function teaWin(){
+ take('milk');take('leaves');take('teabag');F.teaBusy=1;done('tea');
+ say('Nutri-Matic','Fascinating. Absolutely fascinating. I shall need to think about this. Diverting ALL ship\'s processing power to the problem of tea.');
+ say('Eddie','Uh, guys? I\'m kinda busy all of a sudden...');
+ pause(.8);
+ act(()=>startMissiles(false));
+}
+function startMissiles(resume){
+ F.missiles=1;sfx('alarm');G.shake=1;
+ if(!resume){
+  say('Zaphod','(intercom) Uh, people? Two nuclear missiles have just launched from the surface. They are heading straight for us. Eddie, evasive action!');
+  say('Eddie','Sorry, guys! Totally occupied with this tea thing! Can I get back to you?');
+  say('Trillian','(intercom) ARTHUR! The Improbability Drive! It\'s the only thing that can save us! Drive room, east end of the corridor! RUN!');
+ }
+ act(()=>{quest('missiles','Activate the Improbability Drive!','RUN to the drive room at the east end of the ship and hit the big button.');G.timer={t:50,label:'Missile impact',fail:missileFail};});
+}
+function missileFail(){
+ G.shake=1.5;flash('#f80');sfx('caught');
+ say('Narrator','The missiles are almost upon you... and the ship\'s computer briefly stops thinking about tea and nudges the ship aside. Barely.');
+ say('Zaphod','(intercom) Try that again, monkeyman! They\'re looping round for another pass!');
+ act(()=>{teleport(7,16);G.timer={t:50,label:'Missile impact',fail:missileFail};});
+}
+function driveUse(){
+ if(!(F.missiles&&!F.whale)){say('Trillian','(intercom) Arthur, please don\'t touch the drive. The last time somebody pressed it, two people from Earth turned up in our corridor.');return;}
+ G.timer=null;F.whale=1;done('missiles');flash('#fff');sfx('warp');improb(8);G.shake=1;
+ say('Narrator','You slam your fist down on the big button marked IMPROBABILITY. Reality hiccups.');
+ say('Narrator','Outside, the two nuclear missiles are suddenly, and against all reason, a sperm whale and a bowl of petunias.');
+ say('Narrator','The whale, newly in existence several miles above Magrathea, has a lot of questions. "Who am I? Why am I here? What is this big round thing rushing up to meet me? I think I\'ll call it... Ground! I wonder if it will be friends with me?"');
+ say('Narrator','The bowl of petunias thinks only: "Oh no, not again."');
+ act(()=>{unlock('whale');unlock('petunias');});
+ say('Zaphod','(intercom) Monkeyman! You saved the ship! Okay, everybody: we\'re going down.');
+ act(()=>card('Chapter 4 · Magrathea','The Heart of Gold settles onto the dead, dusty surface of the legendary planet. Nearby is a very large crater with a very recently deceased whale in it.',()=>loadMap('magrathea')));
+}
+const IMPROB_FX=[
+ ()=>{G.peng=15;notify('You are a penguin again. It suits you.');},
+ ()=>{notify('Your left arm briefly becomes a small sofa, then thinks better of it.');},
+ ()=>{const m=G.map;for(let i=0;i<300;i++){const x=1+Math.random()*(m.w-2)|0,y=1+Math.random()*(m.h-2)|0;if(passable(x,y)){teleport(x,y);notify('You are suddenly somewhere else on the ship.');break;}}},
+ ()=>{burst(G.p.x*TS+16,G.p.y*TS+16,70,['#f4a','#4af','#fd4','#4f8','#fff']);notify('It rains a brief shower of small, polite confetti.');},
+ ()=>{notify('Somewhere, a bowl of petunias has an awful sense of déjà vu.');},
+ ()=>{notify('For exactly one second, Marvin feels happy. He reports it as a malfunction.');},
+ ()=>{notify('Every door on the ship says "thank you" at the same time.');},
+ ()=>{notify('You briefly understand the offside rule. It passes.');},
+];
+function improbToy(){
+ if(!F.toy){F.toy=1;say('Narrator','A Finite Improbability Generator: a small Brownian motion producer (say, a nice hot cup of tea) wired to a lot of very expensive electronics. There is a big friendly button.');}
+ act(()=>{sfx('warp');flash('#c8f');improb(1);IMPROB_FX[Math.random()*IMPROB_FX.length|0]();});
+}
+
+/* =========================================================================
+   CHAPTER 4 — MAGRATHEA
+   ========================================================================= */
+function awardCheck(){if(has('award')&&!qdone('award')){take('award');done('award');improb(1);
+ say('Slartibartfast','My award! For Norway! I have been looking for that for a million years. Thank you, Earthman. I shall put it on the mantelpiece, next to the one for Africa that I didn\'t get.');}}
+MAPS.magrathea=()=>({
+ name:'Magrathea · surface',chapter:'Ch.4 · Magrathea',w:46,h:30,fill:'`',theme:TH.mag,start:[8,9],tint:'rgba(60,0,60,.12)',
+ build(g){
+  border(g,'R');R(g,4,4,6,3,'Z');
+  [[14,4],[15,5],[22,3],[27,7],[12,15],[6,18],[8,24],[16,26],[28,22],[33,16],[40,14],[42,26],[24,24],[3,12],[19,20],[30,13],[27,26],[35,24]].forEach(p=>Pt(g,p[0],p[1],'R'));
+  [[11,10],[25,20],[37,18],[17,9],[5,22]].forEach(p=>Pt(g,p[0],p[1],'B'));
+  R(g,18,12,9,6,'M');
+  box(g,30,1,15,10,'R','.');Pt(g,36,10,'.');[[33,4],[34,4],[38,6],[39,6],[41,3],[35,7]].forEach(p=>Pt(g,p[0],p[1],'R'));[[33,5],[38,7],[42,5]].forEach(p=>Pt(g,p[0],p[1],'_'));
+ },
+ ents:[
+  {kind:'obj',spr:'heartship',name:'Heart of Gold',x:4,y:4,aw:6,ah:3,zb:2,talk(){say('Narrator','The Heart of Gold, parked rather badly. Zaphod insists it is "artistic".');}},
+  {kind:'obj',spr:'whale',name:'whale',x:21,y:14,aw:3,talk(){say('Narrator','You stand beside the whale for a moment of silence. It had a short life, but it invented the word "ground", which is more than most people manage.');unlock('whale');done('whale');}},
+  {kind:'obj',spr:'petunia',name:'bowl of petunias',x:14,y:19,talk(){say('Narrator','Somehow it survived the fall without a scratch. If a bowl of petunias could sigh, this one would be sighing.');unlock('petunias');}},
+  {kind:'obj',spr:'hatch',name:'tunnel',x:12,y:24,talk(){say('Narrator','A tunnel into the planet. Zaphod, Ford and Trillian have gone in. You can hear Zaphod humming tunelessly. You decide to stay out here and admire the bleakness.');}},
+  {kind:'obj',spr:'sign',name:'warning',x:35,y:11,talk(){say('Narrator','A crudely scratched sign: DANGER. RAVENOUS BUGBLATTER BEAST. (Not from Traal. On holiday.)');}},
+  {id:'slarti',kind:'npc',spr:'slarti',name:'Old man',x:40,y:22,talk:talkSlartiSurface,alertMark:()=>!qdone('explore')},
+  {kind:'obj',spr:'aircar',name:'aircar',x:42,y:22,talk(){say('Narrator','A small, elegant aircar. It looks like it was built by someone who really likes coastlines.');}},
+  {id:'award',kind:'item',x:43,y:2,flavor:'A dusty award: "For Services to Coastlines: the Fjords of Norway."',onPick(){quest('award','Lost property','A dusty award for the fjords of Norway. Someone round here must be missing it.',true);}},
+  {kind:'guide',gid:'bugblatter',x:36,y:12},
+  {kind:'guide',gid:'magrathea',x:8,y:12},
+ ],
+ enemies:[{spr:'beast',label:'Bugblatter Beast',x:32,y:2,path:[[32,2],[42,2],[42,8],[32,8]],speed:1.2,range:6,fov:100,blind:true,
+   catchLine:'The Ravenous Bugblatter Beast scoops you up, sniffs you, decides you\'re not worth the bother, and flings you out of the cave. (Try a towel over your head: press T.)'}],
+ triggers:[{x:36,y:10,cp:[36,11]}],
+ onEnter(){
+  if(!F.magIntro){F.magIntro=1;
+   say('Zaphod','Okay! Ford, Trillian, with me. Monkeyman, you stay with the ship. Guard it. From... things.');
+   say('Arthur','What things?');
+   say('Zaphod','Eh, whatever things there are.');
+   say('Narrator','The three of them disappear into a tunnel. You are alone on a dead planet, in a dressing gown, with a whale.');
+   act(()=>{quest('explore','Explore Magrathea','The others have gone off without you. Have a look around. Someone might still live here.');quest('whale','Pay your respects','The poor whale in the crater deserves a moment of silence.',true);});
+  }
+ }
+});
+function talkSlartiSurface(){
+ say('Old man','Come along, Earthman. You\'re in no danger, and it\'s very cold out here.');
+ say('Arthur','Who are you?');
+ say('Old man','My name is not important.');
+ say('Arthur','What is it, though?');
+ say('Old man','Slartibartfast.');
+ say('Arthur','...Sorry?');
+ say('Slartibartfast','I did say it wasn\'t important. Come. My aircar is just here. There is something you should see, and some people who very much want to meet you.');
+ act(awardCheck);
+ act(()=>{done('explore');card('Inside Magrathea','The aircar plunges down into the planet, through miles of tunnels, and out into a cavern so vast it has its own weather. Here, planets are built to order.',()=>loadMap('factory'));});
+}
+
+MAPS.factory=()=>({
+ name:'Magrathea · Planet Factory Floor',chapter:'Ch.4 · Magrathea',w:46,h:26,fill:'*',theme:TH.factory,start:[3,13],
+ build(g){
+  R(g,2,12,6,4,'.');R(g,8,13,14,2,'.');R(g,9,12,12,1,'g');R(g,9,15,12,1,'g');R(g,22,10,6,8,'.');
+  box(g,22,1,10,8);Pt(g,26,8,'+');Pt(g,26,9,'.');[[24,6],[25,6],[27,6],[28,6]].forEach(p=>Pt(g,p[0],p[1],'s'));
+  R(g,28,13,8,2,'.');box(g,36,8,9,12,'#','r');Pt(g,36,13,'+');R(g,39,12,3,2,'o');
+ },
+ decor(cx,cy){drawSprite('planet',14*TS-cx,6*TS-cy,{r:90,scaffold:true});drawSprite('planet',6*TS-cx,21*TS-cy,{r:60,c1:'#fd8',c2:'#a60',land:'rgba(255,255,255,.3)'});drawSprite('planet',38*TS-cx,23.5*TS-cy,{r:46,c1:'#f8a',c2:'#a24',land:'rgba(120,40,160,.5)'});
+   txt('EARTH Mk II',14*TS-cx,6*TS-cy+112,'#ffcf4a',13,'center');},
+ ents:[
+  {id:'slarti',kind:'npc',spr:'slarti',name:'Slartibartfast',x:25,y:11,talk:talkSlartiFactory,alertMark:()=>!F.slartiF||(qdone('dt')&&!qhas('mice'))},
+  {kind:'obj',spr:'sign',name:'plaque',x:12,y:12,talk(){say('Narrator','EARTH Mk II. Commissioned by: two mice. Status: urgent. Delivery: pending. Notes: fjords to be re-done, Slartibartfast to handle.');}},
+  {kind:'obj',spr:'holo',name:'Deep Thought recording',x:26,y:3,talk:deepThought},
+  {kind:'npc',spr:'mouse',name:'Benjy mouse',x:39,y:12,face:false,talk:miceScene,alertMark:()=>!F.miceDone},
+  {kind:'npc',spr:'mouse',name:'Frankie mouse',x:41,y:12,face:false,talk:miceScene},
+  {kind:'npc',spr:'zaphod',name:'Zaphod',x:38,y:10,talk(){say('Zaphod','These mice are amazing hosts, monkeyman. Free drinks! Tiny, tiny free drinks.');}},
+  {kind:'npc',spr:'ford',name:'Ford',x:42,y:10,talk(){say('Ford','Don\'t eat anything. Don\'t sign anything. And whatever they ask for, the answer is no.');}},
+  {kind:'npc',spr:'trillian',name:'Trillian',x:40,y:15,talk(){say('Trillian','Arthur, these are my mice. MY mice. They\'ve been running experiments on ME this whole time.');}},
+  {kind:'guide',gid:'planetbuild',x:3,y:15},
+ ],
+ onEnter(){if(!F.facIntro){F.facIntro=1;say('Slartibartfast','This way, Earthman. Walk along the gantry. Do try not to fall off. It is quite a long way down, and there is nothing at the bottom.');}}
+});
+function talkSlartiFactory(){
+ if(has('award'))awardCheck();
+ if(!F.slartiF){F.slartiF=1;unlock('fjords');
+  say('Slartibartfast','This is the factory floor, where we made most of your planets.');
+  say('Arthur','Our planets?');
+  say('Slartibartfast','Earth, mostly. I did the fjords myself. Got an award for Norway. Lost it somewhere up on the surface, I believe.');
+  if(!qhas('award'))act(()=>quest('award','Lost property',"Slartibartfast lost his award for Norway's fjords somewhere on the surface. (If you didn't grab it, it's too late now. Sorry.)",true));
+  say('Slartibartfast','That is Earth Mark Two. We are building it again from the original blueprints. Our clients want it back.');
+  say('Arthur','Clients?');
+  say('Slartibartfast','You\'ll see. First, watch the recording in the theatre to the north. It explains everything, which is more than most things do.');
+  act(()=>quest('dt','Watch the Deep Thought recording','The theatre is just north of the platform.'));return;}
+ if(!qdone('dt')){say('Slartibartfast','The theatre, Earthman. North. Things will make sense. Or they won\'t, but at least you\'ll know why.');return;}
+ if(!qhas('mice')){say('Slartibartfast','Your hosts are waiting in the dining room at the east end of the gantry. I would rather be designing a coastline.');
+  act(()=>quest('mice','Meet your hosts','The dining room is at the east end of the gantry.'));return;}
+ say('Slartibartfast','I\'d far rather be happy than right any day. I find it helps with the fjords.');
+}
+function deepThought(){
+ say('Narrator','A hologram flickers into life. Millions of years ago, a race of hyper-intelligent pan-dimensional beings built a computer called Deep Thought to find the Answer to Life, the Universe, and Everything.');
+ say('Deep Thought','I can find the answer. But it will take me some time. About seven and a half million years.');
+ say('Narrator','Seven and a half million years later, a vast crowd gathers. The great day has come.');
+ say('Deep Thought','The Answer to the Great Question... of Life, the Universe and Everything... is...');
+ say('Deep Thought','...you\'re really not going to like it...');
+ say('Deep Thought','Forty-two.');
+ say('Narrator','There is a very long silence.');
+ say('Deep Thought','I checked it very thoroughly. The problem, to be quite honest, is that you never actually knew what the Question was.');
+ say('Deep Thought','But I can design a computer that will find it: a computer so vast that organic life itself will be part of its circuitry. It shall be called... the Earth.');
+ act(()=>{unlock('deepthought');unlock('fortytwo');done('dt');});
+ say('Arthur','The Earth was... a computer?');
+}
+function miceScene(){
+ if(F.miceDone)return;
+ if(!qdone('dt')){say('Narrator','Two white mice sit on the table on little cushions. They look at you, then at each other, then pointedly at the theatre door to the north.');return;}
+ done('mice');
+ say('Benjy','Ah, the Earthman! Do sit down. Have some wine. We\'re so glad you survived. It saves an enormous amount of bother.');
+ say('Frankie','We are the hyper-intelligent pan-dimensional beings who commissioned the Earth. In your dimension we appear as mice. It\'s a look.');
+ say('Benjy','Your planet was five minutes away from finding the Question when the Vogons blew it up. FIVE MINUTES. The paperwork alone...');
+ say('Frankie','But you were on it until the very end. The Question is probably still in your brain. So we\'d like to buy it.');
+ ask('Arthur','Buy... my brain?',[
+  {t:'Absolutely not.'},
+  {t:'What would I use instead?',f(){say('Benjy','Oh, a simple electronic one would do. It would only need to say things like "What?" and "I don\'t understand" and "Where\'s the tea?". Nobody would notice the difference.');}},
+  {t:"Couldn't you just make up a question?",f(){say('Frankie','Ooh, that\'s not a bad idea. "How many roads must a man walk down?" Sounds deep.');say('Benjy','Still want the brain, though.');}}]);
+ say('Arthur','No. I\'m rather attached to it.');
+ say('Benjy','Pity. GUARDS! Seize the Earthman! Gently: we need the brain intact!');
+ act(()=>{F.miceDone=1;unlock('mice');flash('#f33');G.shake=1;
+   card('Escape!','Zaphod kicks over the table. In the chaos you bolt through a side door, straight into the mice\'s brain-research wing. Wrong way. Well, it\'s A way.',()=>loadMap('micelab'));});
+}
+
+MAPS.micelab=()=>({
+ name:'Mice Research Wing',chapter:'Ch.4 · Magrathea',w:44,h:24,fill:'#',theme:TH.lab,start:[2,12],
+ build(g){
+  R(g,1,9,6,6,'.');R(g,7,3,12,18,'.');
+  R(g,9,6,1,4,'K');R(g,13,6,1,4,'K');R(g,9,14,1,4,'K');R(g,13,14,1,4,'K');R(g,16,9,1,6,'K');
+  [[10,7],[14,8],[10,15],[14,16],[17,11],[10,11]].forEach(p=>Pt(g,p[0],p[1],'_'));
+  R(g,20,2,10,7,'.');Pt(g,19,4,'.');Pt(g,24,4,'b');Pt(g,25,4,'b');
+  R(g,19,11,12,2,'.');Pt(g,22,10,'_');Pt(g,27,13,'_');
+  R(g,31,3,11,18,'.');R(g,33,6,2,2,'K');R(g,38,6,2,2,'K');R(g,33,14,2,2,'K');R(g,38,14,2,2,'K');R(g,35,10,3,2,'K');
+  [[35,7],[37,7],[35,15],[37,15],[34,10],[38,11]].forEach(p=>Pt(g,p[0],p[1],'_'));
+  R(g,42,10,2,3,'.');
+ },
+ ents:[
+  {kind:'obj',spr:'jar',name:'jar',x:28,y:3,talk(){say('Narrator','A jar labelled SPARE BRAIN (SIMPLE). It is about the size of a walnut and says "What?" when you tap the glass.');}},
+  {kind:'guide',gid:'brainsurgery',x:21,y:7},
+  {kind:'obj',spr:'exit',name:'exit',x:43,y:11,solid:false,dirv:[1,0],talk(){}},
+ ],
+ enemies:[
+  {spr:'cop',label:'Shooty',x:8,y:4,path:[[8,4],[17,4],[17,19],[8,19]],speed:1.6,range:6,catchLine:'"Stop! We\'re really nice guys and we don\'t want to have to shoot you!" The cop marches you back, apologising sincerely the whole way.'},
+  {spr:'robot',label:'Sentry',x:30,y:12,ang:Math.PI,sweep:.55,sweepSpd:.9,range:7,fov:50,catchLine:'The sentry-bot shrieks "BRAIN DETECTED!" Cops drag you back to the start.'},
+  {spr:'cop',label:'Bang Bang',x:40,y:19,path:[[40,19],[32,19],[32,4],[40,4]],speed:1.5,range:6,catchLine:'"Hey! It\'s a tough job being a cop, you know? Nobody understands that." He sighs and escorts you back.'},
+  {spr:'robot',label:'Orderly',x:41,y:12,path:[[41,12],[32,12]],speed:1.1,range:4.5,catchLine:'An orderly-bot clamps your arm. "Scheduled for surgery! Please proceed back to the waiting area."'},
+ ],
+ triggers:[{x:19,y:11,h:2,cp:[19,11]},{x:31,y:11,h:2,cp:[31,11]},{x:43,y:10,h:3,fn:labExit}],
+ onEnter(){quest('escape','Escape the research wing','Get past the cops and robots to the exit on the far east side. Keep your brain where it is.');}
+});
+function labExit(){
+ done('escape');
+ say('Zaphod','MONKEYMAN! Over here!');
+ say('Narrator','Zaphod, Ford and Trillian burst out of a side passage. Behind them, two cops open fire. The computer bank you are hiding behind explodes. So do the cops, sort of. It is all very confusing.');
+ say('Ford','Brilliant. Now what?');
+ say('Zaphod','Now? Now I\'m starving. I know a place. Great food. Fantastic floor show. It\'s right at the end of the Universe.');
+ say('Narrator','Somewhere behind you, Marvin is left on Magrathea. He doesn\'t mind. He\'s used to it.');
+ act(()=>{improb(4);card('Chapter 5 · The Restaurant at the End of the Universe','Milliways. Every evening the diners watch the entire Universe end in a glorious blaze, and then they go home. The Heart of Gold improbably delivers you to the door.',()=>loadMap('milliways'));});
+}
+
+/* =========================================================================
+   CHAPTER 5 — MILLIWAYS
+   ========================================================================= */
+MAPS.milliways=()=>({
+ name:'Milliways',chapter:'Ch.5 · The Restaurant at the End of the Universe',w:44,h:28,fill:'#',theme:TH.milli,start:[4,13],
+ build(g){
+  R(g,2,11,6,6,'r');R(g,8,3,26,22,'r');R(g,8,2,26,1,'g');R(g,15,3,12,2,'.');R(g,30,7,1,9,'C');
+  for(let tx=11;tx<=26;tx+=5)for(let ty=8;ty<=23;ty+=5)Pt(g,tx,ty,'o');
+  R(g,34,20,4,3,'.');
+ },
+ decor(cx,cy){if(F.showOn){const t=G.time;for(let i=0;i<8;i++){const x=(8+((i*37+Math.floor(t*3))%26))*TS-cx,y=2*TS-cy+16;circ(x,y,10+Math.sin(t*7+i)*6,`hsla(${(t*90+i*45)%360},90%,60%,.7)`);}}},
+ update(dt){if(F.showOn&&Math.random()<dt*6){burst((10+Math.random()*22)*TS,3*TS,12,['#f84','#fd4','#f4f','#4ff'],60);}},
+ ents:[
+  {kind:'npc',spr:'robot',name:'Maître d\'',x:6,y:11,talk(){say('Maître d\'','Welcome to Milliways! Your table is ready. It has always been ready. Time is very flexible here, and so are our prices.');}},
+  {kind:'npc',spr:'zaphod',name:'Zaphod',x:10,y:13,face:false,talk(){say('Zaphod',F.showDone?'Car park, monkeyman! Lift\'s by the bar! Let\'s borrow something fast.':'Best seat in the house. Order anything! It\'s all on account. Somebody\'s account.');}},
+  {kind:'npc',spr:'ford',name:'Ford',x:12,y:13,face:false,talk(){if(!qhas('hotblack')){say('Ford','Arthur! Is that... that IS Hotblack Desiato! Lead singer of Disaster Area! Over there, the table in the south-east, with the bodyguard!');act(()=>quest('hotblack','Meet a rock star','Hotblack Desiato is sitting at a table in the south-east corner of the restaurant.',true));}else say('Ford','The Guide says Milliways has the best view in existence. It\'s right. Mind you, it also says the house wine is drinkable.');}},
+  {kind:'npc',spr:'trillian',name:'Trillian',x:11,y:14,face:false,talk(){say('Trillian','Every night they watch the Universe end, and then they all go home. Doesn\'t anybody find that odd?');}},
+  {id:'cow',kind:'npc',spr:'cow',name:'Dish of the Day',x:13,y:11,talk:talkCow,alertMark:()=>!F.dishDone},
+  {kind:'npc',spr:'max',name:'Max Quordlepleen',x:20,y:4,talk:talkMax,alertMark:()=>F.dishDone&&!F.showDone},
+  {id:'zarquon',kind:'npc',spr:'zarquon',name:'Zarquon',x:22,y:4,cond:()=>!!F.zarquon,talk(){say('Zarquon','Er... hello? Is it over? Have I missed it? I always miss it.');}},
+  {kind:'npc',spr:'barman',name:'Barman',x:32,y:11,talk:talkGargleBar},
+  {kind:'npc',spr:'hotblack',name:'Hotblack Desiato',x:25,y:18,face:false,talk(){unlock('hotblack');done('hotblack');
+    say('Narrator','Hotblack Desiato sits perfectly still behind dark glasses. He is spending a year dead for tax reasons. He doesn\'t say much.');
+    say('Bodyguard','Mr Desiato don\'t talk to nobody. He\'s dead. And keep away from his ship in the car park. Big black thing. Very sensitive.');}},
+  {kind:'npc',spr:'bodyguard',name:'Bodyguard',x:27,y:18,face:false,talk(){say('Bodyguard','Move along. Mr Desiato is being dead.');}},
+  {kind:'npc',spr:'patron',col:'#2a6a8a',hair:'#ddd',name:'Diner',x:17,y:9,wander:1,talk(){say('Diner','I come every night. The Universe ends, I have the cheese board, I go home. It\'s a routine.');}},
+  {kind:'npc',spr:'patron',col:'#8a2a6a',hair:'#222',name:'Diner',x:22,y:20,wander:1,talk(){say('Diner','I asked for my steak medium-rare and the cow was so disappointed in me.');}},
+  {kind:'npc',spr:'marketing',name:'Diner',x:16,y:17,wander:1,talk(){say('Diner','Apparently the Big Bang Burger Bar at the beginning of time is much more lively. Fewer endings.');}},
+  {kind:'obj',spr:'lift',name:'car park lift',verb:'Take',x:36,y:21,talk(){if(qhas('steal'))loadMap('carpark',2,2);else say('Narrator','The lift down to the car park. You have no reason to go down there. Yet.');}},
+  {kind:'guide',gid:'milliways',x:3,y:15},
+ ],
+ onEnter(){
+  if(!F.mIntro){F.mIntro=1;
+   say('Narrator','Milliways: the Restaurant at the End of the Universe. Above you, through the great dome, the stars are already looking a bit tired.');
+   say('Zaphod','Table for four, name of Beeblebrox. I booked. Well, I\'m going to.');
+   say('Narrator','You pay for dinner by putting one penny into a savings account in your own time. By the end of time, the interest covers the bill. Arthur\'s penny is, unfortunately, on a planet that no longer exists. Zaphod pays.');
+   act(()=>quest('dinner','Order dinner','The Dish of the Day is wandering around near your table. It would like a word.'));
+  }
+ }
+});
+function talkCow(){
+ if(F.dishDone){say('Cow','Lovely to meet you. Do enjoy the rest of your evening. And me.');return;}
+ say('Cow','Good evening! I am the main Dish of the Day. May I interest you in parts of my body?');
+ say('Narrator','It shifts its weight and gives you a winning smile.');
+ say('Cow','Something off the shoulder? Braised in a white wine sauce? I\'ve been force-feeding myself for months. Very tender.');
+ ask('Arthur','(Horrified.)',[
+  {t:"I'll have a green salad, please.",f(){say('Cow','A salad? I know plenty of vegetables who would be very upset to hear you say that. At least I WANT to be eaten.');say('Zaphod','Four rare steaks, please. And hurry: we haven\'t eaten in five hundred and seventy-six thousand million years.');}},
+  {t:'Steak. Rare. ...Sorry.',f(){say('Cow','Splendid choice, sir! I\'ll just pop out the back and shoot myself. Don\'t worry, I\'ll be very humane.');}},
+  {t:"Can't I just have the soup?",f(){say('Cow','The soup is also me. Mostly.');}}]);
+ act(()=>{F.dishDone=1;done('dinner');unlock('dish');quest('show','Watch the end of the Universe','Max Quordlepleen is hosting the show on stage. Go and say hello.');});
+}
+function talkMax(){
+ if(!F.dishDone){say('Max','Not yet, sir! The Universe ends after the main course. Have you ordered? You must order!');return;}
+ if(F.showDone){say('Max','Thank you, thank you! Same time tomorrow! Well. Same time.');return;}
+ say('Max','Ladies and gentlemen! The moment you have all been waiting for! The skies are boiling! The stars are collapsing! This is it: the end of absolutely everything!');
+ act(()=>{F.showOn=1;G.shake=.6;sfx('alarm');});
+ pause(2.5);
+ say('Max','And now, to see us all out, please welcome... the Great Prophet ZARQUON!');
+ act(()=>{F.zarquon=1;flash('#fff');});
+ say('Zarquon','Er... hello, everybody. Sorry I\'m a bit late. Had a terrible time. All sorts of things cropping up at the last moment. How are we for time? Is there...');
+ act(()=>{flash('#fff');G.shake=1.5;sfx('warp');F.showOn=0;F.showDone=1;F.zarquon=0;unlock('zarquon');done('show');});
+ say('Narrator','...and the Universe ends. The lights come up. Everybody applauds politely. Coffee is served.');
+ say('Zaphod','Okay, gang. Dessert somewhere less final. Let\'s borrow a ship from the car park. The lift\'s by the bar.');
+ act(()=>quest('steal','Borrow a ship','Take the lift (east side, by the bar) down to the car park and find a fast ship.'));
+}
+function talkGargleBar(){
+ if(qdone('gargle')){say('Barman','Another Gargle Blaster? I admire your courage. Or your total absence of brain cells.');return;}
+ if(!qhas('gargle'))quest('gargle','Pan Galactic Gargle Blaster','Mix the best drink in existence at the bar. The Guide has the recipe.',true);
+ ask('Barman','Want to mix yourself a Pan Galactic Gargle Blaster? House rules: you make it, you drink it.',[
+  {t:"Let's do it.",f(){gargle();}},
+  {t:'What goes in it?',f(){say('Barman','Ask your Guide, sir. Gargle Blasters are entry one in the drinks section.');act(()=>unlock('gargle'));}},
+  {t:'Maybe later.'}]);
+}
+function gargle(){
+ const steps=["Ol' Janx Spirit",'Santraginean sea water','Arcturan Mega-gin','Fallian marsh gas','an Algolian Suntiger tooth','an olive'];
+ const flav=['You pour in a measure of Ol\' Janx Spirit. It hums.','You add Santraginean sea water. Santraginean fish weep somewhere.','Three cubes of Arcturan Mega-gin. They clink ominously.','Four litres of Fallian marsh gas bubble through it, in memory of happy hikers who died in the marshes of Fallia.','The Suntiger tooth dissolves, filling the drink with the fire of the Algolian suns.','Finally, an olive. It sinks with an air of quiet dignity.'];
+ let i=0;
+ const next=()=>{
+  if(i>=steps.length){say('Narrator','You drink it. It is like being hit on the head with a gold bar that someone has politely wrapped in a slice of lemon. You love it.');act(()=>{done('gargle');unlock('gargle');improb(2);G.shake=1;});return;}
+  const opts=shuffle([steps[i],...shuffle(steps.filter((s,j)=>j!==i)).slice(0,2)]);
+  ask('Barman',`Ingredient ${i+1} of 6. What goes in next?`,opts.map(o=>({t:o,f(){if(o===steps[i]){say('Narrator',flav[i]);i++;next();}
+    else{say('Narrator',`You add ${o}. The glass makes a noise like a small sad trumpet and explodes, gently, all over the barman.`);say('Barman','From the top, sir. And maybe check your Guide.');i=0;next();}}})));
+ };
+ next();
+}
+
+MAPS.carpark=()=>({
+ name:'Milliways Car Park',chapter:'Ch.5 · The Restaurant at the End of the Universe',w:44,h:28,fill:'#',theme:TH.carpark,start:[2,2],
+ build(g){
+  R(g,1,1,42,26,'.');for(const x of [6,14,22,30])for(const y of [4,11,18])R(g,x,y,5,4,'X');R(g,37,20,5,4,'Z');
+  [[5,5],[13,12],[21,19],[29,5],[19,12],[27,19],[35,12],[11,19],[35,5],[3,9],[24,16],[4,25]].forEach(p=>Pt(g,p[0],p[1],'_'));
+ },
+ decor(cx,cy){for(const x of [6,14,22,30])for(const y of [4,11,18]){const X=x*TS-cx,Y=y*TS-cy,h=hsh(x,y);const col=['#c33','#3a8','#36c','#ca3','#a3c','#3cc'][h%6];
+   ctx.fillStyle='#2e2e34';ctx.fillRect(X,Y,160,128);ell(X+80,Y+68,76,46,'rgba(0,0,0,.45)');ell(X+80,Y+62,74,44,col);ell(X+84,Y+50,38,22,'rgba(200,240,255,.6)');
+   for(let i=0;i<4;i++)circ(X+30+i*34,Y+86,4,Math.sin(G.time*3+i+h)>0?'#ff8':'#553');}},
+ ents:[
+  {kind:'obj',spr:'lift',name:'lift',verb:'Take',x:1,y:1,talk(){loadMap('milliways',35,21);}},
+  {id:'marvin',kind:'npc',spr:'marvin',name:'Marvin',x:3,y:24,talk:talkMarvinCP,alertMark:()=>!has('key')},
+  {kind:'obj',spr:'blackship',name:'black ship',x:37,y:20,aw:5,ah:4,zb:3,talk(){say('Narrator','A long, sleek, completely black ship. Even the black is black.');}},
+  {kind:'obj',spr:'hatch',name:'hatch',verb:'Board',x:36,y:21,talk:boardShip},
+  {kind:'guide',gid:'timetravel',x:42,y:2},
+ ],
+ enemies:[
+  {spr:'robot',label:'Attendant',x:12,y:2,path:[[12,2],[12,25]],speed:1.3,range:5,catchLine:cpCatch},
+  {spr:'robot',label:'Attendant',x:40,y:9,path:[[40,9],[2,9]],speed:1.5,range:5,catchLine:cpCatch},
+  {spr:'robot',label:'Attendant',x:28,y:25,path:[[28,25],[28,15]],speed:1.1,range:5,catchLine:cpCatch},
+  {spr:'robot',label:'Attendant',x:20,y:16,path:[[20,16],[40,16]],speed:1.3,range:5,catchLine:cpCatch},
+ ],
+ onEnter(){if(!F.cpIntro){F.cpIntro=1;say('Narrator','The car park. Rows of ridiculous spaceships, and robot attendants gliding between them. They take parking extremely seriously.');
+   say('System','Stealth again. Find someone who can get you into a ship.');}}
+});
+function cpCatch(){return 'A parking robot clamps your ankle. "Have you validated your ticket, sir?" You are escorted back to the lift.';}
+function talkMarvinCP(){
+ if(has('key')){say('Marvin','Go on. Steal the ship. Leave me here. I\'m used to it.');return;}
+ say('Marvin','Oh. It\'s you.');
+ say('Arthur','Marvin! What are you doing here?');
+ say('Marvin','Parking cars. I\'ve been parking cars for five hundred and seventy-six thousand million years. You left me on Magrathea, so I waited. Then I got a job. Then the Universe ended. Again. It ends every night.');
+ say('Marvin','The first ten million years were the worst. The second ten million were also the worst. After that it went downhill.');
+ say('Arthur','We need a ship. A fast one.');
+ say('Marvin','Take Hotblack Desiato\'s. The big black one in the far corner. Here\'s the key. Nobody ever thanks me.');
+ act(()=>give('key'));
+ say('Arthur','Thank you, Marvin.');
+ say('Marvin','...That was unexpected. I don\'t like it.');
+}
+function boardShip(){
+ if(!has('key')){say('Narrator','The hatch is locked. Perhaps one of the attendants has a key. Perhaps a depressed one.');return;}
+ done('steal');
+ say('Narrator','You climb aboard. Everything inside is black: black controls, black seats, black labels on black buttons. Zaphod, Ford, Trillian and, gloomily, Marvin pile in after you.');
+ say('Zaphod','Okay, autopilot: get us out of here!');
+ say('System','AUTOPILOT ENGAGED. DESTINATION: THE SUN OF KAKRAFOON. STUNT DIVE COMMENCING. TIME TO IMPACT: SIX MINUTES. THANK YOU FOR FLYING DISASTER AREA.');
+ say('Ford','It\'s Hotblack\'s stunt ship! They fly it into a star at the end of every concert. With nobody on board!');
+ say('Zaphod','So... we\'re the nobody.');
+ say('Narrator','There is, however, a teleporter. It can send people anywhere. It cannot send whoever is operating it. Marvin, of course, is standing next to the controls.');
+ say('Marvin','Don\'t mind me. I\'ll just stay here and be incinerated in a star. Not that anyone will notice.');
+ act(()=>{flash('#fff');sfx('warp');improb(5);card('Chapter 6 · The B Ark','The teleporter scatters everyone across space and time. Arthur and Ford rematerialise in the dark, stuffy hold of an enormous, very old spaceship that smells of shampoo and committee meetings.',()=>loadMap('ark'));});
+}
+
+/* =========================================================================
+   CHAPTER 6 — THE B ARK
+   ========================================================================= */
+const golgCatch='A management consultant grabs you. "Ah! Fresh blood! Let\'s have a quick 360-degree feedback session about your core competencies." Three hours later you crawl back to the teleport bay.';
+const hairCatch='Snip snip! You now have a "Golgafrinchan Executive" haircut. It does not suit you. Back to the start.';
+MAPS.ark=()=>({
+ name:'Golgafrinchan Ark Fleet Ship B',chapter:'Ch.6 · The B Ark',w:46,h:26,fill:'#',theme:TH.ark,start:[3,13],
+ build(g){
+  R(g,1,11,5,5,'.');Pt(g,6,13,'+');R(g,7,2,16,22,'.');
+  for(let x=8;x<=20;x+=3)for(let y=3;y<=19;y+=4){Pt(g,x,y,'p');Pt(g,x,y+1,'p');}
+  [[9,6],[12,9],[15,14],[18,17],[10,21],[16,5],[19,10],[13,18],[21,13],[12,22],[18,22]].forEach(p=>Pt(g,p[0],p[1],'n'));
+  R(g,23,12,20,2,'.');[[26,12],[29,13],[32,12],[35,13],[38,12],[41,13]].forEach(p=>Pt(g,p[0],p[1],'n'));
+  [[25,11],[31,11],[34,11]].forEach(p=>Pt(g,p[0],p[1],'_'));
+  R(g,24,2,10,8,'.');Pt(g,28,10,'+');Pt(g,28,11,'.');R(g,26,4,6,3,'o');
+  R(g,24,16,10,8,'.');Pt(g,28,15,'+');Pt(g,28,14,'.');[[27,19],[27,20],[30,19],[30,20]].forEach(p=>Pt(g,p[0],p[1],'s'));
+  R(g,36,2,9,9,'.');Pt(g,40,11,'+');
+ },
+ ents:[
+  {kind:'obj',spr:'teleport',name:'teleport pad',x:2,y:12,solid:false,talk(){say('Narrator','The teleport pad you arrived on. It is cold, dead, and smells faintly of Marvin\'s disappointment.');}},
+  {kind:'guide',gid:'golgafrincham',x:32,y:3},
+  {kind:'guide',gid:'sanitisers',x:29,y:20},
+  {kind:'npc',spr:'bath',name:'Captain',x:40,y:5,face:false,talk:captainScene,alertMark:()=>!qdone('ark')},
+  {kind:'npc',spr:'number1',name:'Number One',x:38,y:7,talk(){say('Number One','The Captain is in his bath. The Captain is always in his bath. Do you have an appointment?');}},
+ ],
+ enemies:[
+  {spr:'golg',label:'Consultant',x:9,y:5,path:[[9,5],[21,5],[21,21],[9,21]],speed:1.2,range:5,catchLine:golgCatch},
+  {spr:'marketing',label:'Marketing',x:25,y:7,ang:0,sweep:1.2,range:5,catchLine:golgCatch},
+  {spr:'golg',label:'Consultant',x:32,y:7,ang:Math.PI,sweep:1.2,sweepSpd:1.1,range:5,catchLine:golgCatch},
+  {spr:'hairdresser',label:'Hairdresser',x:42,y:13,path:[[42,13],[24,13]],speed:1.0,range:5.5,catchLine:hairCatch},
+  {spr:'hairdresser',label:'Hairdresser',x:25,y:17,path:[[25,17],[32,17],[32,22],[25,22]],speed:1.2,range:4.5,catchLine:hairCatch},
+ ],
+ triggers:[{x:23,y:12,h:2,cp:[23,12]},{x:40,y:10,cp:[40,10]}],
+ onEnter(){
+  G.followers=['ford'];
+  if(!F.arkIntro){F.arkIntro=1;
+   say('Ford','Where the Zarquon are we?');
+   say('Narrator','A huge, dim hold. Row after row of sleep pods, each containing someone sleeping in an important-looking suit.');
+   say('Ford','"Golgafrinchan Ark Fleet Ship B". Never heard of it. Let\'s find the bridge before anyone wakes up.');
+   act(()=>{quest('ark','Find the bridge','Sneak through the ship to the bridge in the north-east. Watch out for creaky floorboards, and for anyone holding a clipboard or scissors.');
+     say('System','Brown planks are creaky floorboards. Stepping on one alerts anyone nearby.');});
+  }
+ }
+});
+function captainScene(){
+ if(qdone('ark'))return;
+ say('Captain','Ah, hello! Come in, come in. Don\'t mind me, I\'m just having a bath. I\'m always having a bath. Captain\'s privilege.');
+ say('Ford','Captain, who are all those people asleep in the pods?');
+ say('Captain','Telephone sanitisers, mostly. And account executives, and middle management. We\'re the B Ark! Our planet was doomed, you see, so we were sent off first. The A Ark, with the leaders and scientists and artists, is right behind us.');
+ say('Number One','And the C Ark, with all the people who actually make things and do things, is right behind them.');
+ say('Ford','...Has anyone heard from the other two Arks since you left?');
+ say('Captain','Funny you should ask. No. Not a peep. Anyway, we\'re about to land on a lovely little planet. Lots of trees. Number One, prepare to land!');
+ say('Number One','Er, sir, we don\'t actually know how to land.');
+ say('Captain','Oh, just do whatever it is you usually do.');
+ act(()=>{G.shake=2;flash('#fff');sfx('caught');done('ark');});
+ say('Narrator','What they usually do turns out to be "crash into a swamp".');
+ act(()=>card('Chapter 7 · Mostly Harmless','Two million years ago. A lovely, green, prehistoric planet. The Golgafrinchans immediately start forming sub-committees. Arthur Dent looks around and gets an uneasy, homesick feeling. This place looks very, very familiar.',()=>loadMap('prehist')));
+}
+
+/* =========================================================================
+   CHAPTER 7 — PREHISTORIC EARTH
+   ========================================================================= */
+function stonePick(){F.stones=(F.stones||0)+1;notify('Flat stones: '+F.stones+' / 6');if(F.stones>=6)notify('That\'s enough stones. Take them to Ford.','#7fd4ff');}
+MAPS.prehist=()=>({
+ name:'Earth, two million years ago',chapter:'Ch.7 · Mostly Harmless',w:40,h:26,fill:',',theme:TH.prehist,start:[6,6],
+ build(g){
+  border(g,'T');R(g,1,16,38,2,'~');R(g,20,16,2,2,'M');
+  [[3,3],[11,3],[16,2],[24,5],[21,9],[3,10],[17,12],[26,13],[36,10],[5,20],[15,21],[23,23],[33,20],[37,24],[19,19],[11,14],[2,14]].forEach(p=>Pt(g,p[0],p[1],'T'));
+  [[9,4],[10,4],[22,12],[23,12],[30,23],[31,23],[8,12]].forEach(p=>Pt(g,p[0],p[1],'h'));
+  [[14,5],[27,10],[34,14],[7,22],[25,19]].forEach(p=>Pt(g,p[0],p[1],'B'));
+  box(g,28,2,10,7,'R','.');Pt(g,32,8,'.');
+  R(g,3,20,8,4,'X');
+ },
+ ents:[
+  {id:'ford',kind:'npc',spr:'ford',name:'Ford',x:8,y:7,talk:fordScrabble,alertMark:()=>(F.stones||0)>=6&&!qdone('scrabble')},
+  {kind:'obj',spr:'fire',name:'campfire',x:13,y:10,talk(){say('Narrator','A campfire. The Fire Development Sub-Committee is very proud of it, though they have not yet agreed on its official colour.');}},
+  {kind:'npc',spr:'marketing',name:'Marketing girl',x:12,y:9,talk:wheelCommittee,alertMark:()=>!qdone('wheel')},
+  {kind:'npc',spr:'golg',name:'Management consultant',x:14,y:9,talk:wheelCommittee},
+  {kind:'obj',spr:'wheel',name:'wheel prototype',x:14,y:11,talk(){say('Narrator','A wheel. It is round, and it works. It has been in development for eleven weeks, mostly in meetings.');}},
+  {kind:'obj',spr:'bath',name:'Captain',x:12,y:21,talk(){say('Captain','Lovely planet! Haven\'t left the bath since we landed. Some fellows carried it out of the wreck for me. Splendid chaps.');}},
+  {kind:'npc',spr:'number1',name:'Number One',x:13,y:22,talk(){say('Number One','We\'ve formed a committee to look into why we crashed. Its first finding is that we need a bigger committee.');}},
+  {kind:'npc',spr:'caveman',name:'Caveman',x:30,y:20,wander:2,beard:1,talk(){say('Narrator','The caveman looks at the Golgafrinchans, then at you, with the sad eyes of someone whose whole species is about to be outcompeted by hairdressers.');if(qdone('scrabble'))say('Caveman','(He carefully arranges two pebbles to spell "UG". It is a very good word.)');}},
+  {kind:'npc',spr:'caveman',name:'Cavewoman',x:24,y:21,wander:2,talk(){say('Narrator','She offers you a nut. You accept. She seems pleased. You get the feeling she would have been much better at running this planet.');}},
+  {kind:'obj',spr:'paint',name:'cave painting',x:33,y:3,talk(){say('Narrator','A cave painting: a fish, something that might be a towel, and a large ugly shape that is unmistakably a Vogon. Huh.');improb(1);}},
+  {kind:'item',id:'stone',key:'stone1',x:17,y:4,onPick:stonePick},
+  {kind:'item',id:'stone',key:'stone2',x:25,y:11,onPick:stonePick},
+  {kind:'item',id:'stone',key:'stone3',x:35,y:12,onPick:stonePick},
+  {kind:'item',id:'stone',key:'stone4',x:9,y:24,onPick:stonePick},
+  {kind:'item',id:'stone',key:'stone5',x:35,y:5,onPick:stonePick},
+  {kind:'item',id:'stone',key:'stone6',x:22,y:21,onPick:stonePick},
+ ],
+ onEnter(){
+  G.followers=[];
+  if(!F.phIntro){F.phIntro=1;
+   say('Ford','Arthur. Bad news. I think we\'re on Earth. About two million years ago.');
+   say('Arthur','Earth?!');
+   say('Ford','And that lot from the Ark... they\'re going to be your ancestors. Not the cavemen. Them. The telephone sanitisers.');
+   say('Arthur','That explains an awful lot.');
+   say('Ford','Listen. The mice said the Question might still be in your head. What if we let your subconscious pull it out at random? Scrabble. Random letters, out of a bag.');
+   say('Arthur','We don\'t have a Scrabble set.');
+   say('Ford','So we make one. Find six good flat stones and I\'ll carve the letters.');
+   act(()=>{quest('scrabble','Make a Scrabble set','Find six flat stones scattered around the valley (both sides of the river), then bring them to Ford.');
+     quest('wheel','The Fire Development Sub-Committee','The Golgafrinchans by the fire need help with a very important decision.',true);});
+  }
+ }
+});
+function wheelCommittee(){
+ if(qdone('wheel')){say('Marketing girl','Focus group results are in! Everyone wants the wheel in a different colour. We\'re thrilled.');return;}
+ say('Marketing girl','Hi! We\'re the Fire Development Sub-Committee. Well, we were, until we invented the wheel. Now we\'re stuck.');
+ say('Management consultant','We have a working prototype. What we need now is a decision about its colour.');
+ ask('Management consultant','So: what colour should the wheel be?',[
+  {t:'Red. It\'s faster.',f(){say('Management consultant','Bold. Aggressive. I like it. Let\'s table it for next quarter.');}},
+  {t:'Blue. Very calming.',f(){say('Marketing girl','Ooh, but does blue say "roll"? I\'m not sure blue says "roll".');}},
+  {t:'Does it matter? It\'s round!',f(){say('Management consultant','...Interesting. Very blue-sky. Can you put that in a memo?');}},
+  {t:'Have you thought about just using it?',f(){say('Marketing girl','USING it? Before the launch? Are you mad?');}}]);
+ act(()=>{done('wheel');unlock('wheel');improb(1);});
+}
+function fordScrabble(){
+ if(qdone('scrabble')){say('Ford','Fancy another game? I\'ve got a good feeling about Q.');return;}
+ if((F.stones||0)<6){say('Ford',`We need six flat stones. You've got ${F.stones||0}. Try both sides of the river, and that cave in the north-east.`);return;}
+ done('scrabble');take('stone');
+ say('Narrator','Ford spends an hour carving letters into the stones, then several dozen more from the riverbank. He puts them all in a bag made of something you decide not to ask about.');
+ say('Ford','Right. Close your eyes. Pull out the letters one at a time and lay them down in order. Don\'t think. Let your brain do it.');
+ act(startScrabble);
+}
+function startScrabble(){
+ const Q='WHAT DO YOU GET IF YOU MULTIPLY SIX BY NINE';const SC={A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:8,K:5,L:1,M:3,N:1,O:1,P:3,Q:10,R:1,S:1,T:1,U:1,V:4,W:4,X:8,Y:4,Z:10};
+ const tiles=[];let x=80,y=150;const sz=44,gap=5;
+ for(const w of Q.split(' ')){const ww=w.length*(sz+gap);if(x+ww>900){x=80;y+=sz+22;}for(const ch of w){tiles.push({ch,x,y});x+=sz+gap;}x+=sz*.6;}
+ MINI={n:0,t:0,tiles,
+  update(dt){this.t+=dt;},
+  key(k){if(!(k===' '||k==='e'||k==='enter'||k==='click'))return;
+   if(this.n<this.tiles.length){this.n++;sfx('blip');}else{MINI=null;G.mode='play';finale();}},
+  draw(){ctx.fillStyle='rgba(20,14,6,.95)';ctx.fillRect(0,0,960,576);
+   txt('Pull letters from the bag',480,60,'#ffcf4a',26,'center','Georgia,serif');
+   txt('Press E / Space to draw the next tile',480,92,'#ccb',14,'center');
+   for(let i=0;i<this.n;i++){const t=this.tiles[i];rr(t.x+3,t.y+4,sz,sz,'rgba(0,0,0,.4)',5);rr(t.x,t.y,sz,sz,'#e8d8b0',5);txt(t.ch,t.x+sz/2,t.y+31,'#3a2a14',26,'center','Georgia,serif');txt(String(SC[t.ch]),t.x+sz-7,t.y+sz-5,'#6a5a3a',10,'center');}
+   if(this.n>=this.tiles.length){txt('...',480,470,'#fff',20,'center');txt('Press E / Space',480,520,`rgba(255,207,74,${.5+.5*Math.sin(G.time*4)})`,15,'center');}
+  }};
+ G.mode='mini';hideBox();
+}
+function finale(){
+ say('Ford','"What do you get if you multiply six by nine?" ...That\'s it! That\'s the Question! The Ultimate Question!');
+ say('Arthur','Six by nine. And the Answer is... forty-two?');
+ ask('Ford','Well? What DO you get if you multiply six by nine?',[
+  {t:'42',f(){say('Ford','Forty-two! It fits!');say('Arthur','But six times nine is fifty-four.');say('Ford','...Unless you count in base thirteen.');say('Arthur','Nobody counts in base thirteen.');
+    say('Ford','Then the Question\'s come out wrong. The Golgafrinchans turned up, the cavemen died out, and the great computer program got scrambled. Your brain is full of a slightly broken Question.');}},
+  {t:'54',f(){say('Ford','Fifty-four. Correct as far as arithmetic is concerned. Completely wrong as far as the Universe is concerned.');say('Arthur','So the Question\'s broken?');
+    say('Ford','The Golgafrinchans arrived, the cavemen died out, and the program went haywire. That\'s why it doesn\'t add up.');}},
+  {t:'A small fish',f(){say('Ford','...You\'ve been in space too long.');say('Arthur','Fine. Forty-two? Fifty-four?');say('Ford','Both, somehow. Which tells you everything you need to know about the Universe.');}}]);
+ say('Arthur','I knew it. I always knew there was something fundamentally wrong with the universe.');
+ act(()=>{unlock('question');improb(42);});
+ say('Narrator','Arthur and Ford sit by the river and watch the sun go down over the young world, which will one day be called Earth, and which will one day be demolished to make way for a hyperspace bypass.');
+ say('Ford','Fancy another game?');
+ say('Arthur','Go on, then.');
+ act(()=>{F.finished=1;save();G.mode='end';G.endT=0;hideBox();sfx('quest');});
+}
+
+/* =========================================================================
+   TITLE / END / BOOT
+   ========================================================================= */
+function drawTitle(){
+ starfield();const t=G.time;
+ drawSprite('planet',170,470,{r:120});
+ ctx.save();ctx.translate(760+Math.sin(t*.4)*20,150+Math.cos(t*.3)*10);ctx.scale(.8,.8);drawSprite('heartship',-40,-18);ctx.restore();
+ ctx.save();ctx.shadowColor='rgba(255,207,74,.6)';ctx.shadowBlur=24;txt("DON'T PANIC",480,200,'#ffcf4a',86,'center','Impact,"Arial Black",sans-serif');ctx.restore();
+ txt("A Hitchhiker's Adventure",480,248,'#7fd4ff',24,'center','Georgia,serif');
+ const sv=hasSave();
+ txt('[N]  New game',480,330,'#fff',20,'center');
+ txt(sv?'[C]  Continue':'[C]  Continue (no save yet)',480,364,sv?'#fff':'#666',20,'center');
+ txt('Press Enter to '+(sv?'continue':'begin'),480,420,`rgba(255,255,255,${.5+.5*Math.sin(t*3)})`,14,'center');
+ txt('Seven chapters · stealth levels · side quests · 38 Guide entries to collect',480,500,'#9ab',13,'center');
+ txt('A fan-made game inspired by the story by Douglas Adams',480,540,'#678',12,'center');
+}
+function titleKey(k){if(k==='n'||(k==='enter'&&!hasSave()))newGame();else if((k==='c'||k==='enter')&&hasSave())loadSave();}
+function newGame(){
+ F=G.flags={};G.inv=[];G.quests={};G.qorder=[];G.guide={};G.improb=0;G.caughtN=0;G.followers=[];G.peng=0;G.shades=false;G.chapter='';marvinTopics=0;
+ card('Chapter 1 · Thursday','In the beginning the Universe was created. Many people consider this to have been a mistake. Today is Thursday, and Arthur Dent is about to have a very bad day.',()=>loadMap('earth'));
+}
+function drawEnd(){
+ starfield();const t=G.endT;
+ txt('THE END',480,110,'#ffcf4a',56,'center','Impact,sans-serif');
+ txt('(mostly)',480,140,'#ccb',16,'center');
+ const gn=Object.keys(G.guide).length,gt=Object.keys(GUIDE).length;
+ const sq=Object.values(G.quests).filter(q=>q.side),sd=sq.filter(q=>q.done).length;
+ const rows=[['Guide entries found',gn+' / '+gt],['Side quests completed',sd+' / '+sq.length],['Times caught',String(G.caughtN)],['Final improbability','2^'+G.improb+' : 1'],['Towel kept',has('towel')?'Yes. A hoopy frood.':'No. Shameful.']];
+ rows.forEach((r,i)=>{if(t>.6+i*.5){txt(r[0],300,220+i*40,'#9cf',18);txt(r[1],660,220+i*40,'#fff',18,'right');}});
+ if(t>3.5){txt(gn===gt?'You found every Guide entry. Ford would be proud. Ford would also want them back.':'There are more Guide entries out there. Probably behind a sofa.',480,450,'#7fff7f',15,'center');
+  txt('So long, and thanks for all the fish.',480,490,'#ffcf4a',18,'center','Georgia,serif');}
+ if(t>4)txt('Press Enter to return to the title screen',480,540,`rgba(255,255,255,${.5+.5*Math.sin(G.time*3)})`,13,'center');
+}
+updHud();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
