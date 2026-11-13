@@ -1,0 +1,1734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clydeside Park Racing</title>
+<style>
+:root{--bg:#0b111b;--panel:#141e2d;--panel2:#1b2840;--ink:#e8eef6;--mute:#8fa1b8;--line:#28384f;--accent:#f5c542;--win:#4ade80;--lose:#f87171;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 16px;background:#0f1828;border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:18px;letter-spacing:.5px}
+.brand span{color:var(--accent)}
+.hstats{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.hstats b{font-size:17px}
+.pos{color:var(--win)}.neg{color:var(--lose)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:6px;padding:6px 10px}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.4;cursor:default}
+button.go{background:var(--accent);color:#1a1300;font-weight:800;border-color:var(--accent);padding:9px 14px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:14px;padding:14px 16px;max-width:1500px;margin:0 auto}
+@media (max-width:980px){main{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px}
+h2,h3{margin:0 0 8px}h2{font-size:16px}h3{font-size:14px;color:var(--mute);text-transform:uppercase;letter-spacing:1px}
+canvas{display:block;width:100%;aspect-ratio:1000/540;touch-action:manipulation;border-radius:10px;border:1px solid var(--line);background:#24361f}
+.comm{margin:10px 0 14px;padding:10px 12px;background:#06090f;border:1px solid var(--line);border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;color:#ffd96a;min-height:42px}
+.cloth{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;font-weight:800;flex:0 0 auto;background:#f4f4f4;color:#111;border:1px solid #0006}
+.silk{width:24px;height:24px;flex:0 0 auto;display:inline-block;vertical-align:middle}
+.cardhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.rname{color:var(--mute);font-size:12.5px;margin:-4px 0 6px}
+.rname b{color:var(--ink);font-weight:600}
+.book{font-size:12px;color:var(--win)}
+.row{display:grid;grid-template-columns:24px 24px minmax(0,1fr) 64px auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.dinfo b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dinfo small,.odds small{color:var(--mute);font-size:11.5px}
+.odds{text-align:right}.odds b{display:block;font-size:15px}
+.btns{display:flex;gap:4px}.btns button{padding:5px 8px;font-size:12.5px}
+.fav{color:var(--accent);font-size:10px;font-weight:700;margin-left:4px}
+.stakeRow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0 8px}
+.stakeRow input{width:80px;font:inherit;padding:5px 6px;border-radius:6px;border:1px solid var(--line);background:#0b111b;color:var(--ink)}
+.stakeRow button{padding:4px 8px;font-size:12px}
+.bet{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.bet .bx{flex:1;min-width:0}.bet small{color:var(--mute);display:block}
+.bet .x{padding:2px 7px}
+.tot{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);font-weight:700}
+.runrow{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+select{font:inherit;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:5px 6px;border-top:1px solid var(--line);text-align:left}
+th{color:var(--mute);font-weight:600;font-size:12px}
+td.r,th.r{text-align:right}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:10px}
+.stat{background:var(--panel2);border-radius:8px;padding:8px}.stat small{color:var(--mute);display:block;font-size:11px}.stat b{font-size:16px}
+.note{color:var(--mute);font-size:12px;margin-top:8px}
+.empty{color:var(--mute);padding:8px 0}
+.strip{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;min-height:24px;align-items:center}
+.strip span.o{color:var(--mute);font-size:11px;margin-right:3px}
+.strip .silk{width:20px;height:20px;margin-right:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:5px 10px;font-size:12.5px}
+.seg button.on{background:var(--accent);color:#1a1300;font-weight:700}
+.modeRow{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 6px;font-size:12.5px;color:var(--mute)}
+.chk{display:flex;gap:6px;align-items:center;margin:8px 0;cursor:pointer;user-select:none}
+.fcgrid{display:grid;grid-template-columns:40px repeat(8,minmax(0,1fr));gap:4px;align-items:center;margin:6px 0}
+.fcgrid .lbl{color:var(--mute);font-size:12px;font-weight:700}
+.fcgrid .hd{display:flex;justify-content:center}
+.cell{height:34px;padding:0;font-weight:800;font-size:13px}
+.cell.on{background:var(--accent);color:#1a1300;border-color:var(--accent)}
+.fcinfo{padding:6px 0;font-size:13px}
+.fcinfo b{color:var(--accent)}
+.tag{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 4px;border-radius:4px;font-size:10.5px;font-weight:800;background:#5b3fd1;color:#fff;flex:0 0 auto}
+.photo{margin:4px 0 10px}.photo canvas{display:block;width:100%;aspect-ratio:auto;border-radius:6px;border:1px solid #000;background:#222}
+.photo small{color:var(--mute);font-size:11.5px}
+body.watching .o3,body.watching .o4,body.watching .o5{opacity:.4;pointer-events:none}
+.hbtn{padding:2px 8px;font-size:12px}
+.dlink{color:inherit;text-decoration:none;border-bottom:1px dotted var(--mute);cursor:pointer}
+.dlink:hover{color:var(--accent);border-color:var(--accent)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:24px 12px}
+.modal[hidden]{display:none}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:820px;width:100%;padding:16px;position:relative}
+.sheet .close{position:absolute;top:10px;right:10px}
+.phead{display:grid;grid-template-columns:minmax(0,300px) 1fr;gap:16px;align-items:center;margin-bottom:12px}
+.phead canvas{width:100%;height:auto;aspect-ratio:600/260;border-radius:8px;border:1px solid var(--line);display:block}
+.phead h2{font-size:21px;margin:0 0 4px;padding-right:40px}
+.facts{color:var(--mute);font-size:13px;line-height:1.6}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{width:24px;height:24px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;background:var(--panel2);color:var(--mute)}
+.chip.p1{background:var(--accent);color:#1a1300}.chip.p2{background:#c9d4e3;color:#111}.chip.p3{background:#b07a4a;color:#fff}.chip.pX{background:#5a1f1f;color:#fca5a5}
+.oncard{background:#1f3a24;border:1px solid #2e6b34;border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13px}
+.tscroll{overflow-x:auto}
+.tscroll table{min-width:600px}
+@media (max-width:640px){.modal{padding:0}.sheet{border-radius:0;min-height:100%;border:0}.phead{grid-template-columns:1fr}}
+.div{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:8px;font-size:13px}
+.nf{color:var(--lose);font-weight:700}
+@media (max-width:980px){
+  main{display:flex;flex-direction:column;gap:0}
+  section,aside{display:contents}
+  .o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}
+}
+@media (max-width:640px){
+  header{padding:8px 12px;gap:6px}.brand{font-size:15px}.hstats{gap:12px}.hstats b{font-size:15px}
+  main{padding:10px 10px}
+  .panel{padding:10px}
+  .row{grid-template-columns:24px 22px minmax(0,1fr) 56px auto;gap:6px}
+  .btns{flex-direction:column}.btns button{padding:6px 10px}
+  .comm{font-size:12.5px;margin:8px 0 10px}
+  td,th{padding:5px 3px}
+  .fcgrid{grid-template-columns:30px repeat(8,minmax(0,1fr));gap:3px}
+  .cell{font-size:12px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🏇 CLYDESIDE PARK <span>RACING</span></div>
+  <div class="hstats">
+    <div>Bank <b id="bank"></b></div>
+    <div>P/L <b id="pl"></b></div>
+    <button id="stableBtn" title="Horses, trainers and jockeys">🐎 Stables</button>
+    <button id="snd" title="Sound on/off">🔊</button>
+    <button id="reset">Reset to £1,000</button>
+  </div>
+</header>
+<main>
+  <section>
+    <div class="o1">
+      <canvas id="cv"></canvas>
+      <div id="strip" class="strip"></div>
+      <div id="comm" class="comm">Place your bets…</div>
+    </div>
+    <div id="results" class="panel o2" hidden></div>
+    <div class="panel o6">
+      <h3>Your record</h3>
+      <div id="stats"></div>
+      <div id="spark"></div>
+      <div id="hist"></div>
+    </div>
+  </section>
+  <aside>
+    <div class="panel o3">
+      <div class="cardhead"><h2 id="raceTitle"></h2><span id="book" class="book"></span></div>
+      <div id="raceName" class="rname"></div>
+      <div class="modeRow"><span>Race types</span>
+        <div class="seg"><button data-mode="mix">Flat &amp; jumps</button><button data-mode="F">Flat only</button><button data-mode="J">Jumps only</button></div></div>
+      <div class="stakeRow">Stake £<input id="stake" type="number" min="1" step="1" value="10">
+        <button data-chip="5">5</button><button data-chip="10">10</button><button data-chip="25">25</button><button data-chip="50">50</button><button data-chip="100">100</button>
+      </div>
+      <div id="card"></div>
+      <div class="note">Fair book: the prices are each horse's true chance of winning, and they add up to exactly 100%. The result is drawn using those same chances, so there's no bookmaker's margin. Each-way means two bets of your stake, one to win and one to place. With eight runners the place part pays at ⅕ of the odds if the horse finishes 1st, 2nd or 3rd. Over jumps, only horses that were never going to place can fall, unseat or be pulled up, so every price stays exact.</div>
+    </div>
+    <div class="panel o5">
+      <h3>Bet slip</h3>
+      <div id="slip"></div>
+    </div>
+    <div class="panel o4">
+      <div class="cardhead"><h3>Forecast / Tricast</h3>
+        <div class="seg"><button data-fct="fc">Forecast</button><button data-fct="tc">Tricast</button></div></div>
+      <label class="chk"><input type="checkbox" id="anyOrder"> Any order (reverse forecast / combination tricast)</label>
+      <div id="fcGrid"></div>
+      <div id="fcInfo" class="fcinfo"></div>
+      <div class="note">A forecast picks 1st and 2nd in the right order, and a tricast picks 1st, 2nd and 3rd. Pick more than one horse in a row (or tick Any order) to cover every combination; each line costs your stake from the box above. Payouts are the exact fair odds of that finishing order, worked out from the same chances as the win prices.</div>
+    </div>
+  </aside>
+</main>
+<div id="modal" class="modal" hidden><div class="sheet"><button class="close" data-close>✕</button><div id="modalBody"></div></div></div>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffled = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const money = n => (n < -0.004 ? '-' : '') + '£' + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const smooth = x => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
+const lerp = (a, b, k) => a + (b - a) * k;
+const ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+const nth = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+const N = 8;                                // runners per race
+const NF = { F: 'fell', U: 'unseated rider', P: 'pulled up' };
+const NFC = { F: 'F', U: 'UR', P: 'PU' };
+
+// ── TRACK GEOMETRY (logical units; left-handed, so horses run anticlockwise) ──
+// One circuit is 1m4f. Races of any trip finish at the same winning post; longer ones go round more than once.
+const LW = 1000, LH = 540, CX = 500, CY = 250, A = 270, R = 150, TW = 70;
+const LAP = 4 * A + 2 * Math.PI * R;
+const FUR = 201.168, LAP_M = 12 * FUR, UPM = LAP / LAP_M;
+const FINISH_S = 2 * A * 0.8;
+const NOSE = 14;                            // horse centre sits this far behind its nose
+// Obstacles: two in the home straight, three down the back straight (used by hurdles and chases alike)
+const FENCE_S = [0.1, 0.38].map(k => k * 2 * A).concat([0.15, 0.45, 0.75].map(k => 2 * A + Math.PI * R + k * 2 * A));
+const startS = D => ((FINISH_S - D) % LAP + LAP) % LAP;
+const dFrom = (s, s0) => ((s - s0) % LAP + LAP) % LAP;
+
+function pt(s, w) {
+  s = ((s % LAP) + LAP) % LAP; const r = R + w;
+  if (s < 2 * A) return [CX - A + s, CY + r];
+  s -= 2 * A;
+  if (s < Math.PI * R) { const th = Math.PI / 2 - s / R; return [CX + A + r * Math.cos(th), CY + r * Math.sin(th)]; }
+  s -= Math.PI * R;
+  if (s < 2 * A) return [CX + A - s, CY - r];
+  s -= 2 * A;
+  const th = -Math.PI / 2 - s / R; return [CX - A + r * Math.cos(th), CY + r * Math.sin(th)];
+}
+function heading(s, w) { const a = pt(s - 1, w), b = pt(s + 1, w); return Math.atan2(b[1] - a[1], b[0] - a[0]); }
+function ring(ctx, w) { ctx.beginPath(); for (let s = 0; s <= LAP; s += 5) { const p = pt(s, w); s ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); } ctx.closePath(); }
+const tripOf = m => { const f = Math.round(m / FUR), mi = Math.floor(f / 8), r = f % 8; return (mi ? mi + 'm' : '') + (r ? r + 'f' : ''); };
+
+// ── DATA ──
+const FLAT_DIST = [5, 6, 7, 8, 10, 12].map(f => Math.round(f * FUR));
+const JUMP_DIST = [16, 20, 24].map(f => Math.round(f * FUR));
+// soft: -1 firm … +1 heavy. k scales running speed.
+const GOINGS = [
+  { n: 'Good to Firm', k: 1.012, soft: -1 }, { n: 'Good', k: 1, soft: -0.5 }, { n: 'Good to Soft', k: 0.976, soft: 0 },
+  { n: 'Soft', k: 0.946, soft: 0.6 }, { n: 'Heavy', k: 0.9, soft: 1 },
+];
+const goingOf = n => GOINGS.find(g => g.n === n) || GOINGS[2];
+const KIND_NAME = { flat: 'Flat', hurdle: 'Hurdle', chase: 'Chase' };
+const KIND_SHORT = { flat: 'Flat', hurdle: 'Hdl', chase: 'Ch' };
+const LEN = { flat: 0.2, hurdle: 0.25, chase: 0.25 };     // seconds per length
+const PRE = ['Clyde', 'Gallus', 'Merchant', 'Barras', 'Kelvin', 'Govan', 'Partick', 'Byres', 'Bonnie', 'Braw', 'Dreich', 'Wee', 'Highland', 'Finnieston', 'Dennistoun', 'Pollok', 'Cathcart', 'Maryhill', 'Calton', 'Bellahouston', 'Saltire', 'Thistle', 'Caledonian', 'Bothwell', 'Rutherglen', 'Campsie', 'Cathkin', 'Glen', 'Southside', 'Riverside', 'Linn', 'Strathclyde'];
+const SUF = ['Lad', 'Lass', 'Prince', 'Princess', 'Rover', 'Dancer', 'Express', 'Flyer', 'Legend', 'Spirit', 'Star', 'Storm', 'Boy', 'Belle', 'Chief', 'Piper', 'Rebel', 'Warrior', 'Duke', 'Duchess', 'Gem', 'Diamond', 'Thunder', 'Song', 'Mist', 'Rose', 'Glory', 'Crane', 'Major', 'Echo'];
+const SPECIAL = ['Taps Aff', 'Pure Dead Brilliant', 'Haud Yer Wheesht', 'Gaun Yersel', 'Mon The Clyde', 'Square Sausage', 'Dancing Cone', 'Peely Wally', 'Gie It Laldy', 'Away And Bile', 'Coorie In', 'Dinnae Fash', 'Heid The Ba', 'Scran Van', 'Clockwork Orange', 'Sauchiehall Sally', 'Barrowland Ballroom', 'Lang May Yer Lum', 'Hen Night', 'Steamie', 'Wee Stoater', 'Pure Barry'];
+const COATS = [
+  { n: 'Bay', c: '#7b4a24', m: '#1b130e' }, { n: 'Dark bay', c: '#4a2b16', m: '#120c08' },
+  { n: 'Chestnut', c: '#a4552a', m: '#8a4220' }, { n: 'Grey', c: '#b8b6b0', m: '#e6e4de' },
+  { n: 'Brown', c: '#3d2618', m: '#140d09' }, { n: 'Black', c: '#24201d', m: '#0b0a09' },
+];
+const STYLE_NAME = { L: 'Front-runner', P: 'Races prominently', H: 'Held up' };
+const SEX_NAME = { c: 'Colt', f: 'Filly', g: 'Gelding', m: 'Mare' };
+const SILK_COLS = ['#d62828', '#1d4ed8', '#f4f4f4', '#151515', '#f5c542', '#15803d', '#7c3aed', '#f77f00', '#ec4899', '#38bdf8', '#7f1d1d', '#064e3b', '#0f2a6b'];
+const PATS = ['plain', 'hoops', 'stripes', 'sash', 'quarters', 'halves', 'chevrons', 'spots', 'cross', 'diamond', 'braces'];
+function makeSilk() {
+  const c1 = pick(SILK_COLS); let c2; do c2 = pick(SILK_COLS); while (c2 === c1);
+  const pat = pick(PATS);
+  return { c1, c2, pat, cap: pat === 'plain' || Math.random() < 0.6 ? c2 : c1, sl: Math.random() < 0.4 ? c2 : c1 };
+}
+// Trainers and jockeys are flavour only: they never change a horse's chances, so the prices stay exactly fair.
+const TRAINER_INFO = [
+  { name: 'H. Grieve', full: 'Hamish Grieve', base: 'Carluke', since: 1994 },
+  { name: 'M. Sinclair', full: 'Moira Sinclair', base: 'Strathaven', since: 2008 },
+  { name: 'A. Munro', full: 'Alasdair Munro', base: 'Lanark', since: 1989 },
+  { name: 'B. Clarke', full: 'Bernadette Clarke', base: 'Kilmacolm', since: 2012 },
+  { name: 'G. Laidlaw', full: 'Gordon Laidlaw', base: 'Eaglesham', since: 2001 },
+  { name: 'F. Rae', full: 'Fiona Rae', base: 'Killearn', since: 2015 },
+  { name: 'D. Paterson', full: 'Duncan Paterson', base: 'Biggar', since: 1998 },
+  { name: 'E. MacLeod', full: 'Eilidh MacLeod', base: 'Lennoxtown', since: 2010 },
+  { name: 'S. Tennant', full: 'Stuart Tennant', base: 'Fenwick', since: 2004 },
+  { name: 'A. Kerr', full: 'Agnes Kerr', base: 'Dalry', since: 1992 },
+];
+const JOCKEY_INFO = [
+  { name: 'C. Rennie', full: 'Callum Rennie', base: 'Paisley', since: 2013 },
+  { name: 'A. Brodie', full: 'Ailsa Brodie', base: 'Hamilton', since: 2017 },
+  { name: 'R. McKenna', full: 'Ross McKenna', base: 'Greenock', since: 2009 },
+  { name: 'K. Dunlop', full: 'Kirsty Dunlop', base: 'Ayr', since: 2015 },
+  { name: 'E. Gilmour', full: 'Euan Gilmour', base: 'Motherwell', since: 2011 },
+  { name: 'N. Coyle', full: 'Niamh Coyle', base: 'Coatbridge', since: 2019 },
+  { name: 'F. Hendry', full: 'Fraser Hendry', base: 'East Kilbride', since: 2006 },
+  { name: 'M. Baird', full: 'Morven Baird', base: 'Stirling', since: 2016 },
+  { name: 'D. Toner', full: 'Declan Toner', base: 'Clydebank', since: 2012 },
+  { name: 'I. Lauder', full: 'Iona Lauder', base: 'Kilmarnock', since: 2020 },
+  { name: 'J. Strachan', full: 'Jamie Strachan', base: 'Falkirk', since: 2008 },
+  { name: 'S. McPhail', full: 'Shona McPhail', base: 'Dumbarton', since: 2014 },
+];
+const TRAINERS = TRAINER_INFO.map(t => t.name), JOCKEYS = JOCKEY_INFO.map(j => j.name);
+const personInfo = (kind, n) => (kind === 'trainer' ? TRAINER_INFO : JOCKEY_INFO).find(t => t.name === n) || { name: n, full: n, base: '–', since: '–' };
+const SPONSORS = ['Barrowland', 'Merchant City', 'Kelvingrove', 'Finnieston Crane', 'Sauchiehall Street', 'Byres Road', 'Glasgow Green', 'Doulton Fountain', "People's Palace", 'Botanic Gardens', 'Clockwork Orange', 'Duke Of Wellington', 'Necropolis', 'Kingston Bridge', 'Squinty Bridge', 'Clyde Auditorium', 'Tall Ship', 'Govan Stones', 'Cathkin Braes', 'Pollok Park'];
+const RACE_TYPES = {
+  flat: ['Handicap', 'Maiden Stakes', 'Novice Stakes', 'Conditions Stakes', 'Handicap'],
+  hurdle: ["Novices' Hurdle", 'Handicap Hurdle', "Maiden Hurdle", 'Handicap Hurdle'],
+  chase: ['Handicap Chase', "Novices' Chase", "Beginners' Chase", 'Handicap Chase'],
+};
+const STABLE_PER_CODE = 24, RUNS_KEPT = 40;
+const FRACS = ['1/5', '2/9', '1/4', '2/7', '1/3', '4/11', '2/5', '4/9', '1/2', '8/15', '4/7', '8/13', '4/6', '8/11', '4/5', '5/6', '10/11', 'Evs', '11/10', '6/5', '5/4', '11/8', '6/4', '13/8', '7/4', '15/8', '2/1', '9/4', '5/2', '11/4', '3/1', '10/3', '7/2', '4/1', '9/2', '5/1', '11/2', '6/1', '13/2', '7/1', '15/2', '8/1', '9/1', '10/1', '11/1', '12/1', '14/1', '16/1', '20/1', '25/1', '33/1', '40/1', '50/1', '66/1', '100/1', '150/1', '200/1'];
+const fracVal = f => f === 'Evs' ? 1 : f.split('/').reduce((n, d) => n / d);
+function nearestFrac(dec) {
+  const t = Math.log(dec - 1); let best = FRACS[0], bd = 1e9;
+  for (const f of FRACS) { const d = Math.abs(Math.log(fracVal(f)) - t); if (d < bd) { bd = d; best = f; } }
+  return best;
+}
+const fmtWt = lb => `${Math.floor(lb / 14)}-${lb % 14}`;
+const fmtTime = s => `${Math.floor(s / 60)}m ${(s % 60).toFixed(2).padStart(5, '0')}s`;
+
+// ── SAVE ──
+const SAVE_KEY = 'horseSave';
+// ── STABLES ──
+// The same 48 horses (24 on the Flat, 24 over jumps) race again and again. Each has a hidden rating `r`
+// that drifts a little after every run, plus a best trip and a ground preference. A horse's true chance in
+// any field comes from its rating adjusted for today's trip and going, and the price is exactly that chance.
+const chancesOf = rs => { const ex = rs.map(r => Math.exp(0.85 * r)), t = ex.reduce((a, b) => a + b, 0); return ex.map(e => e / t); };
+const effR = (h, metres, going) => h.r - 0.9 * Math.abs(Math.log(metres / h.opt)) + 0.3 * h.gp * going.soft;
+const ratingOf = h => h.code === 'F' ? Math.round(72 + 11 * h.r) : Math.round(118 + 13 * h.r);
+function plOrder(ps) {     // Plackett–Luce: winner in proportion to the chances, then each later place among those left
+  const left = ps.map((_, i) => i), order = [];
+  while (left.length) {
+    const tot = left.reduce((a, i) => a + ps[i], 0);
+    let x = Math.random() * tot, k = 0;
+    for (; k < left.length - 1; k++) { x -= ps[left[k]]; if (x <= 0) break; }
+    order.push(left.splice(k, 1)[0]);
+  }
+  return order;
+}
+function winTime(kind, metres, going) {   // expected winning time in seconds
+  const v = kind === 'flat' ? 16.7 - 0.6 * Math.log(metres / 1006) : (kind === 'hurdle' ? 14.3 : 13.9) - Math.log(metres / 3218);
+  return metres / (v * going.k);
+}
+function finishTimes(order, kind, texp) {
+  const T = [];
+  let tm = texp * (1 + rand(-0.012, 0.012));
+  order.forEach((i, k) => {
+    if (k) tm += kind === 'flat' ? 0.012 + Math.pow(Math.random(), 1.7) * 0.7 : 0.02 + Math.pow(Math.random(), 1.4) * 2.4;
+    T[i] = tm;
+  });
+  return T;
+}
+// Fallers, unseated riders and pulled-up horses only ever come from those already drawn to finish 4th or
+// worse, so the win, place, forecast and tricast chances are exactly what the prices say.
+function nonFinishers(order, kind, going) {
+  const st = order.map(() => 0);
+  if (kind === 'flat') return st;
+  order.forEach((i, k) => {
+    if (k < 3) return;
+    const f = kind === 'chase' ? 0.11 : 0.05, pu = 0.03 + (going.soft > 0.5 ? 0.04 : 0), x = Math.random();
+    if (x < f) st[i] = kind === 'chase' && Math.random() < 0.4 ? 'U' : 'F';
+    else if (x < f + pu) st[i] = 'P';
+  });
+  return st;
+}
+function makeHorse(id, code, used) {
+  let name;
+  do { name = Math.random() < 0.3 ? pick(SPECIAL) : pick(PRE) + ' ' + pick(SUF); } while (used.has(name));
+  used.add(name);
+  const flat = code === 'F', age = flat ? 3 + Math.floor(Math.random() * 4) : 5 + Math.floor(Math.random() * 7);
+  const female = Math.random() < (flat ? 0.4 : 0.2);
+  return {
+    id, code, name, r: gauss(), style: pick(['L', 'P', 'P', 'H', 'H']), ci: Math.floor(Math.random() * COATS.length),
+    sex: female ? (flat && age < 5 ? 'f' : 'm') : (flat && age < 5 && Math.random() < 0.5 ? 'c' : 'g'), age,
+    opt: pick(flat ? FLAT_DIST : JUMP_DIST), gp: pick([-1, 0, 0, 1, 1]), silk: makeSilk(),
+    trainer: pick(TRAINERS), last: 0, runs: [],
+  };
+}
+// One run for every horse in a field.
+function recordRuns(stable, field, ps, order, T, st, info, you) {
+  const fin = order.filter(i => !st[i]), len = LEN[info.kind];
+  const w = field[fin[0]], s2 = field[fin[1]];
+  field.forEach((d, i) => {
+    const k = stable.find(x => x.id === d.id); if (!k) return;
+    const p = st[i] || fin.indexOf(i) + 1;
+    const run = { n: info.n, k: info.kind, m: info.metres, g: info.going, no: i + 1, p, o: +(1 / ps[i]).toFixed(2), j: info.jockeys[i],
+      wn: p === 1 ? s2.name : w.name, wid: p === 1 ? s2.id : w.id };
+    if (!st[i]) run.L = +((p === 1 ? T[fin[1]] - T[i] : T[i] - T[fin[0]]) / len).toFixed(2);
+    if (p === 1) run.tm = +T[i].toFixed(2);
+    if (you && you[i]) run.y = you[i];
+    k.runs.push(run); if (k.runs.length > RUNS_KEPT) k.runs.shift();
+    k.last = info.n;
+  });
+  // Ratings wander between runs but are pulled gently back to average, so the spread stays about N(0,1)
+  // for ever instead of a few horses drifting into unbeatable (or hopeless) extremes over a long game.
+  stable.forEach(k => { if (field.some(d => d.id === k.id)) k.r = k.r * 0.995 + gauss() * 0.1; });
+}
+// Eight of the right code, favouring horses that haven't run for a while.
+const pickField = (stable, code) => shuffled(stable.filter(h => h.code === code)).sort((x, y) => (x.last - y.last) + (Math.random() - 0.5) * 6).slice(0, N);
+function seedStable() {
+  const used = new Set(), stable = [];
+  for (let i = 0; i < STABLE_PER_CODE * 2; i++) stable.push(makeHorse(i + 1, i < STABLE_PER_CODE ? 'F' : 'J', used));
+  const ts = shuffled(TRAINERS);              // deal the horses out evenly between the trainers
+  shuffled(stable).forEach((h, i) => { h.trainer = ts[i % ts.length]; });
+  for (let m = 0; m < 70; m++) {              // earlier meetings, before you arrived (race number 0)
+    const code = m % 2 ? 'J' : 'F', kind = code === 'F' ? 'flat' : pick(['hurdle', 'chase']);
+    const metres = pick(code === 'F' ? FLAT_DIST : JUMP_DIST), going = pick(GOINGS);
+    const field = pickField(stable, code), ps = chancesOf(field.map(h => effR(h, metres, going)));
+    const order = plOrder(ps), T = finishTimes(order, kind, winTime(kind, metres, going)), st = nonFinishers(order, kind, going);
+    recordRuns(stable, field, ps, order, T, st, { n: 0, kind, metres, going: going.n, jockeys: shuffled(JOCKEYS) });
+  }
+  return stable;
+}
+const posChar = p => typeof p === 'string' ? p : p >= 10 ? '0' : String(p);
+const formOf = k => k.runs.slice(-6).map(r => posChar(r.p)).join('') || '–';
+const isNum = p => typeof p === 'number';
+
+function fresh() { return { stable: seedStable(), bank: 1000, raceNo: 1, going: 3, mode: 'mix', history: [], bankHist: [1000], stats: { races: 0, bets: 0, staked: 0, returned: 0, winners: 0 } }; }
+function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && typeof s.bank === 'number' && s.stable) return s; } catch (e) {} return null; }
+function save() {
+  for (;;) {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); return; }
+    catch (e) { if (!S.archive || !S.archive.length) return; S.archive = S.archive.slice(0, Math.floor(S.archive.length / 2)); }
+  }
+}
+let S = load() || fresh();
+
+// ── RACE CARD ──
+let card, slip = [], race, phase = 'betting', speedMode = 'normal', settledBets = null;
+const FC = { type: 'fc', any: false, sel: [] };   // forecast/tricast builder: sel[row][horse] booleans
+const clearFC = () => { FC.sel = [0, 1, 2].map(() => Array(N).fill(false)); };
+const startLane = (h, i) => h.draw ? 5 + (h.draw - 1) * 8.4 : 6 + i * 8;
+function fenceDists(s0, D) {
+  const out = [];
+  for (const fs of FENCE_S) for (let d = dFrom(fs, s0); d < D - 60; d += LAP) if (d > 120) out.push(d);
+  return out.sort((a, b) => a - b);
+}
+
+function newCard(quiet) {
+  if (card && !quiet) SND.chime();
+  // Scottish weather: the ground changes now and then, usually for the softer.
+  if (card && !quiet && Math.random() < 0.12) {
+    const was = S.going;
+    S.going = Math.max(0, Math.min(GOINGS.length - 1, S.going + (Math.random() < 0.7 ? 1 : -1)));
+    if (S.going !== was) save();
+  }
+  const code = S.mode === 'mix' ? (S.raceNo % 2 ? 'F' : 'J') : S.mode;
+  const kind = code === 'F' ? 'flat' : pick(['hurdle', 'chase']);
+  const metres = pick(code === 'F' ? FLAT_DIST : JUMP_DIST), going = GOINGS[S.going];
+  // Number 1 is the top-rated horse and carries the most weight, as on a real handicap card.
+  const field = pickField(S.stable, code).sort((a, b) => b.r - a.r);
+  const ps = chancesOf(field.map(h => effR(h, metres, going)));
+  const jk = shuffled(JOCKEYS), draws = shuffled([1, 2, 3, 4, 5, 6, 7, 8]);
+  const top = ratingOf(field[0]), topWt = code === 'F' ? 136 : 166, minWt = code === 'F' ? 114 : 140;
+  const k = Math.min(1, 1600 / (metres * UPM));
+  const horses = field.map((h, i) => {
+    const coat = COATS[h.ci], or = ratingOf(h);
+    const a1 = (h.style === 'L' ? rand(0.012, 0.028) : h.style === 'P' ? rand(0, 0.014) : rand(-0.026, -0.008)) * k;
+    return {
+      id: h.id, no: i + 1, name: h.name, trainer: h.trainer, jockey: jk[i], silk: h.silk, coat: coat.c, mane: coat.m,
+      style: h.style, sex: h.sex, age: h.age, form: formOf(h), or, wt: Math.max(minWt, topWt - (top - or)), draw: code === 'F' ? draws[i] : 0,
+      a1, a2: rand(-0.01, 0.01) * k, a3: rand(-0.006, 0.006) * k,
+      gaitOff: rand(0, 6.28), lane: (h.style === 'L' ? 6 : h.style === 'P' ? 14 : 22) + rand(-3, 6),
+      // True chances: the price IS the chance, so the book is exactly 100%
+      p: ps[i], odds: 1 / ps[i], frac: nearestFrac(1 / ps[i]),
+    };
+  });
+  const favP = Math.max(...horses.map(d => d.p));
+  horses.forEach(d => d.fav = d.p === favP);
+  const D = Math.round(metres * UPM), s0 = startS(D);
+  card = {
+    raceNo: S.raceNo, code, kind, metres, D, s0, fences: kind === 'flat' ? [] : fenceDists(s0, D), going: going.n,
+    name: `${pick(SPONSORS)} ${pick(RACE_TYPES[kind])}`, texp: winTime(kind, metres, going), horses,
+  };
+  slip = []; settledBets = null; phase = 'betting'; clearFC();
+  race = { t: -3, d: horses.map(() => 0), w: horses.map((h, i) => startLane(h, i)), T: null, stop: [] };
+  $('results').hidden = true;
+  say(`Race ${card.raceNo}, the ${card.name}. ${N} runners over ${tripOf(metres)}${kind === 'flat' ? '' : ` and ${card.fences.length} ${kind === 'chase' ? 'fences' : 'hurdles'}`}. The going is ${going.n.toLowerCase()}.`);
+  renderAll();
+}
+const raceLabel = c => `${tripOf(c.metres)} ${KIND_NAME[c.kind]}`;
+
+// ── RUN ──
+const TAU = 2.5;
+function sc(t) { return t - TAU * (1 - Math.exp(-t / TAU)); }
+function h(u, g) { return u + g.a1 * Math.sin(Math.PI * u) + g.a2 * Math.sin(2 * Math.PI * u) + g.a3 * Math.sin(3 * Math.PI * u); }
+// Race time runs faster than real time so a three-mile chase doesn't take six minutes to watch.
+function spd() {
+  if (speedMode === 'real') return 1;
+  return Math.max(1, card.texp / (speedMode === 'fast' ? 16 : 34));
+}
+
+function startRace() {
+  if (phase !== 'betting') return;
+  const cost = slipCost();
+  if (cost > S.bank + 1e-9) return;
+  S.bank -= cost;
+  const hs = card.horses, D = card.D, going = goingOf(card.going);
+  // Finishing order drawn from the true chances (Plackett–Luce): the winner exactly per the prices,
+  // then each later place proportionally among the horses still left.
+  const order = plOrder(hs.map(d => d.p)), T = finishTimes(order, card.kind, card.texp), st = nonFinishers(order, card.kind, going);
+  const v = hs.map((g, i) => {
+    const dh = 1 - Math.PI * g.a1 + 2 * Math.PI * g.a2 - 3 * Math.PI * g.a3;
+    return D * dh * (1 - Math.exp(-T[i] / TAU)) / sc(T[i]);
+  });
+  const tEnd = Math.max(...order.filter(i => !st[i]).map(i => T[i]));
+  race = { t: -2.5, d: hs.map(() => 0), w: hs.map((g, i) => startLane(g, i)), T, v, order, st, stop: [], tEnd, track: [], gait: hs.map(() => Math.random()) };
+  // Where each non-finisher stops: at a fence for fallers and unseats, somewhere out on the course if pulled up.
+  hs.forEach((g, i) => {
+    if (!st[i]) return;
+    let dS, fence = 0;
+    const fs = card.fences.filter(f => f < D * 0.96);
+    if (st[i] !== 'P' && fs.length) { fence = 1 + Math.floor(Math.random() * fs.length); dS = fs[fence - 1]; }
+    else dS = D * rand(0.45, 0.85);
+    race.stop[i] = { t: timeAt(i, dS), tau: st[i] === 'P' ? 2.2 : 0.35, k: st[i], fence };
+  });
+  Object.assign(race, raceCalls());
+  phase = 'running';
+  say(card.kind === 'flat' ? 'The horses are loaded into the stalls…' : 'They walk in to the start…');
+  renderAll();
+  if (cam.follow) cv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// Per-race commentary state, reset for replays too.
+const raceCalls = () => ({ marks: buildMarks(), fired: 0, leader: -1, lastCall: -9, calledWin: false, fc: [], fj: card.horses.map(() => 0) });
+
+function baseDist(i, t) {
+  if (t <= 0) return 0;
+  const T = race.T[i], D = card.D;
+  if (t < T) return D * h(sc(t) / sc(T), card.horses[i]);
+  const x = Math.min(8, t - T), v = race.v[i];
+  return D + v * x - v * x * x / 16;
+}
+function timeAt(i, d) { let lo = 0, hi = race.T[i]; for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; if (baseDist(i, m) < d) lo = m; else hi = m; } return hi; }
+function distAt(i, t) {
+  const sp = race.stop[i];
+  if (!sp || t <= sp.t) return baseDist(i, t);
+  const d0 = baseDist(i, sp.t), v = (baseDist(i, sp.t + 0.05) - d0) / 0.05;
+  return d0 + v * sp.tau * (1 - Math.exp(-(t - sp.t) / sp.tau));
+}
+const stopped = (i, t) => race.stop[i] && t > race.stop[i].t;
+// Running order: horses still racing by distance covered, then any that have stopped.
+const runOrder = () => [...race.d.keys()].sort((a, b) => (race.d[b] - (stopped(b, race.t) ? 1e6 : 0)) - (race.d[a] - (stopped(a, race.t) ? 1e6 : 0)));
+
+function buildMarks() {
+  const D = card.D, M = [], fur = FUR * UPM, n = card.fences.length;
+  const home = D - FINISH_S;
+  if (card.kind === 'flat') {
+    if (card.metres > 1300) M.push({ d: D / 2, msg: l => `Halfway, ${l[0]} leads from ${l[1]}, ${l[2]} handy` });
+    if (home > 150) M.push({ d: home, msg: l => `Into the straight, ${l[0]} from ${l[1]} and ${l[2]}` });
+    if (card.metres > 1100) M.push({ d: D - 2 * fur, msg: l => `Two furlongs to run! ${l[0]} still in front, ${l[1]} hard at work` });
+    M.push({ d: D - fur, msg: l => `Inside the final furlong, ${l[0]}… ${l[1]} closing!` });
+  } else {
+    if (D > LAP + 300) M.push({ d: D - LAP, msg: l => `Out on the final circuit, ${l[0]} leads from ${l[1]}` });
+    card.fences.forEach((f, k) => {
+      const left = n - k;
+      if (left === 1) M.push({ d: f, msg: l => `At the last! ${l[0]} jumps it in front, ${l[1]} in pursuit!` });
+      else if (left === 2) M.push({ d: f, msg: l => `Two out, ${l[0]} from ${l[1]} and ${l[2]}` });
+      else if (k === 0) M.push({ d: f, msg: l => `Over the first, ${l[0]} takes them along` });
+      else if (k % 3 === 0) M.push({ d: f, msg: l => `Over the ${nth(k + 1)}, ${l[0]} from ${l[1]}` });
+    });
+    M.push({ d: D - fur * 0.6, msg: l => `Up the run-in, ${l[0]}… ${l[1]} rallying!` });
+  }
+  return M.sort((a, b) => a.d - b.d);
+}
+
+function stepRace(dt) {
+  const r = race, hs = card.horses, D = card.D;
+  const wasNeg = r.t < 0;
+  r.t += dt; const t = r.t;
+  if (wasNeg && t >= 0) { say(card.kind === 'flat' ? "The stalls open… and they're off!" : "They're off!"); SND.off(card.kind); }
+  for (let i = 0; i < N; i++) r.d[i] = distAt(i, t);
+  if (t > 0) {
+    const tgt = hs.map((g, i) => {
+      let w = lerp(startLane(g, i), g.lane, smooth(t / 12)) + 2.5 * Math.sin(t * 0.35 + g.gaitOff);
+      const sp = r.stop[i];
+      if (sp && sp.k === 'P' && t > sp.t) w = lerp(w, 64, smooth((t - sp.t) / 3));
+      if (!sp && t > r.T[i]) w = lerp(w, 40, smooth((t - r.T[i]) / 5));
+      return w;
+    });
+    // Keep horses out of each other's way; a stopped horse doesn't move, so the others go round it.
+    const fixed = hs.map((_, i) => stopped(i, t) && r.stop[i].k !== 'P');
+    for (let it = 0; it < 3; it++) for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+      if (Math.abs(r.d[i] - r.d[j]) > 26) continue;
+      const dw = tgt[i] - tgt[j];
+      if (Math.abs(dw) >= 9) continue;
+      const s = dw > 0 || (dw === 0 && i > j) ? 1 : -1, push = 9 - Math.abs(dw);
+      if (fixed[i] && fixed[j]) continue;
+      if (fixed[i]) tgt[j] -= s * push; else if (fixed[j]) tgt[i] += s * push;
+      else { tgt[i] += s * push / 2; tgt[j] -= s * push / 2; }
+    }
+    if (r.replay) laneFromTrack(r, t);
+    else {
+      for (let i = 0; i < N; i++) {
+        if (fixed[i]) continue;
+        const w = Math.max(4, Math.min(66, tgt[i]));
+        r.w[i] += (w - r.w[i]) * Math.min(1, dt * 1.5);
+      }
+      r.track.push([t, ...r.w]);
+    }
+    // Commentary
+    const now = performance.now() / 1000;
+    const run = runOrder(), lead = run[0], nm = run.map(i => `${hs[i].no} ${hs[i].name}`);
+    hs.forEach((g, i) => {
+      const sp = r.stop[i];
+      if (sp && !r.fc[i] && t >= sp.t) {
+        r.fc[i] = 1; r.lastCall = now;
+        say(sp.k === 'P' ? `${g.no} ${g.name} has been pulled up.` : sp.k === 'U' ? `${g.no} ${g.name} blunders at the ${nth(sp.fence)} and unseats the jockey!` : `Faller! ${g.no} ${g.name} comes down at the ${nth(sp.fence)}!`);
+        if (sp.k !== 'P') SND.fall();
+      }
+      // a brush of birch (or a rattle of hurdle) as each horse jumps
+      while (r.fj[i] < card.fences.length && r.d[i] >= card.fences[r.fj[i]] && !stopped(i, t)) { r.fj[i]++; SND.brush(); }
+    });
+    if (r.fired < r.marks.length && r.d[lead] >= r.marks[r.fired].d) {
+      if (now - r.lastCall > 0.9) say(r.marks[r.fired].msg(nm));
+      r.fired++; r.lastCall = now; r.leader = lead;
+    }
+    else if (lead !== r.leader && r.d[lead] < D && now - r.lastCall > 2.2) {
+      say(r.leader < 0 ? `${nm[0]} breaks best and leads them away` : `${nm[0]} goes to the front!`); r.lastCall = now; r.leader = lead;
+    }
+    const w0 = r.order[0], r2 = r.order[1];
+    if (!r.calledWin && t >= r.T[w0]) {
+      r.calledWin = true;
+      const g = r.T[r2] - r.T[w0], a = hs[w0], b = hs[r2];
+      SND.finish(g);
+      if (photo(g) && !r.replay) say(`Photo! ${a.no} ${a.name} and ${b.no} ${b.name} flash past the post together…`);
+      else say(`${a.no} ${a.name} wins it${photo(g) ? ' on the photo' : ' by ' + lengths(g)}! ${b.name} second.`);
+    }
+    if (!r.settled && t >= r.tEnd + 1.2) settle();
+    else if (r.replay && t >= r.tEnd + 1.2) { r.replay = false; renderResults(); renderHistory(); }
+  }
+}
+const photo = g => g / LEN[card.kind] < 0.35;    // a neck or less goes to the photo
+
+// ── REPLAY ──
+// Distances come from distAt() (a pure function of time), and the lanes were recorded during the
+// live race, so a replay shows exactly the same race. It never settles bets again.
+function laneFromTrack(r, t) {
+  const tr = r.track;
+  if (!tr.length) return;
+  while (r.ti < tr.length - 1 && tr[r.ti + 1][0] <= t) r.ti++;
+  const a = tr[r.ti], b = tr[Math.min(r.ti + 1, tr.length - 1)];
+  const k = b[0] > a[0] ? Math.max(0, Math.min(1, (t - a[0]) / (b[0] - a[0]))) : 0;
+  for (let i = 0; i < N; i++) r.w[i] = lerp(a[i + 1], b[i + 1], k);
+}
+function startReplay() {
+  if ((phase !== 'result' && phase !== 'history') || race.replay) return;
+  Object.assign(race, { t: -2.5, d: race.d.map(() => 0), w: card.horses.map((g, i) => startLane(g, i)), replay: true, ti: 0 }, raceCalls());
+  say(`${phase === 'history' ? `Race ${card.raceNo} replay` : 'Replay'}. ${card.kind === 'flat' ? 'They load into the stalls…' : 'They line up…'}`);
+  renderResults(); renderHistory();
+  if (cam.follow) cv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// ── RACE HISTORY ──
+// Each settled race is archived with everything a replay needs: the card, finish times and the recorded
+// lanes, thinned to about 300 samples a race so 20 races fit comfortably in localStorage. Watching one swaps
+// it in as `card`/`race` with phase 'history'; the current race is parked in `held` until you go back.
+const ARCHIVE_MAX = 20;
+let held = null;
+function packTrack(tr) {
+  const out = [], gap = card.texp / 300; let next = -Infinity;
+  tr.forEach((e, k) => {
+    if (e[0] >= next || k === tr.length - 1) { out.push(e.map((v, j) => Math.round(v * (j ? 10 : 100)) / (j ? 10 : 100))); next = e[0] + gap; }
+  });
+  return out;
+}
+function archiveEntry() {
+  const r = race, { bets, ...c } = card;
+  return {
+    race: card.raceNo, card: c, T: r.T, v: r.v, order: r.order, st: r.st, stop: r.stop, tEnd: r.tEnd, gait: r.gait, track: packTrack(r.track),
+    bets: settledBets.map(b => ({ dog: b.dog, type: b.type, stake: b.stake, lines: b.lines, any: b.any, rows: b.rows, ret: b.ret, cost: b.cost, pos: b.pos })),
+  };
+}
+function watchArchive(no) {
+  if (phase === 'running' || race.replay) return;
+  const a = (S.archive || []).find(x => x.race === no);
+  if (!a) return;
+  if (!held) held = { card, race, phase, comm: $('comm').textContent };
+  card = { ...a.card, bets: a.bets };
+  race = { t: 0, d: card.horses.map(() => 0), w: card.horses.map((g, i) => startLane(g, i)), T: a.T, v: a.v, order: a.order, st: a.st, stop: a.stop || [], tEnd: a.tEnd, gait: a.gait, track: a.track, settled: true };
+  phase = 'history';
+  document.body.classList.add('watching');
+  renderHeader(); renderCard(); renderHistory();
+  startReplay();
+}
+function leaveArchive() {
+  if (!held) return;
+  ({ card, race, phase } = held);
+  $('comm').textContent = held.comm;
+  held = null;
+  document.body.classList.remove('watching');
+  renderAll();
+}
+function betRow(b, hs, order) {
+  const res = b.lines ? (order ? ' · result ' + nosOf(order.slice(0, b.lines[0].length)) : '')
+    : ' · ' + (isNum(b.pos) ? 'finished ' + ORD[b.pos - 1] : NF[b.pos]);
+  return `<div class="bet">${b.lines ? `<span class="tag">${b.type.toUpperCase()}</span>` : cloth(hs[b.dog].no) + silk(hs[b.dog])}
+      <div class="bx"><b>${b.lines ? fcName(b) : hs[b.dog].name}</b><small>${b.lines ? fcDesc(b) + ' · ' + money(b.stake) + (b.lines.length > 1 ? ' a line' : '')
+        : (b.type === 'ew' ? 'E/W ' + money(b.stake) + ' ×2' : 'Win ' + money(b.stake))}${res}</small></div>
+      <b class="${b.ret > 0 ? 'pos' : 'neg'}">${b.ret > 0 ? money(b.ret) : 'lost'}</b></div>`;
+}
+const betTotal = bs => { const st = bs.reduce((a, b) => a + b.cost, 0), rt = bs.reduce((a, b) => a + b.ret, 0);
+  return `<div class="tot"><span>Staked ${money(st)} · Returned ${money(rt)}</span><span class="${rt - st >= 0 ? 'pos' : 'neg'}">${rt - st >= 0 ? '+' : ''}${money(rt - st)}</span></div>`; };
+function pastBets() {
+  const bs = card.bets || [];
+  if (!bs.length) return '<div class="note">You had no bets on this race.</div>';
+  return '<h3 style="margin-top:12px">Your bets</h3>' + bs.map(b => betRow(b, card.horses, race.order)).join('') + betTotal(bs);
+}
+// Replays drop to slow motion from just before the winner reaches the line until 3rd is past it.
+const slowMo = () => race.replay && race.t > race.T[race.order[0]] - 1.5 && race.t < Math.min(race.T[race.order[2]], race.T[race.order[0]] + 2.5) + 0.4;
+
+function lengths(g) {
+  const L = g / LEN[card.kind];
+  if (L < 0.1) return 'a short head'; if (L < 0.2) return 'a head'; if (L < 0.35) return 'a neck';
+  if (L >= 30) return 'a distance';
+  return lenStr(L) + (L >= 1.13 ? ' lengths' : ' length');
+}
+function lenStr(L) {
+  if (L < 0.1) return 'shd'; if (L < 0.2) return 'hd'; if (L < 0.35) return 'nk';
+  if (L >= 30) return 'dist';
+  if (L >= 4) return String(Math.round(L));
+  const q = Math.round(L * 4) / 4, w = Math.floor(q), f = ['', '¼', '½', '¾'][Math.round((q - w) * 4)];
+  return (w || '') + f;
+}
+
+// ── BETS ──
+const betCost = b => b.stake * (b.lines ? b.lines.length : b.type === 'ew' ? 2 : 1);
+const slipCost = () => slip.reduce((a, b) => a + betCost(b), 0);
+// Chance of an exact finishing order (Plackett–Luce, the same model the result is drawn from)
+function lineProb(line) {
+  let p = 1, used = 0;
+  for (const d of line) { const q = card.horses[d].p; p *= q / (1 - used); used += q; }
+  return p;
+}
+const lineOdds = line => 1 / lineProb(line);
+function fcLines() {
+  const n = FC.type === 'fc' ? 2 : 3, out = [];
+  const rows = FC.any ? Array(n).fill(FC.sel[0]) : FC.sel.slice(0, n);
+  const walk = (k, line) => {
+    if (k === n) { out.push(line); return; }
+    rows[k].forEach((on, d) => { if (on && !line.includes(d)) walk(k + 1, [...line, d]); });
+  };
+  walk(0, []);
+  return out;
+}
+function fcName(b) {
+  const n = b.type === 'fc' ? 'forecast' : 'tricast', L = b.lines.length;
+  if (L === 1) return 'Straight ' + n;
+  if (b.any && b.type === 'fc' && L === 2) return 'Reverse forecast';
+  return 'Combination ' + n + ` (${L} lines)`;
+}
+const nosOf = ds => ds.map(d => card.horses[d].no).join('-');
+function fcDesc(b) {
+  if (b.lines.length === 1) return nosOf(b.lines[0]);
+  if (b.any) return [...new Set(b.lines.flat())].sort((x, y) => x - y).map(d => card.horses[d].no).join(', ') + ' any order';
+  return b.rows.map((r, k) => ORD[k] + ': ' + r.map(d => card.horses[d].no).join(',')).join(' · ');
+}
+function addFC() {
+  if (phase !== 'betting') return;
+  const lines = fcLines(), stake = Math.floor(+$('stake').value * 100) / 100;
+  if (!lines.length || !(stake > 0)) return;
+  if (slipCost() + stake * lines.length > S.bank + 1e-9) { say(`Not enough in the bank for that. You have ${money(S.bank - slipCost())} left to bet.`); return; }
+  const n = FC.type === 'fc' ? 2 : 3;
+  const rows = FC.sel.slice(0, FC.any ? 1 : n).map(r => r.map((on, d) => on ? d : -1).filter(d => d >= 0));
+  slip.push({ type: FC.type, any: FC.any, rows, lines, stake });
+  SND.click();
+  clearFC(); renderFC(); renderSlip(); renderHeader();
+}
+const placeOdds = o => 1 + (o - 1) / 5;     // 8 runners: ⅕ the odds, three places
+function addBet(dog, type) {
+  if (phase !== 'betting') return;
+  const stake = Math.floor(+$('stake').value * 100) / 100;
+  if (!(stake > 0)) return;
+  const cost = stake * (type === 'ew' ? 2 : 1);
+  if (slipCost() + cost > S.bank + 1e-9) { say(`Not enough in the bank for that. You have ${money(S.bank - slipCost())} left to bet.`); return; }
+  const ex = slip.find(b => b.dog === dog && b.type === type);
+  if (ex) ex.stake += stake; else slip.push({ dog, type, stake });
+  SND.click();
+  renderSlip(); renderHeader();
+}
+
+function settle() {
+  const r = race; r.settled = true; phase = 'result';
+  const hs = card.horses, fin = r.order.filter(i => !r.st[i]);
+  const posOf = i => r.st[i] || fin.indexOf(i) + 1;
+  let staked = 0, returned = 0;
+  settledBets = slip.map(b => {
+    if (b.lines) {
+      const top = fin.slice(0, b.lines[0].length);
+      const hit = b.lines.find(l => l.every((d, k) => d === top[k]));
+      const ret = hit ? b.stake * lineOdds(hit) : 0, cost = betCost(b);
+      staked += cost; returned += ret;
+      return { ...b, ret, cost };
+    }
+    const g = hs[b.dog], p = posOf(b.dog);
+    let ret = 0;
+    if (p === 1) ret += b.stake * g.odds;
+    if (b.type === 'ew' && isNum(p) && p <= 3) ret += b.stake * placeOdds(g.odds);
+    const cost = betCost(b);
+    staked += cost; returned += ret;
+    return { ...b, pos: p, ret, cost };
+  });
+  S.bank += returned;
+  S.stats.races++; S.stats.bets += slip.length; S.stats.staked += staked; S.stats.returned += returned;
+  S.stats.winners += settledBets.filter(b => b.ret > 0).length;
+  const w = hs[fin[0]];
+  S.history.unshift({ race: card.raceNo, type: `${tripOf(card.metres)} ${KIND_SHORT[card.kind]}`, no: w.no, silk: w.silk, name: w.name, id: w.id, frac: w.frac, odds: w.odds, staked, returned });
+  const you = [];
+  settledBets.forEach(b => { if (b.lines) return; const y = you[b.dog] || (you[b.dog] = { s: 0, r: 0 }); y.s += b.cost; y.r += b.ret; });
+  recordRuns(S.stable, hs, hs.map(d => d.p), r.order, r.T, r.st,
+    { n: card.raceNo, kind: card.kind, metres: card.metres, going: card.going, jockeys: hs.map(d => d.jockey) }, you);
+  S.history = S.history.slice(0, 50);
+  S.archive = [archiveEntry(), ...(S.archive || [])].slice(0, ARCHIVE_MAX);
+  S.bankHist.push(Math.round(S.bank * 100) / 100); if (S.bankHist.length > 300) S.bankHist.shift();
+  S.raceNo++;
+  save();
+  SND.settled(staked, returned);
+  const g = r.T[fin[1]] - r.T[fin[0]];
+  if (photo(g)) say(`Result of the photograph: 1st ${w.no} ${w.name}, by ${lengths(g)}. 2nd ${hs[fin[1]].no} ${hs[fin[1]].name}.`);
+  renderAll();
+}
+
+// ── SILKS ──
+function paintSilk(c, x, y, w, h, s) {
+  c.fillStyle = s.c1; c.fillRect(x, y, w, h);
+  c.fillStyle = s.c2; c.strokeStyle = s.c2;
+  const poly = (...p) => { c.beginPath(); p.forEach(([px, py], k) => k ? c.lineTo(x + px * w, y + py * h) : c.moveTo(x + px * w, y + py * h)); c.closePath(); c.fill(); };
+  switch (s.pat) {
+    case 'hoops': for (let k = 0; k < 3; k++) c.fillRect(x, y + h * (2 * k + 1) / 7, w, h / 7); break;
+    case 'stripes': for (let k = 0; k < 4; k++) c.fillRect(x + w * (2 * k + 1) / 9, y, w / 9, h); break;
+    case 'sash': poly([0, 0], [0.28, 0], [1, 0.72], [1, 1], [0.72, 1], [0, 0.28]); break;
+    case 'quarters': c.fillRect(x, y, w / 2, h / 2); c.fillRect(x + w / 2, y + h / 2, w / 2, h / 2); break;
+    case 'halves': c.fillRect(x, y, w / 2, h); break;
+    case 'chevrons': c.lineWidth = h / 9; for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(x, y + h * (0.1 + 0.3 * k)); c.lineTo(x + w / 2, y + h * (0.32 + 0.3 * k)); c.lineTo(x + w, y + h * (0.1 + 0.3 * k)); c.stroke(); } break;
+    case 'spots': for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { c.beginPath(); c.arc(x + w * (i + 0.5) / 4 + (j % 2) * w / 8, y + h * (j + 0.5) / 4, Math.min(w, h) / 11, 0, 7); c.fill(); } break;
+    case 'cross': poly([0, 0], [0.2, 0], [1, 0.8], [1, 1], [0.8, 1], [0, 0.2]); poly([1, 0], [1, 0.2], [0.2, 1], [0, 1], [0, 0.8], [0.8, 0]); break;
+    case 'diamond': poly([0.5, 0.12], [0.85, 0.5], [0.5, 0.88], [0.15, 0.5]); break;
+    case 'braces': c.fillRect(x + w * 0.24, y, w * 0.12, h); c.fillRect(x + w * 0.64, y, w * 0.12, h); break;
+  }
+}
+const silkCache = new Map();
+function silkImg(s) {
+  const key = JSON.stringify(s);
+  if (silkCache.has(key)) return silkCache.get(key);
+  const cv2 = document.createElement('canvas'); cv2.width = cv2.height = 48;
+  const c = cv2.getContext('2d');
+  const jersey = () => { c.beginPath(); [[17, 16], [31, 16], [44, 23], [40, 32], [35, 29], [35, 46], [13, 46], [13, 29], [8, 32], [4, 23]].forEach(([x, y], k) => k ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); };
+  c.save(); jersey(); c.clip(); paintSilk(c, 4, 16, 40, 30, s);
+  if (s.sl !== s.c1) { c.fillStyle = s.sl; c.beginPath(); c.moveTo(17, 16); c.lineTo(4, 23); c.lineTo(8, 32); c.lineTo(14, 28); c.closePath(); c.moveTo(31, 16); c.lineTo(44, 23); c.lineTo(40, 32); c.lineTo(34, 28); c.closePath(); c.fill(); }
+  c.restore();
+  c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = 1.5; jersey(); c.stroke();
+  c.fillStyle = s.cap; c.beginPath(); c.arc(24, 12, 7, Math.PI, 0); c.closePath(); c.fill(); c.stroke();
+  c.fillRect(24, 11, 10, 2.5);
+  const url = cv2.toDataURL();
+  silkCache.set(key, url);
+  return url;
+}
+
+// ── RENDER: DOM ──
+function say(m) { $('comm').textContent = m; }
+const cloth = n => `<span class="cloth">${n}</span>`;
+const silk = g => `<img class="silk" src="${silkImg(g.silk)}" alt="">`;
+function renderHeader() {
+  const avail = S.bank - ((held ? held.phase : phase) === 'betting' ? slipCost() : 0);
+  $('bank').textContent = money(avail);
+  const pl = S.bank - 1000;
+  $('pl').textContent = (pl >= 0 ? '+' : '') + money(pl);
+  $('pl').className = pl >= 0 ? 'pos' : 'neg';
+}
+function renderCard() {
+  $('raceTitle').textContent = `Race ${card.raceNo} · ${raceLabel(card)}`;
+  $('raceName').innerHTML = `<b>${card.name}</b> · ${card.kind === 'flat' ? 'Turf' : card.fences.length + ' ' + (card.kind === 'chase' ? 'fences' : 'hurdles')} · Going: <b>${card.going}</b>`;
+  const book = card.horses.reduce((a, d) => a + 1 / d.odds, 0) * 100;
+  $('book').textContent = `Book ${book.toFixed(2)}% ✓ fair`;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+  const dis = phase !== 'betting' ? 'disabled' : '';
+  $('card').innerHTML = card.horses.map((d, i) => `
+    <div class="row">${cloth(d.no)}${silk(d)}
+      <div class="dinfo"><b>${dlink(d)}${d.draw ? ` <small>(${d.draw})</small>` : ''}${d.fav ? '<span class="fav">FAV</span>' : ''}</b>
+        <small>${d.form} · ${d.age}yo · ${fmtWt(d.wt)} · OR ${d.or} · J ${plink('jockey', d.jockey, true)} · T ${plink('trainer', d.trainer, true)}</small></div>
+      <div class="odds"><b>${d.odds.toFixed(2)}</b><small>≈${d.frac}<br>${(d.p * 100).toFixed(1)}%</small></div>
+      <div class="btns"><button data-bet="win" data-i="${i}" ${dis}>Win</button><button data-bet="ew" data-i="${i}" ${dis}>E/W</button></div>
+    </div>`).join('') + `<div class="note" style="margin-top:4px">Form: latest on the right · F fell, U unseated, P pulled up, 0 = 10th or worse${card.kind === 'flat' ? ' · (n) is the stall draw, 1 on the inside rail' : ''}</div>`;
+}
+function renderSlip() {
+  const hs = card.horses;
+  if (phase === 'result' && settledBets) {
+    $('slip').innerHTML = (settledBets.length ? settledBets.map(b => betRow(b, hs, race.order.filter(i => !race.st[i]))).join('')
+      : '<div class="empty">No bets this race.</div>') + betTotal(settledBets) +
+      `<div class="runrow"><span></span><button class="go" id="next">Next race ▶</button></div>`;
+    $('next').onclick = () => newCard();
+    return;
+  }
+  const running = phase === 'running';
+  $('slip').innerHTML = (slip.length ? slip.map((b, k) => {
+    const x = running ? '' : `<button class="x" data-rm="${k}">✕</button>`;
+    if (b.lines) {
+      const os = b.lines.map(lineOdds), lo = Math.min(...os), hi = Math.max(...os);
+      const pays = b.lines.length === 1 ? `@ ${lo.toFixed(2)} · returns ${money(b.stake * lo)}`
+        : `${b.lines.length} × ${money(b.stake)} = ${money(betCost(b))} · returns ${money(b.stake * lo)}–${money(b.stake * hi)}`;
+      return `<div class="bet"><span class="tag">${b.type.toUpperCase()}</span><div class="bx"><b>${fcName(b)}</b>
+        <small>${fcDesc(b)} · ${pays}</small></div>${x}</div>`;
+    }
+    const g = hs[b.dog];
+    const pot = b.type === 'ew'
+      ? `wins: ${money(b.stake * g.odds + b.stake * placeOdds(g.odds))} · placed: ${money(b.stake * placeOdds(g.odds))}`
+      : `returns ${money(b.stake * g.odds)}`;
+    return `<div class="bet">${cloth(g.no)}${silk(g)}<div class="bx"><b>${g.name}</b>
+      <small>${b.type === 'ew' ? `E/W ${money(b.stake)} ×2 = ${money(b.stake * 2)}` : 'Win ' + money(b.stake)} @ ${g.odds.toFixed(2)} · ${pot}</small></div>
+      ${x}</div>`;
+  }).join('') : `<div class="empty">${running ? 'No bets. Just watching this one.' : 'Tap Win or E/W on a horse to add a bet.'}</div>`) +
+    `<div class="tot"><span>Total stake</span><span>${money(slipCost())}</span></div>
+     <div class="runrow">
+       <label>Speed <select id="speed"><option value="normal">Normal</option><option value="fast">Fast</option><option value="real">Real time</option></select></label>
+       <button class="go" id="run" ${running ? 'disabled' : ''}>${running ? 'Running…' : slip.length ? 'Bet & run ▶' : 'Run without betting ▶'}</button>
+     </div>`;
+  $('speed').value = speedMode;
+  $('speed').onchange = e => speedMode = e.target.value;
+  $('run').onclick = startRace;
+}
+function renderResults() {
+  const el = $('results');
+  if (phase !== 'result' && phase !== 'history') { el.hidden = true; return; }
+  const r = race, hs = card.horses, fin = r.order.filter(i => !r.st[i]), out = r.order.filter(i => r.st[i]);
+  el.hidden = false;
+  const gap = r.T[fin[1]] - r.T[fin[0]];
+  el.innerHTML = `<h3>${phase === 'history' ? 'Past race' : 'Result'} · Race ${card.raceNo} · ${raceLabel(card)}</h3>
+    <div class="note" style="margin:-4px 0 8px">${card.name} · Going ${card.going} · Winning time ${fmtTime(r.T[fin[0]])}</div>
+    <div class="photo"><canvas id="photo"></canvas><small>${photo(gap) ? 'PHOTO FINISH · ' : ''}Finish-line camera. Time runs right to left, so the picture shows each horse at the instant its nose reached the line.</small></div>
+    <table><tr><th>Pos</th><th>Horse</th><th class="r">Dist</th><th class="r">SP</th></tr>` +
+    fin.map((i, k) => `<tr><td>${ORD[k]}</td><td>${cloth(hs[i].no)} ${silk(hs[i])} ${dlink(hs[i])} <small style="color:var(--mute)">${hs[i].jockey}</small></td>
+      <td class="r">${k ? lenStr((r.T[i] - r.T[fin[k - 1]]) / LEN[card.kind]) : ''}</td>
+      <td class="r">${hs[i].frac} (${hs[i].odds.toFixed(2)})</td></tr>`).join('') +
+    out.map(i => `<tr><td class="nf">${NFC[r.st[i]]}</td><td>${cloth(hs[i].no)} ${silk(hs[i])} ${dlink(hs[i])} <small style="color:var(--mute)">${hs[i].jockey}</small></td>
+      <td class="r" style="color:var(--mute)">${NF[r.st[i]]}${r.stop[i] && r.stop[i].fence ? ' at the ' + nth(r.stop[i].fence) : ''}</td><td class="r">${hs[i].frac} (${hs[i].odds.toFixed(2)})</td></tr>`).join('') + '</table>' +
+    `<div class="div"><span>Forecast ${nosOf(fin.slice(0, 2))} paid <b>${lineOdds(fin.slice(0, 2)).toFixed(2)}</b></span>
+      <span>Tricast ${nosOf(fin.slice(0, 3))} paid <b>${lineOdds(fin.slice(0, 3)).toFixed(2)}</b></span>
+      <span>Places 1-2-3 at ⅕ odds</span></div>
+     <div class="runrow" style="margin-top:10px"><span class="note" style="margin:0">Fair odds, returned per £1 staked</span><span style="display:flex;gap:8px"><button data-replay ${race.replay ? 'disabled' : ''}>${race.replay ? 'Replaying…' : '↺ Replay'}</button>${phase === 'history'
+      ? `<button class="go" data-back>Back to race ${held.card.raceNo} ▶</button>` : '<button class="go" data-next>Next race ▶</button>'}</span></div>` +
+    (phase === 'history' ? pastBets() : '');
+  drawPhoto($('photo'));
+}
+
+// ── PHOTO FINISH ──
+// A finish camera is a slit camera: it only ever photographs the finish line, column after column, so
+// the picture's x axis is time, not space. Every horse appears exactly as it was when it crossed the line;
+// the static background smears into horizontal streaks; the judge reads times off the hairline at each nose.
+function laneAt(i, t) {
+  const tr = race.track;
+  if (!tr || !tr.length) return race.w[i];
+  let lo = 0, hi = tr.length - 1;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (tr[m][0] < t) lo = m + 1; else hi = m; }
+  return tr[lo][i + 1];
+}
+function drawPhoto(el) {
+  if (!el) return;
+  const r = race, hs = card.horses, dpr = window.devicePixelRatio || 1, len = LEN[card.kind];
+  const W = Math.max(280, el.clientWidth || 700), H = Math.round(Math.max(190, Math.min(330, W * 0.46)));
+  el.width = Math.round(W * dpr); el.height = Math.round(H * dpr); el.style.height = H + 'px';
+  const c = el.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Pixels per second of race time: a length is about a quarter of the picture, zooming out (up to ~3×)
+  // when the runner-up is further back so the picture still shows the first two.
+  const fin = r.order.filter(i => !r.st[i]), gap2 = r.T[fin[1]] - r.T[fin[0]];
+  const K0 = Math.max(W * 0.24, 120) / len, K = Math.max(K0 * 0.35, Math.min(K0, W * 0.72 / gap2));
+  const X0 = W - Math.max(40, W * 0.08), T1 = r.T[fin[0]];
+  const xOf = T => X0 - (T - T1) * K, tOf = x => T1 + (X0 - x) / K;
+  const rnd = seeded(card.raceNo * 7919 + 17);
+  const top = Math.round(H * 0.28), bot = H - 24;
+  // streaked background: stands, rail, then turf
+  const crowd = ['#262b36', '#3a3228', '#4b4136', '#1d2230', '#5a4a3a', '#2f3644', '#6b2a2a', '#28406b'];
+  for (let y = 0; y < bot; y++) {
+    let col;
+    if (y < top - 6) col = crowd[Math.floor(rnd() * crowd.length)];
+    else if (y < top - 3) col = '#f0f0f0';
+    else if (y < top) col = '#7a7f87';
+    else { const k = (y - top) / (bot - top), v = 12 * (rnd() - 0.5) - k * 18; col = `rgb(${84 + v | 0},${134 + v | 0},${62 + v | 0})`; }
+    c.fillStyle = col; c.fillRect(0, y, W, 1);
+  }
+  // horses, far (inside rail) first
+  const unit = K * len / 246;                         // a length is one horse, nose to tail ≈ 246 drawing units
+  const items = fin.map(i => ({ g: hs[i], i, x: xOf(r.T[i]), w: laneAt(i, r.T[i]) }))
+    .filter(o => o.x > 0 && o.x - 260 * unit < W).sort((a, b) => a.w - b.w);
+  for (const o of items) {
+    const k = Math.max(0, Math.min(1, o.w / TW)), s = unit * (0.55 + 0.5 * k);
+    drawSideHorse(c, o.x, top + 34 + k * (bot - top - 40), s, o.g, r.gait ? r.gait[o.i] : 0.5);
+  }
+  // warm photographic tone + vignette
+  c.globalCompositeOperation = 'multiply'; c.fillStyle = '#f4e6cc'; c.fillRect(0, 0, W, bot);
+  c.globalCompositeOperation = 'source-over';
+  const vg = c.createRadialGradient(W / 2, bot / 2, Math.min(W, bot) * 0.3, W / 2, bot / 2, Math.max(W, bot) * 0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.35)'); c.fillStyle = vg; c.fillRect(0, 0, W, bot);
+  // time scale
+  c.fillStyle = '#0a0a0a'; c.fillRect(0, bot, W, H - bot);
+  c.strokeStyle = '#ddd'; c.fillStyle = '#ddd'; c.font = '600 10px ui-monospace,Menlo,Consolas,monospace'; c.textAlign = 'center'; c.textBaseline = 'top';
+  for (let hh = Math.floor(tOf(W) * 100); hh <= Math.ceil(tOf(0) * 100); hh++) {
+    const x = xOf(hh / 100) + 0.5;
+    if (hh % 5) continue;
+    c.beginPath(); c.moveTo(x, bot); c.lineTo(x, bot + (hh % 10 ? 4 : 7)); c.stroke();
+    if (hh % 20 === 0) c.fillText(fmtTime(hh / 100).replace('m ', ':').replace('s', ''), x, bot + 9);
+  }
+  // judge's hairlines at each nose, labels staggered so close finishes stay readable
+  let shown = 0;
+  fin.forEach((i, k) => {
+    const x = Math.round(xOf(r.T[i])) + 0.5;
+    if (x < 0 || x > W) return;
+    const g = hs[i], col = g.silk.c1 === '#151515' ? '#bbb' : g.silk.c1;
+    c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 3; c.beginPath(); c.moveTo(x, 18); c.lineTo(x, bot); c.stroke();
+    c.strokeStyle = col; c.lineWidth = 1; c.beginPath(); c.moveTo(x, 18); c.lineTo(x, bot); c.stroke();
+    const label = `${ORD[k]} · ${g.name}`;
+    c.font = '700 10.5px system-ui,sans-serif'; c.textBaseline = 'middle';
+    const lw = c.measureText(label).width + 22, ly = 4 + (shown % 2) * 15, lx = Math.max(2, Math.min(W - lw - 2, x - lw / 2));
+    c.fillStyle = 'rgba(0,0,0,.75)'; c.fillRect(lx, ly, lw, 14);
+    c.fillStyle = '#f4f4f4'; c.fillRect(lx + 2, ly + 2, 12, 10);
+    c.fillStyle = '#111'; c.font = '800 8.5px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(g.no, lx + 8, ly + 7.5);
+    c.fillStyle = '#fff'; c.font = '700 10.5px system-ui,sans-serif'; c.textAlign = 'left'; c.fillText(label, lx + 17, ly + 7.5);
+    shown++;
+  });
+  c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '700 10px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.fillText(`CLYDESIDE PARK · RACE ${card.raceNo} · ${raceLabel(card).toUpperCase()}`, 8, bot - 7);
+}
+// Side-on racehorse and jockey, facing right, nose at the origin, hooves on y = 0; phase 0 = legs stretched, 1 = gathered.
+function drawSideHorse(c, x, y, s, g, ph, noRider) {
+  const coat = g.coat, mane = g.mane, sk = g.silk;
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(-120, 2, 112, 6, 0, 0, 7); c.fill();
+  const L = (a, b) => [lerp(a[0], b[0], ph), lerp(a[1], b[1], ph)];
+  const leg = (top, knee, hoof, col) => {
+    c.strokeStyle = col; c.lineWidth = 14; c.beginPath(); c.moveTo(top[0], top[1]); c.lineTo(knee[0], knee[1]); c.stroke();
+    c.lineWidth = 7; c.beginPath(); c.moveTo(knee[0], knee[1]); c.lineTo(hoof[0], hoof[1]); c.stroke();
+    c.fillStyle = '#1a1410'; c.beginPath(); c.ellipse(hoof[0] + 2, hoof[1], 6, 4, 0, 0, 7); c.fill();
+  };
+  const far = shade(coat, -0.28);
+  // far-side legs
+  leg([-74, -82], L([-52, -52], [-74, -40]), L([-26, -12], [-90, -6]), far);
+  leg([-178, -84], L([-206, -46], [-170, -42]), L([-228, -10], [-136, -16]), far);
+  // tail
+  c.strokeStyle = mane; c.lineWidth = 12; c.beginPath(); c.moveTo(-194, -122); c.quadraticCurveTo(-226, -124, -246, -92 + ph * 12); c.stroke();
+  c.lineWidth = 6; c.beginPath(); c.moveTo(-200, -118); c.quadraticCurveTo(-232, -112, -250, -80 + ph * 12); c.stroke();
+  // body, neck and head in one outline
+  c.fillStyle = coat; c.beginPath();
+  c.moveTo(0, -126);
+  c.quadraticCurveTo(-14, -150, -34, -160);
+  c.lineTo(-30, -176); c.lineTo(-42, -163);
+  c.quadraticCurveTo(-64, -158, -88, -140);
+  c.quadraticCurveTo(-120, -130, -152, -136);
+  c.quadraticCurveTo(-178, -142, -196, -124);
+  c.quadraticCurveTo(-208, -102, -194, -82);
+  c.quadraticCurveTo(-184, -68, -176, -64);
+  c.quadraticCurveTo(-160, -68, -140, -72);
+  c.quadraticCurveTo(-110, -64, -84, -70);
+  c.quadraticCurveTo(-62, -72, -60, -94);
+  c.quadraticCurveTo(-50, -112, -38, -120);
+  c.quadraticCurveTo(-28, -112, -14, -112);
+  c.quadraticCurveTo(-2, -112, 0, -126);
+  c.closePath(); c.fill();
+  // near-side legs
+  leg([-68, -80], L([-42, -56], [-60, -42]), L([-12, -26], [-94, -32]), coat);
+  leg([-172, -82], L([-214, -50], [-164, -38]), L([-240, -18], [-124, -6]), coat);
+  // mane, eye, nostril, bridle
+  c.strokeStyle = mane; c.lineWidth = 8; c.beginPath(); c.moveTo(-38, -160); c.quadraticCurveTo(-62, -155, -86, -141); c.stroke();
+  c.fillStyle = '#0a0a0a'; c.beginPath(); c.arc(-24, -142, 3, 0, 7); c.fill();
+  c.beginPath(); c.arc(-5, -121, 2, 0, 7); c.fill();
+  c.strokeStyle = '#2a1d12'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-6, -114); c.lineTo(-32, -156); c.moveTo(-4, -130); c.lineTo(-30, -126); c.stroke();
+  if (!noRider) {
+    // saddle cloth with the racecard number, then the saddle
+    c.fillStyle = '#f4f4f4'; c.fillRect(-144, -136, 48, 36);
+    c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 1.5; c.strokeRect(-144, -136, 48, 36);
+    c.fillStyle = '#111'; c.font = '900 24px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(g.no || '', -120, -117);
+    c.fillStyle = '#3a2414'; c.beginPath(); c.ellipse(-120, -138, 22, 6, 0, 0, 7); c.fill();
+    // jockey: white breeches, black boots, crouched with the silks on
+    c.strokeStyle = '#f2efe6'; c.lineWidth = 14; c.beginPath(); c.moveTo(-128, -166); c.lineTo(-98, -156); c.stroke();
+    c.strokeStyle = '#141414'; c.lineWidth = 10; c.beginPath(); c.moveTo(-98, -156); c.lineTo(-112, -124); c.stroke();
+    c.strokeStyle = '#888'; c.lineWidth = 2; c.beginPath(); c.moveTo(-118, -138); c.lineTo(-112, -122); c.stroke();
+    const torso = () => { c.beginPath(); c.moveTo(-140, -170); c.quadraticCurveTo(-116, -198, -82, -196); c.lineTo(-74, -180); c.quadraticCurveTo(-100, -164, -124, -156); c.closePath(); };
+    c.save(); torso(); c.clip(); paintSilk(c, -142, -200, 70, 46, sk); c.restore();
+    c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 1.5; torso(); c.stroke();
+    c.strokeStyle = sk.sl; c.lineWidth = 10; c.beginPath(); c.moveTo(-86, -188); c.lineTo(-66, -166); c.lineTo(-50, -150); c.stroke();
+    c.fillStyle = '#f2efe6'; c.beginPath(); c.arc(-48, -149, 5, 0, 7); c.fill();
+    c.strokeStyle = '#2a1d12'; c.lineWidth = 2; c.beginPath(); c.moveTo(-48, -149); c.lineTo(-6, -126); c.stroke();
+    c.fillStyle = '#e3bf9f'; c.beginPath(); c.arc(-68, -202, 10, 0, 7); c.fill();
+    c.fillStyle = '#222'; c.fillRect(-64, -205, 9, 4);
+    c.fillStyle = sk.cap; c.beginPath(); c.arc(-70, -205, 11, Math.PI * 1.02, Math.PI * 2.08); c.closePath(); c.fill();
+    c.fillRect(-62, -208, 12, 3.5);
+  }
+  c.restore();
+}
+function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(v * (1 + k))));
+  return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
+}
+function renderHistory() {
+  const st = S.stats, pl = st.returned - st.staked;
+  $('stats').innerHTML = `<div class="statgrid">
+    <div class="stat"><small>Races</small><b>${st.races}</b></div>
+    <div class="stat"><small>Bets / winners</small><b>${st.bets} / ${st.winners}</b></div>
+    <div class="stat"><small>Staked</small><b>${money(st.staked)}</b></div>
+    <div class="stat"><small>Returned</small><b>${money(st.returned)}</b></div>
+    <div class="stat"><small>Return on stake</small><b class="${pl >= 0 ? 'pos' : 'neg'}">${st.staked ? ((st.returned / st.staked) * 100).toFixed(1) + '%' : '–'}</b></div></div>`;
+  const hb = S.bankHist;
+  if (hb.length > 1) {
+    const W = 600, H = 90, lo = Math.min(0, ...hb, 1000), hi = Math.max(...hb, 1000) * 1.05;
+    const X = i => i / (hb.length - 1) * W, Y = v => H - 6 - (v - lo) / (hi - lo || 1) * (H - 12);
+    const pts = hb.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    const end = hb[hb.length - 1];
+    $('spark').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="display:block;margin-bottom:8px">
+      <line x1="0" x2="${W}" y1="${Y(1000)}" y2="${Y(1000)}" stroke="#8fa1b8" stroke-dasharray="4 4" stroke-width="1" vector-effect="non-scaling-stroke"/>
+      <polyline points="${pts}" fill="none" stroke="${end >= 1000 ? '#4ade80' : '#f87171'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+      <div class="note" style="margin:-4px 0 8px">Bank after each race (dashed line = £1,000 start)</div>`;
+  } else $('spark').innerHTML = '';
+  const can = new Set((S.archive || []).map(a => a.race)), busy = phase === 'running' || race.replay;
+  $('hist').innerHTML = S.history.length ? `<table><tr><th>Race</th><th>Winner</th><th class="r">Staked</th><th class="r">P/L</th><th></th></tr>` +
+    S.history.slice(0, 10).map(x => { const p = x.returned - x.staked; return `<tr><td>${x.race} <small style="color:var(--mute)">${x.type}</small></td><td>${silk(x)} ${dlink(x)} <small style="color:var(--mute)">${x.frac}</small></td>
+      <td class="r">${money(x.staked)}</td><td class="r ${x.staked ? (p >= 0 ? 'pos' : 'neg') : ''}">${x.staked ? (p >= 0 ? '+' : '') + money(p) : '–'}</td>
+      <td class="r">${can.has(x.race) ? `<button class="hbtn" data-hist="${x.race}" title="Watch race ${x.race} again" ${busy ? 'disabled' : ''}>↺ Watch</button>` : ''}</td></tr>`; }).join('') + '</table>' +
+    (S.archive && S.archive.length ? `<div class="note">The last ${ARCHIVE_MAX} races are kept and can be watched again.</div>` : '')
+    : '<div class="empty">No races yet.</div>';
+}
+function renderFC() {
+  const n = FC.type === 'fc' ? 2 : 3, rows = FC.any ? 1 : n, dis = phase !== 'betting' ? 'disabled' : '';
+  document.querySelectorAll('[data-fct]').forEach(b => b.classList.toggle('on', b.dataset.fct === FC.type));
+  $('anyOrder').checked = FC.any; $('anyOrder').disabled = !!dis;
+  let hh = '<div class="lbl"></div>' + card.horses.map(d => `<div class="hd">${silk(d)}</div>`).join('');
+  for (let k = 0; k < rows; k++) {
+    hh += `<div class="lbl">${FC.any ? 'Any' : ORD[k]}</div>` +
+      card.horses.map((d, i) => `<button class="cell${FC.sel[k][i] ? ' on' : ''}" data-cell="${k},${i}" ${dis}>${d.no}</button>`).join('');
+  }
+  $('fcGrid').innerHTML = `<div class="fcgrid">${hh}</div>`;
+  const lines = fcLines(), stake = Math.max(0, +$('stake').value || 0);
+  let info;
+  if (!lines.length) info = FC.any ? `Pick at least ${n} horses.` : `Pick a horse for each of the ${n} places.`;
+  else {
+    const os = lines.map(lineOdds), lo = Math.min(...os), hi = Math.max(...os);
+    info = lines.length === 1
+      ? `${nosOf(lines[0])} pays <b>${lo.toFixed(2)}</b> (${(100 / lo).toFixed(2)}% chance) · ${money(stake)} returns ${money(stake * lo)}`
+      : `${lines.length} lines × ${money(stake)} = <b>${money(stake * lines.length)}</b> · pays ${lo.toFixed(2)}–${hi.toFixed(2)} on the winning line · ${(lines.reduce((a, l) => a + lineProb(l), 0) * 100).toFixed(1)}% chance to land`;
+  }
+  $('fcInfo').innerHTML = `<div>${info}</div><div class="runrow" style="margin-top:8px"><button data-fcclear ${dis}>Clear</button>
+    <button class="go" data-fcadd ${dis || !lines.length ? 'disabled' : ''}>Add to slip</button></div>`;
+}
+let stripKey = '';
+function renderStrip() {
+  let run = null;
+  if ((phase === 'result' || phase === 'history') && !race.replay) run = race.order.filter(i => !race.st[i]).concat(race.order.filter(i => race.st[i]));
+  else if (race.t > 0) run = runOrder();
+  const key = run ? run.join(',') + phase + !!race.replay + run.map(i => stopped(i, race.t) ? 1 : 0).join('') : 'none';
+  if (key === stripKey) return;
+  stripKey = key;
+  let k = 0;
+  $('strip').innerHTML = run ? run.map(i => {
+    const out = stopped(i, race.t) || ((phase === 'result' || phase === 'history') && !race.replay && race.st[i]);
+    return `<span><span class="o">${out ? `<span class="nf">${NFC[race.st[i]]}</span>` : ORD[k++]}</span>${silk(card.horses[i])}${cloth(card.horses[i].no)}</span>`;
+  }).join('') : '';
+}
+function renderAll() { renderHeader(); renderCard(); renderFC(); renderSlip(); renderResults(); renderHistory(); }
+
+// ── HORSE, TRAINER AND JOCKEY PROFILES ──
+const dlink = d => d.id ? `<a class="dlink" data-horse="${d.id}">${d.name}</a>` : d.name;
+const plink = (kind, n, short) => `<a class="dlink" data-${kind}="${n}">${short ? n : personInfo(kind, n).full}</a>`;
+// The overlay keeps a stack of views (stable list → trainer → horse …) so ◀ Back retraces your steps.
+let modalStack = [];
+function showModal(view, push) {
+  if (!push || $('modal').hidden) modalStack = [];
+  modalStack.push(view);
+  paintModal();
+}
+function paintModal() {
+  const v = modalStack[modalStack.length - 1];
+  const html = v.type === 'horse' ? profileHTML(v.id) : v.type === 'trainer' || v.type === 'jockey' ? personHTML(v.type, v.name) : listHTML(v.type);
+  if (html == null) return;
+  $('modalBody').innerHTML = (modalStack.length > 1 ? '<button data-mback style="margin-bottom:10px">◀ Back</button>' : '') + html;
+  $('modal').hidden = false;
+  $('modal').scrollTop = 0;
+  if (v.type === 'horse') drawPortrait(v.id);
+}
+function closeModal() { $('modal').hidden = true; modalStack = []; }
+const chip = p => `<span class="chip ${isNum(p) ? 'p' + p : 'pX'}">${posChar(p)}</span>`;
+function horseStats(k) {
+  const runs = k.runs, n = runs.length, fins = runs.filter(r => isNum(r.p));
+  const wins = runs.filter(r => r.p === 1).length, pl = fins.filter(r => r.p <= 3).length;
+  const ys = runs.filter(r => r.y), st = ys.reduce((a, r) => a + r.y.s, 0), rt = ys.reduce((a, r) => a + r.y.r, 0);
+  return { n, wins, pl, nf: n - fins.length, st, rt, ys: ys.length };
+}
+const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '–';
+const signed = (v, dp) => (v >= 0 ? '+' : '') + v.toFixed(dp);
+const plTd = y => `<td class="r ${y ? (y.r - y.s >= 0 ? 'pos' : 'neg') : ''}">${y ? (y.r - y.s >= 0 ? '+' : '') + money(y.r - y.s) : ''}</td>`;
+const runType = r => `${tripOf(r.m)} ${KIND_SHORT[r.k]}`;
+const goingPref = gp => gp > 0 ? 'Loves soft ground' : gp < 0 ? 'Wants a sound surface' : 'Acts on any ground';
+function profileHTML(id) {
+  const k = S.stable.find(x => x.id === id);
+  if (!k) return null;
+  const st = horseStats(k), onCard = phase !== 'history' ? card.horses.find(d => d.id === id) : null;
+  const archived = new Set((S.archive || []).map(a => a.race)), busy = phase === 'running' || race.replay;
+  const runs = [...k.runs].reverse();
+  const recent = k.runs.slice(-20);
+  const W = phoneQ.matches ? 340 : 560, H = 120, X = i => 22 + i * (W - 44) / Math.max(1, recent.length - 1), Y = p => 12 + ((isNum(p) ? p : 9) - 1) * (H - 24) / 8;
+  const chart = recent.length > 1 ? `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="display:block">
+      ${[1, 2, 3, 4, 5, 6, 7, 8].map(p => `<line x1="16" x2="${W - 10}" y1="${Y(p)}" y2="${Y(p)}" stroke="#28384f"/><text x="2" y="${Y(p) + 4}" fill="#8fa1b8" font-size="11">${p}</text>`).join('')}
+      <text x="2" y="${Y(9) + 4}" fill="#f87171" font-size="10">x</text>
+      <polyline points="${recent.map((r, i) => `${X(i)},${Y(r.p)}`).join(' ')}" fill="none" stroke="#f5c542" stroke-width="2"/>
+      ${recent.map((r, i) => `<circle cx="${X(i)}" cy="${Y(r.p)}" r="4" fill="${r.p === 1 ? '#f5c542' : r.p === 2 ? '#c9d4e3' : isNum(r.p) ? '#1b2840' : '#f87171'}" stroke="#f5c542"/>`).join('')}
+    </svg><div class="note" style="margin:0 0 10px">Finishing position, last ${recent.length} runs (oldest left; x = fell, unseated or pulled up)</div>` : '';
+  return `
+    <div class="phead"><canvas id="pdog" width="600" height="260"></canvas>
+      <div><h2>${k.name}</h2>
+        <div class="facts">${k.age}yo ${COATS[k.ci].n.toLowerCase()} ${SEX_NAME[k.sex].toLowerCase()} · ${k.code === 'F' ? 'Flat' : 'Jumps'} · Rated ${ratingOf(k)}<br>
+          Trainer ${plink('trainer', k.trainer)}<br>
+          ${STYLE_NAME[k.style]} · Best trip ${tripOf(k.opt)} · ${goingPref(k.gp)}<br>
+          Form <b style="color:var(--ink)">${formOf(k)}</b> <small>(latest on the right)</small></div>
+        ${onCard ? `<div class="oncard">Running in race ${card.raceNo} (${raceLabel(card)}, ${card.going}) as number ${onCard.no}${onCard.draw ? ` from stall ${onCard.draw}` : ''}, ridden by ${onCard.jockey}, at <b>${onCard.odds.toFixed(2)}</b> (≈${onCard.frac}, ${(onCard.p * 100).toFixed(1)}% chance)</div>` : ''}
+      </div></div>
+    <div class="statgrid">
+      <div class="stat"><small>Runs</small><b>${st.n}</b></div>
+      <div class="stat"><small>Wins</small><b>${st.wins}</b></div>
+      <div class="stat"><small>Placed (1-2-3)</small><b>${st.pl}</b></div>
+      <div class="stat"><small>Win rate</small><b>${pct(st.wins, st.n)}</b></div>
+      ${k.code === 'J' ? `<div class="stat"><small>Fell / UR / PU</small><b>${st.nf}</b></div>` : ''}
+      <div class="stat"><small>You on this horse</small><b class="${st.rt - st.st >= 0 ? 'pos' : 'neg'}">${st.ys ? (st.rt - st.st >= 0 ? '+' : '') + money(st.rt - st.st) : '–'}</b></div>
+    </div>
+    <div class="chips" style="margin-bottom:10px">${k.runs.slice(-10).map(r => chip(r.p)).join('')}</div>
+    ${chart}
+    <h3>Race history</h3>
+    <div class="tscroll"><table><tr><th>Race</th><th>Type</th><th>Going</th><th>Pos</th><th class="r">Dist</th><th class="r">SP</th><th>Jockey</th><th>Winner / 2nd</th><th class="r">You</th><th></th></tr>
+    ${runs.map(r => `<tr><td>${r.n || '<span style="color:var(--mute)">earlier</span>'}</td><td>${runType(r)}</td><td>${r.g}</td>
+      <td>${isNum(r.p) ? ORD[r.p - 1] : `<span class="nf">${NFC[r.p]}</span>`}</td>
+      <td class="r">${r.L == null ? '' : r.p === 1 ? (r.L < 0.1 ? 'shd' : '+' + lenStr(r.L)) : lenStr(r.L)}</td>
+      <td class="r">${nearestFrac(r.o)}</td><td>${r.j ? plink('jockey', r.j, true) : ''}</td>
+      <td>${S.stable.some(x => x.id === r.wid) ? `<a class="dlink" data-horse="${r.wid}">${r.wn}</a>` : r.wn}</td>
+      ${plTd(r.y)}
+      <td class="r">${r.n && archived.has(r.n) ? `<button class="hbtn" data-hist="${r.n}" ${busy ? 'disabled' : ''}>↺ Watch</button>` : ''}</td></tr>`).join('')}
+    </table></div>
+    <div class="note">Dist is lengths behind the winner, or (+) the winning margin. Races marked "earlier" were run before you arrived.</div>`;
+}
+// portrait: with its number cloth if it's on today's card
+function drawPortrait(id) {
+  const k = S.stable.find(x => x.id === id), onCard = phase !== 'history' && card.horses.find(d => d.id === id);
+  const cvp = $('pdog'), c = cvp.getContext('2d');
+  const sky = c.createLinearGradient(0, 0, 0, 260); sky.addColorStop(0, '#8aa4bd'); sky.addColorStop(0.45, '#c6d2dc'); sky.addColorStop(0.46, '#4f8a3c'); sky.addColorStop(1, '#3e7330');
+  c.fillStyle = sky; c.fillRect(0, 0, 600, 260);
+  // Glasgow skyline: a crane, a tower block or two and the Campsies beyond
+  c.fillStyle = '#7f93a6'; c.beginPath(); c.moveTo(0, 118); c.quadraticCurveTo(150, 82, 300, 104); c.quadraticCurveTo(450, 86, 600, 112); c.lineTo(600, 120); c.lineTo(0, 120); c.fill();
+  c.fillStyle = '#5c6d7e';
+  [[30, 70, 26], [70, 84, 18], [520, 64, 22], [560, 90, 16]].forEach(([x, y, w]) => c.fillRect(x, y, w, 120 - y));
+  c.fillRect(160, 60, 8, 60); c.fillRect(120, 56, 90, 8); c.fillRect(196, 64, 3, 22);
+  c.fillStyle = 'rgba(255,255,255,.95)'; c.fillRect(0, 122, 600, 4); c.fillRect(0, 134, 600, 3);
+  drawSideHorse(c, 470, 248, 0.92, { ...k, coat: COATS[k.ci].c, mane: COATS[k.ci].m, no: onCard ? onCard.no : '' }, 0.35);
+}
+const tabs = on => `<div class="seg" style="margin-bottom:10px">${[['horses', 'Horses'], ['trainers', 'Trainers'], ['jockeys', 'Jockeys']].map(([k, n]) => `<button data-mtab="${k}" class="${on === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+function listHTML(type) {
+  const on = new Map(phase !== 'history' ? card.horses.map(d => [d.id, d]) : []);
+  if (type === 'trainers' || type === 'jockeys') {
+    const kind = type === 'trainers' ? 'trainer' : 'jockey', names = kind === 'trainer' ? TRAINERS : JOCKEYS;
+    const rows = names.map(n => ({ n, t: personStats(kind, n) })).filter(x => x.t.n).sort((a, b) => b.t.wins - a.t.wins || b.t.wins / (b.t.n || 1) - a.t.wins / (a.t.n || 1));
+    return tabs(type) + `<h2>${kind === 'trainer' ? 'Trainers' : 'Jockeys'}</h2><div class="note" style="margin:0 0 10px">"vs exp" is wins compared with what their ${kind === 'trainer' ? 'horses\'' : 'mounts\''} prices said they should have won: luck, since ${type} don't change a horse's chances.</div>
+      <div class="tscroll"><table><tr><th>${kind === 'trainer' ? 'Trainer' : 'Jockey'}</th><th>${kind === 'trainer' ? 'Yard' : 'From'}</th><th class="r">${kind === 'trainer' ? 'Runners' : 'Rides'}</th><th class="r">Wins</th><th class="r">Win %</th><th class="r">vs exp</th><th>Last 10</th><th>Today</th></tr>
+      ${rows.map(({ n, t }) => `<tr><td>${plink(kind, n)}</td><td>${personInfo(kind, n).base}</td><td class="r">${t.n}</td><td class="r">${t.wins}</td>
+        <td class="r">${pct(t.wins, t.n)}</td><td class="r ${t.wins - t.exp >= 0 ? 'pos' : 'neg'}">${signed(t.wins - t.exp, 1)}</td>
+        <td>${t.last10.map(r => posChar(r.p)).join('') || '–'}</td><td>${card.horses.filter(d => on.has(d.id) && d[kind] === n).map(d => cloth(d.no)).join(' ')}</td></tr>`).join('')}
+      </table></div>`;
+  }
+  const rows = S.stable.map(k => ({ k, st: horseStats(k) })).sort((a, b) => a.k.code.localeCompare(b.k.code) || b.st.wins - a.st.wins || b.st.pl - a.st.pl);
+  return tabs('horses') + `<h2>The stables</h2><div class="note" style="margin:0 0 10px">${STABLE_PER_CODE} Flat horses and ${STABLE_PER_CODE} jumpers race here. Tap one for its profile and race history.</div>
+    <div class="tscroll"><table><tr><th></th><th>Horse</th><th>Code</th><th>Trainer</th><th>Trip</th><th>Form</th><th class="r">Runs</th><th class="r">Wins</th><th class="r">Win %</th><th class="r">OR</th><th>Today</th></tr>
+    ${rows.map(({ k, st }) => `<tr><td>${silk(k)}</td><td><a class="dlink" data-horse="${k.id}">${k.name}</a></td><td>${k.code === 'F' ? 'Flat' : 'Jumps'}</td><td>${plink('trainer', k.trainer, true)}</td><td>${tripOf(k.opt)}</td><td>${formOf(k)}</td>
+      <td class="r">${st.n}</td><td class="r">${st.wins}</td><td class="r">${pct(st.wins, st.n)}</td><td class="r">${ratingOf(k)}</td>
+      <td>${on.has(k.id) ? cloth(on.get(k.id).no) : ''}</td></tr>`).join('')}
+    </table></div>`;
+}
+function personStats(kind, name) {
+  const runs = kind === 'trainer'
+    ? S.stable.filter(k => k.trainer === name).flatMap(k => k.runs.map(r => ({ ...r, horse: k })))
+    : S.stable.flatMap(k => k.runs.filter(r => r.j === name).map(r => ({ ...r, horse: k })));
+  const recent = runs.filter(r => r.n).sort((a, b) => b.n - a.n);
+  const ys = runs.filter(r => r.y);
+  return {
+    runs, recent, n: runs.length, wins: runs.filter(r => r.p === 1).length, pl: runs.filter(r => isNum(r.p) && r.p <= 3).length,
+    exp: runs.reduce((a, r) => a + 1 / r.o, 0), last10: recent.slice(0, 10),
+    ys: ys.length, st: ys.reduce((a, r) => a + r.y.s, 0), rt: ys.reduce((a, r) => a + r.y.r, 0),
+  };
+}
+function personHTML(kind, name) {
+  const ti = personInfo(kind, name), t = personStats(kind, name), tr = kind === 'trainer';
+  const on = phase !== 'history' ? card.horses.filter(d => d[kind] === name) : [];
+  const archived = new Set((S.archive || []).map(a => a.race)), busy = phase === 'running' || race.replay;
+  const initials = ti.full.split(' ').map(w => w[0]).join('');
+  const l10w = t.last10.filter(r => r.p === 1).length;
+  const yard = tr ? S.stable.filter(k => k.trainer === name) : [];
+  return `
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:12px;padding-right:40px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--panel2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:var(--accent);flex:0 0 auto">${initials}</div>
+      <div><h2 style="margin:0 0 4px;font-size:21px">${ti.full}</h2>
+        <div class="facts">${tr ? `Trains at ${ti.base} · Licensed since ${ti.since} · ${yard.length} horse${yard.length === 1 ? '' : 's'} at Clydeside Park` : `Jockey from ${ti.base} · Riding since ${ti.since}`}</div></div>
+    </div>
+    ${on.length ? `<div class="oncard">${tr ? 'Runners' : 'Rides'} in race ${card.raceNo}: ${on.map(d => `${cloth(d.no)} ${dlink(d)} at <b>${d.odds.toFixed(2)}</b>`).join(' · ')}</div>` : ''}
+    <div class="statgrid">
+      <div class="stat"><small>${tr ? 'Runners' : 'Rides'}</small><b>${t.n}</b></div>
+      <div class="stat"><small>Wins</small><b>${t.wins}</b></div>
+      <div class="stat"><small>Placed (1-2-3)</small><b>${t.pl}</b></div>
+      <div class="stat"><small>Win rate</small><b>${pct(t.wins, t.n)}</b></div>
+      <div class="stat"><small>Expected wins</small><b>${t.exp.toFixed(1)} <span class="${t.wins - t.exp >= 0 ? 'pos' : 'neg'}" style="font-size:12px">${signed(t.wins - t.exp, 1)}</span></b></div>
+      <div class="stat"><small>Last 10 ${tr ? 'runners' : 'rides'}</small><b>${t.last10.length ? l10w + ' win' + (l10w === 1 ? '' : 's') : '–'}</b></div>
+      <div class="stat"><small>You on ${tr ? 'their horses' : 'their mounts'}</small><b class="${t.rt - t.st >= 0 ? 'pos' : 'neg'}">${t.ys ? (t.rt - t.st >= 0 ? '+' : '') + money(t.rt - t.st) : '–'}</b></div>
+    </div>
+    ${tr ? `<h3>Horses</h3>
+    <div class="tscroll"><table><tr><th></th><th>Horse</th><th>Code</th><th>Trip</th><th>Form</th><th class="r">Runs</th><th class="r">Wins</th><th class="r">Win %</th><th class="r">OR</th></tr>
+    ${yard.map(k => ({ k, st: horseStats(k) })).sort((a, b) => b.st.wins - a.st.wins).map(({ k, st }) => `<tr><td>${silk(k)}</td><td><a class="dlink" data-horse="${k.id}">${k.name}</a></td>
+      <td>${k.code === 'F' ? 'Flat' : 'Jumps'}</td><td>${tripOf(k.opt)}</td><td>${formOf(k)}</td><td class="r">${st.n}</td><td class="r">${st.wins}</td>
+      <td class="r">${pct(st.wins, st.n)}</td><td class="r">${ratingOf(k)}</td></tr>`).join('')}
+    </table></div>` : ''}
+    <h3 style="margin-top:14px">Recent ${tr ? 'runners' : 'rides'}</h3>
+    ${t.recent.length ? `<div class="tscroll"><table><tr><th>Race</th><th>Type</th><th>Horse</th><th>Pos</th><th class="r">SP</th><th>${tr ? 'Jockey' : 'Trainer'}</th><th class="r">You</th><th></th></tr>
+    ${t.recent.slice(0, 15).map(r => `<tr><td>${r.n}</td><td>${runType(r)}</td><td><a class="dlink" data-horse="${r.horse.id}">${r.horse.name}</a></td>
+      <td>${isNum(r.p) ? ORD[r.p - 1] : `<span class="nf">${NFC[r.p]}</span>`}</td><td class="r">${nearestFrac(r.o)}</td>
+      <td>${tr ? (r.j ? plink('jockey', r.j, true) : '') : plink('trainer', r.horse.trainer, true)}</td>
+      ${plTd(r.y)}
+      <td class="r">${archived.has(r.n) ? `<button class="hbtn" data-hist="${r.n}" ${busy ? 'disabled' : ''}>↺ Watch</button>` : ''}</td></tr>`).join('')}
+    </table></div>` : `<div class="empty">No ${tr ? 'runners' : 'rides'} since you arrived yet.</div>`}
+    <div class="note">Stats include runs from before you arrived. Expected wins add up each runner's chance from its price.</div>`;
+}
+$('stableBtn').onclick = () => showModal({ type: 'horses' });
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('modal').hidden) closeModal(); });
+
+document.addEventListener('click', e => {
+  const dl = e.target.closest('[data-horse]');
+  if (dl) { e.preventDefault(); return showModal({ type: 'horse', id: +dl.dataset.horse }, true); }
+  const tl = e.target.closest('[data-trainer]');
+  if (tl) { e.preventDefault(); return showModal({ type: 'trainer', name: tl.dataset.trainer }, true); }
+  const jl = e.target.closest('[data-jockey]');
+  if (jl) { e.preventDefault(); return showModal({ type: 'jockey', name: jl.dataset.jockey }, true); }
+  const mt = e.target.closest('[data-mtab]');
+  if (mt) { modalStack[modalStack.length - 1] = { type: mt.dataset.mtab }; return paintModal(); }
+  if (e.target.closest('[data-mback]')) { modalStack.pop(); return paintModal(); }
+  if (e.target.closest('[data-close]')) return closeModal();
+  if (e.target.closest('#modal [data-hist]')) { closeModal(); return watchArchive(+e.target.closest('[data-hist]').dataset.hist); }
+  const md = e.target.closest('[data-mode]');
+  if (md) {
+    S.mode = md.dataset.mode; save();
+    // switch the card straight away if nothing's been bet on it yet and it's the wrong code
+    if (phase === 'betting' && !slip.length && S.mode !== 'mix' && card.code !== S.mode) newCard(true);
+    else renderCard();
+    return;
+  }
+  const b = e.target.closest('[data-bet]'); if (b) return addBet(+b.dataset.i, b.dataset.bet);
+  const rm = e.target.closest('[data-rm]'); if (rm && phase === 'betting') { slip.splice(+rm.dataset.rm, 1); renderSlip(); renderHeader(); return; }
+  const c = e.target.closest('[data-chip]'); if (c) { $('stake').value = c.dataset.chip; renderFC(); return; }
+  if (phase === 'betting') {
+    const cell = e.target.closest('[data-cell]');
+    if (cell) { const [k, i] = cell.dataset.cell.split(',').map(Number); FC.sel[k][i] = !FC.sel[k][i]; return renderFC(); }
+    const t = e.target.closest('[data-fct]'); if (t) { FC.type = t.dataset.fct; return renderFC(); }
+    if (e.target.closest('[data-fcclear]')) { clearFC(); return renderFC(); }
+    if (e.target.closest('[data-fcadd]')) return addFC();
+  }
+  if (e.target.closest('[data-replay]')) return startReplay();
+  const hb = e.target.closest('[data-hist]'); if (hb) return watchArchive(+hb.dataset.hist);
+  if (e.target.closest('[data-back]')) return leaveArchive();
+  if (e.target.closest('[data-next]') && phase === 'result') newCard();
+});
+$('anyOrder').onchange = e => { FC.any = e.target.checked; clearFC(); renderFC(); };
+$('stake').oninput = () => renderFC();
+$('reset').onclick = () => {
+  if (phase === 'running' || phase === 'history') return;
+  if (!confirm('Reset your bank to £1,000 and clear your record?')) return;
+  S = fresh(); save(); newCard(true);
+};
+
+// ── SOUND (all synthesised with WebAudio; nothing is loaded) ──
+const SND = (() => {
+  let ac = null, master, noise, crowd, bands = [];
+  let on = true, ex = 0.12, spike = 0, babbleT = 0, brushAt = 0;
+  const hoofT = Array(N).fill(0);
+  try { on = localStorage.getItem('horseSound') !== 'off'; } catch (e) {}
+
+  function init() {
+    if (!on) return;
+    if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ac = new AC();
+    master = ac.createGain(); master.gain.value = 0.7; master.connect(ac.destination);
+    noise = ac.createBuffer(1, ac.sampleRate * 4, ac.sampleRate);
+    const nd = noise.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    // Crowd: looped noise through a few voice-range bands whose levels and pitch wander (a babble);
+    // excitement brightens it towards the upper bands, which is what cheering sounds like.
+    crowd = ac.createGain(); crowd.gain.value = 0; crowd.connect(master);
+    const src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
+    for (const [f, q] of [[260, 0.9], [650, 1.4], [1300, 1.6], [2500, 1.8]]) {
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;
+      const g = ac.createGain(); g.gain.value = 0;
+      src.connect(bp); bp.connect(g); g.connect(crowd);
+      bands.push({ f, bp, g });
+    }
+    src.start();
+  }
+  function setOn(v) {
+    on = v;
+    try { localStorage.setItem('horseSound', v ? 'on' : 'off'); } catch (e) {}
+    if (v) init(); else if (ac) ac.suspend();
+  }
+  const ok = () => ac && on && ac.state === 'running';
+
+  function tone(f, t0, dur, vol, type, dest) {
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + t0;
+    o.type = type || 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest || master); o.start(t); o.stop(t + dur + 0.05);
+    return o;
+  }
+  function burst(t0, dur, vol, type, freq, q, pan) {
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), t = ac.currentTime + t0;
+    s.buffer = noise; f.type = type; f.frequency.value = freq; if (q) f.Q.value = q;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    let out = g;
+    if (pan && ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); out = p; }
+    s.connect(f); f.connect(g); out.connect(master);
+    s.start(t, Math.random() * 3, dur + 0.05);
+    return f;
+  }
+
+  function off(kind) {
+    if (!ok()) return;
+    if (kind === 'flat') {                                  // the clang of the stalls' gates springing open
+      burst(0, 0.25, 0.45, 'highpass', 1500);
+      [311, 466, 698, 1046].forEach((f, i) => tone(f, i * 0.006, 0.6, 0.06, 'square'));
+      const o = tone(95, 0, 0.35, 0.45, 'sine'); o.frequency.exponentialRampToValueAtTime(40, ac.currentTime + 0.35);
+    } else {                                                // the starter's bell, then the tape flies up
+      [0, 0.12].forEach(t => { tone(1318, t, 0.5, 0.12, 'triangle'); tone(2637, t, 0.3, 0.04, 'sine'); });
+      const f = burst(0.25, 0.3, 0.2, 'bandpass', 900, 0.8); f.frequency.exponentialRampToValueAtTime(3200, ac.currentTime + 0.55);
+    }
+    spike = Math.max(spike, 0.4);
+  }
+  function brush() {                                         // birch brushed as a horse jumps; spaced out so a field doesn't roar
+    if (!ok() || ac.currentTime - brushAt < 0.05) return;
+    brushAt = ac.currentTime;
+    burst(0, 0.12, 0.08, 'highpass', 2600 + Math.random() * 1500);
+  }
+  function fall() {
+    if (!ok()) return;
+    const o = tone(70, 0, 0.5, 0.5, 'sine'); o.frequency.exponentialRampToValueAtTime(32, ac.currentTime + 0.5);
+    burst(0, 0.35, 0.3, 'lowpass', 400);
+    spike = Math.max(spike, 0.9);                            // the crowd gasps
+  }
+  function finish(gap) { spike = photo(gap) ? 1.1 : gap < 0.6 ? 0.85 : 0.6; }
+  function click() { if (ok()) { tone(2400, 0, 0.04, 0.12, 'square'); tone(1600, 0.03, 0.05, 0.08, 'square'); } }
+  function chime() {
+    if (!ok()) return;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1100; bp.Q.value = 0.6; bp.connect(master);
+    [[659.3, 0], [523.3, 0.42], [392, 0.84]].forEach(([f, t]) => { tone(f, t, 1.4, 0.35, 'sine', bp); tone(f * 2, t, 0.8, 0.08, 'sine', bp); });
+  }
+  function settled(staked, returned) {
+    if (!ok() || !staked) return;
+    if (returned > 0) {
+      [1568, 2093, 2637, 3136].forEach((f, i) => tone(f, 0.15 + i * 0.07, 0.5, 0.16, 'triangle'));
+      burst(0.15, 0.6, 0.12, 'highpass', 6500);
+      spike = Math.max(spike, returned > staked ? 0.6 : 0.3);
+    } else {                                               // "awww": a falling, muffled groan
+      const f = burst(0.1, 1.4, 0.35, 'bandpass', 700, 1.2);
+      f.frequency.setValueAtTime(700, ac.currentTime + 0.1);
+      f.frequency.exponentialRampToValueAtTime(220, ac.currentTime + 1.5);
+    }
+  }
+
+  function excitement() {
+    if ((phase !== 'running' && !race.replay) || race.t <= 0) return 0.14;
+    const lead = Math.max(...race.d), prog = Math.min(1, lead / card.D);
+    if (lead >= card.D) return 0.3;
+    const sorted = [...race.d].sort((a, b) => b - a), gap = sorted[0] - sorted[1];
+    return 0.2 + 0.5 * smooth((prog - 0.6) / 0.4) + 0.3 * Math.max(0, 1 - gap / 30) * prog;
+  }
+  function update(dt) {
+    if (!ok()) return;
+    const now = ac.currentTime;
+    spike *= Math.exp(-dt / 2.2);
+    ex += (excitement() + spike - ex) * Math.min(1, dt * 2.5);
+    const e = Math.min(1.4, ex);
+    crowd.gain.setTargetAtTime(0.05 + 0.32 * e, now, 0.1);
+    babbleT -= dt;
+    if (babbleT <= 0) {
+      babbleT = 0.09 + Math.random() * 0.08;
+      const base = [0.55, 0.55 + 0.35 * e, 0.15 + 0.85 * e, 0.03 + 0.55 * e];
+      bands.forEach((b, i) => {
+        b.g.gain.setTargetAtTime(base[i] * (0.55 + Math.random() * 0.9), now, 0.06);
+        b.bp.frequency.setTargetAtTime(b.f * (0.85 + Math.random() * 0.3) * (1 + 0.15 * e), now, 0.08);
+      });
+    }
+    if (!race.T || phase === 'betting') return;
+    // Hooves: a galloping three-beat drum per horse at a real-time cadence (it stays a gallop at any speed)
+    const t = race.t;
+    if (t > 0) for (let i = 0; i < N; i++) {
+      if (stopped(i, t)) continue;
+      const left = race.T[i] + 5 - t;
+      if (left <= 0) continue;
+      hoofT[i] -= dt;
+      if (hoofT[i] <= 0) {
+        hoofT[i] += 0.42 + Math.random() * 0.05;
+        const x = pt(card.s0 + race.d[i] - NOSE, race.w[i])[0];
+        const pan = Math.max(-1, Math.min(1, (x - cam.x - cam.vw / 2) / (cam.vw / 2))) * 0.8, vol = 0.14 * Math.min(1, left / 4);
+        [0, 0.07, 0.14].forEach(d => burst(d, 0.06, vol, 'lowpass', 180 + Math.random() * 120, 0, pan));
+      }
+    }
+  }
+  return { init, setOn, isOn: () => on, off, brush, fall, finish, click, chime, settled, update };
+})();
+// Browsers only allow audio after a user gesture, so start it on the first tap or key.
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => SND.init(), true));
+const sndBtn = $('snd');
+const showSnd = () => { sndBtn.textContent = SND.isOn() ? '🔊' : '🔇'; };
+sndBtn.onclick = () => { SND.setOn(!SND.isOn()); showSnd(); };
+showSnd();
+
+// ── RENDER: CANVAS ──
+const cv = $('cv'), ctx = cv.getContext('2d');
+const bg = document.createElement('canvas'), bctx = bg.getContext('2d');
+let scale = 1;
+// On phones the whole course is too small to follow, so the view zooms in and tracks the field.
+const phoneQ = window.matchMedia('(max-width:640px)');
+const cam = { x: 0, y: 0, vw: LW, vh: LH, follow: false };
+function resize() {
+  cam.follow = phoneQ.matches;
+  cam.vw = cam.follow ? 560 : LW; cam.vh = cam.follow ? 420 : LH;
+  cv.style.aspectRatio = `${cam.vw} / ${cam.vh}`;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth || cam.vw;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(w * cam.vh / cam.vw * dpr);
+  scale = cv.width / cam.vw;
+  bg.width = Math.round(LW * scale); bg.height = Math.round(LH * scale);
+  drawBackground();
+  moveCam(1);
+}
+function moveCam(k) {
+  if (!cam.follow) { cam.x = cam.y = 0; return; }
+  let tx, ty;
+  if (race.t <= 0) [tx, ty] = pt(card.s0, 30);
+  else {   // halfway between the leader and the middle of the horses still racing
+    const live = card.horses.map((_, i) => i).filter(i => !stopped(i, race.t));
+    const ps = live.map(i => pt(card.s0 + race.d[i] - NOSE, race.w[i]));
+    const li = live.reduce((a, i, k) => race.d[i] > race.d[live[a]] ? k : a, 0);
+    tx = (ps.reduce((a, p) => a + p[0], 0) / ps.length + ps[li][0]) / 2;
+    ty = (ps.reduce((a, p) => a + p[1], 0) / ps.length + ps[li][1]) / 2;
+  }
+  const nx = Math.max(0, Math.min(LW - cam.vw, tx - cam.vw / 2)), ny = Math.max(0, Math.min(LH - cam.vh, ty - cam.vh / 2));
+  cam.x += (nx - cam.x) * k; cam.y += (ny - cam.y) * k;
+}
+function seeded(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+function drawBackground() {
+  const c = bctx, rnd = seeded(42);
+  c.setTransform(scale, 0, 0, scale, 0, 0);
+  // parkland around the course
+  c.fillStyle = '#2c4426'; c.fillRect(0, 0, LW, LH);
+  for (let i = 0; i < 1600; i++) { c.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.04)'; c.fillRect(rnd() * LW, rnd() * LH, 3, 3); }
+  // the River Clyde along the top
+  const rv = c.createLinearGradient(0, 0, 0, 34); rv.addColorStop(0, '#2b4a63'); rv.addColorStop(1, '#3a6382');
+  c.fillStyle = rv; c.beginPath(); c.moveTo(0, 0); c.lineTo(LW, 0); c.lineTo(LW, 26); c.quadraticCurveTo(LW / 2, 40, 0, 24); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 1;
+  for (let i = 0; i < 40; i++) { const x = rnd() * LW, y = 4 + rnd() * 18; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 10 + rnd() * 14, y); c.stroke(); }
+  // trees in the corners
+  for (let i = 0; i < 70; i++) {
+    const corner = i % 4, x = (corner % 2 ? LW - 10 - rnd() * 120 : 10 + rnd() * 120), y = corner < 2 ? 50 + rnd() * 90 : 340 + rnd() * 100;
+    if (Math.hypot(x - (corner % 2 ? CX + A : CX - A), y - CY) < R + TW + 24) continue;
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.arc(x + 3, y + 3, 8 + rnd() * 4, 0, 7); c.fill();
+    c.fillStyle = ['#1e3a1a', '#25471f', '#2f5426'][Math.floor(rnd() * 3)]; c.beginPath(); c.arc(x, y, 8 + rnd() * 4, 0, 7); c.fill();
+  }
+  // turf course with mown stripes
+  c.save(); ring(c, TW); c.fillStyle = '#4f8a3c'; c.fill(); ring(c, 0); c.fillStyle = '#000'; c.globalCompositeOperation = 'destination-out'; c.fill(); c.restore();
+  c.save(); ring(c, TW); c.clip();
+  for (let s = 0; s < LAP; s += 24) {
+    if ((s / 24) % 2) continue;
+    const q = [pt(s, -2), pt(s + 24, -2), pt(s + 24, TW + 2), pt(s, TW + 2)];
+    c.fillStyle = 'rgba(255,255,255,.05)'; c.beginPath(); q.forEach((p, k) => k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); c.fill();
+  }
+  c.restore();
+  // infield
+  c.save(); ring(c, -6); c.fillStyle = '#3a6a2e'; c.fill(); c.clip();
+  for (let x = 0; x < LW; x += 40) { c.fillStyle = (x / 40) % 2 ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.04)'; c.fillRect(x, 0, 40, LH); }
+  c.restore();
+  // running rails
+  c.lineWidth = 2.5; c.strokeStyle = '#f2f2f2'; ring(c, TW + 1); c.stroke();
+  c.lineWidth = 2; ring(c, -1); c.stroke();
+  // furlong poles counting down to the winning post
+  c.font = '700 8px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  for (let f = 1; f <= 7; f++) {
+    const s = FINISH_S - f * FUR * UPM, p = pt(s, TW + 7), q = pt(s, TW + 15);
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(p[0], p[1], 2.5, 0, 7); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.75)'; c.fillText(f + 'f', q[0], q[1]);
+  }
+  // winning post (red-and-white disc) and judge's box
+  const f0 = pt(FINISH_S, 0), f1 = pt(FINISH_S, TW);
+  c.strokeStyle = '#fff'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(f0[0], f0[1]); c.lineTo(f1[0], f1[1]); c.stroke();
+  c.fillStyle = '#d62828'; c.beginPath(); c.arc(f1[0], f1[1] + 7, 5, 0, 7); c.fill();
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(f1[0], f1[1] + 7, 2.2, 0, 7); c.fill();
+  c.fillStyle = '#e8e8e8'; c.fillRect(f0[0] - 8, f0[1] - 14, 16, 9);
+  // parade ring
+  c.fillStyle = '#2f5a26'; c.strokeStyle = '#f2f2f2'; c.lineWidth = 1.5;
+  c.beginPath(); c.ellipse(70, 452, 44, 22, 0, 0, 7); c.fill(); c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.7)'; c.font = '600 9px system-ui,sans-serif'; c.fillText('PARADE RING', 70, 452);
+  // grandstand with crowd
+  c.fillStyle = '#161f2e'; c.fillRect(0, 486, LW, 54);
+  c.fillStyle = '#243149'; c.fillRect(0, 486, LW, 4);
+  const crowd = ['#d9c3a0', '#e0b090', '#8a5a3a', '#f4f4f4', '#d62828', '#1d4ed8', '#f5c542', '#3d3d3d', '#2d6a4f', '#5b3a29'];
+  for (let row = 0; row < 4; row++) for (let x = 6 + (row % 2) * 5; x < LW; x += 10 + rnd() * 3) {
+    if (rnd() < 0.15) continue;
+    c.fillStyle = crowd[Math.floor(rnd() * crowd.length)]; c.beginPath(); c.arc(x, 498 + row * 11, 3.2, 0, 7); c.fill();
+  }
+  c.fillStyle = 'rgba(255,255,255,.8)'; c.font = '700 12px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.fillText('RIVER CLYDE', 14, 18);
+  c.textAlign = 'right'; c.fillText('CLYDESIDE PARK · GLASGOW', LW - 14, 18);
+}
+// Obstacles change with the race (none on the Flat), so they're drawn each frame rather than baked in.
+function drawFences() {
+  if (card.kind === 'flat') return;
+  const c = ctx, chase = card.kind === 'chase', th = chase ? 6 : 4;
+  const quad = (s0, s1, w0, w1) => { const q = [pt(s0, w0), pt(s1, w0), pt(s1, w1), pt(s0, w1)]; c.beginPath(); q.forEach((p, k) => k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); };
+  for (const fs of FENCE_S) {
+    if (chase) {
+      quad(fs - th / 2, fs + th / 2, 2, TW - 2); c.fillStyle = '#2f4d22'; c.fill(); c.strokeStyle = '#1b2e12'; c.lineWidth = 1; c.stroke();
+      quad(fs - th / 2 - 2.5, fs - th / 2 - 1, 2, TW - 2); c.fillStyle = '#ff8a1f'; c.fill();     // take-off board
+    } else {
+      for (let w = 2; w < TW - 4; w += 11) { quad(fs - th / 2, fs + th / 2, w, w + 9); c.fillStyle = '#9a6a3a'; c.fill(); c.strokeStyle = '#5b3c1e'; c.lineWidth = 0.8; c.stroke(); }
+    }
+    for (const w of [-1, TW + 1]) { quad(fs - 4, fs + 4, w - 2, w + 2); c.fillStyle = '#f2f2f2'; c.fill(); }   // wings
+  }
+}
+
+function drawHorse(g, x, y, ang, gait, moving, lift, down) {
+  const c = ctx, sk = g.silk, k = 1 + 0.3 * lift;
+  c.save(); c.translate(x, y);
+  c.save(); c.rotate(ang); c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(1 + lift * 4, 3.5 + lift * 7, 18, 6, 0, 0, 7); c.fill(); c.restore();
+  c.rotate(ang + (down === 'F' ? 1.2 : 0)); c.scale(k, k);
+  const sw = moving ? Math.sin(gait) * 5.5 : 0, sw2 = moving ? Math.sin(gait + 1.1) * 5.5 : 0;
+  c.strokeStyle = g.coat; c.lineWidth = 2.4; c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(8, -3.6); c.lineTo(9 + sw, -6.5); c.moveTo(8, 3.6); c.lineTo(9 + sw * 0.7, 6.5);
+  c.moveTo(-8, -3.6); c.lineTo(-8 - sw2, -6.5); c.moveTo(-8, 3.6); c.lineTo(-8 - sw2 * 0.7, 6.5);
+  c.stroke();
+  c.strokeStyle = g.mane; c.lineWidth = 2.6; c.beginPath(); c.moveTo(-12, 0); c.quadraticCurveTo(-17, moving ? Math.sin(gait * 0.5) * 2 : 1, -21, moving ? Math.sin(gait * 0.5 + 1) * 2.5 : 2); c.stroke();
+  c.fillStyle = g.coat; c.beginPath(); c.ellipse(0, 0, 12.5, 5, 0, 0, 7); c.fill();
+  c.beginPath(); c.ellipse(12, 0, 6.5, 2.9, 0, 0, 7); c.fill();
+  c.beginPath(); c.ellipse(19, 0, 4.4, 2.2, 0, 0, 7); c.fill();
+  c.strokeStyle = g.mane; c.lineWidth = 1.3; c.beginPath(); c.moveTo(6, 0); c.lineTo(15, 0); c.stroke();
+  c.fillStyle = g.coat; c.beginPath(); c.ellipse(15.5, -1.8, 1.6, 0.8, -0.4, 0, 7); c.ellipse(15.5, 1.8, 1.6, 0.8, 0.4, 0, 7); c.fill();
+  const rider = !down || down === 'P';
+  if (rider) {
+    c.fillStyle = '#f4f4f4'; c.fillRect(-7, -5.6, 9, 11.2);                       // number cloth either side
+    c.save(); c.beginPath(); c.ellipse(-1, 0, 4.8, 3.9, 0, 0, 7); c.clip(); paintSilk(c, -5.8, -3.9, 9.6, 7.8, sk); c.restore();
+    c.strokeStyle = sk.sl; c.lineWidth = 1.6; c.beginPath(); c.moveTo(1.5, -3); c.lineTo(6.5, -1.8); c.moveTo(1.5, 3); c.lineTo(6.5, 1.8); c.stroke();
+    c.fillStyle = sk.cap; c.beginPath(); c.arc(3, 0, 2.4, 0, 7); c.fill(); c.fillRect(4.5, -1, 1.8, 2);
+    c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 0.6; c.beginPath(); c.ellipse(-1, 0, 4.8, 3.9, 0, 0, 7); c.stroke();
+  }
+  c.restore();
+  if (rider) {   // upright number by the saddle cloth
+    const nx = x + Math.cos(ang) * -6 + Math.cos(ang + Math.PI / 2) * 9, ny = y + Math.sin(ang) * -6 + Math.sin(ang + Math.PI / 2) * 9;
+    c.font = '800 7.5px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.lineWidth = 2.2; c.strokeStyle = 'rgba(0,0,0,.75)'; c.strokeText(g.no, nx, ny); c.fillStyle = '#fff'; c.fillText(g.no, nx, ny);
+  } else {       // the jockey, on the ground beside
+    const jx = x + Math.cos(ang + Math.PI / 2) * 10 - Math.cos(ang) * 4, jy = y + Math.sin(ang + Math.PI / 2) * 10 - Math.sin(ang) * 4;
+    c.save(); c.translate(jx, jy); c.rotate(ang + 0.6);
+    c.save(); c.beginPath(); c.ellipse(0, 0, 4.5, 3, 0, 0, 7); c.clip(); paintSilk(c, -4.5, -3, 9, 6, sk); c.restore();
+    c.fillStyle = sk.cap; c.beginPath(); c.arc(5, 0, 2.2, 0, 7); c.fill();
+    c.fillStyle = '#f2efe6'; c.fillRect(-8, -2, 4, 1.6); c.fillRect(-8, 0.6, 4, 1.6);
+    c.restore();
+  }
+}
+
+function drawStart(t) {
+  const c = ctx, s0 = card.s0, hs = card.horses;
+  if (card.kind === 'flat') {      // starting stalls, towed away once the race is under way
+    const off = t < 3 ? 0 : (t - 3) * 10, alpha = 1 - off / 40;
+    if (alpha <= 0) return;
+    c.save(); c.globalAlpha = alpha;
+    for (let k = 1; k <= N; k++) {
+      const wl = 5 + (k - 1) * 8.4 + off, q = [pt(s0 - 32, wl - 4.2), pt(s0 + 2, wl - 4.2), pt(s0 + 2, wl + 4.2), pt(s0 - 32, wl + 4.2)];
+      c.fillStyle = 'rgba(40,46,56,.6)'; c.strokeStyle = '#c7ccd4'; c.lineWidth = 1;
+      c.beginPath(); q.forEach((p, j) => j ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); c.fill(); c.stroke();
+      if (t < 0) { c.strokeStyle = '#2d6ae0'; c.lineWidth = 2; c.beginPath(); c.moveTo(q[1][0], q[1][1]); c.lineTo(q[2][0], q[2][1]); c.stroke(); }
+      const lp = pt(s0 - 37, wl);
+      c.fillStyle = '#fff'; c.font = '700 6.5px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(k, lp[0], lp[1]);
+    }
+    c.restore();
+  } else if (t < 1.5) {            // the starting tape
+    c.save(); c.globalAlpha = t < 0 ? 1 : 1 - t / 1.5;
+    const a = pt(s0 + 2, -2), b = pt(s0 + 2, TW + 2);
+    c.strokeStyle = '#f4f4f4'; c.lineWidth = 1.6; c.setLineDash([5, 3]); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+    c.restore();
+  }
+}
+
+function drawTote(t) {
+  const c = ctx, x = CX - 180, y = CY - 80, w = 360, hgt = 160, hs = card.horses;
+  c.fillStyle = '#05080d'; c.strokeStyle = '#3b4a63'; c.lineWidth = 2;
+  c.beginPath(); c.roundRect ? c.roundRect(x, y, w, hgt, 6) : c.rect(x, y, w, hgt); c.fill(); c.stroke();
+  c.textBaseline = 'middle'; c.font = '700 13px ui-monospace,Menlo,Consolas,monospace';
+  const amber = '#ffcf4a';
+  const tag = (g, bx, by) => {
+    c.save(); c.beginPath(); c.rect(bx, by - 8, 16, 16); c.clip(); paintSilk(c, bx, by - 8, 16, 16, g.silk); c.restore();
+    c.font = '800 11px system-ui,sans-serif'; c.textAlign = 'center'; c.lineWidth = 2.5; c.strokeStyle = 'rgba(0,0,0,.8)';
+    c.strokeText(g.no, bx + 8, by + 0.5); c.fillStyle = '#fff'; c.fillText(g.no, bx + 8, by + 0.5);
+    c.font = '700 13px ui-monospace,Menlo,Consolas,monospace';
+  };
+  c.textAlign = 'left'; c.fillStyle = amber;
+  const rowY = k => y + 46 + (k % 4) * 27, colX = k => x + 14 + (k < 4 ? 0 : 1) * 175;
+  if (phase === 'betting') {
+    c.fillText(`RACE ${card.raceNo}  ${raceLabel(card).toUpperCase()}`, x + 14, y + 18);
+    hs.forEach((g, i) => {
+      const bx = colX(i), by = rowY(i);
+      tag(g, bx, by); c.textAlign = 'left'; c.fillStyle = amber;
+      c.fillText(g.frac.padStart(6), bx + 22, by); c.fillStyle = '#8fa1b8'; c.fillText((g.p * 100).toFixed(0) + '%', bx + 94, by);
+    });
+  } else {
+    const done = (phase === 'result' || phase === 'history') && !race.replay;
+    const run = done ? race.order.filter(i => !race.st[i]).concat(race.order.filter(i => race.st[i])) : runOrder();
+    c.fillText(done ? `RESULT  RACE ${card.raceNo}` : `RACE ${card.raceNo}  ${race.replay ? 'REPLAY' : 'RUNNING'}`, x + 14, y + 18);
+    c.textAlign = 'right';
+    const fin = race.order.filter(i => !race.st[i]), tw = race.T[fin[0]];
+    const clock = done ? tw : Math.max(0, Math.min(t, tw));
+    c.fillText(fmtTime(clock).replace('m ', ':').replace('s', ''), x + w - 14, y + 18);
+    let p = 0;
+    run.forEach((i, k) => {
+      const bx = colX(k), by = rowY(k), out = done ? race.st[i] : stopped(i, t);
+      c.textAlign = 'left'; c.fillStyle = out ? '#f87171' : amber; c.fillText(out ? NFC[race.st[i]] : ORD[p++], bx, by);
+      tag(hs[i], bx + 38, by);
+      c.textAlign = 'left'; c.fillStyle = out ? '#6b7a8f' : '#c9d4e3'; c.font = '600 11px system-ui,sans-serif';
+      c.fillText(hs[i].name.slice(0, 16), bx + 60, by); c.font = '700 13px ui-monospace,Menlo,Consolas,monospace';
+    });
+  }
+}
+
+function draw() {
+  moveCam(0.08);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(bg, cam.x * scale, cam.y * scale, cv.width, cv.height, 0, 0, cv.width, cv.height);
+  ctx.setTransform(scale, 0, 0, scale, -cam.x * scale, -cam.y * scale);
+  const t = race.t, hs = card.horses;
+  drawTote(t);
+  drawFences();
+  drawStart(t);
+  // Before the off: in the stalls on the Flat, walking up to the tape over jumps.
+  const pre = t >= 0 ? 0 : card.kind === 'flat' ? -4 : -30 * smooth(-t / 3);
+  const items = hs.map((g, i) => {
+    const s = card.s0 + race.d[i] - NOSE + pre, w = race.w[i], p = pt(s, w), sp = race.stop[i];
+    let lift = 0;
+    if (!stopped(i, t)) for (const f of card.fences) { const dx = race.d[i] - NOSE * 0.4 - f; if (Math.abs(dx) < 13) lift = Math.max(lift, Math.cos(dx / 13 * Math.PI / 2)); }
+    const down = sp && t > sp.t ? sp.k : 0;
+    return { g, i, p, ang: heading(s, w), lift, down, moving: t > 0 && !(down && t > sp.t + sp.tau * 3) && (!race.T || t < race.T[i] + 8) };
+  }).sort((a, b) => a.lift - b.lift || a.p[1] - b.p[1]);
+  for (const it of items) drawHorse(it.g, it.p[0], it.p[1], it.ang, race.d[it.i] * 0.16 + it.g.gaitOff, it.moving, it.lift, it.down);
+  if (race.replay) {
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    const label = slowMo() ? '● REPLAY · SLOW MOTION' : '● REPLAY';
+    ctx.font = '800 15px system-ui,sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const w = ctx.measureText(label).width + 20;
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(cam.vw - w - 10, 30, w, 26);
+    ctx.fillStyle = Math.floor(performance.now() / 600) % 2 ? '#ff4d4d' : '#ffffff'; ctx.fillText(label, cam.vw - 20, 43.5);
+  }
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  // the build-up before the off plays in real time; the race itself at the chosen speed
+  if (race.T && race.t < race.tEnd + 8) stepRace(race.t < 0 ? dt : dt * spd() * (slowMo() ? 0.3 : 1));
+  draw();
+  renderStrip();
+  SND.update(dt);
+  requestAnimationFrame(frame);
+}
+
+window.addEventListener('resize', () => { resize(); if (phase === 'result' || phase === 'history') drawPhoto($('photo')); });
+newCard(true);
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
