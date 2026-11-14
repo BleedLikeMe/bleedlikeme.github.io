@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beyond the Wardrobe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2b1d0e;--ink2:#5c4327;--ink3:#8a6c45;--parch:#f2e4c0;--parch2:#e6d09c;--edge:#a8834a;
+  --gold:#c9a227;--gold2:#ffd76a;--red:#8b1e1e;--elf:#2f5f4f;--sea:#9fb4a8;--bg:#1a120b;--bg2:#2b1d12;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:#140d07 radial-gradient(ellipse at 50% 0%,#3a2716 0%,#140d07 70%);color:var(--ink);
+  font-family:'EB Garamond',Georgia,'Times New Roman',serif;font-size:17px}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation}
+.sview{position:relative}
+.sdpad{display:none}
+.hidden{display:none!important}
+
+/* header */
+#top{display:flex;align-items:center;gap:14px;padding:8px 16px;background:linear-gradient(#2e1f12,#1b120a);
+  border-bottom:2px solid #6b4c22;color:#e9d6a6;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.brand{font-family:'Cinzel',serif;font-weight:700;font-size:1.25rem;letter-spacing:.08em;color:var(--gold2);
+  text-shadow:0 0 8px rgba(255,190,60,.35);white-space:nowrap}
+.brand span{display:block;font-size:.62rem;letter-spacing:.3em;color:#b99a62;font-weight:500}
+#stats{display:flex;gap:12px;flex:1;flex-wrap:wrap;align-items:center}
+.stat{display:flex;align-items:center;gap:6px;font-size:.9rem;min-width:110px}
+.stat .lbl{color:#c8ad78;font-variant:small-caps;letter-spacing:.05em}
+.bar{width:70px;height:8px;background:#0e0905;border:1px solid #6b4c22;border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;transition:width .4s}
+.ringicon{width:22px;height:22px;border-radius:50%;border:3px solid var(--gold);box-shadow:0 0 6px var(--gold);transition:all .5s}
+.date{font-style:italic;color:#cdb47f;font-size:.88rem;margin-left:auto;white-space:nowrap}
+.hbtns button{background:#3b2815;border:1px solid #7a5a2c;color:#f0dca8;border-radius:6px;padding:4px 10px;font-size:1rem;margin-left:4px}
+.hbtns button:hover{background:#4d351c}
+
+/* layout */
+#wrap{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:14px;max-width:1440px;margin:0 auto;padding:14px}
+.parch{background:var(--parch);background-image:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.35),transparent 60%),
+  radial-gradient(ellipse at 80% 90%,rgba(140,100,40,.18),transparent 55%);
+  border:1px solid var(--edge);border-radius:4px;box-shadow:0 6px 24px rgba(0,0,0,.55),inset 0 0 40px rgba(120,80,30,.25)}
+#stage{padding:18px 26px 26px;min-height:70vh}
+#side{display:flex;flex-direction:column;min-height:70vh;max-height:calc(100vh - 90px);position:sticky;top:76px}
+#tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--edge)}
+#tabs button{flex:1;background:transparent;border:0;border-right:1px solid rgba(168,131,74,.4);padding:8px 4px;
+  font-family:'Cinzel',serif;font-size:.72rem;color:var(--ink2);letter-spacing:.04em}
+#tabs button.on{background:rgba(201,162,39,.22);color:var(--ink);font-weight:700}
+#panel{padding:12px 14px;overflow-y:auto;flex:1}
+
+/* stage */
+.chaphead{text-align:center;margin-bottom:6px}
+.chaphead .cn{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.35em;color:var(--ink3)}
+.chaphead h2{font-family:'Cinzel',serif;margin:2px 0 0;font-size:1.55rem;color:var(--ink);letter-spacing:.03em}
+.chaphead .where{font-style:italic;color:var(--ink2);font-size:.95rem}
+.rule{height:10px;margin:8px auto 12px;width:60%;background:radial-gradient(circle,var(--edge) 2px,transparent 3px) center/14px 10px repeat-x;opacity:.7}
+.art{margin:0 auto 12px;max-width:760px;cursor:zoom-in;position:relative}
+.art svg{width:100%;height:auto;display:block;border-radius:3px}
+.art .hint{position:absolute;right:8px;bottom:6px;font-size:.72rem;color:var(--ink2);background:rgba(242,228,192,.85);padding:1px 6px;border-radius:3px}
+.text{max-width:760px;margin:0 auto}
+.text p{font-size:1.12rem;line-height:1.62;margin:0 0 .85em}
+.text p.first::first-letter{font-family:'IM Fell English',serif;float:left;font-size:3.3em;line-height:.85;padding:4px 8px 0 0;color:var(--red)}
+.text .speech{color:#3b2a14}
+.text em{color:#4a3518}
+.choices{max-width:760px;margin:16px auto 0;display:flex;flex-direction:column;gap:8px}
+.choice{text-align:left;background:rgba(255,250,235,.55);border:1px solid var(--edge);border-radius:4px;padding:10px 14px;
+  font-size:1.05rem;color:var(--ink);transition:all .15s;position:relative}
+.choice:hover{background:#fff8e2;transform:translateX(3px);box-shadow:0 2px 8px rgba(90,60,20,.25)}
+.choice .tag{font-size:.75rem;color:var(--ink3);font-variant:small-caps;margin-left:6px}
+.choice.ring{border:1px solid var(--gold);background:linear-gradient(90deg,rgba(255,215,106,.35),rgba(255,250,235,.5));}
+.choice.ring::before{content:'';display:inline-block;width:12px;height:12px;border:2px solid var(--gold);border-radius:50%;margin-right:8px;vertical-align:-1px;box-shadow:0 0 5px var(--gold)}
+.choice.talk::before{content:'❝ ';color:var(--elf)}
+.choice.go{font-weight:600}
+.choice.game{border-style:double;border-width:3px}
+.choice[disabled]{opacity:.45;pointer-events:none}
+.choice.disabled-choice{opacity:.55;font-style:italic}
+.result{max-width:760px;margin:10px auto;border-left:3px solid var(--edge);padding:6px 14px;background:rgba(255,250,235,.4)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font-size:.8rem;padding:2px 8px;border-radius:10px;border:1px solid var(--edge);background:#fff5d8}
+.chip.good{border-color:#4f7d3a;color:#2f5a1c;background:#eef6dc}
+.chip.bad{border-color:#9c3b2b;color:#7a2416;background:#f8e2d8}
+.chip.ring{border-color:var(--gold);background:#fff1b8;color:#6b4c00}
+.btn{background:linear-gradient(#5b3f1f,#3c2912);color:#f6e4b4;border:1px solid #2a1a0a;border-radius:4px;padding:9px 18px;
+  font-family:'Cinzel',serif;font-size:.9rem;letter-spacing:.05em;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.btn:hover{background:linear-gradient(#6d4c26,#4a3317)}
+.btn.ghost{background:transparent;color:var(--ink2);border:1px solid var(--edge);box-shadow:none}
+.btn.gold{background:linear-gradient(#e9c45a,#b88d1c);color:#2b1d0e;border-color:#7a5a10}
+.center{text-align:center}
+
+/* song card */
+.song{max-width:560px;margin:14px auto;padding:14px 22px;background:rgba(255,252,240,.6);border:1px solid var(--edge);
+  border-radius:4px;font-family:'IM Fell English',serif;position:relative}
+.song h3{font-family:'Cinzel',serif;font-size:1rem;margin:0 0 2px;text-align:center}
+.song .by{text-align:center;font-style:italic;font-size:.85rem;color:var(--ink3);margin-bottom:8px}
+.song .st{margin:0 0 10px}
+.song .ln{display:block;font-size:1.05rem;line-height:1.45;transition:color .2s,background .2s;padding:0 4px;border-radius:3px}
+.song .ln.lit{background:rgba(201,162,39,.3);color:#000}
+.song .sing{display:block;margin:6px auto 0}
+
+/* side panels */
+.ptitle{font-family:'Cinzel',serif;font-size:.95rem;margin:4px 0 8px;color:var(--ink);letter-spacing:.04em}
+.char{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--edge)}
+.char .av{flex:0 0 38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-weight:700;color:#fff;font-size:1rem;border:2px solid rgba(0,0,0,.25)}
+.char .nm{font-weight:600}
+.char .ds{font-size:.85rem;color:var(--ink2);line-height:1.3}
+.char .here{font-size:.7rem;color:var(--elf);font-variant:small-caps;margin-left:4px}
+.abar{height:5px;background:rgba(0,0,0,.12);border-radius:3px;margin-top:3px;position:relative;overflow:hidden}
+.abar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.item{display:flex;gap:10px;padding:7px 0;border-bottom:1px dotted var(--edge)}
+.item .ic{font-size:1.5rem;width:34px;text-align:center}
+.item .nm{font-weight:600}.item .ds{font-size:.85rem;color:var(--ink2)}
+.songli,.mapli{display:block;width:100%;text-align:left;background:rgba(255,250,235,.5);border:1px solid var(--edge);
+  margin-bottom:6px;padding:7px 10px;border-radius:3px;font-size:.95rem;color:var(--ink)}
+.songli small{display:block;color:var(--ink3);font-style:italic}
+.mapgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mapgrid button{padding:4px;background:rgba(255,250,235,.5);border:1px solid var(--edge);border-radius:3px;font-size:.75rem;color:var(--ink)}
+.mapgrid svg{width:100%;height:auto;display:block}
+.mapgrid .lock{opacity:.35;pointer-events:none}
+.log{font-size:.88rem;line-height:1.35;padding:5px 0;border-bottom:1px dotted rgba(168,131,74,.5)}
+.log b{color:var(--ink3);font-weight:400;font-style:italic}
+.meta{font-size:.82rem;color:var(--ink2)}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(10,6,2,.78);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
+#modal .mbox{max-width:1100px;width:100%;max-height:94vh;overflow:auto;position:relative;padding:18px}
+#modal .mclose{position:absolute;right:8px;top:6px;background:none;border:0;font-size:1.8rem;color:var(--ink2);z-index:2}
+
+/* toasts */
+#toasts{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;z-index:60;pointer-events:none;align-items:center}
+.toast{background:#2b1d0e;color:#f3e2b2;border:1px solid var(--gold);padding:6px 14px;border-radius:16px;font-size:.92rem;
+  animation:tin .3s ease-out,tout .5s 2.6s forwards;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.toast.bad{border-color:#c2543f}.toast.good{border-color:#7fae58}
+@keyframes tin{from{opacity:0;transform:translateY(10px)}}
+@keyframes tout{to{opacity:0;transform:translateY(-8px)}}
+
+/* wraith world flash */
+body.wraith #wrap{filter:grayscale(1) blur(1.5px) contrast(1.3) brightness(.7);transition:filter .3s}
+#eye{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .6s;
+  background:radial-gradient(ellipse 9% 18% at 50% 45%,#000 30%,transparent 32%),radial-gradient(ellipse 22% 26% at 50% 45%,#ff7a12 0%,#c22a00 45%,rgba(120,10,0,.6) 60%,transparent 75%)}
+body.wraith #eye{opacity:.55}
+
+/* games */
+.gwrap{max-width:820px;margin:0 auto}
+.ghead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
+.ghead .gt{font-family:'Cinzel',serif;font-size:1.1rem}
+.ghud{display:flex;gap:14px;flex-wrap:wrap;font-size:.95rem}
+.ghud b{font-family:'Cinzel',serif}
+canvas.gc{width:100%;height:auto;display:block;background:#000;border:2px solid #4a3317;border-radius:4px;touch-action:none}
+.gmsg{min-height:1.6em;font-style:italic;text-align:center;margin:8px 0;color:var(--ink2)}
+.gbar{height:16px;background:rgba(0,0,0,.15);border:1px solid var(--edge);border-radius:8px;overflow:hidden;margin:4px 0}
+.gbar i{display:block;height:100%;transition:width .08s}
+.dpad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,44px);gap:6px;justify-content:center;margin:10px auto}
+.dpad button{font-size:1.3rem;border-radius:6px;border:1px solid var(--edge);background:#fff5d8}
+.pads{display:grid;grid-template-columns:repeat(2,minmax(0,170px));gap:12px;justify-content:center;margin:14px auto}
+.pad{height:110px;border-radius:12px;border:3px solid rgba(0,0,0,.3);font-size:2.4rem;color:rgba(255,255,255,.9);transition:filter .1s,transform .1s}
+.pad.lit{filter:brightness(1.8) drop-shadow(0 0 14px #fff);transform:scale(1.04)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.opts button{padding:10px;border:1px solid var(--edge);background:rgba(255,250,235,.6);border-radius:4px;font-size:1rem}
+.opts button:hover{background:#fff8e2}
+.riddle{font-family:'IM Fell English',serif;font-size:1.2rem;line-height:1.5;text-align:center;padding:14px;background:rgba(255,252,240,.5);border:1px solid var(--edge);border-radius:4px;white-space:pre-line}
+.inline-input{font-family:'IM Fell English',serif;font-size:1.3rem;padding:6px 12px;border:1px solid var(--edge);border-radius:4px;background:#fffaf0;width:220px;text-align:center}
+.qkeys{display:flex;gap:10px;justify-content:center;margin:12px 0}
+.qkeys button{width:64px;height:64px;font-size:1.8rem;border-radius:8px;border:2px solid var(--edge);background:#fff5d8}
+.qkeys button.want{background:#ffe08a;border-color:#a57b00;box-shadow:0 0 12px #ffcc33}
+.qprompt{font-size:3.2rem;text-align:center;font-family:'Cinzel',serif;margin:4px 0}
+.tcell{cursor:pointer}
+
+/* title */
+.titlescr{text-align:center;padding:30px 10px}
+.titlescr h1{font-family:'Cinzel',serif;font-size:2.8rem;margin:10px 0 0;letter-spacing:.06em;color:#3b2408}
+.titlescr .sub{font-family:'IM Fell English',serif;font-style:italic;font-size:1.25rem;color:var(--ink2)}
+.titlescr .verse{font-family:'IM Fell English',serif;font-size:1.1rem;line-height:1.6;margin:18px auto;max-width:480px;color:var(--ink2)}
+.titlescr .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.ending h2{font-family:'Cinzel',serif;text-align:center;font-size:1.8rem;margin:6px 0}
+.etable{margin:10px auto;border-collapse:collapse;font-size:.95rem}
+.etable td{padding:3px 10px;border-bottom:1px dotted var(--edge)}
+
+/* the Ring makes you vanish: the world goes grey-gold and thin */
+body.wraith #wrap{filter:grayscale(.8) sepia(.4) blur(1.2px) brightness(.82);transition:filter .3s}
+.coin{display:inline-block;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#d9a520 55%,#8a6410);border:1px solid #6b4c00;vertical-align:-3px}
+.greedicon{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#d9a520 55%,#8a6410);transition:all .5s}
+.choice.gold{border:1px solid #b88d1c;background:linear-gradient(90deg,rgba(233,196,90,.35),rgba(255,250,235,.5))}
+.choice.gold::before{content:'◆ ';color:#a57b00}
+.bid{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px dotted var(--edge)}
+.bid .lot{flex:1}.bid .lot b{display:block}.bid .lot small{color:var(--ink2)}
+.smaugline{font-family:'IM Fell English',serif;font-size:1.15rem;line-height:1.5;padding:12px 16px;background:rgba(60,10,0,.08);border-left:4px solid #8b1e1e;margin:8px 0}
+@media (max-width:900px){
+  #top{position:static;padding:8px 12px;gap:8px}
+  .brand{flex:1}
+  .hbtns{order:2}
+  #stats{order:3;flex:0 0 100%;gap:8px 14px}
+  .side-here{display:none}
+  .sview{overflow:hidden;max-height:62vh;border-radius:4px}
+  .sview canvas.gc{width:860px;max-width:none}
+  .sdpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,50px);gap:6px;justify-content:center;margin:10px auto 0;user-select:none;-webkit-user-select:none}
+  .sdpad button{font-size:1.4rem;border-radius:8px;border:1px solid var(--edge);background:#fff5d8;touch-action:none}
+  .sdpad button.on{background:#ffe08a}
+  #wrap{grid-template-columns:minmax(0,1fr);padding:8px}
+  #stage,#side{min-width:0}
+  #side{position:static;max-height:none;min-height:0}
+  #stage{padding:14px 14px 20px;min-height:0}
+  .date{margin-left:0}
+  .stat{min-width:0}.bar{width:48px}
+  .text p{font-size:1.05rem}
+  .opts{grid-template-columns:1fr}
+  .brand{font-size:1.05rem}
+}
+
+/* ═══ NARNIA: snow-light paper, midnight ink, the Lion's gold, a red robin ═══ */
+:root{
+  --ink:#1c2433;--ink2:#3e4c64;--ink3:#7686a0;--parch:#f2f5f8;--parch2:#dfe6ee;--edge:#9aa8bc;
+  --gold:#c99a2a;--gold2:#ffe2a0;--red:#b0302a;--elf:#2f6a4f;--sea:#a9c2d0;--bg:#0e1626;--bg2:#1a2438;
+}
+body{background:#0b1220 radial-gradient(ellipse at 50% 0%,#2a3a58 0%,#0b1220 70%)}
+#top{background:linear-gradient(#22304a,#0e1626);border-bottom:2px solid #c99a2a;color:#eef2f8}
+.brand{color:#ffe2a0;text-shadow:0 0 10px rgba(255,220,140,.35)}
+.brand span{color:#b8c8e0}
+.parch{background:var(--parch);background-image:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.7),transparent 60%),radial-gradient(ellipse at 80% 90%,rgba(80,110,160,.12),transparent 55%);
+  border:1px solid var(--edge);box-shadow:0 6px 24px rgba(0,0,0,.55),inset 0 0 40px rgba(90,120,170,.15)}
+#tabs button.on{background:rgba(201,154,42,.18);color:#6a4a0a}
+.chaphead .cn{color:#9a7414}
+.text p.first::first-letter{color:var(--gold)}
+.text .rune{display:block;font-family:'IM Fell English',serif;font-style:italic;text-align:center;margin:6px auto;max-width:520px;padding:10px;border:1px solid #8a8a7a;background:linear-gradient(#e8e4da,#d8d2c4);color:#3a3426;letter-spacing:.04em}
+.text .aslan{display:block;font-family:'IM Fell English',serif;font-size:1.15rem;color:#6a4a0a;padding:8px 14px;border-left:4px solid var(--gold);background:rgba(201,154,42,.1);margin:6px 0}
+.pov{color:var(--red);font-style:italic}
+.choice.tdelight{border:1px solid #c890b0;background:linear-gradient(90deg,rgba(220,150,190,.18),rgba(255,250,235,.5))}
+.choice.tdelight::before{content:'◆ ';color:#c060a0}
+.choice.lion{border:1px solid var(--gold);background:linear-gradient(90deg,rgba(255,215,106,.3),rgba(255,250,235,.5));font-weight:600}
+.choice.lion::before{content:'☀ ';color:#b07a00}
+.chip.ring{border-color:#5a7aa0;background:#e0e8f4;color:#2a3a5a}
+.toast{background:#1a2438;border-color:#c99a2a;color:#eef2f8}
+.toast.ring{border-color:#8ab0e0}
+.thaw{display:inline-block;width:70px;height:8px;border-radius:5px;background:linear-gradient(90deg,#dfe9f6,#9fc0e0);border:1px solid #4a5a74;position:relative;overflow:hidden}
+.thaw i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#6a9a4a,#c8e070)}
+.noticeicon{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fff,#bcd4f0 50%,#3a5a8a);border:1px solid #1a2a44;transition:all .5s}
+/* the easy way: a sweet white frost creeps over the page */
+body.wraith #wrap{filter:saturate(.3) brightness(1.15) contrast(.9);transition:filter .3s}
+#scan{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .4s;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(220,235,255,.75))}
+body.wraith #scan{opacity:1}
+/* falling snow; fades as the spell breaks */
+#snow{position:fixed;inset:0;pointer-events:none;z-index:5;transition:opacity 2s;
+  background-image:radial-gradient(2px 2px at 20px 30px,#fff,transparent),radial-gradient(2px 2px at 120px 80px,#fff,transparent),radial-gradient(1.5px 1.5px at 200px 160px,#fff,transparent),radial-gradient(2.5px 2.5px at 60px 220px,#fff,transparent),radial-gradient(1.5px 1.5px at 260px 260px,#fff,transparent);
+  background-size:300px 300px;animation:snowfall 14s linear infinite;opacity:.6}
+@keyframes snowfall{from{background-position:0 0}to{background-position:-120px 600px}}
+@media (prefers-reduced-motion:reduce){#snow{animation:none}}
+</style>
+</head>
+<body>
+<div id="snow"></div>
+<header id="top">
+  <div class="brand">Beyond the Wardrobe<span>A TALE OF NARNIA</span></div>
+  <div id="stats"></div>
+  <div class="hbtns"><button id="btnSound" title="Sound effects">♪</button><button id="btnMenu" title="Menu">☰</button></div>
+</header>
+<main id="wrap">
+  <section id="stage" class="parch"></section>
+  <aside id="side" class="parch"><nav id="tabs"></nav><div id="panel"></div></aside>
+</main>
+<div id="modal" class="hidden"><div class="mbox parch"><button class="mclose" aria-label="Close">×</button><div id="mbody"></div></div></div>
+<div id="toasts"></div>
+<div id="scan"></div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════════════
+   BEYOND THE WARDROBE — an unofficial game after C. S. Lewis's The Lion, the
+   Witch and the Wardrobe (1950). The novel is in copyright, so only short
+   phrases are quoted; prose and verses here are new (the carol is
+   traditional). Built on the burglar.html engine.
+   Stats (engine keys): hum = Faith · health = Warmth · sus = the Witch's
+   Notice · food = Provisions · cash = the Thaw (0–100).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// ── UTILITIES ───────────────────────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rnd = (a, b) => a + Math.random() * (b - a);
+const ri = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function hash(s){ let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function seeded(seed){ let s = (seed >>> 0) || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+function shuffle(a, r){ r = r || Math.random; for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+const tx = t => typeof t === 'function' ? t(G) : (t || '');
+
+
+// ── ITEMS ───────────────────────────────────────────────────────────────────
+const ITEMS = {
+  coat:{n:'A Fur Coat', ic:'🧥', d:'Borrowed from the wardrobe, which is full of them. Too long for you, but in Narnia it is the most sensible thing you own.'},
+  hanky:{n:'Your Handkerchief', ic:'🤧', d:'Lent to Mr Tumnus, who cried into it a great deal and wrung it out.'},
+  parcel:{n:'Mr Tumnus\'s Parcels', ic:'📦', d:'Under his arm when you first met him in the snow. You never did find out what was in them.'},
+  delight:{n:'Turkish Delight', ic:'🍬', d:'From a jewelled box, in the Witch\'s sledge. Enchanted, though you do not know it: the more you eat, the more you want, and the less you care about anything else.'},
+  sword:{n:'Peter\'s Sword and Shield', ic:'🗡️', d:'Father Christmas\'s gift to the eldest: a silver shield with a red lion, and a sword with a golden hilt.'},
+  bow:{n:'Susan\'s Bow and Horn', ic:'🏹', d:'A bow that does not easily miss, and a little ivory horn: blow it, and wherever you are, help of some kind will come.'},
+  cordial:{n:'Lucy\'s Cordial', ic:'🧪', d:'A tiny glittering bottle — glass, or perhaps diamond — of cordial from the fire-flowers of the sun-mountains. A few drops heal any hurt.'},
+  dagger:{n:'Lucy\'s Dagger', ic:'🔪', d:'A small dagger, for defending yourself at need. You are not meant to be in the battle.'},
+  marmalade:{n:'Marmalade Roll', ic:'🍰', d:'Mrs Beaver\'s, steaming hot, packed up for the journey.'},
+  lamp:{n:'A Note on the Floor', ic:'📜', d:'Nailed to the floor of Mr Tumnus\'s wrecked cave. It says he is arrested for High Treason, for comforting her enemies and fraternising with Humans. Signed: Maugrim, Captain of the Secret Police.'}
+};
+
+// ── CHARACTERS ──────────────────────────────────────────────────────────────
+const CHARS = {
+  peter:{n:'Peter', c:'#3a5a8a', d:'The eldest. Fair, and fair-minded, and trying very hard to be in charge.'},
+  susan:{n:'Susan', c:'#8a5a7a', d:'The next eldest. Sensible, and a little bit grown-up about everything, and the best shot of you all.'},
+  edmund:{n:'Edmund', c:'#5a6a4a', d:'Your brother, who is being beastly at the moment, mostly to you.'},
+  professor:{n:'The Professor', c:'#6a5a4a', d:'A very old man with shaggy white hair, who owns the big house in the country, and who believes you, which is more than anyone else does. "Logic! Why don\'t they teach logic at these schools?"'},
+  tumnus:{n:'Mr Tumnus', c:'#8a6a3a', d:'A Faun: goat\'s legs and hooves, a man\'s body, little horns, a red woollen muffler and an umbrella. He has a cave with books in it, and a terrible secret.'},
+  witch:{n:'The White Witch', c:'#cfdcea', d:'She calls herself Queen of Narnia. Her face is snow-white, but for a red, proud mouth. It is her magic that makes it always winter and never Christmas.'},
+  dwarf:{n:'The Dwarf', c:'#6a4a3a', d:'The Witch\'s sledge-driver: a fat Dwarf dressed in polar bear\'s fur, with a whip.'},
+  beaver:{n:'Mr Beaver', c:'#7a5a3a', d:'An honest beaver, with a dam, a fishing-hole, and a very great deal of practical sense. He calls you Son of Adam and Daughter of Eve.'},
+  mrsbeaver:{n:'Mrs Beaver', c:'#8a6a4a', d:'Sitting at her sewing-machine when you arrive. She will not leave without it, nor without packing a proper lunch.'},
+  aslan:{n:'Aslan', c:'#c99a2a', d:'The Lion, the great Lion, the son of the Emperor-beyond-the-Sea. Not a tame lion. Not safe. But good.'},
+  maugrim:{n:'Maugrim', c:'#3a3a3a', d:'A grey wolf, Captain of the Witch\'s Secret Police. Also called Fenris Ulf in some tellings.'},
+  fatherxmas:{n:'Father Christmas', c:'#b0302a', d:'Big, red-robed, white-bearded, and more real than anyone you have ever met. The Witch has kept him out for a hundred years.'},
+  giant:{n:'Giant Rumblebuffin', c:'#6a7a5a', d:'A large and friendly giant, turned to stone in the Witch\'s courtyard. Very eager to help, and a little slow on the uptake.'},
+  robin:{n:'The Robin', c:'#b0402a', d:'A robin with a very red breast, which seems to want you to follow it.'}
+};
+
+// ── SOUND ───────────────────────────────────────────────────────────────────
+const SND = (() => {
+  let ctx = null, on = false, master = null, playing = [], lineTimers = [];
+  try { on = localStorage.getItem('narniaSound') === '1'; } catch (e) {}
+  function ac(){
+    if (!ctx){ const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      ctx = new C(); master = ctx.createGain(); master.gain.value = .5; master.connect(ctx.destination); }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+  function note(m, t, dur, type, vol, dest){
+    const c = ac(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'triangle'; o.frequency.value = mf(m);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || .25, t + .02);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g); g.connect(dest || master); o.start(t); o.stop(t + dur + .05); playing.push(o);
+  }
+  function noise(t, dur, vol, freq){
+    const c = ac(); if (!c) return;
+    const b = c.createBuffer(1, Math.max(1, c.sampleRate * dur), c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = c.createBufferSource(); s.buffer = b;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq || 3000;
+    const g = c.createGain(); g.gain.setValueAtTime(vol || .2, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); playing.push(s);
+  }
+  function fx(kind){
+    if (!on) return; const c = ac(); if (!c) return; const t = c.currentTime;
+    switch (kind){
+      case 'click': note(84, t, .06, 'square', .05); break;
+      case 'good': note(72, t, .15, 'triangle', .2); note(76, t + .08, .15, 'triangle', .2); note(79, t + .16, .3, 'triangle', .2); break;
+      case 'bad': note(52, t, .3, 'sawtooth', .12); note(47, t + .12, .4, 'sawtooth', .12); break;
+      case 'ring': note(40, t, 1.4, 'sine', .3); note(47, t, 1.4, 'sine', .15); noise(t, 1.2, .08, 400); break;
+      case 'hit': noise(t, .15, .3, 900); break;
+      case 'boom': note(30, t, .6, 'sine', .5); noise(t, .4, .25, 200); break;
+      case 'firework': noise(t, .5, .25, 1800); note(ri(80, 95), t, .2, 'sine', .08); break;
+      case 'splash': noise(t, .35, .2, 1200); break;
+      case 'shriek': { const o = c.createOscillator(), g = c.createGain(); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(1400, t); o.frequency.exponentialRampToValueAtTime(500, t + .9);
+        g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + 1); o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.05); break; }
+      case 'step': noise(t, .05, .12, 500); break;
+    }
+  }
+  function tone(m, dur, type, vol){ if (!on) return; const c = ac(); if (!c) return; note(m, c.currentTime, dur || .3, type, vol); }
+  function toneAlways(m, dur, type, vol){ const c = ac(); if (!c) return; note(m, c.currentTime, dur || .3, type, vol); }
+  // play a generated melody; onLine(i) fires as each line starts
+  function sing(mel, onLine, onEnd){
+    stop(); const c = ac(); if (!c) { if (onEnd) onEnd(); return; }
+    const beat = 60 / mel.tempo; let t = c.currentTime + .15; const t0 = t;
+    mel.lines.forEach((line, li) => {
+      lineTimers.push(setTimeout(() => onLine && onLine(li), (t - t0) * 1000 + 150));
+      line.forEach(([m, d]) => {
+        note(m, t, d * beat * 1.6, mel.voice, .22); note(m + 12, t, d * beat * .8, 'sine', .05);
+        if (mel.drum && d >= 1) noise(t, .05, .06, 4000);
+        t += d * beat;
+      });
+      note(mel.root - 12, t - line.reduce((a, n) => a + n[1], 0) * beat, line.reduce((a, n) => a + n[1], 0) * beat, 'sine', mel.drone ? .08 : .03);
+      t += beat * .5;
+    });
+    lineTimers.push(setTimeout(() => { if (onEnd) onEnd(); }, (t - t0) * 1000 + 300));
+  }
+  function stop(){ lineTimers.forEach(clearTimeout); lineTimers = []; playing.forEach(o => { try { o.stop(); } catch (e) {} }); playing = []; }
+  return { fx, tone, toneAlways, sing, stop, ac,
+    get on(){ return on; }, set on(v){ on = v; try { localStorage.setItem('narniaSound', v ? '1' : '0'); } catch (e) {} } };
+})();
+
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+const SAVE_KEY = 'narniaSave';
+let G = null;
+const UI = { tab:'map', game:null, inst:null, mapZoom:null };
+
+function newGame(){
+  return {
+    version:1, beat:null, chapter:1, chTitle:'', date:'', map:'house', loc:'spareroom',
+    stats:{hum:50, health:100, sus:0, food:2, cash:0},
+    aff:{peter:20, susan:20, edmund:-10, professor:10, tumnus:0, beaver:0, mrsbeaver:0, aslan:0, witch:0},
+    met:['peter', 'susan', 'edmund', 'professor'],
+    party:['peter', 'susan', 'edmund'], gone:[],
+    items:[], flags:{}, songs:[], maps:['house'], seen:{}, route:['house'],
+    log:[], ringUses:0, games:{}, pending:null, checkpoint:null, ending:null, started:Date.now()
+  };
+}
+function save(){ if (!G) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); } catch (e) {} }
+function tryLoad(){
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.version === 1 && BEATS[s.beat]) return s; } catch (e) {}
+  return null;
+}
+function snapshot(){ const c = Object.assign({}, G); delete c.checkpoint; return JSON.parse(JSON.stringify(c)); }
+
+const has = k => G.items.indexOf(k) >= 0;
+const flag = k => !!G.flags[k];
+const aff = k => G.aff[k] || 0;
+const inParty = k => G.party.indexOf(k) >= 0;
+
+// ── EFFECTS ─────────────────────────────────────────────────────────────────
+const STAT_NAME = {hum:'Faith', health:'Warmth', sus:'The Witch\'s Notice', food:'Provisions', cash:'The Thaw'};
+const STAT_MAX = {hum:100, health:100, sus:100, food:20, cash:100};
+function applyFx(fx){
+  const out = [];
+  if (!fx) return out;
+  ['hum','health','sus','food','cash'].forEach(k => {
+    if (!fx[k]) return;
+    const before = G.stats[k];
+    G.stats[k] = clamp(before + fx[k], 0, STAT_MAX[k]);
+    const d = G.stats[k] - before; if (!d) return;
+    if (k === 'cash'){ out.push({t: d > 0 ? 'The thaw spreads… (spring ' + G.stats.cash + '%)' : 'The cold tightens', c: d > 0 ? 'good' : 'bad'}); return; }
+    const good = k === 'sus' ? d < 0 : d > 0;
+    out.push({t:`${STAT_NAME[k]} ${d > 0 ? '+' : ''}${d}`, c: k === 'sus' && d > 0 ? 'ring' : good ? 'good' : 'bad'});
+  });
+  if (fx.aff) Object.keys(fx.aff).forEach(k => {
+    const v = fx.aff[k]; G.aff[k] = clamp((G.aff[k] || 0) + v, -100, 100);
+    const nm = (CHARS[k] ? CHARS[k].n : k).replace(/^(The |Mr |Mrs )/, '').split(' ')[0];
+    out.push({t:`${nm} ${v > 0 ? '♥+' + v : '♥' + v}`, c: v > 0 ? 'good' : 'bad'});
+  });
+  [].concat(fx.item || []).forEach(k => { if (!has(k)){ G.items.push(k); out.push({t:'Gained: ' + ITEMS[k].n, c:'good'}); } });
+  [].concat(fx.lose || []).forEach(k => { const i = G.items.indexOf(k); if (i >= 0){ G.items.splice(i, 1); out.push({t:'Gone: ' + ITEMS[k].n, c:'bad'}); } });
+  [].concat(fx.flag || []).forEach(k => { G.flags[k] = true; });
+  if (fx.flags) Object.assign(G.flags, fx.flags);
+  [].concat(fx.song || []).forEach(k => { if (learnSong(k)) out.push({t:'Song: ' + SONGS[k].title, c:'good'}); });
+  [].concat(fx.map || []).forEach(k => { if (unlockMap(k)) out.push({t:'New map: ' + MAPS[k].title, c:'good'}); });
+  [].concat(fx.meet || []).forEach(k => { if (G.met.indexOf(k) < 0) G.met.push(k); });
+  [].concat(fx.join || []).forEach(k => { if (G.party.indexOf(k) < 0) G.party.push(k); if (G.met.indexOf(k) < 0) G.met.push(k); });
+  [].concat(fx.leave || []).forEach(k => { const i = G.party.indexOf(k); if (i >= 0) G.party.splice(i, 1); });
+  return out;
+}
+// The easy way: Turkish-Delight choices, sweet and cold. They cost Faith.
+// In the stealth maps, standing like a statue costs Warmth instead.
+function ringUse(cost){
+  G.ringUses++;
+  const out = UI.game ? applyFx({health: -Math.round(1.5 * (cost || 2))}) : applyFx({hum: -2 * (cost || 4)});
+  wraithFlash();
+  return out;
+}
+function wraithFlash(){
+  SND.fx('ring');
+  document.body.classList.add('wraith');
+  setTimeout(() => { if (!UI.ringHeld) document.body.classList.remove('wraith'); }, 1200);
+}
+function learnSong(k){ if (!SONGS[k] || G.songs.indexOf(k) >= 0) return false; G.songs.push(k); return true; }
+function unlockMap(k){ if (!MAPS[k] || G.maps.indexOf(k) >= 0) return false; G.maps.push(k); return true; }
+function addLog(t){ G.log.unshift({d:G.date, t}); if (G.log.length > 150) G.log.length = 150; }
+function markSeen(map, loc){ if (!G.seen[map]) G.seen[map] = []; if (G.seen[map].indexOf(loc) < 0) G.seen[map].push(loc); }
+
+function toast(chips){
+  const box = $('#toasts');
+  chips.forEach((c, i) => setTimeout(() => {
+    const d = document.createElement('div'); d.className = 'toast ' + (c.c || ''); d.textContent = c.t;
+    box.appendChild(d); setTimeout(() => d.remove(), 3300);
+  }, i * 220));
+}
+
+// ── BEAT ENGINE ─────────────────────────────────────────────────────────────
+function failCheck(b, id){
+  if (b.ending) return null;
+  if (G.stats.health <= 0 && id !== 'frozen') return 'frozen';
+  if (G.stats.sus >= 100 && id !== 'stone') return 'stone';
+  return null;
+}
+function goBeat(id){
+  const b = BEATS[id];
+  if (!b){ console.error('Missing beat', id); return; }
+  const re = G.beat === id;
+  G.beat = id; G.pending = null;
+  if (re){ save(); render(); return; }
+  if (b.chapter){ G.chapter = b.chapter; G.chTitle = b.chTitle; G.checkpoint = null; G.checkpoint = snapshot(); }
+  let chips = [];
+  if (b.date) G.date = b.date;
+  if (b.map){ G.map = b.map; unlockMap(b.map); }
+  if (b.loc){ G.loc = b.loc; markSeen(G.map, b.loc); }
+  if (b.w && G.route[G.route.length - 1] !== b.w) G.route.push(b.w);
+  if (b.fx) chips = chips.concat(applyFx(typeof b.fx === 'function' ? b.fx(G) : b.fx));
+  const sg = typeof b.song === 'function' ? b.song(G) : b.song; if (sg) learnSong(sg);
+  if (b.travel){
+    const need = b.travel;
+    if (G.stats.food >= need) chips = chips.concat(applyFx({food:-need}));
+    else { const short = need - G.stats.food; chips = chips.concat(applyFx({food:-G.stats.food, health:-6 * short, hum:-2 * short}));
+      }
+  }
+  if (b.enter) b.enter(G);
+  if (b.log) addLog(tx(b.log));
+  const f = failCheck(b, id); if (f){ save(); return goBeat(f); }
+  if (chips.length) toast(chips);
+  save();
+  render();
+  window.scrollTo(0, 0);
+}
+function visibleChoices(b){ return (b.choices ? tx(b.choices) : []).filter(c => !c.if || c.if(G)); }
+function choose(i){
+  const b = BEATS[G.beat], c = visibleChoices(b)[i]; if (!c) return;
+  SND.fx('click');
+  let chips = applyFx(typeof c.fx === 'function' ? c.fx(G) : c.fx);
+  if (c.dt) chips = chips.concat(ringUse(c.dt === true ? 3 : c.dt));
+  if (c.act) c.act(G);
+  let next = typeof c.go === 'function' ? c.go(G) : (c.go || G.beat);
+  const f = failCheck(BEATS[next] || {}, next); if (f) next = f;
+  const res = tx(c.res);
+  if (res){ G.pending = {text:res, chips, next}; save(); render(); window.scrollTo(0, 0); }
+  else { if (chips.length) toast(chips); goBeat(next); }
+}
+function continuePending(){ const n = G.pending.next; G.pending = null; goBeat(n); }
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+function paras(t, first){
+  return String(t).split(/\n\s*\n/).map((p, i) => `<p class="${first && i === 0 ? 'first' : ''}">${p.trim()}</p>`).join('');
+}
+function chipHTML(chips){ return chips && chips.length ? `<div class="chips">${chips.map(c => `<span class="chip ${c.c || ''}">${esc(c.t)}</span>`).join('')}</div>` : ''; }
+function locName(map, loc){
+  const m = MAPS[map]; if (!m) return ''; const p = m.places.find(p => p.k === loc); return p ? p.n : '';
+}
+function headerHTML(b){
+  return `<div class="chaphead"><div class="cn">CHAPTER ${romanize(G.chapter)}</div><h2>${esc(G.chTitle || '')}</h2>
+    <div class="where">${esc(b.title || locName(G.map, G.loc))}${b.pov ? ` <span class="pov">· as ${esc(b.pov)}</span>` : ''}</div></div><div class="rule"></div>`;
+}
+function romanize(n){ const r = [['M',1000],['CM',900],['D',500],['CD',400],['C',100],['XC',90],['L',50],['XL',40],['X',10],['IX',9],['V',5],['IV',4],['I',1]]; let s = ''; r.forEach(([k, v]) => { while (n >= v){ s += k; n -= v; } }); return s; }
+function artHTML(b){
+  if (b.art === 'none') return '';
+  if (b.art && VIGNETTES[b.art]) return `<div class="art" data-vig="${b.art}">${VIGNETTES[b.art]()}</div>`;
+  const map = b.map || G.map;
+  return `<div class="art" data-map="${map}">${drawMap(map, {here:G.loc, small:true})}<span class="hint">click to enlarge</span></div>`;
+}
+function render(){
+  renderStats(); renderSide();
+  if (!G){ renderTitle(); return; }
+  if (UI.game) return;
+  const st = $('#stage'), b = BEATS[G.beat];
+  if (b.ending){ st.innerHTML = renderEnding(b); wireStage(); return; }
+  let h = headerHTML(b);
+  if (G.pending){
+    h += `<div class="text">${paras(G.pending.text, true)}</div>${G.pending.chips.length ? `<div class="result">${chipHTML(G.pending.chips)}</div>` : ''}
+      <div class="choices"><button class="choice go" data-cont>Continue…</button></div>`;
+    st.innerHTML = h; wireStage(); return;
+  }
+  h += artHTML(b);
+  h += `<div class="text">${paras(tx(b.text), true)}</div>`;
+  const sg = typeof b.song === 'function' ? b.song(G) : b.song; if (sg) h += songCard(sg);
+  if (b.game){
+    const gc = tx(b.game);
+    h += `<div class="choices"><button class="choice game go" data-game>${esc(gc.label || 'Begin')}</button>
+      <button class="choice" data-skip>Let the robin decide <span class="tag">skip the game · an average outcome</span></button></div>`;
+  } else {
+    const cs = visibleChoices(b);
+    h += `<div class="choices">${cs.map((c, i) => {
+      const cls = ['choice', c.dt ? 'tdelight' : '', c.talk ? 'talk' : '', c.cls || ''].join(' ');
+      return `<button class="${cls}" data-c="${i}">${tx(c.t)}${c.tag ? `<span class="tag">${tx(c.tag)}</span>` : ''}${c.dt ? '<span class="tag">the easy way</span>' : ''}</button>`;
+    }).join('')}</div>`;
+  }
+  st.innerHTML = h; wireStage();
+}
+function wireStage(){
+  const st = $('#stage');
+  st.querySelectorAll('[data-c]').forEach(el => el.onclick = () => choose(+el.dataset.c));
+  const cont = st.querySelector('[data-cont]'); if (cont) cont.onclick = continuePending;
+  const gb = st.querySelector('[data-game]'); if (gb) gb.onclick = () => startGame(tx(BEATS[G.beat].game));
+  const sk = st.querySelector('[data-skip]'); if (sk) sk.onclick = () => { const gc = tx(BEATS[G.beat].game); UI.game = gc; finishGame({win: Math.random() < .55, score: .5, msg:'It all happened, somehow, as things do in Narnia.', fx: gc.skipFx}); };
+  const art = st.querySelector('.art'); if (art) art.onclick = () => art.dataset.map ? openMap(art.dataset.map) : null;
+  st.querySelectorAll('[data-sing]').forEach(el => el.onclick = () => singSong(el.dataset.sing, el.closest('.song')));
+  st.querySelectorAll('[data-checkpoint]').forEach(el => el.onclick = restoreCheckpoint);
+  st.querySelectorAll('[data-new]').forEach(el => el.onclick = startNew);
+  st.querySelectorAll('[data-load]').forEach(el => el.onclick = () => { G = tryLoad(); render(); });
+}
+function restoreCheckpoint(){
+  if (!G.checkpoint) return;
+  const cp = G.checkpoint; G = JSON.parse(JSON.stringify(cp)); G.checkpoint = cp; G.pending = null;
+  UI.game = null; if (UI.inst && UI.inst.stop) UI.inst.stop(); UI.inst = null;
+  save(); closeModal(); render(); toast([{t:'Back through the wardrobe, to the start of the chapter.'}]);
+}
+function startNew(){ SND.stop(); if (UI.inst && UI.inst.stop) UI.inst.stop(); UI.inst = null; UI.game = null; G = newGame(); closeModal(); goBeat('start'); }
+
+
+function renderStats(){
+  const el = $('#stats');
+  const snow = document.getElementById('snow');
+  if (!G){ el.innerHTML = ''; if (snow) snow.style.opacity = .6; return; }
+  const s = G.stats;
+  if (snow) snow.style.opacity = Math.max(0, .6 * (1 - s.cash / 70));
+  const bar = (v, c) => `<span class="bar"><i style="width:${v}%;background:${c}"></i></span>`;
+  const glow = 2 + s.sus / 4, gc = s.sus > 70 ? '#9fd0ff' : s.sus > 40 ? '#6a9ad0' : '#3a5a8a';
+  el.innerHTML = `
+    <span class="stat" title="Faith: trust in Aslan, and in each other. Taking the easy way costs it."><span class="lbl">faith</span>${bar(s.hum, 'linear-gradient(90deg,#9a7414,#ffe2a0)')}</span>
+    <span class="stat" title="Warmth: at nothing, the cold has you"><span class="lbl">warmth</span>${bar(s.health, 'linear-gradient(90deg,#8a2a2a,#f0905a)')}</span>
+    <span class="stat" title="The Witch's Notice: at 100, she has you turned to stone"><span class="noticeicon" style="box-shadow:0 0 ${glow}px ${gc}"></span><span class="lbl">notice</span> ${s.sus}</span>
+    <span class="stat" title="Provisions: food for the journey. Travelling without it costs Warmth.">🍞 <span class="lbl">food</span> ${s.food}</span>
+    <span class="stat" title="The Thaw: how far the Witch's winter has broken"><span class="lbl">thaw</span><span class="thaw"><i style="width:${s.cash}%"></i></span></span>
+    <span class="date">${esc(G.date || '')}</span>`;
+}
+const TABS = [['map','Narnia'],['fellow','Friends'],['pack','Pockets'],['songs','Songs'],['maps','Maps'],['log','Journal']];
+function renderSide(){
+  $('#tabs').innerHTML = TABS.map(([k, n]) => `<button data-tab="${k}" class="${UI.tab === k ? 'on' : ''}">${n}</button>`).join('');
+  $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { UI.tab = b.dataset.tab; renderSide(); });
+  const p = $('#panel');
+  if (!G){ p.innerHTML = `<div class="ptitle">Narnia</div>${drawMap('wild', {small:true})}<p class="meta">From the Lamp-post to Cair Paravel, under a hundred years of snow.</p>`; return; }
+  let h = '';
+  if (UI.tab === 'map'){
+    h = `<div class="ptitle">Narnia</div><div class="art" data-map="wild">${drawMap('wild', {small:true, worldRoute:true})}</div>
+      <p class="meta">${G.route.length} place${G.route.length === 1 ? '' : 's'} on your road. Click to enlarge.</p>
+      <div class="side-here"><div class="ptitle">Here</div><div class="art" data-map="${G.map}">${drawMap(G.map, {here:G.loc, small:true})}</div></div>`;
+  } else if (UI.tab === 'fellow'){
+    h = `<div class="ptitle">Friends &amp; Foes</div>`;
+    const order = Object.keys(CHARS).filter(k => G.met.indexOf(k) >= 0);
+    order.sort((a, b) => (inParty(b) ? 1 : 0) - (inParty(a) ? 1 : 0));
+    h += order.map(k => {
+      const c = CHARS[k], a = G.aff[k], gone = G.gone.indexOf(k) >= 0;
+      const ab = a === undefined ? '' : `<div class="abar"><i style="left:${a >= 0 ? 50 : 50 + a / 2}%;width:${Math.abs(a) / 2}%;background:${a >= 0 ? '#c99a2a' : '#5a7aa0'}"></i></div>`;
+      return `<div class="char"><div class="av" style="background:${c.c};color:${k === 'witch' ? '#333' : '#fff'}">${c.n.replace(/^(The |Mr |Mrs |Giant )/, '')[0]}</div><div style="flex:1"><span class="nm">${esc(c.n)}</span>${inParty(k) ? '<span class="here">with you</span>' : ''}${gone ? '<span class="here" style="color:#5a7aa0">turned to stone</span>' : ''}<div class="ds">${esc(c.d)}</div>${ab}</div></div>`;
+    }).join('');
+  } else if (UI.tab === 'pack'){
+    h = `<div class="ptitle">In Your Pockets</div>` + (G.items.length ? G.items.map(k => `<div class="item"><div class="ic">${ITEMS[k].ic}</div><div><div class="nm">${esc(ITEMS[k].n)}</div><div class="ds">${esc(ITEMS[k].d)}</div></div></div>`).join('') : '<p class="meta">Mothballs.</p>')
+      + `<p class="meta">🍞 ${G.stats.food} provisions. You have taken the easy way ${G.ringUses} time${G.ringUses === 1 ? '' : 's'}.</p>`;
+  } else if (UI.tab === 'songs'){
+    h = `<div class="ptitle">Songs &amp; Sayings (${G.songs.length}/${Object.keys(SONGS).length})</div>`
+      + (G.songs.length ? G.songs.map(k => `<button class="songli" data-song="${k}">${esc(SONGS[k].title)}<small>${esc(SONGS[k].by)}</small></button>`).join('') : '<p class="meta">Nobody sings in the Witch\'s winter.</p>');
+  } else if (UI.tab === 'maps'){
+    h = `<div class="ptitle">Maps (${G.maps.length}/${Object.keys(MAPS).length})</div><div class="mapgrid">`
+      + Object.keys(MAPS).map(k => G.maps.indexOf(k) >= 0
+        ? `<button data-map="${k}">${drawMap(k, {thumb:true})}${esc(MAPS[k].title)}</button>`
+        : `<button class="lock">${'<svg viewBox="0 0 100 70"><rect width="100" height="70" fill="#dfe6ee"/><text x="50" y="42" text-anchor="middle" font-size="22" fill="#7686a0">?</text></svg>'}Not yet</button>`).join('') + `</div>`;
+  } else if (UI.tab === 'log'){
+    h = `<div class="ptitle">Lucy's Journal</div>` + (G.log.length ? G.log.map(l => `<div class="log"><b>${esc(l.d)}</b> — ${esc(l.t)}</div>`).join('') : '<p class="meta">Nothing written yet.</p>');
+  }
+  p.innerHTML = h;
+  p.querySelectorAll('[data-map]').forEach(el => el.onclick = () => openMap(el.dataset.map));
+  p.querySelectorAll('[data-song]').forEach(el => el.onclick = () => openSong(el.dataset.song));
+}
+
+function openModal(html){ $('#mbody').innerHTML = html; $('#modal').classList.remove('hidden'); }
+function closeModal(){ $('#modal').classList.add('hidden'); SND.stop(); }
+function openMap(k){
+  const m = MAPS[k];
+  openModal(`<div class="center" style="font-family:Cinzel,serif;font-size:1.2rem">${esc(m.title)}</div>
+    <div class="center meta" style="margin-bottom:8px;font-style:italic">${esc(m.sub || '')}</div>
+    ${drawMap(k, {here: G && k === G.map ? G.loc : null, worldRoute: k === 'wild', big:true})}
+    ${m.notes ? `<p class="meta" style="margin-top:8px">${esc(m.notes)}</p>` : ''}`);
+}
+function openSong(k){
+  openModal(songCard(k, true));
+  $('#mbody').querySelectorAll('[data-sing]').forEach(el => el.onclick = () => singSong(k, el.closest('.song')));
+}
+
+
+// ═══ MAPS ═══════════════════════════════════════════════════════════════════
+const MAPS = {
+  wild:{title:'Narnia', sub:'From the Lantern Waste to Cair Paravel, under a hundred years of winter', w:1200, h:800,
+    water:[[[1080,0],[1200,0],[1200,800],[1100,800],[1060,600],[1080,420],[1050,220]]],
+    rivers:[[[720,170],[700,260],[660,330],[600,420]],[[160,460],[300,430],[420,420],[520,440],[700,430],[880,450],[1060,430]]],
+    roads:[[[180,300],[260,360],[420,410]],[[420,410],[520,440],[620,520]],[[420,410],[560,300],[720,170]],[[620,520],[760,560]],[[620,520],[860,470],[1080,420]]],
+    mts:[[[480,70],[640,60],[820,70],[960,90]],[[980,180],[1020,300]]],
+    forest:[[[60,200],[340,180],[380,320],[260,380],[80,360]],[[520,480],[780,470],[820,620],[560,640]],[[300,520],[460,520],[480,640],[320,660]]],
+    hills:[[620,500],[650,490],[700,150],[740,140],[860,640],[900,650]],
+    places:[
+      {k:'house',n:'The Wardrobe',x:110,y:300,t:'inn',a:'b'},{k:'lamppost',n:'The Lamp-post',x:180,y:300,t:'tower',a:'t'},
+      {k:'tumnus',n:'Mr Tumnus\'s Cave',x:260,y:360,t:'hill',a:'b'},{k:'dam',n:'The Beavers\' Dam',x:420,y:420,t:'inn',a:'b'},
+      {k:'witch',n:'The Witch\'s House',x:720,y:170,t:'tower',a:'r'},{k:'beruna',n:'The Fords of Beruna',x:520,y:440,t:'ruin',a:'t'},
+      {k:'stonetable',n:'The Stone Table',x:620,y:520,t:'peak',a:'b'},{k:'battle',n:'The Battle',x:760,y:560,t:'ruin',a:'b'},
+      {k:'cair',n:'Cair Paravel',x:1080,y:420,t:'city',a:'l'},{k:'fxmas',n:'Father Christmas',x:500,y:360,t:'tree',a:'t'}],
+    labels:[['NARNIA',400,740,26,0],['LANTERN WASTE',180,240,12,0],['the Great River',840,470,11,0],['THE EASTERN OCEAN',1140,640,12,90],['the Witch\'s hills',720,40,11,0]],
+    notes:'The red line is your road. In Narnia, time runs differently: however long you stay, you may come home the same afternoon.'},
+
+  house:{title:'The Professor\'s House', sub:'The sort of house that you never seem to come to the end of', w:1000, h:700, dungeon:true,
+    roads:[[[100,600],[500,600],[500,300],[800,300]],[[500,300],[500,140]],[[300,600],[300,420]]],
+    places:[{k:'hall',n:'The Hall',x:100,y:600,t:'inn',a:'b'},{k:'library',n:'The Library',x:300,y:420,t:'inn',a:'t'},
+      {k:'stairs',n:'The Stairs',x:500,y:450,t:'hill',a:'r'},{k:'armour',n:'A Suit of Armour',x:650,y:300,t:'dot',a:'t'},
+      {k:'spareroom',n:'The Spare Room (the Wardrobe)',x:800,y:300,t:'inn',a:'b'},{k:'professor',n:'The Professor\'s Study',x:500,y:140,t:'inn',a:'t'}],
+    labels:[['THE PROFESSOR\'S HOUSE',500,70,20,0],['rain, rain, rain',500,660,12,0]],
+    route:['hall','stairs','spareroom']},
+
+  wood:{title:'The Lantern Waste', sub:'Snow under foot, snow on the trees, and a lamp-post burning in the middle of a wood', w:1000, h:700,
+    forest:[[[40,60],[440,40],[480,240],[300,300],[60,280]],[[560,40],[960,60],[960,320],[620,300]],[[100,460],[460,440],[480,660],[120,660]],[[620,440],[960,440],[960,660],[640,660]]],
+    roads:[[[60,350],[300,350],[600,250]],[[300,350],[700,380],[940,360]]],
+    places:[{k:'wardrobe',n:'The Wardrobe Door',x:60,y:350,t:'inn',a:'b'},{k:'lamppost',n:'The Lamp-post',x:300,y:350,t:'tower',a:'b'},
+      {k:'cave',n:'Mr Tumnus\'s Cave',x:600,y:250,t:'hill',a:'t'},{k:'robin',n:'Where the Robin Waited',x:700,y:380,t:'tree',a:'b'},
+      {k:'east',n:'Towards the Beavers',x:940,y:360,t:'dot',a:'l'}],
+    labels:[['LANTERN WASTE',500,690,16,0]],
+    route:['wardrobe','lamppost','cave','robin','east']},
+
+  dam:{title:'The Beavers\' Dam', sub:'A little house like an enormous beehive, on top of a dam across a frozen river', w:1000, h:700,
+    water:[[[0,280],[1000,260],[1000,420],[0,440]]],
+    roads:[[[100,600],[500,360],[900,180]],[[500,360],[700,560]]],
+    forest:[[[600,500],[960,480],[980,680],[620,680]],[[40,40],[340,40],[300,180],[60,200]]],
+    places:[{k:'bank',n:'The Steep Bank',x:100,y:600,t:'dot',a:'b'},{k:'dam',n:'The Dam',x:500,y:360,t:'ruin',a:'t'},
+      {k:'house',n:'The Beavers\' House',x:540,y:330,t:'inn',a:'r'},{k:'icehole',n:'The Fishing Hole',x:380,y:330,t:'dot',a:'t'},
+      {k:'hideout',n:'The Hiding-Hole',x:700,y:560,t:'hill',a:'b'},{k:'fxmas',n:'Father Christmas\'s Sledge',x:900,y:180,t:'tree',a:'l'}],
+    labels:[['the frozen river',200,360,13,0]],
+    route:['bank','dam','house','hideout','fxmas']},
+
+  witchhouse:{title:'The Witch\'s House', sub:'More a small castle than a house, all towers, pointed like dunce\'s caps', w:1000, h:700, dungeon:true,
+    roads:[[[100,600],[300,600],[300,300],[700,300],[700,140]],[[300,450],[700,450]]],
+    places:[{k:'gate',n:'The Arched Gateway',x:100,y:600,t:'dot',a:'b'},{k:'courtyard',n:'The Courtyard of Statues',x:300,y:450,t:'ruin',a:'l'},
+      {k:'lion',n:'The Stone Lion',x:500,y:450,t:'dot',a:'b'},{k:'door',n:'Maugrim\'s Door',x:700,y:450,t:'dot',a:'r'},
+      {k:'hall',n:'The Long Hall',x:500,y:300,t:'inn',a:'t'},{k:'throne',n:'The Witch',x:700,y:140,t:'tower',a:'t'}],
+    labels:[['THE WITCH\'S HOUSE',500,80,20,0],['statues everywhere',300,520,10,0]],
+    route:['gate','courtyard','lion','door','throne']},
+
+  stonetable:{title:'The Stone Table', sub:'On a hill-top, a great grim slab of grey stone on four upright stones', w:1000, h:700,
+    roads:[[[100,600],[400,450],[500,280]],[[500,280],[760,240]],[[400,450],[760,600]]],
+    forest:[[[100,100],[380,80],[400,260],[140,280]],[[600,420],[960,420],[960,680],[620,680]]],
+    hills:[[480,300],[520,300],[460,320],[540,320]],
+    places:[{k:'approach',n:'The Approach',x:100,y:600,t:'dot',a:'b'},{k:'pavilion',n:'Aslan\'s Pavilion',x:400,y:450,t:'city',a:'b'},
+      {k:'table',n:'The Stone Table',x:500,y:280,t:'peak',a:'t'},{k:'bushes',n:'Where the Girls Hid',x:760,y:240,t:'tree',a:'r'},
+      {k:'battle',n:'The Battle-field',x:760,y:600,t:'ruin',a:'t'}],
+    labels:[['old strange lettering on the stone',500,220,10,0]],
+    route:['approach','pavilion','table','bushes']},
+
+  cair:{title:'Cair Paravel', sub:'The castle on the shore, where the river runs into the sea', w:1000, h:700,
+    water:[[[700,0],[1000,0],[1000,700],[640,700],[620,400]]],
+    rivers:[[[0,400],[300,380],[600,400]]],
+    roads:[[[100,600],[400,500],[560,420]]],
+    forest:[[[40,60],[360,40],[380,260],[60,280]]],
+    places:[{k:'road',n:'The Road from the West',x:100,y:600,t:'dot',a:'b'},{k:'gate',n:'The Great Gate',x:400,y:500,t:'dot',a:'b'},
+      {k:'hall',n:'The Great Hall of Ivory',x:560,y:420,t:'city',a:'t'},{k:'thrones',n:'The Four Thrones',x:600,y:360,t:'tower',a:'t'}],
+    labels:[['CAIR PARAVEL',400,120,18,0],['the sea',820,360,16,0],['mermen and mermaids sing',820,560,10,0]],
+    route:['road','gate','hall','thrones']}
+};
+
+// geometry + map drawing (shared with ringbearer.html)
+function pointInPoly(x, y, poly){
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++){
+    const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function smoothPath(pts, closed){
+  const L = pts.length, f = n => n.toFixed(1);
+  if (L < 3) return 'M' + pts.map(p => f(p[0]) + ',' + f(p[1])).join('L') + (closed ? 'Z' : '');
+  const at = i => closed ? pts[(i + L) % L] : pts[clamp(i, 0, L - 1)];
+  let d = `M${f(pts[0][0])},${f(pts[0][1])}`;
+  const n = closed ? L : L - 1;
+  for (let i = 0; i < n; i++){
+    const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += `C${f(c1x)},${f(c1y)} ${f(c2x)},${f(c2y)} ${f(p2[0])},${f(p2[1])}`;
+  }
+  return d + (closed ? 'Z' : '');
+}
+function samplePolyline(pts, step){
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++){
+    const a = pts[i], b = pts[i + 1], d = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(d / step));
+    for (let k = 0; k < n; k++) out.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]);
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+const INK = '#4a3216', INK2 = '#7a5a30', WATER = '#a8bdb0', WATER_INK = '#5f7f78';
+const MAP_CACHE = {};
+function mapBase(k, noPlaces){
+  const ck = k + (noPlaces ? '|np' : '');
+  if (MAP_CACHE[ck]) return MAP_CACHE[ck];
+  const m = MAPS[k], r = seeded(hash(k)), W = m.w, H = m.h;
+  const dun = !!m.dungeon;
+  let s = '';
+  // parchment
+  s += `<rect width="${W}" height="${H}" fill="${dun ? '#d6dde8' : '#eef3f8'}"/>`;
+  for (let i = 0; i < 9; i++){ const x = r() * W, y = r() * H, rr = 80 + r() * 220;
+    s += `<circle cx="${x | 0}" cy="${y | 0}" r="${rr | 0}" fill="#5a7298" opacity="${(0.03 + r() * .05).toFixed(3)}"/>`; }
+  if (dun){ // dwarf-hall grid
+    for (let x = 20; x < W; x += 40) s += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="${INK2}" stroke-width=".4" opacity=".35"/>`;
+    for (let y = 20; y < H; y += 40) s += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${INK2}" stroke-width=".4" opacity=".35"/>`;
+  }
+  (m.zones || []).forEach(z => { s += `<path d="${smoothPath(z.p, true)}" fill="${z.c}" opacity=".55" stroke="${INK}" stroke-width="1.2"/>`; });
+  (m.dark || []).forEach(p => { s += `<path d="${smoothPath(p, true)}" fill="#3a2a1a" opacity=".16"/>`; });
+  (m.water || []).forEach(p => {
+    s += `<path d="${smoothPath(p, true)}" fill="${WATER}" stroke="${WATER_INK}" stroke-width="1.6"/>`;
+    s += `<path d="${smoothPath(p, true)}" fill="none" stroke="${WATER_INK}" stroke-width=".6" opacity=".5" transform="translate(4,4)"/>`;
+  });
+  (m.marsh || []).forEach(p => {
+    const xs = p.map(q => q[0]), ys = p.map(q => q[1]);
+    for (let y = Math.min.apply(0, ys); y < Math.max.apply(0, ys); y += 12)
+      for (let x = Math.min.apply(0, xs); x < Math.max.apply(0, xs); x += 16){
+        const jx = x + r() * 8, jy = y + r() * 6; if (!pointInPoly(jx, jy, p)) continue;
+        s += `<path d="M${(jx - 4).toFixed(1)},${jy.toFixed(1)}h8M${jx.toFixed(1)},${jy.toFixed(1)}v-5M${(jx - 2.5).toFixed(1)},${jy.toFixed(1)}l-1.5,-3.5M${(jx + 2.5).toFixed(1)},${jy.toFixed(1)}l1.5,-3.5" stroke="${INK2}" stroke-width=".8" fill="none"/>`;
+      }
+  });
+  (m.rivers || []).forEach((p, i) => { s += `<path d="${smoothPath(p)}" fill="none" stroke="${WATER_INK}" stroke-width="${i === 1 && k === 'wild' ? 3.2 : 2.2}" stroke-linecap="round"/>`; });
+  (m.roads || []).forEach(p => { s += `<path d="${smoothPath(p)}" fill="none" stroke="${dun ? INK : '#8a5a2a'}" stroke-width="${dun ? 9 : 1.6}" ${dun ? 'opacity=".25"' : 'stroke-dasharray="6 4"'} stroke-linecap="round"/>`;
+    if (dun) s += `<path d="${smoothPath(p)}" fill="none" stroke="${INK}" stroke-width="1" opacity=".7" stroke-dasharray="2 3"/>`; });
+  (m.forest || []).forEach(p => {
+    const xs = p.map(q => q[0]), ys = p.map(q => q[1]);
+    s += `<path d="${smoothPath(p, true)}" fill="#6b7a3a" opacity=".12"/>`;
+    for (let y = Math.min.apply(0, ys) + 6; y < Math.max.apply(0, ys); y += 13)
+      for (let x = Math.min.apply(0, xs) + 4; x < Math.max.apply(0, xs); x += 13){
+        const jx = x + (r() - .5) * 7, jy = y + (r() - .5) * 6; if (!pointInPoly(jx, jy, p)) continue;
+        const rr = 3.6 + r() * 2;
+        s += `<line x1="${jx.toFixed(1)}" y1="${jy.toFixed(1)}" x2="${jx.toFixed(1)}" y2="${(jy + rr + 3).toFixed(1)}" stroke="${INK}" stroke-width=".8"/>`
+          + `<circle cx="${jx.toFixed(1)}" cy="${jy.toFixed(1)}" r="${rr.toFixed(1)}" fill="#8d9a55" stroke="${INK}" stroke-width=".8"/>`;
+      }
+  });
+  (m.hills || []).forEach(h => { s += `<path d="M${h[0] - 11},${h[1]} Q${h[0] - 2},${h[1] - 13} ${h[0] + 11},${h[1]} Z" fill="#e0cb94" stroke="${INK}" stroke-width="1"/><path d="M${h[0] + 1},${h[1] - 6} l3,5 M${h[0] + 4},${h[1] - 4} l2.5,4" stroke="${INK}" stroke-width=".6"/>`; });
+  (m.mts || []).forEach(line => {
+    samplePolyline(line, 17).forEach(([x, y]) => {
+      const w = 9 + r() * 6, h = 13 + r() * 12; x += (r() - .5) * 6; y += (r() - .5) * 6;
+      s += `<path d="M${(x - w).toFixed(1)},${y.toFixed(1)} L${x.toFixed(1)},${(y - h).toFixed(1)} L${(x + w).toFixed(1)},${y.toFixed(1)}" fill="#e6d3a2" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"/>`
+        + `<path d="M${x.toFixed(1)},${(y - h).toFixed(1)} L${(x + w * .35).toFixed(1)},${y.toFixed(1)} M${(x + 2).toFixed(1)},${(y - h * .6).toFixed(1)} l3,4 M${(x + 3).toFixed(1)},${(y - h * .3).toFixed(1)} l3,3" stroke="${INK}" stroke-width=".6" fill="none"/>`;
+    });
+  });
+  (m.labels || []).forEach(([t, x, y, sz, rot]) => {
+    const caps = t === t.toUpperCase();
+    s += `<text x="${x}" y="${y}" font-family="'IM Fell English',Georgia,serif" font-style="${caps ? 'normal' : 'italic'}" font-size="${sz}" fill="${INK2}" text-anchor="middle" letter-spacing="${caps ? sz * .35 : 0}" opacity=".85" transform="rotate(${rot || 0} ${x} ${y})">${esc(t)}</text>`;
+  });
+  // places
+  (noPlaces ? [] : m.places).forEach(p => {
+    const x = p.x, y = p.y;
+    switch (p.t){
+      case 'city': s += `<circle cx="${x}" cy="${y}" r="6" fill="#f6f8fb" stroke="${INK}" stroke-width="1.4"/><circle cx="${x}" cy="${y}" r="2.5" fill="${INK}"/>`; break;
+      case 'tower': s += `<path d="M${x - 4},${y + 5} v-9 h-1.5 v-3 h3 v1.5 h1.5 v-1.5 h2 v1.5 h1.5 v-1.5 h3 v3 h-1.5 v9 z" fill="${INK}"/>`; break;
+      case 'peak': s += `<path d="M${x - 11},${y + 4} L${x},${y - 14} L${x + 11},${y + 4}z" fill="#d9c08a" stroke="${INK}" stroke-width="1.5"/><path d="M${x - 4},${y - 7} L${x},${y - 14} L${x + 4},${y - 7} l-2,2 -2,-2 -2,2z" fill="#fff"/>`; break;
+      case 'hill': s += `<path d="M${x - 8},${y + 3} Q${x},${y - 10} ${x + 8},${y + 3}" fill="#e2cf9a" stroke="${INK}" stroke-width="1.3"/><circle cx="${x}" cy="${y - 1}" r="1.8" fill="${INK}"/>`; break;
+      case 'inn': s += `<rect x="${x - 4}" y="${y - 4}" width="8" height="8" fill="#f6f8fb" stroke="${INK}" stroke-width="1.3"/><path d="M${x - 5},${y - 4} L${x},${y - 9} L${x + 5},${y - 4}" fill="${INK}"/>`; break;
+      case 'tree': s += `<circle cx="${x}" cy="${y - 5}" r="8" fill="#5c6b2e" stroke="${INK}" stroke-width="1.2"/><path d="M${x},${y + 4} v-6 M${x},${y} l-5,4 M${x},${y} l5,4" stroke="${INK}" stroke-width="1.6"/>`; break;
+      case 'ruin': s += `<path d="M${x - 4},${y - 4} l8,8 M${x + 4},${y - 4} l-8,8" stroke="${INK}" stroke-width="1.6"/>`; break;
+      default: s += `<circle cx="${x}" cy="${y}" r="3.5" fill="${INK}"/>`;
+    }
+    const a = p.a || 'r';
+    const tx = a === 'r' ? x + 9 : a === 'l' ? x - 9 : x, ty = a === 'b' ? y + 18 : a === 't' ? y - 14 : y + 4;
+    s += `<text x="${tx}" y="${ty}" font-family="'IM Fell English',Georgia,serif" font-size="13" fill="${INK}" text-anchor="${a === 'r' ? 'start' : a === 'l' ? 'end' : 'middle'}" paint-order="stroke" stroke="#eef3f8" stroke-width="3" stroke-opacity=".7">${esc(p.n)}</text>`;
+  });
+  // compass rose
+  const cx = W - 60, cy = H - 64;
+  s += `<g transform="translate(${cx},${cy})" opacity=".85"><circle r="26" fill="none" stroke="${INK}" stroke-width=".8"/><circle r="20" fill="none" stroke="${INK}" stroke-width=".5"/>
+    <path d="M0,-34 L5,0 L0,34 L-5,0z" fill="${INK}"/><path d="M-34,0 L0,5 L34,0 L0,-5z" fill="${INK2}"/>
+    <path d="M0,-34 L5,0 L0,0z" fill="#eef3f8"/><text y="-38" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="${INK}">N</text></g>`;
+  // cartouche
+  const tw = Math.max(180, m.title.length * 13 + 30);
+  s += `<g transform="translate(24,22)"><rect width="${tw}" height="38" fill="#f6f8fb" stroke="${INK}" stroke-width="1.2"/><rect x="3" y="3" width="${tw - 6}" height="32" fill="none" stroke="${INK}" stroke-width=".6"/>
+    <text x="${tw / 2}" y="25" text-anchor="middle" font-family="Cinzel,serif" font-size="17" fill="${INK}">${esc(m.title)}</text></g>`;
+  // frame
+  s += `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" fill="none" stroke="${INK}" stroke-width="2.4"/><rect x="10" y="10" width="${W - 20}" height="${H - 20}" fill="none" stroke="${INK}" stroke-width=".8"/>`;
+  return (MAP_CACHE[ck] = s);
+}
+function drawMap(k, o){
+  o = o || {};
+  const m = MAPS[k]; if (!m) return '';
+  let s = mapBase(k, o.noPlaces);
+  if (!o.thumb && G){
+    const P = key => m.places.find(p => p.k === key);
+    if (k === 'wild' && o.worldRoute !== false){
+      const pts = G.route.map(P).filter(Boolean).map(p => [p.x, p.y]);
+      if (pts.length > 1) s += `<path d="${smoothPath(pts)}" fill="none" stroke="#a31f1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`;
+      pts.forEach(p => { s += `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#a31f1f"/>`; });
+      const last = pts[pts.length - 1];
+      if (last) s += hereMarker(last[0], last[1]);
+    } else if (m.route){
+      const seen = G.seen[k] || [];
+      let far = -1; m.route.forEach((key, i) => { if (seen.indexOf(key) >= 0) far = i; });
+      const pts = m.route.slice(0, far + 1).map(P).filter(Boolean).map(p => [p.x, p.y]);
+      if (pts.length > 1) s += `<path d="${smoothPath(pts)}" fill="none" stroke="#a31f1f" stroke-width="2.6" stroke-dasharray="7 5" stroke-linecap="round" opacity=".85"/>`;
+      if (o.here){ const h = P(o.here); if (h) s += hereMarker(h.x, h.y); }
+    }
+  }
+  return `<svg viewBox="0 0 ${m.w} ${m.h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(m.title)}">${s}</svg>`;
+}
+function hereMarker(x, y){
+  return `<g><circle cx="${x}" cy="${y}" r="10" fill="none" stroke="#a31f1f" stroke-width="2.5"><animate attributeName="r" values="8;18;8" dur="2.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.2;1" dur="2.2s" repeatCount="indefinite"/></circle>
+    <circle cx="${x}" cy="${y}" r="4.5" fill="#a31f1f" stroke="#fff3d0" stroke-width="1.5"/></g>`;
+}
+
+
+// ═══ VIGNETTES ══════════════════════════════════════════════════════════════
+const VB = (inner, bg) => `<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">${bg || ''}${inner}<rect x="3" y="3" width="794" height="334" fill="none" stroke="${INK}" stroke-width="3"/></svg>`;
+const skyGrad = (id, a, b) => `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="800" height="340" fill="url(#${id})"/>`;
+const tree = (x, y, s, c) => `<path d="M${x},${y} v${-40 * s}" stroke="#2a1a0a" stroke-width="${5 * s}"/><circle cx="${x}" cy="${y - 55 * s}" r="${28 * s}" fill="${c || '#2e4418'}"/>`;
+const FIR = (x, y, s, snow) => `<g transform="translate(${x},${y}) scale(${s})"><path d="M0,-90 L28,-30 L14,-30 L36,10 L-36,10 L-14,-30 L-28,-30z" fill="#2a4a3a" stroke="#1a2a22"/>${snow ? '<path d="M0,-90 L12,-64 L-12,-64z M-20,-32 h40 M-30,6 h60" stroke="#fff" stroke-width="5" fill="#fff"/>' : ''}<rect x="-4" y="10" width="8" height="14" fill="#3a2a1a"/></g>`;
+const SNOWDOTS = n => Array.from({length:n}, (_, i) => `<circle cx="${(i * 89) % 800}" cy="${(i * 53) % 340}" r="${1 + i % 3}" fill="#fff" opacity=".85"/>`).join('');
+const LION = (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><circle r="56" fill="#c98a2a"/>${Array.from({length:18}, (_, i) => { const a = i / 18 * Math.PI * 2; return `<path d="M${Math.cos(a) * 40},${Math.sin(a) * 40} L${Math.cos(a) * 66},${Math.sin(a) * 66}" stroke="#a86a1a" stroke-width="10" stroke-linecap="round"/>`; }).join('')}
+  <circle r="36" fill="#e8b850"/><circle cx="-13" cy="-8" r="4" fill="#3a2a0a"/><circle cx="13" cy="-8" r="4" fill="#3a2a0a"/><path d="M-8,10 h16 l-8,8z" fill="#5a3a1a"/><path d="M0,18 v6 M0,24 q-8,6 -14,2 M0,24 q8,6 14,2" stroke="#5a3a1a" stroke-width="2" fill="none"/></g>`;
+const VIGNETTES = {
+  wardrobe: () => VB(`<rect width="800" height="340" fill="#4a3a2a"/><rect y="280" width="800" height="60" fill="#3a2a1a"/>
+    <rect x="270" y="20" width="260" height="280" fill="#6a4a2a" stroke="#2a1a0a" stroke-width="4"/><rect x="290" y="40" width="105" height="240" fill="#5a3a1a" stroke="#2a1a0a" stroke-width="2"/><rect x="405" y="40" width="105" height="240" fill="#5a3a1a" stroke="#2a1a0a" stroke-width="2"/>
+    <path d="M405,40 l60,-10 v260 l-60,-10z" fill="#7a5a3a" stroke="#2a1a0a" stroke-width="2"/><rect x="405" y="40" width="0" height="240" fill="#000"/>
+    <rect x="410" y="45" width="0" height="230" fill="#000"/><rect x="398" y="44" width="8" height="232" fill="#111"/>
+    <path d="M300,60 q20,40 0,200 M330,60 q-20,40 0,200 M360,60 q20,40 0,200" stroke="#8a7a6a" stroke-width="14" fill="none" opacity=".7"/>
+    <g opacity=".9">${SNOWDOTS(14).replace(/cx="(\d+)"/g, (m, v) => `cx="${410 + (+v % 50)}"`)}</g><path d="M406,250 q20,-10 50,0 v20 h-50z" fill="#fff" opacity=".8"/>
+    <circle cx="380" cy="160" r="4" fill="#c99a2a"/><circle cx="420" cy="160" r="4" fill="#c99a2a"/>`),
+  lamppost: () => VB(`${FIR(90, 300, 1.6, 1)}${FIR(200, 290, 1.2, 1)}${FIR(640, 300, 1.8, 1)}${FIR(740, 290, 1.3, 1)}<path d="M0,290 Q400,270 800,295 V340 H0z" fill="#f4f8fc"/>
+    <path d="M400,300 v-210" stroke="#222" stroke-width="7"/><path d="M386,90 h28 l-6,-22 h-16z" fill="#ffe2a0" stroke="#222" stroke-width="3"/><circle cx="400" cy="80" r="40" fill="#ffe2a0" opacity=".25"/>
+    <g transform="translate(500,250)"><path d="M-10,0 v40 M10,0 v40" stroke="#6a4a2a" stroke-width="8"/><path d="M-14,40 h8 M8,40 h8" stroke="#222" stroke-width="5"/><path d="M-16,-50 h32 l4,50 h-40z" fill="#8a6a4a"/><circle cy="-64" r="14" fill="#e8c8a0"/><path d="M-8,-74 q-6,-10 -2,-14 M8,-74 q6,-10 2,-14" stroke="#4a3a2a" stroke-width="3" fill="none"/><path d="M-18,-48 h36" stroke="#b0302a" stroke-width="8"/><path d="M18,-40 l30,-60" stroke="#222" stroke-width="3"/><path d="M30,-110 q20,-10 38,10" fill="#222"/><rect x="-36" y="-30" width="20" height="16" fill="#c8a870" stroke="#222"/></g>
+    ${SNOWDOTS(40)}`, skyGrad('lp', '#9ab0c8', '#e4ecf4')),
+  tumnus: () => VB(`<rect width="800" height="340" fill="#7a5a3a"/><path d="M0,0 h800 v60 q-400,40 -800,0z" fill="#5a3a2a"/><rect y="270" width="800" height="70" fill="#6a4a2a"/>
+    <rect x="80" y="140" width="120" height="130" fill="#3a2a1a"/><path d="M110,270 q30,-80 60,0" fill="#ff8a2a"><animate attributeName="d" values="M110,270 q30,-80 60,0;M110,270 q30,-96 60,0;M110,270 q30,-80 60,0" dur="1.4s" repeatCount="indefinite"/></path>
+    ${Array.from({length:5}, (_, r) => Array.from({length:6}, (_, i) => `<rect x="${560 + i * 30}" y="${80 + r * 34}" width="${20 + i % 2 * 4}" height="28" fill="${['#8a2a2a', '#2a4a6a', '#4a6a2a', '#6a5a2a'][(i + r) % 4]}"/>`).join('')).join('')}
+    <rect x="300" y="220" width="200" height="12" fill="#5a3a1a"/><path d="M320,232 v40 M480,232 v40" stroke="#3a2a1a" stroke-width="5"/>
+    ${[340, 380, 440].map(x => `<ellipse cx="${x}" cy="214" rx="14" ry="6" fill="#fff" stroke="#555"/>`).join('')}<path d="M400,214 q10,-20 30,0" fill="#c86a3a"/>
+    <path d="M560,20 v40" stroke="#555"/><text x="640" y="60" font-family="'IM Fell English',serif" font-size="12" fill="#e8d8b8">Is Man a Myth?</text>`),
+  sledge: () => VB(`${FIR(60, 290, 1.4, 1)}${FIR(740, 290, 1.6, 1)}<path d="M0,280 Q400,260 800,285 V340 H0z" fill="#f4f8fc"/>
+    ${[[160, 230], [250, 236]].map(([x, y]) => `<g transform="translate(${x},${y})"><ellipse rx="38" ry="18" fill="#f4f4f0" stroke="#888"/><path d="M28,-10 l20,-30 M34,-14 l26,-22" stroke="#888" stroke-width="3"/><path d="M-26,14 v26 M26,14 v26" stroke="#ddd" stroke-width="5"/><circle cx="46" cy="-6" r="10" fill="#f4f4f0" stroke="#888"/><circle cx="20" cy="-14" r="4" fill="#b0302a"/></g>`).join('')}
+    <path d="M300,250 h300 q30,0 30,-30 M300,250 q-10,0 -10,-10" stroke="#c99a2a" stroke-width="5" fill="none"/><path d="M320,250 v-60 h200 v60z" fill="#e8eef6" stroke="#8aa0c0" stroke-width="2"/>
+    <g transform="translate(480,180)"><path d="M-30,10 q-10,-80 30,-90 q40,10 30,90z" fill="#fff" stroke="#9ab"/><circle cy="-92" r="18" fill="#f8fbff" stroke="#9ab"/><path d="M-6,-84 q6,4 12,0" stroke="#c0102a" stroke-width="3"/><path d="M-16,-108 l4,-16 l6,10 l6,-14 l6,14 l6,-10 l4,16z" fill="#e8f0ff" stroke="#9ab"/><path d="M28,-40 l40,-60" stroke="#c99a2a" stroke-width="4"/></g>
+    <g transform="translate(360,186)"><circle r="12" fill="#e8c8a0"/><path d="M-10,0 h20 v30 h-20z" fill="#f4f4f0"/><path d="M-12,-8 q12,-14 24,0" fill="#fff"/></g>${SNOWDOTS(30)}`, skyGrad('sl', '#c8d8ec', '#f0f4f8')),
+  beaver: () => VB(`<rect y="150" width="800" height="120" fill="#d8e8f4"/><path d="M0,270 h800 v70 h-800z" fill="#f4f8fc"/><path d="M100,200 h600" stroke="#6a4a2a" stroke-width="40"/>
+    <path d="M420,180 q60,-90 120,0z" fill="#8a6a4a" stroke="#4a2a1a" stroke-width="2"/><rect x="470" y="160" width="20" height="20" fill="#ffe2a0"/><path d="M500,110 q4,-20 -4,-40" stroke="#999" stroke-width="5" fill="none" opacity=".6"/>
+    <g transform="translate(300,170)"><ellipse rx="30" ry="22" fill="#7a5a3a"/><circle cx="24" cy="-16" r="14" fill="#7a5a3a"/><path d="M-30,6 l-30,10 l6,10 l30,-8z" fill="#4a3a2a"/><rect x="32" y="-12" width="6" height="6" fill="#fff"/></g>
+    <ellipse cx="200" cy="230" rx="30" ry="10" fill="#2a3a4a"/>${FIR(700, 280, 1.4, 1)}${FIR(60, 280, 1.2, 1)}`, skyGrad('bv', '#b8c8dc', '#eef2f8')),
+  witchyard: () => VB(`<rect width="800" height="340" fill="#cfd8e4"/><rect y="250" width="800" height="90" fill="#e8eef4"/><path d="M150,0 v120 l30,-40 l30,40 v-120 M590,0 v120 l30,-40 l30,40 v-120" fill="#a8b4c4"/>
+    ${[[120, 'giant'], [260, 'dwarf'], [520, 'horse'], [660, 'faun']].map(([x, k]) => k === 'giant' ? `<g transform="translate(${x},250)"><rect x="-26" y="-150" width="52" height="150" rx="10" fill="#9aa0a8"/><circle cy="-170" r="24" fill="#9aa0a8"/></g>` : k === 'horse' ? `<g transform="translate(${x},250)"><ellipse cy="-50" rx="50" ry="22" fill="#9aa0a8"/><path d="M40,-60 l20,-40 h14 l-10,40z" fill="#9aa0a8"/><path d="M-36,-30 v30 M36,-30 v30" stroke="#9aa0a8" stroke-width="10"/></g>` : `<g transform="translate(${x},250)"><rect x="-12" y="-70" width="24" height="70" fill="#9aa0a8"/><circle cy="-80" r="12" fill="#9aa0a8"/></g>`).join('')}
+    <g transform="translate(390,210)" opacity=".85"><ellipse rx="56" ry="26" fill="#9aa0a8"/><circle cx="-50" cy="-24" r="26" fill="#9aa0a8"/><path d="M-62,-20 q4,8 14,6 M-42,-20 q4,8 14,6" stroke="#222" stroke-width="3" fill="none"/></g>`),
+  fxmas: () => VB(`${FIR(80, 290, 1.4, 1)}${FIR(720, 290, 1.6, 1)}<path d="M0,280 Q400,260 800,285 V340 H0z" fill="#f4f8fc"/>
+    ${[200, 290].map(x => `<g transform="translate(${x},236)"><ellipse rx="34" ry="16" fill="#8a5a3a"/><path d="M26,-10 l14,-34 M30,-30 l14,-6 M34,-22 l16,-14" stroke="#5a3a1a" stroke-width="3"/><circle cx="42" cy="-6" r="9" fill="#8a5a3a"/><path d="M-22,12 v24 M22,12 v24" stroke="#5a3a1a" stroke-width="5"/><circle cy="-8" r="3" fill="#c99a2a"/></g>`).join('')}
+    <path d="M340,250 h260 v-50 h-260z" fill="#b0302a" stroke="#6a1a1a"/><path d="M330,250 h290" stroke="#c99a2a" stroke-width="5"/>
+    <g transform="translate(470,190)"><path d="M-40,10 q-10,-90 40,-96 q50,6 40,96z" fill="#c0302a"/><circle cy="-94" r="22" fill="#f4dcc4"/><path d="M-26,-90 q26,70 52,0 q-26,30 -52,0z" fill="#fff"/><path d="M-24,-108 q24,-30 48,0" fill="#c0302a"/><circle cx="24" cy="-120" r="7" fill="#fff"/></g>
+    ${[[380, 220], [560, 214], [600, 226]].map(([x, y]) => `<rect x="${x}" y="${y}" width="22" height="22" fill="#2f6a4f" stroke="#c99a2a"/>`).join('')}`, skyGrad('fx', '#b8c8dc', '#f6eee0')),
+  thaw: () => VB(`<path d="M0,260 Q400,230 800,260 V340 H0z" fill="#7aa04a"/>${[[60, 1.6], [200, 1.2], [640, 1.8], [740, 1.3]].map(([x, s]) => FIR(x, 280, s, 0)).join('')}
+    <path d="M0,300 Q200,280 400,300 T800,296" stroke="#8ab8d0" stroke-width="16" fill="none"/>${[[300, 250, '#f4d040'], [340, 262, '#f4f0f0'], [460, 256, '#c040a0'], [500, 266, '#f4d040'], [560, 254, '#80a0f0']].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="7" fill="${c}"/>`).join('')}
+    <path d="M200,140 q20,-20 40,0 M520,120 q20,-20 40,0" stroke="#3a3a3a" stroke-width="3" fill="none"/>${Array.from({length:12}, (_, i) => `<path d="M${(i * 71) % 800},${(i * 37) % 120 + 20} v10" stroke="#9ac0e0" stroke-width="2"/>`).join('')}`, skyGrad('th', '#a8c8e8', '#f0f4e0')),
+  aslan: () => VB(`${LION(400, 170, 1.9)}<circle cx="400" cy="170" r="150" fill="#ffe2a0" opacity=".15"/>`, skyGrad('as', '#f8e0a0', '#fff6e0')),
+  stonetable: () => VB(`<path d="M0,260 Q400,180 800,260 V340 H0z" fill="#6a7a5a"/><rect x="250" y="190" width="300" height="34" fill="#8a8a7a" stroke="#3a3a2a" stroke-width="2"/>
+    ${[270, 340, 460, 520].map(x => `<rect x="${x}" y="224" width="20" height="44" fill="#7a7a6a" stroke="#3a3a2a"/>`).join('')}<path d="M400,190 l-10,16 l14,6 l-8,12" stroke="#2a2a1a" stroke-width="4" fill="none"/>
+    <text x="400" y="212" text-anchor="middle" font-family="'IM Fell English',serif" font-size="11" fill="#3a3a2a" letter-spacing="3">ᚠ ᛟ ᚱ ᛖ ᚢ ᛖ ᚱ</text>
+    <circle cx="400" cy="300" r="200" fill="#ffe2a0" opacity=".12"/><circle cx="720" cy="80" r="40" fill="#fff4c0"/>`, skyGrad('st', '#e8c8a0', '#f8f0d8')),
+  battle: () => VB(`<path d="M0,250 Q400,220 800,250 V340 H0z" fill="#6a7a4a"/>${Array.from({length:20}, (_, i) => `<path d="M${30 + i * 38},${250 - (i % 4) * 4} v-30" stroke="${i < 10 ? '#3a5a8a' : '#9aa0a8'}" stroke-width="3"/>`).join('')}
+    ${LION(640, 150, .9)}<g transform="translate(260,200)"><path d="M0,0 v-50" stroke="#ccc" stroke-width="3"/><rect x="-14" y="-30" width="28" height="36" fill="#c0c8d0" stroke="#3a3a3a"/><path d="M-6,-24 h12 v14 h-12z" fill="#b0302a"/></g>`, skyGrad('bt', '#9aa8b8', '#e8e0c8')),
+  cair: () => VB(`<rect y="200" width="800" height="140" fill="#5a8ab0"/>${Array.from({length:14}, (_, i) => `<path d="M${(i * 61) % 800},${220 + (i * 29) % 110} q15,-6 30,0" stroke="#d8eef8" fill="none" stroke-width="2"/>`).join('')}
+    <path d="M200,200 v-110 l20,-30 l20,30 v40 h60 v-70 l25,-36 l25,36 v70 h60 v-40 l20,-30 l20,30 v110z" fill="#f0ece0" stroke="${INK}" stroke-width="2"/>
+    ${[260, 340, 420].map(x => `<rect x="${x}" y="150" width="14" height="22" fill="#ffe2a0"/>`).join('')}<path d="M325,54 v-30 l24,10 l-24,10" fill="#b0302a"/>`, skyGrad('cp', '#f8d0a0', '#fff4e0')),
+  stag: () => VB(`<path d="M0,260 Q400,240 800,265 V340 H0z" fill="#7a9a4a"/>${[60, 160, 640, 740].map((x, i) => tree(x, 280, 1.4 + i % 2 * .3, '#4a6a2a')).join('')}
+    <g transform="translate(420,220)"><ellipse rx="56" ry="26" fill="#fafaf4" stroke="#9a9a8a"/><path d="M44,-14 q10,-30 22,-36 l10,4 l-12,34z" fill="#fafaf4" stroke="#9a9a8a"/><path d="M66,-52 l-10,-30 M66,-52 l8,-34 M60,-70 l-14,-6 M72,-74 l12,-8" stroke="#c9a24a" stroke-width="3" fill="none"/><path d="M-40,20 v40 M-20,20 v40 M20,20 v40 M40,20 v40" stroke="#fafaf4" stroke-width="6"/></g>
+    <rect x="96" y="150" width="20" height="130" fill="#222"/><path d="M90,150 h32 l-6,-22 h-20z" fill="#ffe2a0" stroke="#222"/>`, skyGrad('sg', '#bcd8f0', '#f4f0d8'))
+};
+
+// ═══ SONGS & SAYINGS ════════════════════════════════════════════════════════
+// The carol is traditional (public domain). Everything else is written for
+// this game — Lewis's own rhymes are not reproduced. read:true can't be sung.
+const SONGS = {
+  lullaby:{title:'The Faun\'s Lullaby', by:'Played by Mr Tumnus on a little reed-flute, by the fire. Words invented', mode:'dorian', tempo:76, drone:true,
+    v:[['Sleep, little Daughter of Eve, by the fire,','The snow is a blanket, the wind is a choir;','The kettle is singing, the cakes are all brown,','And somewhere, far off, there\'s a Queen with a crown.'],
+       ['Sleep, while the dryads go dancing in rings,','Sleep, while the Faun thinks of terrible things;','And when you awaken, be quick on your feet —','The way to the lamp-post is under the sleet.']]},
+  rhyme:{title:'An Old Narnian Saying', by:'Something the Beavers half-remember. (Lewis\'s own rhymes are not reproduced here; these lines are new)', mode:'mixo', tempo:96,
+    v:[['When the Lion\'s paw is on the snow,','The long white grief will thaw and go;','When four from the Lamp\'s side sit in state,','The Witch\'s winter will meet its fate.']]},
+  decree:{title:'The Witch\'s Notice', by:'Nailed to the floor of Mr Tumnus\'s cave (as it was, in substance)', read:true, mode:'aeolian', tempo:60,
+    v:[['The former occupant of these premises, the Faun Tumnus, is under arrest and awaiting trial on a charge of High Treason against Her Imperial Majesty the Queen of Narnia,','for comforting her enemies, harbouring spies, and fraternising with Humans.'],['Long live the Queen!','— Maugrim, Captain of the Secret Police']]},
+  carol:{title:'The Holly and the Ivy', by:'A traditional carol — the first you have heard in Narnia, for a hundred years', mode:'major', tempo:100,
+    v:[['The holly and the ivy,','When they are both full grown,','Of all the trees that are in the wood,','The holly bears the crown.'],
+       ['The rising of the sun','And the running of the deer,','The playing of the merry organ,','Sweet singing in the choir.']]},
+  thaw:{title:'The Thaw', by:'What the water sings, everywhere, as the spell breaks. Words invented', mode:'major', tempo:140,
+    v:[['Drip, and a trickle, and a run, and a roar,','The ice on the river is ice no more;','The snowdrop is up and the crocus is out —','Aslan is on the move, there\'s no doubt!']]},
+  deepmagic:{title:'The Deep Magic', by:'As the Witch claimed it at the Stone Table (in substance; the words here are new)', read:true, mode:'aeolian', tempo:60,
+    v:[['Every traitor belongs to me as my lawful prey; for every treachery I have a right to a kill.','That law is written on the Stone Table, and on the sceptre of the Emperor-beyond-the-Sea.'],['If I do not have blood, as the Law says, all Narnia will be overturned, and perish in fire and water.']]},
+  deepermagic:{title:'The Deeper Magic', by:'As Aslan told it at dawn (in substance; the words here are new)', read:true, mode:'major', tempo:80,
+    v:[['There is a magic deeper still, from before the dawn of time, that the Witch never knew.','If a willing victim who has done no treachery is killed in a traitor\'s place,'],['the Table will crack, and Death itself will start working backwards.']]},
+  coronation:{title:'At Cair Paravel', by:'Sung in the great hall of ivory, with the mer-people singing at the windows. Words invented', mode:'major', tempo:92, drone:true,
+    v:[['Four thrones under the ivory roof,','Four crowns for the brave and the true;','King Peter, Queen Susan, King Edmund, Queen Lucy —','Long live the Kings and the Queens, and you!']]},
+  robin:{title:'The Robin\'s Song', by:'From a bough, a little way ahead, always a little way ahead', mode:'major', tempo:170,
+    v:[['(no words — a twitter, a trill,','a hop to the next bough,','a look back over its shoulder,','as if to say: this way, this way)']]}
+};
+function songMelody(k){
+  const s = SONGS[k];
+  if (s._mel) return s._mel;
+  const SC = {major:[0,2,4,5,7,9,11], mixo:[0,2,4,5,7,9,10], dorian:[0,2,3,5,7,9,10], aeolian:[0,2,3,5,7,8,10]}[s.mode];
+  const r = seeded(hash(k)), root = s.mode === 'major' || s.mode === 'mixo' ? 62 : 60;
+  const deg2m = d => root + 12 * Math.floor(d / 7) + SC[((d % 7) + 7) % 7];
+  const lines = [];
+  // one musical phrase per text line; phrases A/B repeat across stanzas
+  const phrase = (len, end, seedR) => {
+    const out = []; let d = Math.floor(seedR() * 5);
+    for (let i = 0; i < len; i++){
+      const last = i === len - 1;
+      if (last) d = end;
+      else { const st = seedR(); d += st < .35 ? 1 : st < .7 ? -1 : st < .85 ? 2 : -2; d = clamp(d, -2, 9); }
+      const dur = last ? 2 : (seedR() < .25 && i < len - 2 ? .5 : 1);
+      out.push([deg2m(d), dur]);
+      if (dur === .5) out.push([deg2m(d + (seedR() < .5 ? 1 : -1)), .5]);
+    }
+    return out;
+  };
+  const phrases = [0, 1, 2, 3].map(i => phrase(7 + (i % 2), i === 3 ? 0 : i === 1 ? 4 : 2, seeded(hash(k + i))));
+  s.v.forEach(st => st.forEach((ln, i) => lines.push(phrases[(i + (st.length === 2 ? i : 0)) % 4])));
+  return (s._mel = {lines, tempo:s.tempo, voice: s.drum ? 'square' : 'triangle', root, drone:!!s.drone, drum:!!s.drum});
+}
+function songCard(k, full){
+  const s = SONGS[k];
+  let li = 0;
+  const st = s.v.map(stz => `<div class="st">${stz.map(l => `<span class="ln" data-l="${li++}">${esc(l)}</span>`).join('')}</div>`).join('');
+  return `<div class="song"><h3>${esc(s.title)}</h3><div class="by">${esc(s.by)}</div>${st}${s.read ? '' : `<button class="btn gold sing" data-sing="${k}">♪ Sing it</button>`}</div>`;
+}
+function singSong(k, card){
+  const mel = songMelody(k), lines = card ? card.querySelectorAll('.ln') : [];
+  const btn = card && card.querySelector('.sing');
+  if (btn){ if (btn.dataset.on){ SND.stop(); lines.forEach(l => l.classList.remove('lit')); btn.textContent = '♪ Sing it'; delete btn.dataset.on; return; }
+    btn.dataset.on = 1; btn.textContent = '■ Stop'; }
+  SND.sing(mel, i => { lines.forEach(l => l.classList.remove('lit')); if (lines[i]) lines[i].classList.add('lit'); },
+    () => { lines.forEach(l => l.classList.remove('lit')); if (btn){ btn.textContent = '♪ Sing it'; delete btn.dataset.on; } });
+}
+
+
+
+// ═══ STORY ══════════════════════════════════════════════════════════════════
+// A beat: {text, choices|game|ending, title, map, loc, w, date, chapter+chTitle,
+// pov (whose eyes), fx/song on entry, travel (eats provisions)}.
+// A choice: {t, go, fx, res, dt (the easy way: costs Faith), if, talk, tag, cls}.
+const talk = (id, t, res, fx, cond) => ({t, talk:true, res, fx:Object.assign({}, fx || {}, {flag:[].concat((fx || {}).flag || [], 't_' + id)}), if: G => !G.flags['t_' + id] && (!cond || cond(G))});
+const RN = s => `<span class="rune">${s}</span>`;
+const AS = s => `<span class="aslan">${s}</span>`;
+const BEATS = {};
+
+// ── 1. LUCY LOOKS INTO A WARDROBE ───────────────────────────────────────────
+Object.assign(BEATS, {
+start:{chapter:1, chTitle:'Lucy Looks into a Wardrobe', date:'A wet morning, in the war', map:'house', loc:'hall', w:'house', art:'wardrobe',
+  text:`Four children — Peter, Susan, Edmund and you — have been packed off from London because of the air-raids, to stay with an old Professor in a rambling house deep in the country, a long way from any station.
+
+You are Lucy, the youngest. And this morning it is raining so hard that you can't see the mountains or the woods or even the stream in the garden.
+
+"We'll explore the house," says Peter. It is a house of corridors that lead to more corridors: a gallery of portraits, a suit of armour on a landing, a green room with a harp, more books than anyone could read.
+
+And then a room that is quite empty except for one big wardrobe; the sort that has a looking-glass in the door.`,
+  choices:[
+    talk('armour', 'Knock on the suit of armour.', `It goes hollow, and Edmund laughs, and a long way off a door bangs. The house is full of passages.`, {hum:2}),
+    talk('library', 'Look into the library.', `Hundreds of old books, some bigger than a Bible in a church. The Professor is in there, somewhere, with his shaggy white hair, but he doesn't look up.`, {meet:'professor'}),
+    {t:'Stay behind when the others go on. Try the wardrobe door.', go:'coats', fx:{hum:6}},
+    {t:'Follow the others. It\'s only a wardrobe.', go:'end_neverwent', dt:4}
+  ]},
+coats:{title:'The Spare Room', loc:'spareroom', art:'wardrobe',
+  text:`The door isn't locked. A couple of moth-balls roll out at your feet, and inside hang fur coats, rows of them, soft and heavy and smelling of camphor. You push in among them — leaving the door ajar behind you, because everyone knows you never shut yourself in a wardrobe.
+
+The coats go on further than a wardrobe ought to. Your hand reaches for the wooden back and finds more coats; then something prickly; then cold. Under your shoes, something crunches. It isn't fur brushing your face any more. It's branches, with snow on them.
+
+You are standing in the middle of a wood at night-time, with snow under your feet and snowflakes falling through the air. Ahead of you, a light. A lamp-post, in the middle of a wood.`,
+  fx:{item:'coat', map:'wild'},
+  choices:[{t:'Walk towards the light.', go:'faun', fx:{hum:4}}]}
+});
+
+// ── 2. WHAT LUCY FOUND THERE ────────────────────────────────────────────────
+Object.assign(BEATS, {
+faun:{chapter:2, chTitle:'What Lucy Found There', map:'wood', loc:'lamppost', w:'lamppost', art:'lamppost', date:'Snow, always snow',
+  text:`Pitter patter: footsteps. And from among the trees comes a very strange person. He is hardly taller than you, holding a snowy umbrella over his head; above the waist he is a man, with curly hair and two small horns, but below it he has the shaggy legs and neat hoofs of a goat. A red scarf is wound round his neck, and his arms are full of brown-paper parcels — until he catches sight of you, jumps, and drops the lot.
+
+"Goodness gracious me!" says the Faun. And then: "Should I be right in thinking that you are a Daughter of Eve?"
+
+"My name's Lucy," you say, not quite understanding him.`,
+  fx:{meet:'tumnus'},
+  choices:[
+    talk('narnia', '"What is this place?"', `"This, my dear, is the land of Narnia," says the Faun, "where we are now; all that lies between the lamp-post and the great castle of Cair Paravel on the eastern sea." He tells you his name is Tumnus. And he has never seen a Daughter of Eve before, and he seems quite dreadfully pleased about it.`, {hum:4}),
+    talk('parcels', 'Help him pick up his parcels.', `They are rather heavy, and one of them smells of sardines. "Most kind, most kind," he says, quite flustered.`, {aff:{tumnus:5}, item:'parcel'}),
+    {t:'Accept when he asks you to tea.', go:'tea', fx:{aff:{tumnus:6}}}
+  ]},
+tea:{title:'Mr Tumnus\'s Cave', loc:'cave', w:'tumnus', art:'tumnus',
+  text:`His cave is snug and dry: a rug, two small chairs, a fire crackling, a dresser of crockery, and a whole wall of books, one of which is called "Is Man a Myth?"
+
+And tea: boiled eggs, sardines, hot buttered toast with honey dripping off it, and a cake with sugar on top. You eat a great deal.
+
+And Mr Tumnus tells you wonderful tales of life in the forest: of midnight dances with the Nymphs and Dryads, of hunting the milk-white stag who could give you wishes, of summer when the woods were green. "Not that it isn't always winter now," he adds gloomily.
+
+Then he takes from its case on the dresser a strange little flute, and begins to play.`,
+  fx:{food:4, health:10, song:'lullaby'},
+  game:{type:'rhythm', song:'lullaby', label:'Listen to the Faun\'s flute', win:'confession', lose:'confession', fxWin:{hum:4, aff:{tumnus:6}}, fxLose:{health:-6},
+    winText:'The tune makes you want to cry and laugh and dance and go to sleep all at the same time. When at last you shake yourself, it is a great many hours later than you meant.',
+    loseText:'The music winds round and round you until your eyelids droop. You jerk awake. "Oh, Mr Tumnus — I must go home."'}},
+confession:{title:'Mr Tumnus\'s Cave', art:'tumnus',
+  text:`"It's no good now, you know," says the Faun, laying down his flute. And he begins to cry, enormous tears running down his face and dripping off the end of his beard.
+
+"Mr Tumnus! Mr Tumnus! Whatever is the matter?"
+
+"I'm crying because I'm such a bad Faun. I'm in the pay of the White Witch. She is the one who has got all Narnia under her thumb. It's she that makes it always winter. Always winter and never Christmas; think of that!"
+
+He was employed, he says, to catch any Son of Adam or Daughter of Eve he met, and hand them over to her. And he had pretended to be friendly, and asked you to tea, and been waiting till you were asleep.`,
+  fx:{meet:'witch', item:'hanky'},
+  choices:[
+    {t:'"But you won\'t, will you, Mr Tumnus? I\'m sure you won\'t."', go:'backhome', fx:{hum:8, aff:{tumnus:15}, lose:'hanky', flag:'tumnusTrusted'}, res:`He wipes his face on your handkerchief, then wrings it out. "No," he says at last, "of course I won't. I didn't know what a Human was like before I met you." And he takes you back through the snow, as fast as you can go, to the lamp-post. "Can you find your way from there?" — "I think so." You leave him the handkerchief. He seems to want it.`},
+    {t:'"Then let me go — now!"', go:'backhome', fx:{hum:-2, aff:{tumnus:-6}}, res:`"Of course, of course," he says, miserably, and gets his umbrella, and takes you back to the lamp-post at a run, through the darkening snow, looking round all the time. "Will you ever forgive me?" — You do, a little, by the time you reach the light.`}
+  ]},
+backhome:{title:'The Spare Room', map:'house', loc:'spareroom', art:'wardrobe',
+  text:`You run between the trees until you see, a long way ahead, a patch of light that looks like daylight. Then coats, and moth-balls, and you jump out of the wardrobe into the same empty room.
+
+"I'm all right," you shout. "I've come back."
+
+But you have not been gone at all, the others say: not even a minute. And when you make them look in the wardrobe, there is nothing but coats, and a solid wooden back.
+
+"A jolly good hoax, Lu," says Peter. And for days and days after that, Edmund will not leave you alone about it.`,
+  log:'I went to Narnia and had tea with a Faun. Nobody believes me.',
+  choices:[
+    {t:'Stick to it. It was true.', go:'edmund1', fx:{hum:8, aff:{edmund:-6}}},
+    {t:'Say it was only a game, to make them stop.', go:'edmund1', dt:6, fx:{aff:{edmund:4}}}
+  ]}
+});
+
+// ── 3. EDMUND AND THE WARDROBE ──────────────────────────────────────────────
+Object.assign(BEATS, {
+edmund1:{chapter:3, chTitle:'Edmund and the Wardrobe', map:'wood', loc:'wardrobe', pov:'Edmund', art:'lamppost', date:'A wet day, a few days later',
+  text:`(Lucy didn't see this part. She was told it, much later, by the person it happened to.)
+
+You are Edmund. It's raining again, and they're playing hide-and-seek, and you see Lucy dart into the wardrobe, and you follow her in, meaning to tease her about her imaginary country.
+
+But there is no back to the wardrobe. There is snow, and trees, and a pale light; and no Lucy.
+
+"Lucy! Lu! I say, Lucy, I'm here too — Edmund." No answer. "She's angry about all the things I've been saying lately," you think. You don't much like being alone in this cold place.
+
+And then, a long way off, you hear the sound of bells.`,
+  choices:[{t:'Wait and see what\'s coming.', go:'witch1', fx:{health:-6}}]},
+witch1:{chapter:4, chTitle:'Turkish Delight', pov:'Edmund', art:'sledge',
+  text:`A sledge comes sweeping through the trees, pulled by two white reindeer with bells on their harness, and driven by a stout Dwarf bundled in white fur. Behind him, high up, sits a lady — very tall, very beautiful, crowned with gold, holding a long golden wand. Her face is the strangest thing: as white as the snow around her, all but the mouth, which is red as a berry, and proud, and cold.
+
+"Stop!" she says, and the sledge stops. "And what, pray, are you?"
+
+"I'm — my name's Edmund," you say rather awkwardly. You do not like the way she looks at you.
+
+"Is that how you address a Queen?"`,
+  fx:{meet:['witch', 'dwarf']},
+  game:{type:'witchtalk', label:'Talk with the Queen', win:'lucymeets', lose:'lucymeets'}},
+lucymeets:{title:'The Lamp-post', loc:'lamppost', pov:'Edmund', art:'lamppost',
+  text:G => `The sledge glides away into the dark, the bells growing fainter. And a moment later, through the trees, comes Lucy, very happy, calling your name.
+
+"Oh Edmund! So you've got in too! Isn't it wonderful? I've been with Mr Tumnus, and he's all right, and the White Witch hasn't done anything to him —"
+
+"The White Witch? Who's she?" (You feel uncomfortable. ${G.flags.ateDelight ? 'You also feel a little sick, from all the Turkish Delight.' : 'You still taste something sweet, and want more of it.'})
+
+"She is a perfectly terrible person. She calls herself the Queen of Narnia, though she has no right to be queen at all."
+
+Back through the coats, and the rain, and Peter and Susan in the passage. "Edmund's been too!" cries Lucy. "Tell them, Edmund!"`,
+  choices:[
+    {t:'Tell them the truth: Lucy was right.', go:'professor', fx:{hum:12, aff:{edmund:30, peter:6}, flag:'edmundTruth'}, res:`You don't know why you do it. Something about Lucy's face. "It's true," you say. "There is a country. There's snow. I —" You stop before the Queen. But it's enough: Peter stares, and Susan stares, and Lucy hugs you.\n\nIt doesn't break whatever is in you about the Turkish Delight. But it is the first crack.`},
+    {t:'"Oh, yes, Lucy and I have been playing — pretending all her story is true." (This is what Edmund did.)', go:'professor', dt:8, fx:{aff:{edmund:-20}}, res:`And that, as Lucy said afterwards, was one of the nastiest things in the whole story. Lucy gives you one look and rushes out of the room.`}
+  ]}
+});
+
+// ── 5. BACK ON THIS SIDE OF THE DOOR ────────────────────────────────────────
+Object.assign(BEATS, {
+professor:{chapter:5, chTitle:'Back on This Side of the Door', map:'house', loc:'professor', art:'none',
+  text:`You are Lucy again. And Peter and Susan, worried about you, go to the Professor.
+
+He listens to the whole story, and then he asks: does your sister usually tell lies? No. Is she mad? Look at her and you can see she is not. "Then," says the Professor, "unless any further evidence turns up, we must assume that she is telling the truth."
+
+"Logic!" says the Professor half to himself. "Why don't they teach logic at these schools?"
+
+A few days later the housekeeper, Mrs Macready, is showing a party of sightseers round the house, and the four of you, dodging from room to room to keep out of the way, find yourselves in the spare room. The voices are coming nearer. "Quick!" says Peter. "There's nowhere else —" and you all bundle into the wardrobe, and pull the door to.`,
+  choices:[
+    talk('prof', 'Thank the Professor.', `He smiles at you under his shaggy eyebrows, as though he knows a great deal more than he will say. "Nothing is less likely," he says, "than that you'll get in by trying."`, {aff:{professor:10}, hum:4}),
+    {t:'Into the wardrobe, all four of you.', go:'forest', fx:{hum:4}}
+  ]}
+});
+
+// ── 6. INTO THE FOREST ──────────────────────────────────────────────────────
+Object.assign(BEATS, {
+forest:{chapter:6, chTitle:'Into the Forest', map:'wood', loc:'cave', w:'tumnus', art:'lamppost', travel:1,
+  text:G => `"I say! There's something cold behind me!" says Peter. And there you all are, in the snow, in the middle of the Narnian wood, in broad daylight.
+
+Peter apologises to you at once, very handsomely. And then Edmund says something about "the lamp-post, where we met last time" — and stops, but it's too late.${G.flags.edmundTruth ? ' (He has owned up, at least; but there is something sly in his face still.)' : ' "Last time!" says Peter. "You little beast."'}
+
+You take everyone straight to Mr Tumnus's cave. The door has been wrenched off its hinges. Inside it is dark and cold, and the snow has drifted in. Crockery smashed on the floor. And nailed to the carpet, a notice.`,
+  fx:{song:'decree', lose:'parcel'},
+  choices:[
+    {t:'Read the notice.', go:'robin', fx:{item:'lamp', hum:-2, flag:'readNotice'}, res:`It says that Mr Tumnus is under arrest for High Treason, for comforting the Queen's enemies and fraternising with Humans. It is signed by Maugrim, Captain of the Secret Police. LONG LIVE THE QUEEN.\n\n"Oh, Mr Tumnus, it's all my fault," you say. "We must rescue him." And for once even Susan does not say it is too dangerous.`},
+    {t:'"Let\'s go home. We can\'t do anything." (Susan wants to.)', go:'robin', dt:6}
+  ]},
+robin:{title:'The Robin', loc:'robin', art:'none', song:'robin',
+  text:`Just then there is a robin on a bough, with a very red breast, looking at you with its head on one side. It hops to the next bough and looks back over its shoulder, as plainly as if it had spoken: "Follow me."
+
+But there are other things in the wood too. Wolves are the Witch's police; and the Witch has spies in the trees.`,
+  fx:{meet:'robin'},
+  game:{type:'sneak', map:'forest', label:'Follow the robin', win:'mrbeaver', lose:'mrbeaver', fxWin:{hum:6}, fxLose:{sus:16, health:-6},
+    winText:'The robin leads you on and on, and nothing sees you. Then it flies off. And from behind a tree, something beckons — something with whiskers.',
+    loseText:'A wolf\'s head turns your way; something in a tree calls out sharply. You run. When you stop, panting, the robin is gone, and something with whiskers is beckoning from behind a tree.'}},
+mrbeaver:{title:'Among the Trees', loc:'east', art:'none',
+  text:`It is a Beaver. It puts its paw against its mouth, and then beckons you in among the thicker trees.
+
+"Are you the Sons of Adam and the Daughters of Eve?" it whispers. You say yes. "Then hush! Even some of the trees would betray us to HER." It holds out a small white object: your own handkerchief, the one you gave Mr Tumnus. He had time to give it to the Beaver before they took him, it says, as a token.
+
+Then, very quietly: "They say Aslan is on the move — perhaps has already landed."
+
+You have never heard the name before. None of you has. But something happens when he says it, something you will never be able to explain to anyone in England: Peter straightens, as if someone has handed him a sword; Susan smiles at nothing; and you feel like the first morning of the summer holidays, when you wake and remember.
+
+Edmund, alone, goes cold all over.`,
+  fx:{meet:'beaver', item:'hanky', hum:10, aff:{beaver:10}},
+  choices:[{t:'Follow Mr Beaver home.', go:'dam'}]}
+});
+
+// ── 7. A DAY WITH THE BEAVERS ───────────────────────────────────────────────
+Object.assign(BEATS, {
+dam:{chapter:7, chTitle:'A Day with the Beavers', map:'dam', loc:'house', w:'dam', art:'beaver', travel:1,
+  text:`The dam is a fine one, across a frozen river, and on top of it a little house like an enormous beehive, with smoke coming out of a hole in the roof. Inside, Mrs Beaver is sitting in the corner with a thread in her mouth, working busily at her sewing-machine.
+
+"So you've come at last!" she says. "At last! To think that ever I should live to see this day!"
+
+Mr Beaver takes Peter out to the fishing-hole in the ice, and comes back with fine trout; there are boiled potatoes, and a great jug of creamy milk for the children, and beer for Mr Beaver, and a great and gloriously sticky marmalade roll, steaming hot, to finish.`,
+  fx:{meet:'mrsbeaver', food:5, health:15},
+  choices:[
+    talk('who', '"Who is Aslan?"', `"Aslan?" says Mr Beaver. "Why, don't you know? He's the King. He's the Lord of the whole wood, but not often here, you understand. Never in my time or my father's time. But the word has reached us that he has come back." He is a lion, Mr Beaver says. The Lion, the great Lion.\n\n"Is he — quite safe?" asks Susan.\n\n"Safe?" says Mr Beaver. "Who said anything about safe? Course he isn't safe. But he's good. He's the King, I tell you."`, {hum:10, song:'rhyme'}),
+    talk('prophecy', '"And what about the Witch?"', `There are old sayings in Narnia, Mr Beaver says, about Sons of Adam and Daughters of Eve, and four thrones at Cair Paravel. When two of each sit on those thrones, it will be the end of the White Witch's reign. That is why she is so keen to catch you. "She'd turn you into stone," says Mr Beaver, "and you'd be just a statue in that courtyard of hers."`, {hum:4}),
+    talk('watch', 'Keep an eye on Edmund.', `He has gone very quiet, and keeps looking at the door. When Mr Beaver mentions the Witch's House, Edmund's eyes flicker. You open your mouth to say something — and don't, because he is your brother.`, {flag:'watchedEdmund', aff:{edmund:4}}),
+    {t:'"Where\'s Edmund?"', go:'edgone'}
+  ]},
+edgone:{chapter:8, chTitle:'What Happened after Dinner', art:'beaver',
+  text:`There is an awful pause. Then everyone begins asking "Who saw him last?" and "How long has he been gone?" and rushing to the door and looking out. The snow is falling thick and steadily.
+
+"He's gone to her," says Mr Beaver, quietly. "He has the look of one who has been with the Witch and eaten her food. I knew it as soon as I saw him."
+
+"Then we must go after him," says Peter.
+
+"No. Don't you understand? She'll be here as soon as she can, with her wolves. Our only chance is to go to meet Aslan at the Stone Table, before she does."`,
+  fx:{leave:'edmund'},
+  choices:[
+    {t:'Help Mrs Beaver pack. Hams, tea, sugar, a loaf or two.', go:'flee', fx:{food:6, item:'marmalade', sus:6}, res:`"Do hurry, Mrs Beaver!" — "Just a moment. Pass me the ham. And here's a packet of tea, and sugar, and some matches. Now, a loaf or two —" You can almost hear the wolves. She tries to bring the sewing-machine. Mr Beaver will not let her.`},
+    {t:'"Leave it all! Go now!"', go:'flee', fx:{food:1, sus:-4}}
+  ]},
+flee:{title:'Along the River', loc:'hideout', art:'none',
+  text:`Out into the snow, which has stopped, and the moon out. You go along the river bank, keeping in the shadow of the trees, all night, a long weary march. Behind you, somewhere, the Witch's sledge; ahead, Aslan, if he is there.`,
+  game:{type:'chase', mode:'flee', label:'Flee along the frozen river', win:'witchhouse', lose:'witchhouse', fxWin:{hum:4}, fxLose:{health:-15, sus:10},
+    winText:'At last, almost asleep on your feet, you reach a little cave in the bank, half hidden by brambles, and creep in, and sleep.',
+    loseText:'You fall more than once, and once you hear bells, very near. But you reach a little cave in the bank, half hidden by brambles, and creep in, shivering, and sleep.'}}
+});
+
+// ── 9. IN THE WITCH'S HOUSE ─────────────────────────────────────────────────
+Object.assign(BEATS, {
+witchhouse:{chapter:9, chTitle:'In the Witch\'s House', map:'witchhouse', loc:'gate', w:'witch', pov:'Edmund', art:'witchyard',
+  text:`You are Edmund again, and you have done it: left the warm dam in the dark, without your coat, and crossed the river and climbed the hills, falling into snow-drifts, thinking about Turkish Delight and about being a King, and about Peter, who will be sorry. Mostly about the cold.
+
+The Witch's House is more like a small castle, all towers, pointed like dunce's caps, shining in the moonlight. The gate is open. Inside is a courtyard full of statues. A lion crouches by the door, ready to spring, and your heart nearly stops — but it's stone, it's only stone. Snow on its back and head.
+
+There is a wolf on guard at the door.`,
+  game:{type:'sneak', map:'courtyard', label:'Cross the courtyard of statues', win:'witchangry', lose:'witchangry', fxWin:{}, fxLose:{health:-10},
+    winText:'You reach the door before the wolf even turns his head. Close to, the stone lion is quite silly-looking, really. You draw a moustache on its lip with a stub of pencil, and feel a little better.',
+    loseText:'The wolf springs at you. "Who\'s there? Stand still, stranger, and tell me who you are." — "I have come to see the Queen," you squeak.'}},
+witchangry:{title:'The Long Hall', loc:'throne', pov:'Edmund', art:'none',
+  text:`She is in a long, gloomy hall, sitting on a throne, with a great lamp beside her. You rush forward.
+
+"Please, your Majesty, I've brought them — at least they're quite close. They're at the little house on top of the dam just up the river, with Mr and Mrs Beaver."
+
+"Is this all? I told you to bring them all to me." Then: "Oh, and you have heard that Aslan is in Narnia, have you?" Her face changes, horribly.
+
+"Please — please — may I have some Turkish Delight? You — you —"
+
+"Silence, fool! Give the brat food and drink," she says to the Dwarf. And it is a bowl of water and a plate with a hunk of dry bread on it. Then she calls for her sledge, with no bells; and for Maugrim, and orders her wolves out into the night.`,
+  fx:{meet:'maugrim', health:-6},
+  choices:[
+    {t:'Eat the bread. You are too hungry not to.', go:'fxmas', fx:{health:4}},
+    {t:'Push it away. You want Turkish Delight.', go:'fxmas', dt:6, fx:{health:-8}}
+  ]}
+});
+
+
+// ── 10. THE SPELL BEGINS TO BREAK ───────────────────────────────────────────
+Object.assign(BEATS, {
+fxmas:{chapter:10, chTitle:'The Spell Begins to Break', map:'dam', loc:'fxmas', w:'fxmas', art:'fxmas', date:'Christmas morning',
+  text:`You are Lucy again, and it is morning, and you have slept in the cave in the bank, and Mr Beaver has crept out to look.
+
+You hear bells. Sledge-bells. Everyone freezes. And then Mr Beaver's voice, calling, almost dancing: "Come out, Sons and Daughters of Adam and Eve! It's all right! It isn't HER!"
+
+Bells — but brown reindeer, not white ones, and enormous, and a sledge piled high; and on it a man you would know anywhere, in any country, in any book: big and red-robed and white-bearded and laughing, the realest-looking person you have ever seen.
+
+Father Christmas. "I've come at last," he says. "She has kept me out for a long time, but I have got in at last. Aslan is on the move. The Witch's magic is weakening."`,
+  fx:{meet:'fatherxmas', cash:12, hum:10, song:'carol'},
+  choices:[
+    {t:'"Peter, Adam\'s Son." (Peter steps forward.)', if:G => !G.flags.giftPeter, fx:{flag:'giftPeter', item:'sword'}, res:`A silver shield with a red lion rearing on it, and a sword with a golden hilt. "Tools, not toys," says Father Christmas, quite seriously. "You may need them soon."`},
+    {t:'"Susan, Eve\'s Daughter."', if:G => !G.flags.giftSusan, fx:{flag:'giftSusan', item:'bow'}, res:`A bow with a full quiver, and a small ivory horn. The bow is for great need only, he says; and if she blows the horn, help will come, wherever she is.`},
+    {t:'"Lucy, Eve\'s Daughter."', if:G => !G.flags.giftLucy, fx:{flag:'giftLucy', item:['cordial', 'dagger'], hum:6}, res:`A tiny bottle that glitters like glass or diamond, full of a cordial from the fire-flowers of the sun-mountains — a few drops will heal any hurt — and a small dagger, for defending yourself, though he does not mean you to be in the battle.\n\nYou say you think you could be brave enough. He smiles, and says that is not the point; but he does not explain.`},
+    {t:'"A tray of tea, for everyone!"', if:G => G.flags.giftPeter && G.flags.giftSusan && G.flags.giftLucy, go:'thaw', fx:{food:6, health:20}, res:`Out of the sledge comes a tray, with cups, and sugar, and cream, and a teapot steaming like a little engine. Then a crack of the whip, a shout of "Merry Christmas! Long live the true King!" — and he is gone, bells and all.`}
+  ]}
+});
+
+// ── 11. ASLAN IS NEARER ─────────────────────────────────────────────────────
+Object.assign(BEATS, {
+thaw:{chapter:11, chTitle:'Aslan Is Nearer', map:'wild', loc:'beruna', pov:'Edmund', art:'sledge', travel:1,
+  text:`You are Edmund, on the Witch's sledge, with your hands tied, and the sledge going fast through the night, no bells.
+
+In the morning you come upon a merry party sitting round a table under a tree: a squirrel and his wife and children, two satyrs, a dwarf, and an old dog-fox, all with plates in front of them, and a smell of plum pudding. "What is the meaning of all this gluttony?" says the Witch.
+
+"Please, your Majesty, we were given it. Father Christmas —"
+
+"What?" She has raised her wand.`,
+  choices:[
+    {t:'"Oh, don\'t, don\'t, please don\'t!"', go:'thaw2', fx:{hum:14, aff:{edmund:25}, flag:'edmundTurned'}, res:`But she has waved her wand, and instantly, where the merry party was, there are only statues of creatures round a stone table with stone plates and a stone plum pudding. And the Witch strikes you across the face. "Let that teach you to ask favour for spies and traitors."\n\nAnd you, for the first time in this story, feel sorry for someone besides yourself.`},
+    {t:'Say nothing. It\'s nothing to do with you.', go:'thaw2', dt:8, res:`She waves her wand, and there are only statues. You look away. You are very cold.`}
+  ]},
+thaw2:{title:'The Thaw', art:'thaw', song:'thaw', pov:'Edmund',
+  text:`Then the sledge sticks. The snow is going soft and slushy. All round you there is a strange noise: the noise of running water, everywhere, chattering and gurgling and splashing. The trees are dripping. The fog turns from white to gold. There are green patches, and celandines, and snowdrops, and a bird twittering, and then another bird answering.
+
+The Dwarf stops dead and stares at the dripping trees. It isn't a thaw, he says, his voice shaking. It's spring. And they both know whose doing that is.
+
+"If either of you mentions that name again," says the Witch, "he shall instantly be killed."`,
+  fx:{cash:35, health:10},
+  choices:[{t:'Walk on through the mud, tied to the Dwarf. Listen to the birds.', go:'aslan'}]}
+});
+
+// ── 12. PETER'S FIRST BATTLE ────────────────────────────────────────────────
+Object.assign(BEATS, {
+aslan:{chapter:12, chTitle:'Peter\'s First Battle', map:'stonetable', loc:'pavilion', w:'stonetable', art:'aslan', date:'Spring, all at once',
+  text:`You are Lucy, and it is spring, and you are walking through glades of primroses and under the blossom of wild cherry. And then there is a hill with the Stone Table on top of it, and a pavilion pitched, with a banner on which a red lion is painted. And a crowd of creatures — dryads and naiads, centaurs, a unicorn, a bull with the head of a man, a pelican, an eagle, a great dog.
+
+And in the middle of them, Aslan.
+
+You had thought something could be either good or frightening, not both at once. Then you see him — the gold of him, the size of him, the eyes — and you can't look, and then you can't look away, and you find you are trembling and glad at the same time.
+
+"Welcome, Peter, Son of Adam," says Aslan. "Welcome, Susan and Lucy, Daughters of Eve. Welcome, He-Beaver and She-Beaver." And then: "But where is the fourth?"`,
+  fx:{meet:'aslan', aff:{aslan:20}, hum:12, cash:15},
+  choices:[
+    {t:'"He has tried to betray them and joined the White Witch," says Mr Beaver. And then — tell the truth yourself.', go:'horn', fx:{hum:6}, res:`"That was partly my fault, Aslan," says Peter. "I was angry with him." And you say: "Please, Aslan — can anything be done to save Edmund?" — "All shall be done," says Aslan. "But it may be harder than you think." And he looks sad.`},
+    {t:'Say nothing about Edmund.', dt:6, go:'horn'}
+  ]},
+horn:{title:'Near the Pavilion', art:'none',
+  text:`Susan has gone off with the dryads, and suddenly you hear her horn — a strange horn-call, not like the horns you know. And from somewhere: a growl.
+
+A great grey wolf, its hair on end, has Susan up a tree. "Back!" says Aslan to the creatures crowding forward. "Let the Prince win his spurs." And Peter, not feeling very brave at all, rushes at the wolf with his new sword.`,
+  game:{type:'qte', label:'Peter fights Maugrim', n:7, time:1.35, win:'knighted', lose:'knighted', fxWin:{hum:8, sus:-10}, fxLose:{health:-10},
+    lines:['The wolf turns from the tree, snarling — raise the shield!','It leaps! Duck under the jaws!','Thrust — between the forelegs!','Hold on! Its weight crashes down on you!','Pull the sword free!','Hair, and hot breath, and a howl — strike again!','It\'s down. It\'s dead. Breathe!'],
+    winText:'Maugrim, the Captain of the Witch\'s Secret Police, lies dead at Peter\'s feet. "Rise up, Sir Peter Wolf\'s-Bane," says Aslan. "And, whatever happens, never forget to wipe your sword."',
+    loseText:'It is an ugly, confused fight, and Peter is bitten twice, and very sick afterwards; but the wolf is dead. "Rise up, Sir Peter Wolf\'s-Bane," says Aslan.'}},
+knighted:{title:'The Pavilion', art:'aslan',
+  text:`Then Aslan sends the swiftest of his creatures after the other wolf, which ran to warn the Witch: centaurs, eagles, a unicorn, a cheetah. All that night they ride.
+
+In the morning, Edmund is there. You see him standing on the dewy grass, walking with Aslan apart from the rest, talking. What Aslan says to him nobody ever knows. But you never forget the look on Edmund's face when he comes back, and says to each of you, "I'm sorry," and you all say "That's all right."`,
+  fx:{join:'edmund', aff:{edmund:20}, hum:8},
+  choices:[
+    {t:'Hug him.', go:'deepmagic', fx:{aff:{edmund:15}, hum:4}},
+    {t:'Say "That\'s all right," like the others, and mean it.', go:'deepmagic', fx:{aff:{edmund:8}}}
+  ]}
+});
+
+// ── 13. DEEP MAGIC FROM THE DAWN OF TIME ────────────────────────────────────
+Object.assign(BEATS, {
+deepmagic:{chapter:13, chTitle:'Deep Magic from the Dawn of Time', loc:'table', art:'stonetable',
+  text:`The Witch comes under a flag of truce to speak with Aslan. She stands on the grass in the sun, with her very white face and her very red mouth, and she looks at Edmund.
+
+"You have a traitor there, Aslan," she says. "Have you forgotten the Deep Magic? You at least know the magic which the Emperor put into Narnia at the very beginning. You know that every traitor belongs to me as my lawful prey."
+
+Edmund is looking at Aslan. He has stopped feeling anything for himself.
+
+"It is very true," says Aslan. "I do not deny it."
+
+"Oh, Aslan!" whispers Susan. "Can't we — you won't, will you? Can't we do something about the Deep Magic?"
+
+"Work against the Emperor's Magic?" says Aslan, turning to her with something like a frown. And nobody ever made that suggestion to him again.`,
+  fx:{song:'deepmagic', sus:20},
+  choices:[
+    {t:'Hold Edmund\'s hand.', go:'renounced', fx:{aff:{edmund:10}, hum:4}},
+    {t:'Watch Aslan\'s face.', go:'renounced', fx:{hum:6, aff:{aslan:6}}}
+  ]},
+renounced:{title:'The Stone Table', art:'none',
+  text:`"Fall back, all of you," says Aslan, "and I will talk to the Witch alone."
+
+It is the most terrible time of all, waiting and wondering, while the Lion and the Witch talk earnestly together in low voices.
+
+At last Aslan's voice: "You can all come back. I have settled the matter. She has renounced the claim on your brother's blood."
+
+And the whole hill is full of noise, as if everyone has been holding their breath. The Witch turns away with a look of fierce joy on her face. "But how do I know that this promise will be kept?" she cries.
+
+Aslan rises, and opens his mouth in a roar, and she runs for her life.`,
+  fx:{sus:-30},
+  choices:[{t:'Celebrate with everyone. Somehow, you can\'t.', go:'night'}]}
+});
+
+// ── 14. THE TRIUMPH OF THE WITCH ────────────────────────────────────────────
+Object.assign(BEATS, {
+night:{chapter:14, chTitle:'The Triumph of the Witch', loc:'bushes', art:'none', date:'That night',
+  text:`Aslan is quiet all that afternoon. At supper, he hardly eats. He seems sad, and walks with his head low. And in the night, you cannot sleep, and Susan cannot sleep either.
+
+"Lucy," Susan whispers. "I've a horrible feeling. Something about Aslan."
+
+Out of the pavilion, and there in the moonlight is Aslan, walking slowly away into the wood, his tail and his head hanging low.`,
+  choices:[
+    {t:'Follow him. Whatever happens.', go:'follow', if:G => G.stats.hum >= 25, fx:{hum:10, aff:{aslan:10}}},
+    {t:'Stay in the tent. It is too frightening.', go:'stayback', dt:10},
+    {t:'Run. Find the lamp-post. Go back through the wardrobe and never come back.', if:G => G.stats.hum < 70, go:'end_winter'}
+  ]},
+stayback:{title:'The Pavilion', art:'none',
+  text:`You lie awake a long time, listening. Far off, there is drumming, and shouting, and then a great silence. At last you can't bear it, and you and Susan creep out after all; but by the time you reach the hill it is all over, and the moon is going down.`,
+  choices:[{t:'Go up to the Table.', go:'dawn', fx:{hum:-4}}]},
+follow:{title:'The Wood, at Night', loc:'bushes', art:'stonetable',
+  text:`He lets you walk with him a while, and you bury your hands in his mane, and stroke it. Then, at the edge of the trees, he stops. "And now, from here, I must go on alone. Whatever happens, do not let yourselves be seen. Farewell."
+
+From the bushes you watch. The Witch and her horrible crowd — ogres, wolves, hags, spirits of evil trees — at the Stone Table, with torches. They bind him. They shave his glorious mane. They jeer. He does not move or struggle.
+
+What happened then your humble chronicler will not set down. Only this: the Witch raises her stone knife, and you cannot look.
+
+Afterwards, when they have all gone roaring away to battle, you and Susan creep out, and sit beside him in the cold moonlight, and cry until you can cry no more.`,
+  choices:[
+    {t:'Try to untie the cords.', go:'dawn', fx:{health:-6}, res:`Your fingers are too cold. And then — little things are moving over him. Mice. Hundreds of little field mice, nibbling, nibbling at the cords. "Ugh! Horrid little things!" says Susan, and lifts her hand — but you stop her. "They're helping." And one by one, the cords are gnawed through.`},
+    {t:'Sit with him until the sky goes grey.', go:'dawn', fx:{hum:8}}
+  ]}
+});
+
+// ── 15. DEEPER MAGIC FROM BEFORE THE DAWN OF TIME ───────────────────────────
+Object.assign(BEATS, {
+dawn:{chapter:15, chTitle:'Deeper Magic from Before the Dawn of Time', loc:'table', art:'stonetable',
+  text:`You and Susan are walking up and down to keep warm, as the sky over the sea goes from black to grey to pale gold, when behind you there is a sound like the world splitting — one enormous crack.
+
+The Stone Table is broken into two pieces by a great crack that runs down it from end to end. And there is no Aslan.
+
+"Is it more magic?"
+
+"Yes!" says a great voice behind your backs. "It is more magic." And there, shining in the sunrise, larger than you have seen him before, shaking his mane, stands Aslan himself.`,
+  fx:{song:'deepermagic', hum:20, cash:20, aff:{aslan:20}},
+  choices:[
+    talk('ghost', '"Aren\'t you dead then, dear Aslan?"', `"Not now." — "You're not — not a —" asks Susan in a shaky voice; she can't bring herself to say the word ghost. Aslan stoops his golden head and licks her forehead. The warmth of his breath and a rich sort of smell that seems to hang about his hair come all over her. "Do I look it?" he says.`, {hum:6}),
+    talk('why', '"But what does it all mean?"', `${AS('Though the Witch knew the Deep Magic, there is a magic deeper still which she did not know. Her knowledge goes back only to the dawn of time. If she could have looked a little further back, into the stillness and the darkness before Time dawned, she would have read there a different incantation.')}\n\n(That is what he told them, in substance. The book's own words are better.)`, {hum:8}),
+    {t:'Romp with him: a mad chase round and round the hill-top.', go:'ride', fx:{health:30, hum:6}, res:`Round and round the hill-top, tumbling in the grass, the great paws as soft as velvet, the whole hill shaking with laughter — yours and his. Then he warns you to cover your ears, and roars, and every tree on the hill bends like grass in a gale.`}
+  ]},
+ride:{title:'Over Hill and Dale', art:'aslan',
+  text:`"We have a long journey to go. You must ride on me." He crouches, and the children climb on to his warm, golden back.
+
+You will remember that ride all your life: the silent speed of him, the golden mane in your fists, the wind in your eyes, river and valley and hill streaming away below. On and on, faster than anything, until — the Witch's castle, towers like dunce's caps.`,
+  fx:{map:'witchhouse'},
+  choices:[{t:'Over the wall, in one great bound!', go:'statues'}]}
+});
+
+// ── 16. WHAT HAPPENED ABOUT THE STATUES ─────────────────────────────────────
+Object.assign(BEATS, {
+statues:{chapter:16, chTitle:'What Happened about the Statues', map:'witchhouse', loc:'courtyard', w:'witch', art:'witchyard',
+  text:`The courtyard is full of statues. And Aslan bounds up to the stone lion and breathes on him.
+
+Nothing — and then a thread of gold creeps across the grey stone, and spreads, and warms, and the statue shudders and stretches and is suddenly a lion again, shaking snow and stone-dust out of his mane, roaring with joy.
+
+The whole courtyard is waiting. "Quick," says Aslan, "there are more inside. Come, help me find them all."`,
+  game:{type:'breathe', label:'Find the statues for Aslan to breathe on', win:'tumnusfree', lose:'tumnusfree', fxWin:{hum:8, cash:10}, fxLose:{hum:2, cash:6},
+    winText:'Every statue in the castle is found and breathed upon. The courtyard looks no longer like a museum; it looks more like a zoo, with creatures running everywhere and dancing round Aslan.',
+    loseText:'There are so many statues, in so many dark corners and up so many stairs. You miss a few, but Aslan does not, in the end.'}},
+tumnusfree:{title:'The Courtyard', art:'none',
+  text:`And there — oh, there — is Mr Tumnus, rubbing his eyes as if he has been asleep, and you are hugging him and he is hugging you, and he is crying again, but quite differently.
+
+And there is Giant Rumblebuffin, who very handsomely knocks down the castle gate with his club for everyone to get out, and wipes his face with his enormous handkerchief, and offers it to you — and it is the size of a bedsheet.
+
+"Now!" says Aslan. "Those who can't keep up — children, dwarfs and small animals — must ride on the backs of those who can. We have to get to Peter. To the battle."`,
+  fx:{meet:'giant', aff:{tumnus:30}, hum:10},
+  choices:[{t:'Ride to the battle.', go:'battle', travel:1}]},
+battle:{title:'The Battle', map:'stonetable', loc:'battle', w:'battle', art:'battle',
+  text:`It is fearful. The Witch's army, and Peter's army fighting with their backs to the wall; and stone statues all over the battlefield, where she has used her wand. Edmund fought his way through to her, and smashed her wand, and was terribly wounded.
+
+Then Aslan comes, roaring, with all his new army out of the castle, and flings himself upon the White Witch. And then it is over.
+
+There are wounded everywhere. And you have your cordial.`,
+  game:{type:'cordial', label:'Use the cordial', win:'cair', lose:'cair', fxWin:{hum:10, aff:{edmund:20}}, fxLose:{hum:2},
+    winText:'Edmund is the first. You put drops in his mouth, and you watch, and then his face isn\'t grey any more; it is himself, better than he has been for ages. And Aslan says to you, kindly, "Others also are at the point of death. Must more people die for Edmund?" And you go, as quickly as you can, to everyone.',
+    loseText:'You hesitate too long over Edmund, and then you hurry, and there are so many. But Aslan is with you, breathing on those who were turned to stone, and at last everyone who can be helped is helped.'}}
+});
+
+// ── 17. THE HUNTING OF THE WHITE STAG ───────────────────────────────────────
+Object.assign(BEATS, {
+cair:{chapter:17, chTitle:'The Hunting of the White Stag', map:'cair', loc:'thrones', w:'cair', art:'cair', date:'Many years after', song:'coronation',
+  text:`At Cair Paravel, the castle by the sea, in a hall with an ivory roof and doors that open on the waves, Aslan crowns all four of you, and the creatures of Narnia cheer until the windows shake.
+
+And somewhere in the feasting, Aslan is simply not there any more. Mr Beaver isn't surprised. He comes and goes, he says. He's not a tame lion.
+
+You reign a long time, the four of you. Peter, the Magnificent. Susan, the Gentle. Edmund, the Just. And you are Queen Lucy the Valiant, and always gay and golden-haired.
+
+Then one day, many years later, word comes that the White Stag has been seen again in the Western Woods — the stag who would give you your wishes if you caught him.`,
+  fx:{cash:20, flags:{crowned:true}},
+  choices:[{t:'Ride out after the White Stag.', go:'stag'}]},
+stag:{title:'The Western Woods', map:'wood', loc:'robin', w:'lamppost', art:'stag',
+  text:`You ride after the White Stag, all four of you, and the stag leads you into a thicket where the horses can't follow, and so you go on foot. And there is something strange about the place.
+
+King Peter (you all talk rather grandly now) stops before something very odd: an iron post, with a lantern on top, in the middle of the wood.`,
+  game:{type:'chase', mode:'stag', label:'Follow the White Stag through the thicket', win:'lampagain', lose:'lampagain', fxWin:{hum:4}, fxLose:{},
+    winText:'The Stag leaps away, white, into the trees, and is gone; and you are standing by the lamp-post.',
+    loseText:'You lose the Stag in the thicket — and find instead, quite by surprise, the lamp-post.'}},
+lampagain:{title:'The Lamp-post', loc:'lamppost', art:'lamppost',
+  text:`Queen Susan says she has a feeling she has seen it before, a long time ago, in a dream. King Edmund wants to go on and see. So do you.
+
+And the branches turn to fur under your hands, and the fur to coats, and you all come tumbling out of a wardrobe into an empty room.`,
+  choices:[{t:'Tumble out.', go:'end_home'}]}
+});
+
+// ── ENDINGS ─────────────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+end_home:{ending:'good', title:'Once a Queen in Narnia', art:'wardrobe', text:G => `And you are no longer Kings and Queens in your hunting array, but just Peter, Susan, Edmund and Lucy in your old clothes. It is the same day and the same hour of the day on which you all went into the wardrobe to hide. Mrs Macready and the visitors are still talking in the passage.
+
+You tell the Professor everything, because of the missing coats. He doesn't laugh. He listens, and nods, and believes every word — and says that you won't get back by the wardrobe, and mustn't try; it will happen when you're not looking for it.
+
+"Once a King in Narnia, always a King in Narnia," he says.
+
+${G.flags.edmundTruth ? 'And Edmund, who told the truth the very first time, looks at you across the room, and grins.' : 'And Edmund, at the window, catches your eye, and says "I\'m sorry, Lu — about before," for the second time in his life, and that is enough.'}
+
+That is the very end of the adventures of the wardrobe. But if the Professor was right, it was only the beginning of the adventures of Narnia.`},
+end_neverwent:{ending:'bad', title:'Only a Wardrobe', art:'wardrobe', text:`You follow the others out, and the wardrobe door swings shut behind you with a little click, and a moth-ball rolls across the floor.
+
+It rains all that week, and then it stops raining, and you play in the garden. The war goes on and ends. You grow up, and you never think about that wardrobe at all — except, sometimes, very late, in the winter, when it snows, and you see a street-lamp shining through falling flakes, and a lump comes into your throat that you can't explain.
+
+Somewhere, a Faun is still waiting with his parcels, under the lamp, for a Daughter of Eve who never came.`},
+end_winter:{ending:'bad', title:'Always Winter', art:'lamppost', text:`You run, through the dark wood, past the trees that are beginning to drip, all the way to the lamp-post, and through the coats, and out into the empty room. You close the wardrobe door very firmly.
+
+You never find out what happened that night at the Stone Table. Peter and Susan and Edmund come back, in the end, grown up and strange and kind, and try to tell you; but you put your hands over your ears.
+
+Perhaps the spring came anyway. Perhaps it always would have. But for you, in the place inside where Narnia was, it is always winter, and never Christmas.
+
+<em>(Lucy never ran. Her faith held, when it mattered. Keep yours higher, and see what she saw.)</em>`},
+frozen:{ending:'fail', title:'The Cold', text:`The cold has you, in the end: the Witch's cold, that gets into the bones and the heart and makes everything seem far away and not worth the effort.
+
+<em>But that is not how the story goes. Go back to the start of the chapter, and keep warmer.</em>`},
+stone:{ending:'fail', title:'Turned to Stone', art:'witchyard', text:`The Witch's wand comes down. A coldness runs up from your feet, and your hands go heavy, and then you are one more statue in her courtyard, with snow on your shoulders and a surprised look on your face, waiting for a Lion who has not yet come.
+
+<em>She noticed you too often. Go back to the start of the chapter, and keep out of her sight.</em>`}
+});
+
+function renderEnding(b){
+  const g = b.ending, art = b.art && VIGNETTES[b.art] ? `<div class="art">${VIGNETTES[b.art]()}</div>` : '';
+  const id = Object.keys(BEATS).find(k => BEATS[k] === b);
+  const title = {end_home:'Queen Lucy the Valiant', end_neverwent:'Lucy, who never went in', end_winter:'Lucy, who ran away'}[id] || '';
+  const gifts = ['sword', 'bow', 'cordial'].filter(has).length;
+  return `<div class="ending">${art}<div class="chaphead"><div class="cn">${g === 'fail' ? 'THE STORY STOPS' : 'THE END'}</div></div><h2>${esc(b.title)}</h2><div class="rule"></div>
+    <div class="text">${paras(tx(b.text), true)}</div>
+    ${g === 'fail' ? '' : `<table class="etable">
+      <tr><td>You were</td><td><b>${esc(title)}</b></td></tr>
+      <tr><td>Faith</td><td>${G.stats.hum}</td></tr>
+      <tr><td>The Thaw</td><td>${G.stats.cash}%</td></tr>
+      <tr><td>The easy way taken</td><td>${G.ringUses} time${G.ringUses === 1 ? '' : 's'}</td></tr>
+      <tr><td>Edmund</td><td>${G.flags.edmundTruth ? 'Told the truth at once' : G.flags.edmundTurned ? 'Turned, on the sledge' : 'Came back, in the end'}</td></tr>
+      <tr><td>Mr Tumnus</td><td>${G.flags.crowned ? 'Freed from stone' : G.flags.tumnusTrusted ? 'Trusted' : 'Met'}</td></tr>
+      <tr><td>Father Christmas's gifts</td><td>${gifts} of 3</td></tr>
+      <tr><td>Songs</td><td>${G.songs.length} of ${Object.keys(SONGS).length}</td></tr>
+      <tr><td>Maps</td><td>${G.maps.length} of ${Object.keys(MAPS).length}</td></tr>
+    </table>`}
+    <div class="choices" style="align-items:center">
+      ${g === 'fail' && G.checkpoint ? '<button class="btn gold" data-checkpoint>Back to the start of the chapter</button>' : ''}
+      <button class="btn" data-new>Through the wardrobe again</button></div></div>`;
+}
+
+
+// ═══ GAMES ══════════════════════════════════════════════════════════════════
+const SNEAK_GRIDS = {
+  forest:[
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+    "T,,,,,,,,T,,,,,,,,,,TT,,,,,,,,,,T,,,,,,T",
+    "T,1,,,,,,T,,,,h,,,,,TT,,,,,2,,,,T,,,,,,T",
+    "T,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,h,,T",
+    "T,,,TT,,,,,,,,,,,,,,,,,,,,,,TT,,,,,,,,,T",
+    "T,,,TT,,,,,,TTT,,,,,,,3,,,,,TT,,,,,,,,,T",
+    "TS,,,,,,,,,,TTT,,,,,,,,,,,,,,,,,,,,,,,,T",
+    "T,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,4,,,T",
+    "T,,,,,h,,,,,,,,,,,,TT,,,,,,,,,,,,,,,,,,T",
+    "TTTTTT,,,,,,,,,,,,,TT,,,,,,,,,,,,TTTTTTT",
+    "T,,,,,,,,,,,5,,,,,,,,,,,,,,6,,,,,,,,,,,T",
+    "T,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,T",
+    "T,,TT,,,,,,,,,,,TT,,,,,,,,h,,,,,,,,TT,,T",
+    "T,,TT,,,,,,h,,,,TT,,,,,,,,,,,,,,,,,TT,,T",
+    "T,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,T",
+    "T,,,,,,,,,,,,,,,,,,,,,7,,,,,,,,,,,,,,,,T",
+    "T,,,,,,TTT,,,,,,,,,,,,,,,,,,,,TTT,,,,,,T",
+    "T,,,,,,TTT,,,,,,,,,,,,,,,,,,,,TTT,,,,EET",
+    "T,,8,,,,,,,,,,,,,,h,,,,,,,,,,,,,,,,,,EET",
+    "T,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,EET",
+    "T,,,,,,,,,,,,,TT,,,,,,,,,,,,,,9,,,,,,,,T",
+    "T,,,h,,,,,,,,,TT,,,,,,,,,,,,,,,,,,,0,,,T",
+    "T,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,T",
+    "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"],
+  courtyard:[
+    "########################################",
+    "#..................####................#",
+    "#.1..T.....T.....2.####.3...T.....T...4#",
+    "#..................####................#",
+    "#...T....h....T....====....T....h..EEE.#",
+    "#..................####............EEE.#",
+    "#...T.....T.....T..####..T....5........#",
+    "#..................####................#",
+    "#######====#############====############",
+    "#......................................#",
+    "#..T....T....T....h....T....T....T.....#",
+    "#......................................#",
+    "#.6..................................7.#",
+    "#..T....T....T....T....h....T....T.....#",
+    "#......................................#",
+    "##########====##########====############",
+    "#..................####................#",
+    "#...h..T....T......####....T....T......#",
+    "#..................====......8.........#",
+    "#S.......T....T....####..T....T....h...#",
+    "#..................####................#",
+    "#...9..............####............0...#",
+    "#..................####................#",
+    "########################################"]
+};
+const SNEAK = {
+  forest:{title:'Following the Robin', goal:'Mr Beaver', theme:'shire', limit:150, dark:0, hide:'snowy bush', sig:'The Lantern Waste, under snow',
+    labels:[['the cave',1,5.0,'l'],['the robin flew this way',38.5,16.4,'r']], party:['peter'],
+    foes:[{n:'Wolf',k:'pol',route:'12',sp:1.9,r:4.5},{n:'Spy-tree',k:'mic',route:'3',sp:0,r:3.5},{n:'Wolf',k:'pol',route:'56',sp:2.0,r:4.5},
+      {n:'Wolf',k:'pol',route:'78',sp:1.8,r:4.5},{n:'Spy-crow',k:'man',route:'90',sp:1.4,r:4},{n:'Spy-tree',k:'mic',route:'4',sp:0,r:3.5}]},
+  courtyard:{title:'The Courtyard of Statues', who:'Edmund', goal:'the door', theme:'halls', limit:140, dark:4, hide:'statue\'s shadow', sig:'The Witch\'s house, by moonlight',
+    labels:[['the gate',1,22.6,'l'],['the door (Maugrim)',38.5,3.4,'r']], party:[],
+    foes:[{n:'Maugrim',k:'pol',route:'45',sp:1.6,r:5},{n:'Wolf',k:'pol',route:'12',sp:1.9,r:4.5},{n:'Wolf',k:'pol',route:'67',sp:2.0,r:4.5},
+      {n:'The Dwarf',k:'man',route:'90',sp:1.4,r:4},{n:'Wolf',k:'pol',route:'38',sp:1.8,r:4.5}]}
+};
+const SHORT = {peter:'Peter'};
+const THEME = {
+  shire:{bg:'#eef3f8', field:'rgba(160,190,220,.12)', road:'rgba(120,130,150,.2)', wall:'#4a6a5a', ink:'#1c2433'},
+  halls:{bg:'#d8dee8', field:'rgba(160,170,190,.12)', road:'rgba(120,110,90,.2)', wall:'#5a6274', ink:'#1c2433'}
+};
+
+// Each game is GAMES[type](cfg, wrap, done) → {stop, key?}; done({win, score, msg, ...}).
+const GAMES = {};
+function startGame(cfg){
+  SND.ac();
+  UI.game = cfg;
+  const st = $('#stage');
+  st.innerHTML = headerHTML(BEATS[G.beat]) + `<div class="gwrap" id="gwrap"></div>`;
+  UI.inst = GAMES[cfg.type](cfg, $('#gwrap'), res => finishGame(res)) || {};
+  window.scrollTo(0, 0);
+}
+function finishGame(res){
+  if (UI.inst && UI.inst.stop) UI.inst.stop();
+  UI.inst = null; UI.keys = {};
+  const cfg = UI.game; UI.game = null;
+  if (!cfg) return;
+  G.games[cfg.type] = res;
+  let chips = applyFx(res.win ? cfg.fxWin : cfg.fxLose);
+  if (res.fx) chips = chips.concat(applyFx(res.fx));
+  if (res.ringOn) chips = chips.concat(ringUse(res.ringCost || 10));
+  SND.fx(res.win ? 'good' : 'bad');
+  let next = res.win ? cfg.win : (cfg.lose || cfg.win); if (typeof next === 'function') next = next(G);
+  if (G.stats.health <= 0) next = 'frozen';
+  if (G.stats.sus >= 100) next = 'stone';
+  const text = [res.msg, res.win ? cfg.winText : cfg.loseText].filter(Boolean).join('\n\n');
+  G.pending = {text: text || (res.win ? 'Well done.' : 'It could have gone better.'), chips, next};
+  save(); render(); window.scrollTo(0, 0);
+}
+function gameShell(wrap, title, hud, help){
+  wrap.innerHTML = `<div class="ghead"><span class="gt">${title}</span><span class="ghud" id="ghud">${hud || ''}</span></div>
+    <div id="gbody"></div><div class="gmsg" id="gmsg"></div>${help ? `<p class="meta center">${help}</p>` : ''}`;
+  return {body:$('#gbody'), hud:$('#ghud'), msg:$('#gmsg')};
+}
+function mkCanvas(parent, w, h){
+  const c = document.createElement('canvas'); c.width = w; c.height = h; c.className = 'gc'; parent.appendChild(c);
+  return {c, x:c.getContext('2d')};
+}
+function canvasPos(c, e){
+  const r = c.getBoundingClientRect(), t = e.touches ? e.touches[0] : e;
+  return [(t.clientX - r.left) / r.width * c.width, (t.clientY - r.top) / r.height * c.height];
+}
+function ticker(fn){
+  let last = performance.now(), dead = false;
+  const id = setInterval(() => { if (dead) return; const now = performance.now(); const dt = Math.min(.1, (now - last) / 1000); last = now; fn(dt); }, 16);
+  return () => { dead = true; clearInterval(id); };
+}
+UI.keys = {};
+const KEYMAP = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right'};
+
+function carveMaze(cw, ch, r, loops){
+  const W = cw * 2 + 1, H = ch * 2 + 1, g = [];
+  for (let y = 0; y < H; y++) g.push(new Array(W).fill(1));
+  const st = [[0, 0]], seen = {}; seen['0,0'] = 1; g[1][1] = 0;
+  while (st.length){
+    const [cx, cy] = st[st.length - 1];
+    const nb = [[1,0],[-1,0],[0,1],[0,-1]].map(([dx, dy]) => [cx + dx, cy + dy, dx, dy]).filter(([nx, ny]) => nx >= 0 && ny >= 0 && nx < cw && ny < ch && !seen[nx + ',' + ny]);
+    if (!nb.length){ st.pop(); continue; }
+    const [nx, ny, dx, dy] = nb[Math.floor(r() * nb.length)];
+    seen[nx + ',' + ny] = 1; g[cy * 2 + 1 + dy][cx * 2 + 1 + dx] = 0; g[ny * 2 + 1][nx * 2 + 1] = 0; st.push([nx, ny]);
+  }
+  for (let i = 0; i < loops; i++){ const x = 1 + Math.floor(r() * (W - 2)), y = 1 + Math.floor(r() * (H - 2)); if ((x + y) % 2 === 1) g[y][x] = 0; }
+  return g;
+}
+function gridPath(g, sx, sy, tx, ty){
+  const H = g.length, W = g[0].length, prev = new Int32Array(W * H).fill(-1), s = sy * W + sx, t = ty * W + tx, q = [s]; prev[s] = s;
+  for (let h = 0; h < q.length; h++){ const cur = q[h]; if (cur === t) break; const cx = cur % W, cy = (cur / W) | 0;
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H || g[ny][nx] === 1) continue; const n = ny * W + nx; if (prev[n] !== -1) continue; prev[n] = cur; q.push(n); } }
+  if (tx < 0 || ty < 0 || tx >= W || ty >= H || prev[t] === -1) return null; const path = []; let cur = t; while (cur !== s){ path.push([cur % W, (cur / W) | 0]); cur = prev[cur]; } return path.reverse();
+}
+// ── Simple reused games: rhythm, qte, riddles ───────────────────────────────
+GAMES.rhythm = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, SONGS[cfg.song].title, '', 'Hit the notes as they reach the line: keys <b>A S D</b> (or <b>←↓→</b>), or tap the lanes.');
+  const {c, x} = mkCanvas(ui.body, 600, 440);
+  const mel = songMelody(cfg.song), beat = 60 / mel.tempo, lines = SONGS[cfg.song].v[0].concat(SONGS[cfg.song].v[1] || []);
+  const notes = []; let tt = 2;
+  mel.lines.forEach((ln, li) => { ln.forEach(([m, d]) => { notes.push({t:tt, lane:m % 3, m, li, hit:null}); tt += d * beat; }); tt += beat * .5; });
+  const end = tt + 1.2, HIT = 380, SPEED = 260, keys = {a:0, s:1, d:2, ArrowLeft:0, ArrowDown:1, ArrowRight:2, j:0, k:1, l:2};
+  let t = 0, good = 0, ok = 0, miss = 0, combo = 0, over = false, flashL = [0, 0, 0];
+  function press(lane){
+    if (over) return; flashL[lane] = .15;
+    let best = null, bd = .26;
+    notes.forEach(n => { if (n.hit === null && n.lane === lane){ const d = Math.abs(n.t - t); if (d < bd){ bd = d; best = n; } } });
+    if (!best){ combo = 0; return; }
+    best.hit = bd < .11 ? 'good' : 'ok'; if (best.hit === 'good') good++; else ok++; combo++;
+    SND.toneAlways(best.m, .25, 'square', .12);
+  }
+  c.addEventListener('pointerdown', e => { const [px] = canvasPos(c, e); press(Math.min(2, Math.floor(px / 200))); });
+  const stop = ticker(dt => {
+    if (over) return;
+    t += dt;
+    notes.forEach(n => { if (n.hit === null && t - n.t > .26){ n.hit = 'miss'; miss++; combo = 0; } });
+    x.fillStyle = '#2a1a0e'; x.fillRect(0, 0, 600, 440);
+    for (let l = 0; l < 3; l++){ x.fillStyle = flashL[l] > 0 ? 'rgba(255,215,106,.25)' : (l % 2 ? '#33200f' : '#2e1c0d'); x.fillRect(l * 200, 0, 200, 440); flashL[l] = Math.max(0, flashL[l] - dt); }
+    x.fillStyle = '#c9a227'; x.fillRect(0, HIT - 2, 600, 4);
+    ['A','S','D'].forEach((k, l) => { x.fillStyle = '#8a6c45'; x.font = '16px Cinzel,serif'; x.textAlign = 'center'; x.fillText(k, l * 200 + 100, HIT + 34); });
+    let cur = 0;
+    notes.forEach(n => {
+      if (n.t - t < 2.2 && n.t - t > -1) cur = Math.max(cur, n.li);
+      if (n.hit && n.hit !== 'miss') return;
+      const y = HIT - (n.t - t) * SPEED; if (y < -20 || y > 460) return;
+      x.fillStyle = n.hit === 'miss' ? '#553' : ['#ffd76a','#ff9a5a','#9ad7ff'][n.lane];
+      x.beginPath(); x.ellipse(n.lane * 200 + 100, y, 34, 12, 0, 0, 7); x.fill();
+    });
+    const curLine = notes.filter(n => n.t <= t + .3).reduce((a, n) => n.li, 0);
+    x.fillStyle = 'rgba(0,0,0,.55)'; x.fillRect(0, 0, 600, 56);
+    x.fillStyle = '#ffe9b0'; x.font = 'italic 15px "IM Fell English",serif'; x.textAlign = 'center';
+    const L = lines[curLine] || ''; x.fillText(L.length > 70 ? L.slice(0, 68) + '…' : L, 300, 24);
+    x.fillStyle = '#b99a62'; x.font = 'italic 12px "IM Fell English",serif'; const L2 = lines[curLine + 1] || ''; x.fillText(L2.length > 80 ? L2.slice(0, 78) + '…' : L2, 300, 44);
+    ui.hud.innerHTML = `<span>Combo <b>${combo}</b></span><span>Hits <b>${good + ok}/${notes.length}</b></span>`;
+    if (t > end){ over = true; const acc = (good + ok * .6) / notes.length; done({win: acc >= .55, score:acc, msg:`You hit ${good + ok} of ${notes.length} notes.`}); }
+  });
+  return {stop, key(e){ if (keys[e.key] !== undefined){ e.preventDefault(); press(keys[e.key]); } }};
+};
+// ── QTE: quick reactions ────────────────────────────────────────────────────
+GAMES.qte = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, cfg.label, '', 'Press the arrow shown, quickly — on the keyboard or the buttons.');
+  const AR = {up:'▲', down:'▼', left:'◀', right:'▶'};
+  ui.body.innerHTML = `<div class="riddle" id="qline" style="min-height:3em"></div><div class="qprompt" id="qp"></div><div class="gbar" style="max-width:420px;margin:0 auto"><i id="qt" style="background:linear-gradient(90deg,#c22,#ffb030)"></i></div>
+    <div class="qkeys">${['left','up','down','right'].map(d => `<button data-d="${d}">${AR[d]}</button>`).join('')}</div>`;
+  let i = -1, want = null, left = 0, okc = 0, over = false, gap = 0;
+  const n = cfg.n || 6, T = cfg.time || 1.5;
+  function nextP(){ i++; if (i >= n){ over = true; return done({win: okc / n >= .6, score:okc / n, msg:`You got ${okc} of ${n} right.`}); }
+    want = pick(['up','down','left','right']); left = T * (1 - i * .03); $('#qline').textContent = (cfg.lines && cfg.lines[i]) || '…'; $('#qp').textContent = AR[want];
+    ui.body.querySelectorAll('[data-d]').forEach(b => b.classList.toggle('want', b.dataset.d === want)); }
+  function press(d){ if (over || !want) return; if (d === want){ okc++; SND.fx('hit'); ui.msg.textContent = 'Yes!'; } else { SND.fx('bad'); ui.msg.textContent = 'Wrong!'; } want = null; gap = .35; }
+  ui.body.querySelectorAll('[data-d]').forEach(b => b.onclick = () => press(b.dataset.d));
+  const stop = ticker(dt => {
+    if (over) return;
+    if (gap > 0){ gap -= dt; if (gap <= 0) nextP(); return; }
+    if (want){ left -= dt; $('#qt').style.width = Math.max(0, left / T * 100) + '%'; if (left <= 0){ want = null; gap = .35; ui.msg.textContent = 'Too slow!'; SND.fx('bad'); } }
+    ui.hud.innerHTML = `<span><b>${Math.max(0, i + 1)}/${n}</b></span>`;
+  });
+  gap = .6;
+  return {stop, key(e){ const d = KEYMAP[e.key]; if (d && e.key.indexOf('Arrow') === 0){ e.preventDefault(); press(d); } }};
+};
+function losGrid(g, x0, y0, x1, y1){
+  const dx = x1 - x0, dy = y1 - y0, n = Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) * 3);
+  for (let i = 1; i < n; i++){ const x = x0 + dx * i / n, y = y0 + dy * i / n; if (g[Math.floor(y)][Math.floor(x)] !== 0) return false; }
+  return true;
+}
+function drawFeet(c, e, ts, col, label, alpha){
+  const px = e.x * ts, py = e.y * ts, hd = e.hd, ph = Math.floor(e.step * 2.4) % 2, nx = -Math.sin(hd), ny = Math.cos(hd);
+  for (let i = 0; i < 2; i++){
+    const back = i === 0 ? .1 : -.35, side = ((i + ph) % 2) ? 1 : -1;
+    const fx = px + Math.cos(hd) * back * ts + nx * side * .17 * ts, fy = py + Math.sin(hd) * back * ts + ny * side * .17 * ts;
+    c.save(); c.translate(fx, fy); c.rotate(hd); c.globalAlpha = (i === 0 ? .95 : .5) * (alpha || 1); c.fillStyle = col;
+    c.beginPath(); c.ellipse(0, 0, .22 * ts, .1 * ts, 0, 0, 7); c.fill(); c.restore();
+  }
+  c.globalAlpha = alpha || 1; c.fillStyle = col; c.font = `italic ${Math.max(10, ts * .62)}px 'IM Fell English', Georgia, serif`; c.textAlign = 'center';
+  if (label) c.fillText(label, px, py - ts * .55);
+  c.globalAlpha = 1;
+}
+GAMES.sneak = (cfg, wrap, done) => {
+  const S = SNEAK[cfg.map], rows = SNEAK_GRIDS[cfg.map], H = rows.length, W = rows[0].length, T = THEME[S.theme];
+  const g = [], wps = {}, hides = {}, goal = {}, open = [];
+  let start = [1, 1];
+  for (let y = 0; y < H; y++){ g.push([]); for (let x = 0; x < W; x++){
+    const ch = rows[y][x], walk = '#T~'.indexOf(ch) < 0; g[y].push(walk ? 0 : 1);
+    if (walk) open.push([x, y]);
+    if (ch >= '0' && ch <= '9') wps[ch] = [x, y];
+    if (ch === 'S') start = [x, y]; if (ch === 'E') goal[x + ',' + y] = 1; if (ch === 'h') hides[x + ',' + y] = 1;
+  } }
+  const M = {px:start[0] + .5, py:start[1] + .5, hd:-Math.PI / 2, step:0, path:[], sus:0, t:0, moving:false, ringT:0, ringCD:0, trail:[], seenBy:null, over:false};
+  const foes = S.foes.map(f => {
+    const route = f.route ? f.route.split('').map(c => wps[c]) : null;
+    let p = route ? route[0] : null;
+    if (!p){ let tries = 0; do { p = pick(open); tries++; } while (Math.hypot(p[0] - start[0], p[1] - start[1]) < 14 && tries < 80); }
+    return {n:f.n, k:f.k, route, wi:0, x:p[0] + .5, y:p[1] + .5, path:[], hd:0, step:0, sp:f.sp, r:f.r, sees:false};
+  });
+  const who = S.who || 'Lucy';
+  const canRing = true;
+  const ui = gameShell(wrap, S.title, '', `Arrow keys / WASD to move, or click where you want to go. Stand still behind a ${S.hide} to hide. ${canRing ? 'Press <b>R</b> to <b>stand stock still like one of the statues in her courtyard</b>. Her creatures pass by stone without a glance — but it is bitterly cold, and costs you Warmth.' : ''}`);
+  ui.body.innerHTML = `<div class="ghud" style="justify-content:space-between;margin-bottom:6px"><span id="sobj"></span><span id="stime"></span></div>
+    <div class="gbar"><i id="ssus" style="background:#c9a24a"></i></div><div id="scv" class="sview"></div>
+    <div class="sdpad"><span></span><button data-h="up">▲</button><span></span><button data-h="left">◀</button><button data-h="down">▼</button><button data-h="right">▶</button></div>
+    ${canRing ? '<div class="center" style="margin-top:8px"><button class="btn gold" id="sring">❄ Stand like stone (R)</button></div>' : ''}`;
+  const ts = 24, {c, x} = mkCanvas($('#scv'), W * ts, H * ts);
+  // static layer
+  const st = document.createElement('canvas'); st.width = W * ts; st.height = H * ts; const s = st.getContext('2d');
+  s.fillStyle = T.bg; s.fillRect(0, 0, st.width, st.height);
+  for (let i = 0; i < 26; i++){ const gx = ((i * 97) % 100) / 100 * st.width, gy = ((i * 57) % 100) / 100 * st.height, gr = s.createRadialGradient(gx, gy, 0, gx, gy, st.width * .15);
+    gr.addColorStop(0, 'rgba(150,110,50,.12)'); gr.addColorStop(1, 'rgba(150,110,50,0)'); s.fillStyle = gr; s.fillRect(0, 0, st.width, st.height); }
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++){
+    const ch = rows[y][xx], X = xx * ts, Y = y * ts;
+    if (ch === ',') { s.fillStyle = T.field; s.fillRect(X, Y, ts, ts); }
+    else if (ch === '=') { s.fillStyle = T.road; s.fillRect(X, Y, ts, ts); }
+    else if (ch === '~') { s.fillStyle = '#a8bdb0'; s.fillRect(X, Y, ts + .5, ts + .5); s.strokeStyle = 'rgba(70,100,100,.5)'; s.beginPath(); s.moveTo(X + 3, Y + ts / 2); s.quadraticCurveTo(X + ts / 2, Y + ts / 2 - 4, X + ts - 3, Y + ts / 2); s.stroke(); }
+    else if (ch === '#') {
+      if (S.theme === 'shire'){ s.fillStyle = 'rgba(92,107,46,.55)'; s.beginPath(); s.arc(X + ts / 2, Y + ts / 2, ts * .5, 0, 7); s.fill(); }
+      else { s.fillStyle = 'rgba(60,40,20,.13)'; s.fillRect(X, Y, ts + .5, ts + .5); s.strokeStyle = 'rgba(60,40,20,.25)'; s.beginPath(); s.moveTo(X, Y + ts); s.lineTo(X + ts, Y); s.stroke(); }
+    }
+    else if (ch === 'T') {
+      if (S.theme === 'goblin' || S.theme === 'halls'){ s.fillStyle = '#8a8070'; for (let k = 0; k < 3; k++){ s.beginPath(); s.arc(X + 5 + k * 7, Y + 8 + (k % 2) * 8, 5, 0, 7); s.fill(); } }
+      else { s.fillStyle = '#7d8c4a'; s.strokeStyle = T.ink; s.lineWidth = 1; s.beginPath(); s.arc(X + ts / 2, Y + ts / 2 - 2, ts * .42, 0, 7); s.fill(); s.stroke(); s.beginPath(); s.moveTo(X + ts / 2, Y + ts / 2 + 6); s.lineTo(X + ts / 2, Y + ts); s.stroke(); }
+    }
+    else if (ch === 'h') {
+      if (S.hide === 'haystack'){ s.fillStyle = '#d8b850'; s.strokeStyle = T.ink; s.beginPath(); s.moveTo(X + 3, Y + ts - 3); s.quadraticCurveTo(X + ts / 2, Y - 2, X + ts - 3, Y + ts - 3); s.closePath(); s.fill(); s.stroke(); }
+      else if (S.hide === 'bush'){ s.fillStyle = '#6a8a3a'; s.beginPath(); s.arc(X + 8, Y + 14, 7, 0, 7); s.arc(X + 16, Y + 12, 8, 0, 7); s.fill(); }
+      else if (S.hide === 'barrel'){ s.fillStyle = '#8a5a2a'; s.strokeStyle = T.ink; s.beginPath(); s.ellipse(X + ts / 2, Y + ts / 2, ts * .36, ts * .44, 0, 0, 7); s.fill(); s.stroke(); }
+      else { s.fillStyle = 'rgba(40,30,20,.55)'; for (let k = 0; k < 3; k++) s.fillRect(X + ts * (.2 + k * .25), Y + ts * .15, ts * .12, ts * .7); }
+    }
+  }
+  // ink outlines between walkable and solid cells
+  s.strokeStyle = T.ink; s.lineWidth = 2.2; s.lineCap = 'round'; s.beginPath();
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++){
+    if (g[y][xx] !== 0) continue; const X = xx * ts, Y = y * ts;
+    if (!g[y - 1] || g[y - 1][xx] !== 0){ s.moveTo(X, Y); s.lineTo(X + ts, Y); }
+    if (!g[y + 1] || g[y + 1][xx] !== 0){ s.moveTo(X, Y + ts); s.lineTo(X + ts, Y + ts); }
+    if (g[y][xx - 1] !== 0 && xx > 0){ s.moveTo(X, Y); s.lineTo(X, Y + ts); }
+    if (g[y][xx + 1] !== 0 && xx < W - 1){ s.moveTo(X + ts, Y); s.lineTo(X + ts, Y + ts); }
+  }
+  s.stroke();
+  s.fillStyle = T.ink; s.textAlign = 'center'; s.textBaseline = 'middle';
+  S.labels.forEach(([t, lx, ly, a]) => { s.font = `italic ${ts * .78}px 'IM Fell English', Georgia, serif`; s.textAlign = a === 'r' ? 'right' : a === 'l' ? 'left' : 'center';
+    s.fillStyle = 'rgba(255,248,225,.75)'; const w = s.measureText(t).width; s.fillRect((a === 'r' ? lx * ts - w : a === 'l' ? lx * ts : lx * ts - w / 2) - 3, ly * ts - ts * .45, w + 6, ts * .9);
+    s.fillStyle = T.ink; s.fillText(t, lx * ts, ly * ts); });
+  s.textAlign = 'right'; s.font = `italic ${ts * .7}px 'IM Fell English', Georgia, serif`;
+  { const w = s.measureText(S.sig).width; s.fillStyle = 'rgba(245,235,205,.85)'; s.fillRect(st.width - ts * .6 - w - 6, st.height - ts * 1.25, w + 12, ts * .95); }
+  s.fillStyle = 'rgba(74,44,18,.85)'; s.fillText(S.sig, st.width - ts * .6, st.height - ts * .75);
+  s.textBaseline = 'alphabetic';
+  const walkable = (xx, yy) => { const r = g[Math.floor(yy)]; return !!r && r[Math.floor(xx)] === 0; };
+  const isHide = (xx, yy) => !!hides[Math.floor(xx) + ',' + Math.floor(yy)];
+  function ringToggle(){
+    if (!canRing || M.over) return;
+    if (M.ringT > 0){ M.ringT = 0; UI.ringHeld = false; document.body.classList.remove('wraith'); return; }
+    if (M.ringCD > 0){ ui.msg.textContent = 'Not yet. Your fingers are still numb from the last time.'; return; }
+    M.ringT = 6; M.ringCD = 10; UI.ringHeld = true;
+    toast(ringUse(2));
+    document.body.classList.add('wraith'); renderStats();
+    ui.msg.textContent = foes.some(f => f.k === 'rider') ? 'The world goes grey and thin. The Riders\' heads turn as one, like hounds catching a scent.' : 'You freeze, still as a statue, frost on your eyelashes. A wolf pads by and does not look twice.';
+  }
+  const rb = $('#sring'); if (rb) rb.onclick = ringToggle;
+  // hold-to-walk pad for touch screens
+  ui.body.querySelectorAll('[data-h]').forEach(b => {
+    const on = e => { e.preventDefault(); UI.keys[b.dataset.h] = true; b.classList.add('on'); M.path = []; };
+    const off = () => { UI.keys[b.dataset.h] = false; b.classList.remove('on'); };
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  // on a phone the canvas is wider than its window; keep the walker in view
+  const view = $('#scv');
+  function follow(){
+    if (view.scrollWidth <= view.clientWidth + 2 && view.scrollHeight <= view.clientHeight + 2) return;
+    const sc = c.getBoundingClientRect().width / c.width;
+    view.scrollLeft = clamp(M.px * ts * sc - view.clientWidth / 2, 0, view.scrollWidth - view.clientWidth);
+    view.scrollTop = clamp(M.py * ts * sc - view.clientHeight / 2, 0, view.scrollHeight - view.clientHeight);
+  }
+  c.addEventListener('pointerdown', e => { if (M.over) return; const [px, py] = canvasPos(c, e); const p = gridPath(g, Math.floor(M.px), Math.floor(M.py), Math.floor(px / ts), Math.floor(py / ts)); if (p) M.path = p; });
+  function end(win, by){
+    M.over = true; UI.ringHeld = false; document.body.classList.remove('wraith');
+    setTimeout(() => done({win, score: win ? 1 - M.sus : .3, msg: win ? '' : by === 'dawn' ? 'You took too long, and the Witch\'s wolves picked up your scent.' : `${by} has seen you!`}), 700);
+  }
+  const stop = ticker(dt => {
+    if (M.over) return;
+    M.t += dt; M.ringCD = Math.max(0, M.ringCD - dt);
+    if (M.ringT > 0){ M.ringT -= dt; if (M.ringT <= 0){ UI.ringHeld = false; document.body.classList.remove('wraith'); ui.msg.textContent = 'You move again, stiff and shivering.'; } }
+    let vx = 0, vy = 0; const k = UI.keys;
+    if (k.left) vx -= 1; if (k.right) vx += 1; if (k.up) vy -= 1; if (k.down) vy += 1;
+    const sp = 4.0 * dt; let viaPath = false;
+    if (vx || vy){ M.path = []; const l = Math.hypot(vx, vy); vx /= l; vy /= l; }
+    else if (M.path.length){ const n = M.path[0], dx = n[0] + .5 - M.px, dy = n[1] + .5 - M.py, d = Math.hypot(dx, dy);
+      if (d <= sp){ M.px = n[0] + .5; M.py = n[1] + .5; M.path.shift(); } else { vx = dx / d; vy = dy / d; viaPath = true; } }
+    if (viaPath){ M.px += vx * sp; M.py += vy * sp; }
+    else if (vx || vy){ const r = .28;
+      if (vx){ const nx = M.px + vx * sp; if (walkable(nx + Math.sign(vx) * r, M.py - r + .02) && walkable(nx + Math.sign(vx) * r, M.py + r - .02)) M.px = nx; }
+      if (vy){ const ny = M.py + vy * sp; if (walkable(M.px - r + .02, ny + Math.sign(vy) * r) && walkable(M.px + r - .02, ny + Math.sign(vy) * r)) M.py = ny; } }
+    M.moving = !!(vx || vy);
+    if (M.moving){ M.hd = Math.atan2(vy, vx); M.step += sp;
+      const last = M.trail[M.trail.length - 1]; if (!last || Math.hypot(last.x - M.px, last.y - M.py) > .12) M.trail.push({x:M.px, y:M.py, hd:M.hd}); if (M.trail.length > 200) M.trail.shift(); }
+    foes.forEach(e => {
+      if (!e.path.length){ let tg; if (e.route){ e.wi = (e.wi + 1) % e.route.length; tg = e.route[e.wi]; } else tg = pick(open); e.path = gridPath(g, Math.floor(e.x), Math.floor(e.y), tg[0], tg[1]) || []; }
+      if (e.path.length){ const n = e.path[0], cx = n[0] + .5, cy = n[1] + .5, dx = cx - e.x, dy = cy - e.y, d = Math.hypot(dx, dy), s2 = e.sp * dt;
+        if (d <= s2){ e.x = cx; e.y = cy; e.path.shift(); } else { e.x += dx / d * s2; e.y += dy / d * s2; } if (d > .001) e.hd = Math.atan2(dy, dx); e.step += s2; }
+    });
+    const ringOn = M.ringT > 0, hidden = !M.moving && isHide(M.px, M.py);
+    let best = 0, seen = null;
+    foes.forEach(e => {
+      const rider = e.k === 'rider', r = e.r * (ringOn ? (rider ? 1.8 : .28) : 1), d = Math.hypot(e.x - M.px, e.y - M.py);
+      e.sees = false;
+      if (r <= 0) return;
+      const seeThroughHide = rider && d < 1.6;
+      if ((!hidden || seeThroughHide) && d < r && losGrid(g, e.x, e.y, M.px, M.py)){ e.sees = true; const v = (.7 + 1.6 * (1 - d / r)) * (ringOn && rider ? 1.5 : 1); if (v > best){ best = v; seen = e; } }
+    });
+    if (seen){ M.sus += best * dt; M.seenBy = seen.n; if (seen.k === 'rider' && Math.random() < dt * .8) SND.fx('shriek'); }
+    else M.sus = Math.max(0, M.sus - .3 * dt);
+    if (M.sus >= 1) return end(false, M.seenBy);
+    if (goal[Math.floor(M.px) + ',' + Math.floor(M.py)]) return end(true);
+    if (M.t >= S.limit) return end(false, 'dawn');
+    // draw
+    x.drawImage(st, 0, 0);
+    x.fillStyle = `rgba(60,140,60,${.18 + .12 * Math.sin(M.t * 4)})`; Object.keys(goal).forEach(kk => { const [gx, gy] = kk.split(',').map(Number); x.fillRect(gx * ts, gy * ts, ts, ts); });
+    foes.forEach(e => {
+      const rider = e.k === 'rider', r = e.r * (ringOn ? (rider ? 1.8 : .28) : 1);
+      if (r > 0){ x.strokeStyle = e.sees ? 'rgba(200,40,20,.65)' : 'rgba(74,44,18,.25)'; x.setLineDash([3, 3]); x.beginPath(); x.arc(e.x * ts, e.y * ts, r * ts, 0, 7); x.stroke(); x.setLineDash([]); }
+      drawFeet(x, e, ts, e.sees ? '#b0200f' : rider ? '#111' : '#5a2e14', e.n);
+    });
+    const party = (S.party || []);
+    party.forEach((p, i) => { const tr = M.trail[M.trail.length - 1 - (i + 1) * 9]; if (tr) drawFeet(x, {x:tr.x, y:tr.y, hd:tr.hd, step:M.step + i}, ts * .8, '#3a5a2a', SHORT[p] || p, .7); });
+    drawFeet(x, {x:M.px, y:M.py, hd:M.hd, step:M.step}, ts, ringOn ? 'rgba(14,58,122,.35)' : '#0e3a7a', who);
+    if (hidden){ x.fillStyle = 'rgba(14,58,122,.8)'; x.font = `italic ${ts * .65}px serif`; x.fillText('(hidden)', M.px * ts, M.py * ts + ts * .95); }
+    if (S.dark){
+      const ov = document.createElement('canvas'); ov.width = c.width; ov.height = c.height; const o = ov.getContext('2d');
+      o.fillStyle = 'rgba(8,6,4,.88)'; o.fillRect(0, 0, ov.width, ov.height); o.globalCompositeOperation = 'destination-out';
+      const hole = (hx, hy, rr) => { const gr = o.createRadialGradient(hx, hy, 0, hx, hy, rr); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(.6, 'rgba(0,0,0,.8)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); o.fillStyle = gr; o.beginPath(); o.arc(hx, hy, rr, 0, 7); o.fill(); };
+      hole(M.px * ts, M.py * ts, S.dark * ts);
+      foes.forEach(e => hole(e.x * ts, e.y * ts, 2.6 * ts));
+      Object.keys(goal).forEach(kk => { const [gx, gy] = kk.split(',').map(Number); hole(gx * ts + ts / 2, gy * ts + ts / 2, ts * 1.4); });
+      x.drawImage(ov, 0, 0);
+      foes.forEach(e => { x.fillStyle = 'rgba(255,150,40,.85)'; x.beginPath(); x.arc(e.x * ts + 6, e.y * ts - 6, 3, 0, 7); x.fill(); });
+    }
+    follow();
+    $('#sobj').innerHTML = `Reach <b>${esc(S.goal)}</b>${M.ringT > 0 ? ' · <b style="color:#3a6a9a">still as stone</b>' : ''}`;
+    const left = Math.max(0, S.limit - M.t); $('#stime').textContent = `${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`;
+    const b = $('#ssus'); b.style.width = Math.min(100, M.sus * 100) + '%'; b.style.background = M.sus > .6 ? '#c8553d' : '#c9a24a';
+    if (rb) rb.textContent = M.ringT > 0 ? `❄ Move again (${Math.ceil(M.ringT)})` : M.ringCD > 0 ? `❄ (${Math.ceil(M.ringCD)})` : '❄ Stand like stone (R)';
+  });
+  return {stop(){ stop(); UI.ringHeld = false; document.body.classList.remove('wraith'); }, key(e){ if (e.key === 'r' || e.key === 'R') ringToggle(); }, held:true};
+};
+
+
+// ── The Witch: Turkish Delight ──────────────────────────────────────────────
+GAMES.witchtalk = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, 'The Queen of Narnia', '', 'You are Edmund. She is very kind, and very interested, and the Turkish Delight is very good. Every true thing you tell her about your brother and sisters is something she can use. Every sweet you ask for draws you deeper into her spell.');
+  const R = [
+    {s:'"How, in the name of all wonder, did you come into my dominions? Are you a Son of Adam?"', o:[{t:'"Yes, your Majesty. I came through a wardrobe."', k:'tell'},{t:'"I — I don\'t really know, your Majesty. I got lost."', k:'evade'},{t:'"I\'m frightfully cold. Have you anything hot to drink?"', k:'want'}]},
+    {s:'She lets fall a drop from a copper bottle, and there is a jewelled cup, steaming. "What would you like best to eat?"', o:[{t:'"Turkish Delight, please, your Majesty."', k:'want'},{t:'"Nothing, thank you."', k:'evade'},{t:'"Whatever you have, your Majesty." (You don\'t trust it.)', k:'evade'}]},
+    {s:'"Have you any brothers and sisters? How many?"', o:[{t:'"A brother and two sisters. Peter, Susan and Lucy."', k:'tell'},{t:'"Just me, your Majesty."', k:'evade'},{t:'"Is there more Turkish Delight?"', k:'want'}]},
+    {s:'"Four of you, then? Are you quite sure? And has your sister been to Narnia already? Who did she meet?"', o:[{t:'"She met a Faun called Tumnus."', k:'tell'},{t:'"She makes things up. You can\'t believe a word."', k:'evade'},{t:'"Please — just one more piece?"', k:'want'}]},
+    {s:'"I should like to make you a Prince. Later, King of Narnia. You must bring the others to my house — it\'s just between those two hills. Will you?"', o:[{t:'"Yes. I\'ll bring them."', k:'tell'},{t:'"I\'ll — I\'ll see. I\'ll try."', k:'evade'},{t:'"If I can have more Turkish Delight, I\'ll do anything."', k:'want'}]}];
+  const W = {tell:[16, 18], evade:[4, 0], want:[24, 4]};   // [enchantment, notice]
+  let i = 0, ench = 15, notice = 0, ate = 0, told = 0, over = false;
+  function show(){
+    if (i >= R.length){ over = true; const win = ench < 60;
+      return done({win, score:1 - ench / 100, fx:{hum:-Math.round(ench / 6), sus:Math.round(notice / 3), item: ate ? 'delight' : [], flags:{ateDelight: ate > 0}},
+        msg: win ? 'You keep back more than she would like. She smiles, and the smile does not reach her eyes. Still, she gives you the rest of the box.' : 'You would tell her anything, and you very nearly do. She smiles a smile that is not at all pleasant, and the sledge glides off.'}); }
+    const r = R[i];
+    ui.body.innerHTML = `<div class="art" style="cursor:default">${VIGNETTES.sledge()}</div><div class="smaugline">${esc(r.s)}</div>
+      <div style="max-width:560px;margin:6px auto"><div class="meta">The enchantment</div><div class="gbar"><i style="width:${ench}%;background:#c060a0"></i></div>
+      <div class="meta">What she has learned</div><div class="gbar"><i style="width:${notice}%;background:#5a7aa0"></i></div></div>
+      <div class="choices">${shuffle(r.o.slice()).map(o => `<button class="choice talk" data-k="${o.k}">${esc(o.t)}</button>`).join('')}</div>`;
+    ui.body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => answer(b.dataset.k));
+    ui.hud.innerHTML = `<span>Question <b>${i + 1}/${R.length}</b></span>`;
+  }
+  function answer(k){
+    if (over) return;
+    const [e, n] = W[k]; ench = clamp(ench + e, 0, 100); notice = clamp(notice + n, 0, 100);
+    if (k === 'want') ate++; if (k === 'tell') told++;
+    ui.msg.textContent = k === 'want' ? 'Each piece is sweet and light to the very centre. You want more.' : k === 'tell' ? 'Her eyes glitter. "Four, you say? Interesting."' : 'She looks at you for a long moment, as if you were a puzzle.';
+    SND.fx(k === 'evade' ? 'click' : 'ring');
+    i++; setTimeout(show, 800);
+  }
+  show();
+  return {stop(){}};
+};
+
+// ── Chase: fleeing the Witch / following the White Stag ─────────────────────
+GAMES.chase = (cfg, wrap, done) => {
+  const stag = cfg.mode === 'stag';
+  const ui = gameShell(wrap, stag ? 'The White Stag' : 'Along the River', '', `Change lanes with <b>↑ ↓</b> (or W / S), or tap above or below yourself. ${stag ? 'Duck the branches; keep the white shape ahead of you.' : 'Mind the drifts and the fallen trees. Somewhere behind, a sledge. Pick up what the Beavers drop.'}`);
+  const {c, x} = mkCanvas(ui.body, 760, 300);
+  const LY = [90, 150, 210], PX = 150, DUR = 26;
+  let lane = 1, py = LY[1], t = 0, obs = [], next = .8, hp = 4, over = false, scroll = 0, inv = 0, bonus = 0;
+  const move = d => { lane = clamp(lane + d, 0, 2); };
+  c.addEventListener('pointerdown', e => { const [, yy] = canvasPos(c, e); move(yy < py ? -1 : 1); });
+  const stop = ticker(dt => {
+    if (over) return;
+    t += dt; const sp = 230 + t * 7; scroll += sp * dt; py += (LY[lane] - py) * Math.min(1, dt * 14); inv = Math.max(0, inv - dt);
+    next -= dt;
+    if (next <= 0){ next = rnd(.45, .9); obs.push({k: Math.random() < .2 ? 'bonus' : pick(stag ? ['branch','bush','branch'] : ['drift','log','drift']), lane:ri(0, 2), x:800}); }
+    obs.forEach(o => { o.x -= sp * dt;
+      if (!o.hit && o.lane === lane && Math.abs(o.x - PX) < 30 && inv <= 0){ o.hit = true;
+        if (o.k === 'bonus'){ bonus++; SND.fx('good'); ui.msg.textContent = stag ? 'A glimpse of white between the trees!' : 'A sandwich, dropped by Mrs Beaver!'; return; }
+        hp--; inv = .8; SND.fx('hit'); ui.msg.textContent = o.k === 'drift' ? 'Into a snow-drift, up to your waist!' : o.k === 'log' ? 'You trip over a fallen log!' : 'A branch whips across your face!'; } });
+    obs = obs.filter(o => o.x > -60);
+    x.fillStyle = stag ? '#6a9a4a' : '#e8f0f8'; x.fillRect(0, 0, 760, 300);
+    x.fillStyle = stag ? '#4a6a2a' : '#c8d8e8'; x.fillRect(0, 0, 760, 50); x.fillRect(0, 250, 760, 50);
+    if (!stag){ x.fillStyle = '#b8d0e4'; x.fillRect(0, 240, 760, 10); }
+    for (let i = 0; i < 12; i++){ const tx2 = ((i * 90 - scroll * .9) % 900 + 900) % 900 - 60; x.fillStyle = stag ? '#2a4a1a' : '#2a4a3a';
+      x.beginPath(); x.moveTo(tx2, 46); x.lineTo(tx2 + 18, 0); x.lineTo(tx2 + 36, 46); x.fill(); x.beginPath(); x.moveTo(tx2 + 40, 300); x.lineTo(tx2 + 58, 254); x.lineTo(tx2 + 76, 300); x.fill(); }
+    if (!stag) for (let i = 0; i < 30; i++){ x.fillStyle = 'rgba(255,255,255,.9)'; x.fillRect(((i * 53) - scroll * .5 % 760 + 760 * 3) % 760, (i * 37 + t * 60) % 300, 2, 2); }
+    obs.forEach(o => { const y = LY[o.lane]; if (o.hit) return;
+      if (o.k === 'bonus'){ x.fillStyle = stag ? '#fafaf4' : '#c8a060'; x.beginPath(); x.arc(o.x, y, 9, 0, 7); x.fill(); }
+      else if (o.k === 'drift'){ x.fillStyle = '#fff'; x.beginPath(); x.ellipse(o.x, y + 8, 34, 18, 0, Math.PI, 0); x.fill(); x.strokeStyle = '#9ab'; x.stroke(); }
+      else if (o.k === 'log'){ x.fillStyle = '#6a4a2a'; x.fillRect(o.x - 30, y - 6, 60, 14); }
+      else if (o.k === 'branch'){ x.strokeStyle = '#3a2a1a'; x.lineWidth = 5; x.beginPath(); x.moveTo(o.x - 24, y - 16); x.lineTo(o.x + 20, y + 14); x.moveTo(o.x, y); x.lineTo(o.x + 14, y - 12); x.stroke(); }
+      else { x.fillStyle = '#3a5a2a'; x.beginPath(); x.arc(o.x, y, 22, 0, 7); x.fill(); } });
+    if (stag){ const sx = 640 + Math.sin(t * 2) * 30, sy = LY[Math.floor(t / 2) % 3]; x.fillStyle = '#fafaf4'; x.beginPath(); x.ellipse(sx, sy, 26, 12, 0, 0, 7); x.fill(); x.strokeStyle = '#c9a24a'; x.lineWidth = 2; x.beginPath(); x.moveTo(sx + 22, sy - 10); x.lineTo(sx + 30, sy - 30); x.moveTo(sx + 26, sy - 20); x.lineTo(sx + 36, sy - 26); x.stroke(); }
+    else { const bx = 30 + Math.sin(t) * 10; x.fillStyle = 'rgba(200,220,240,.7)'; x.fillRect(bx - 30, 130, 40, 40); }
+    x.globalAlpha = inv > 0 && Math.floor(t * 12) % 2 ? .4 : 1;
+    x.fillStyle = '#7a5a3a'; x.fillRect(PX - 9, py - 4, 18, 20); x.fillStyle = '#f0d8b8'; x.beginPath(); x.arc(PX, py - 12, 8, 0, 7); x.fill(); x.fillStyle = '#c8a040'; x.beginPath(); x.arc(PX, py - 16, 8, Math.PI, 0); x.fill(); x.globalAlpha = 1;
+    const prog = Math.min(1, t / DUR); x.fillStyle = 'rgba(0,0,0,.2)'; x.fillRect(20, 8, 720, 6); x.fillStyle = '#c99a2a'; x.fillRect(20, 8, 720 * prog, 6);
+    ui.hud.innerHTML = `<span>Strength <b>${'♦'.repeat(Math.max(0, hp))}</b></span><span>${stag ? 'Glimpses' : 'Sandwiches'} <b>${bonus}</b></span>`;
+    if (hp <= 0){ over = true; done({win:false, score:prog, fx: !stag && bonus ? {food:bonus} : null}); }
+    else if (t >= DUR){ over = true; done({win:true, score:1, fx: !stag && bonus ? {food:bonus} : null}); }
+  });
+  return {stop, key(e){ const d = KEYMAP[e.key]; if (d === 'up'){ e.preventDefault(); move(-1); } else if (d === 'down'){ e.preventDefault(); move(1); } }};
+};
+
+// ── Breathe: find the statues for Aslan ─────────────────────────────────────
+GAMES.breathe = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, 'The Statues', '', 'The castle is dark. Move your light (mouse or finger) through the halls and click or tap each statue you find, and Aslan will breathe on it. Find as many as you can before the battle.');
+  const {c, x} = mkCanvas(ui.body, 760, 420);
+  const KINDS = ['faun','dwarf','centaur','giant','dryad','squirrel','bear','horse'];
+  const st = Array.from({length:16}, () => ({x:rnd(40, 720), y:rnd(60, 390), k:pick(KINDS), freed:0}));
+  let mx = 380, my = 210, t = 0, found = 0, over = false; const DUR = 30;
+  c.addEventListener('pointermove', e => { const [a, b] = canvasPos(c, e); mx = a; my = b; });
+  c.addEventListener('pointerdown', e => { const [a, b] = canvasPos(c, e); mx = a; my = b;
+    let best = null, bd = 40; st.forEach(s => { if (s.freed) return; const d = Math.hypot(s.x - a, s.y - b); if (d < bd && Math.hypot(s.x - mx, s.y - my) < 110){ bd = d; best = s; } });
+    if (best){ best.freed = .01; found++; SND.fx('good'); ui.msg.textContent = pick(['A streak of gold runs over the stone…','The statue shivers, and stretches, and laughs.','"Aslan! Aslan!" it shouts, coming alive.','Stone-dust falls like snow, and something warm stands up.']); } });
+  const stop = ticker(dt => {
+    if (over) return;
+    t += dt; st.forEach(s => { if (s.freed && s.freed < 1) s.freed = Math.min(1, s.freed + dt * 1.5); });
+    x.fillStyle = '#2a3040'; x.fillRect(0, 0, 760, 420); x.strokeStyle = '#3a4258'; x.lineWidth = 2;
+    for (let i = 0; i < 8; i++){ x.strokeRect(i * 100 - 20, 30, 80, 380); }
+    st.forEach(s => { const col = s.freed ? `rgb(${Math.round(150 + 80 * s.freed)},${Math.round(150 + 40 * s.freed)},${Math.round(160 - 80 * s.freed)})` : '#9aa0a8';
+      x.fillStyle = col; const h = s.k === 'giant' ? 46 : s.k === 'squirrel' ? 14 : 30;
+      x.beginPath(); x.arc(s.x, s.y - h, h * .3, 0, 7); x.fill(); x.fillRect(s.x - h * .25, s.y - h * .75, h * .5, h * .75);
+      if (s.freed >= 1){ x.fillStyle = '#ffe2a0'; x.font = '12px serif'; x.textAlign = 'center'; x.fillText('✶', s.x, s.y - h - 10); } });
+    const g = x.createRadialGradient(mx, my, 20, mx, my, 120); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.92)');
+    x.fillStyle = g; x.fillRect(0, 0, 760, 420);
+    st.forEach(s => { if (s.freed >= 1){ x.fillStyle = 'rgba(255,226,160,.25)'; x.beginPath(); x.arc(s.x, s.y - 20, 30, 0, 7); x.fill(); } });
+    x.fillStyle = 'rgba(255,226,160,.1)'; x.beginPath(); x.arc(mx, my, 110, 0, 7); x.fill();
+    ui.hud.innerHTML = `<span>Freed <b>${found}/16</b></span><span>Time <b>${Math.max(0, Math.ceil(DUR - t))}</b></span>`;
+    if (found >= 16 || t >= DUR){ over = true; done({win:found >= 11, score:found / 16, msg:`${found} statues found and breathed upon.`}); }
+  });
+  return {stop};
+};
+
+// ── The Cordial ─────────────────────────────────────────────────────────────
+GAMES.cordial = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, 'Lucy\'s Cordial', '', 'Each wounded creature\'s strength is ebbing. Click or tap a name to give one drop; some need two. You have only so many drops — but Aslan says the cordial will last, if you are quick and do not waste it. Edmund first.');
+  const W = [{n:'Edmund', need:2, life:9},{n:'A Dwarf', need:1, life:12},{n:'A Centaur', need:2, life:15},{n:'A Leopard', need:1, life:11},{n:'A Faun', need:1, life:17},{n:'A Dryad', need:1, life:14},{n:'A Bear', need:2, life:19},{n:'A Badger', need:1, life:16},{n:'A Satyr', need:1, life:20}].map(w => Object.assign({given:0, saved:false, lost:false, max:w.life}, w));
+  let drops = 13, over = false, t = 0;
+  function render(){
+    ui.body.innerHTML = `<div class="art" style="cursor:default">${VIGNETTES.battle()}</div><div class="center meta" style="margin:6px 0">🧪 Drops left: <b>${drops}</b></div>
+      <div class="opts">${W.map((w, i) => `<button data-w="${i}" ${w.saved || w.lost ? 'disabled' : ''} style="${w.saved ? 'background:#e8f4d8' : w.lost ? 'opacity:.4' : ''}"><b>${esc(w.n)}</b>${w.saved ? ' — healed' : w.lost ? ' — too late' : ` · needs ${w.need - w.given} · <span style="color:${w.life / w.max < .35 ? '#b0302a' : '#3a5a2a'}">${'❤'.repeat(Math.max(1, Math.ceil(w.life / w.max * 5)))}</span>`}</button>`).join('')}</div>`;
+    ui.body.querySelectorAll('[data-w]').forEach(b => b.onclick = () => give(+b.dataset.w));
+  }
+  function give(i){
+    const w = W[i]; if (over || drops <= 0 || w.saved || w.lost) return;
+    drops--; w.given++; SND.fx('click');
+    if (w.given >= w.need){ w.saved = true; SND.fx('good'); ui.msg.textContent = w.n === 'Edmund' ? 'Edmund\'s face is not grey any more. He opens his eyes.' : `${w.n} sits up, and stretches, and stands.`; }
+    render(); check();
+  }
+  function check(){
+    const left = W.filter(w => !w.saved && !w.lost);
+    if (!left.length || drops <= 0){ over = true; const saved = W.filter(w => w.saved).length, ed = W[0].saved;
+      done({win: ed && saved >= 7, score:saved / W.length, msg:`${saved} of ${W.length} healed${ed ? ', Edmund first among them' : ''}.`}); }
+  }
+  render();
+  let last = 0;
+  const stop = ticker(dt => {
+    if (over) return; t += dt; last += dt;
+    W.forEach(w => { if (w.saved || w.lost) return; w.life -= dt; if (w.life <= 0){ w.lost = true; ui.msg.textContent = `${w.n} — too late. Aslan bows his great head.`; } });
+    if (last > .5){ last = 0; render(); check(); }
+    ui.hud.innerHTML = `<span>Healed <b>${W.filter(w => w.saved).length}</b></span>`;
+  });
+  return {stop};
+};
+
+// ═══ TITLE, MENU, BOOT ══════════════════════════════════════════════════════
+function renderTitle(){
+  const sv = tryLoad();
+  $('#stage').innerHTML = `<div class="titlescr">${VIGNETTES.lamppost()}
+    <h1>Beyond the Wardrobe</h1><div class="sub">being the adventures of Lucy and her brothers and sister in the land of Narnia, where it is always winter</div>
+    <div class="verse">A lamp-post in a snowy wood,<br>A Faun with parcels, as he should;<br>A Witch, a Lion, and a door<br>That opens once, and then no more.</div>
+    <div class="btns">${sv ? `<button class="btn gold" data-load>Continue — Chapter ${romanize(sv.chapter)}: ${esc(sv.chTitle || '')}</button>` : ''}<button class="btn" data-new>Step into the wardrobe</button></div>
+    <p class="meta" style="margin-top:18px;max-width:580px;margin-left:auto;margin-right:auto">Seventeen chapters, ${Object.keys(SONGS).length} songs and sayings, ${Object.keys(MAPS).length} maps and nine trials. Keep your <b>Faith</b> and your <b>Warmth</b>, keep out of <b>the Witch's Notice</b>, mind your <b>Provisions</b>, and watch <b>the Thaw</b> spread. An unofficial game after C. S. Lewis's novel; only short phrases are quoted, and the prose and verses are new.</p></div>`;
+  wireStage();
+  const nb = $('#stage').querySelector('[data-new]');
+  if (nb && sv) nb.onclick = () => { if (confirm('Begin again? Your saved game will be lost.')) startNew(); };
+}
+function openMenu(){
+  openModal(`<div class="ptitle" style="font-size:1.2rem;text-align:center">Menu</div>
+    <div class="choices" style="max-width:420px">
+      ${G && G.checkpoint ? `<button class="choice" id="mcp">↺ Back to the start of this chapter (${esc(G.chTitle)})</button>` : ''}
+      <button class="choice" id="mhelp">How to play</button>
+      <button class="choice" id="msnd">${SND.on ? '♪ Sound: on' : '♪ Sound: off'}</button>
+      <button class="choice" id="mnew">Begin again</button>
+      ${G ? '<button class="choice" id="mtitle">Back to the title page</button>' : ''}
+    </div><p class="meta center">Your progress is saved after every step.</p>`);
+  const q = id => document.getElementById(id);
+  if (q('mcp')) q('mcp').onclick = () => { if (confirm('Go back to the start of this chapter?')) restoreCheckpoint(); };
+  q('mhelp').onclick = () => openModal(`<div class="ptitle" style="font-size:1.2rem">How to play</div><div class="text">${paras(`You are Lucy, the youngest of four children sent to stay in the country — and sometimes, for a chapter, you see through Edmund's eyes, or Peter's. Read, choose, and play your way through Narnia.
+
+<b>Faith</b> is your trust in Aslan, and in each other. Choices marked ◆ are <b>the easy way</b> — sweet, like the Witch's Turkish Delight — and every one costs some Faith. When it matters most, you may need enough of it to follow where Aslan goes. <b>Warmth</b> is your body against the Witch's winter. <b>The Witch's Notice</b> rises when she learns about you: at 100, you are stone. <b>Provisions</b> are eaten on long journeys; without them, you freeze. <b>The Thaw</b> shows how far her winter has broken — watch the snow on the page as it rises.
+
+Trials: the Faun's flute, the Witch's questions (as Edmund), following the robin and crossing the courtyard of statues (stealth maps: arrow keys or click; R to stand stock still like a statue), fleeing along the frozen river, Peter's fight with the wolf, finding the statues for Aslan, the cordial on the battlefield, and the White Stag. Every one can be skipped.`)}</div>`);
+  q('msnd').onclick = () => { SND.on = !SND.on; openMenu(); updateSoundBtn(); };
+  q('mnew').onclick = () => { if (!G || confirm('Begin again? Your current progress will be lost.')) startNew(); };
+  if (q('mtitle')) q('mtitle').onclick = () => { closeModal(); if (UI.inst && UI.inst.stop) UI.inst.stop(); UI.inst = null; UI.game = null; G = null; render(); };
+}
+function updateSoundBtn(){ $('#btnSound').style.opacity = SND.on ? 1 : .45; $('#btnSound').title = SND.on ? 'Sound on' : 'Sound off'; }
+
+$('#btnMenu').onclick = openMenu;
+$('#btnSound').onclick = () => { SND.on = !SND.on; updateSoundBtn(); if (SND.on) SND.fx('good'); };
+$('#modal .mclose').onclick = closeModal;
+$('#modal').addEventListener('pointerdown', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.key === 'Escape' && !$('#modal').classList.contains('hidden')){ closeModal(); return; }
+  if (UI.game && UI.inst){
+    const d = KEYMAP[e.key];
+    if (UI.inst.held && d){ UI.keys[d] = true; e.preventDefault(); }
+    if (UI.inst.key) UI.inst.key(e);
+    return;
+  }
+  if (G && !UI.game && /^[1-9]$/.test(e.key) && $('#modal').classList.contains('hidden')){
+    const btns = $('#stage').querySelectorAll('.choices button'); const b = btns[+e.key - 1]; if (b) b.click();
+  }
+});
+document.addEventListener('keyup', e => { const d = KEYMAP[e.key]; if (d) UI.keys[d] = false; if (UI.game && UI.inst && UI.inst.keyup) UI.inst.keyup(e); });
+window.addEventListener('blur', () => { UI.keys = {}; });
+
+updateSoundBtn();
+G = null;
+render();
+</script>
+</body>
+</html>
