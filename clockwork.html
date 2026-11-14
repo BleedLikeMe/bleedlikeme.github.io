@@ -1,0 +1,2199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Real Horrorshow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Courier+Prime:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2b1d0e;--ink2:#5c4327;--ink3:#8a6c45;--parch:#f2e4c0;--parch2:#e6d09c;--edge:#a8834a;
+  --gold:#c9a227;--gold2:#ffd76a;--red:#8b1e1e;--elf:#2f5f4f;--sea:#9fb4a8;--bg:#1a120b;--bg2:#2b1d12;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:#140d07 radial-gradient(ellipse at 50% 0%,#3a2716 0%,#140d07 70%);color:var(--ink);
+  font-family:'Crimson Pro',Georgia,'Times New Roman',serif;font-size:17px}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation}
+.sview{position:relative}
+.sdpad{display:none}
+.hidden{display:none!important}
+
+/* header */
+#top{display:flex;align-items:center;gap:14px;padding:8px 16px;background:linear-gradient(#2e1f12,#1b120a);
+  border-bottom:2px solid #6b4c22;color:#e9d6a6;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.brand{font-family:'Bungee',sans-serif;font-weight:700;font-size:1.25rem;letter-spacing:.08em;color:var(--gold2);
+  text-shadow:0 0 8px rgba(255,190,60,.35);white-space:nowrap}
+.brand span{display:block;font-size:.62rem;letter-spacing:.3em;color:#b99a62;font-weight:500}
+#stats{display:flex;gap:12px;flex:1;flex-wrap:wrap;align-items:center}
+.stat{display:flex;align-items:center;gap:6px;font-size:.9rem;min-width:110px}
+.stat .lbl{color:#c8ad78;font-variant:small-caps;letter-spacing:.05em}
+.bar{width:70px;height:8px;background:#0e0905;border:1px solid #6b4c22;border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;transition:width .4s}
+.ringicon{width:22px;height:22px;border-radius:50%;border:3px solid var(--gold);box-shadow:0 0 6px var(--gold);transition:all .5s}
+.date{font-style:italic;color:#cdb47f;font-size:.88rem;margin-left:auto;white-space:nowrap}
+.hbtns button{background:#3b2815;border:1px solid #7a5a2c;color:#f0dca8;border-radius:6px;padding:4px 10px;font-size:1rem;margin-left:4px}
+.hbtns button:hover{background:#4d351c}
+
+/* layout */
+#wrap{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:14px;max-width:1440px;margin:0 auto;padding:14px}
+.parch{background:var(--parch);background-image:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.35),transparent 60%),
+  radial-gradient(ellipse at 80% 90%,rgba(140,100,40,.18),transparent 55%);
+  border:1px solid var(--edge);border-radius:4px;box-shadow:0 6px 24px rgba(0,0,0,.55),inset 0 0 40px rgba(120,80,30,.25)}
+#stage{padding:18px 26px 26px;min-height:70vh}
+#side{display:flex;flex-direction:column;min-height:70vh;max-height:calc(100vh - 90px);position:sticky;top:76px}
+#tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--edge)}
+#tabs button{flex:1;background:transparent;border:0;border-right:1px solid rgba(168,131,74,.4);padding:8px 4px;
+  font-family:'Bungee',sans-serif;font-size:.72rem;color:var(--ink2);letter-spacing:.04em}
+#tabs button.on{background:rgba(201,162,39,.22);color:var(--ink);font-weight:700}
+#panel{padding:12px 14px;overflow-y:auto;flex:1}
+
+/* stage */
+.chaphead{text-align:center;margin-bottom:6px}
+.chaphead .cn{font-family:'Bungee',sans-serif;font-size:.78rem;letter-spacing:.35em;color:var(--ink3)}
+.chaphead h2{font-family:'Bungee',sans-serif;margin:2px 0 0;font-size:1.55rem;color:var(--ink);letter-spacing:.03em}
+.chaphead .where{font-style:italic;color:var(--ink2);font-size:.95rem}
+.rule{height:10px;margin:8px auto 12px;width:60%;background:radial-gradient(circle,var(--edge) 2px,transparent 3px) center/14px 10px repeat-x;opacity:.7}
+.art{margin:0 auto 12px;max-width:760px;cursor:zoom-in;position:relative}
+.art svg{width:100%;height:auto;display:block;border-radius:3px}
+.art .hint{position:absolute;right:8px;bottom:6px;font-size:.72rem;color:var(--ink2);background:rgba(242,228,192,.85);padding:1px 6px;border-radius:3px}
+.text{max-width:760px;margin:0 auto}
+.text p{font-size:1.12rem;line-height:1.62;margin:0 0 .85em}
+.text p.first::first-letter{font-family:'Courier Prime',monospace;float:left;font-size:3.3em;line-height:.85;padding:4px 8px 0 0;color:var(--red)}
+.text .speech{color:#3b2a14}
+.text em{color:#4a3518}
+.choices{max-width:760px;margin:16px auto 0;display:flex;flex-direction:column;gap:8px}
+.choice{text-align:left;background:rgba(252,251,247,.55);border:1px solid var(--edge);border-radius:4px;padding:10px 14px;
+  font-size:1.05rem;color:var(--ink);transition:all .15s;position:relative}
+.choice:hover{background:#ffffff;transform:translateX(3px);box-shadow:0 2px 8px rgba(90,60,20,.25)}
+.choice .tag{font-size:.75rem;color:var(--ink3);font-variant:small-caps;margin-left:6px}
+.choice.ring{border:1px solid var(--gold);background:linear-gradient(90deg,rgba(255,215,106,.35),rgba(252,251,247,.5));}
+.choice.ring::before{content:'';display:inline-block;width:12px;height:12px;border:2px solid var(--gold);border-radius:50%;margin-right:8px;vertical-align:-1px;box-shadow:0 0 5px var(--gold)}
+.choice.talk::before{content:'❝ ';color:var(--elf)}
+.choice.go{font-weight:600}
+.choice.game{border-style:double;border-width:3px}
+.choice[disabled]{opacity:.45;pointer-events:none}
+.choice.disabled-choice{opacity:.55;font-style:italic}
+.result{max-width:760px;margin:10px auto;border-left:3px solid var(--edge);padding:6px 14px;background:rgba(252,251,247,.4)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font-size:.8rem;padding:2px 8px;border-radius:10px;border:1px solid var(--edge);background:#f2f0e8}
+.chip.good{border-color:#4f7d3a;color:#2f5a1c;background:#eef6dc}
+.chip.bad{border-color:#9c3b2b;color:#7a2416;background:#f8e2d8}
+.chip.ring{border-color:var(--gold);background:#fff1b8;color:#6b4c00}
+.btn{background:linear-gradient(#5b3f1f,#3c2912);color:#f6e4b4;border:1px solid #2a1a0a;border-radius:4px;padding:9px 18px;
+  font-family:'Bungee',sans-serif;font-size:.9rem;letter-spacing:.05em;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.btn:hover{background:linear-gradient(#6d4c26,#4a3317)}
+.btn.ghost{background:transparent;color:var(--ink2);border:1px solid var(--edge);box-shadow:none}
+.btn.gold{background:linear-gradient(#e9c45a,#b88d1c);color:#2b1d0e;border-color:#7a5a10}
+.center{text-align:center}
+
+/* song card */
+.song{max-width:560px;margin:14px auto;padding:14px 22px;background:rgba(255,252,240,.6);border:1px solid var(--edge);
+  border-radius:4px;font-family:'Courier Prime',monospace;position:relative}
+.song h3{font-family:'Bungee',sans-serif;font-size:1rem;margin:0 0 2px;text-align:center}
+.song .by{text-align:center;font-style:italic;font-size:.85rem;color:var(--ink3);margin-bottom:8px}
+.song .st{margin:0 0 10px}
+.song .ln{display:block;font-size:1.05rem;line-height:1.45;transition:color .2s,background .2s;padding:0 4px;border-radius:3px}
+.song .ln.lit{background:rgba(201,162,39,.3);color:#000}
+.song .sing{display:block;margin:6px auto 0}
+
+/* side panels */
+.ptitle{font-family:'Bungee',sans-serif;font-size:.95rem;margin:4px 0 8px;color:var(--ink);letter-spacing:.04em}
+.char{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--edge)}
+.char .av{flex:0 0 38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'Bungee',sans-serif;font-weight:700;color:#fff;font-size:1rem;border:2px solid rgba(0,0,0,.25)}
+.char .nm{font-weight:600}
+.char .ds{font-size:.85rem;color:var(--ink2);line-height:1.3}
+.char .here{font-size:.7rem;color:var(--elf);font-variant:small-caps;margin-left:4px}
+.abar{height:5px;background:rgba(0,0,0,.12);border-radius:3px;margin-top:3px;position:relative;overflow:hidden}
+.abar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.item{display:flex;gap:10px;padding:7px 0;border-bottom:1px dotted var(--edge)}
+.item .ic{font-size:1.5rem;width:34px;text-align:center}
+.item .nm{font-weight:600}.item .ds{font-size:.85rem;color:var(--ink2)}
+.songli,.mapli{display:block;width:100%;text-align:left;background:rgba(252,251,247,.5);border:1px solid var(--edge);
+  margin-bottom:6px;padding:7px 10px;border-radius:3px;font-size:.95rem;color:var(--ink)}
+.songli small{display:block;color:var(--ink3);font-style:italic}
+.mapgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mapgrid button{padding:4px;background:rgba(252,251,247,.5);border:1px solid var(--edge);border-radius:3px;font-size:.75rem;color:var(--ink)}
+.mapgrid svg{width:100%;height:auto;display:block}
+.mapgrid .lock{opacity:.35;pointer-events:none}
+.log{font-size:.88rem;line-height:1.35;padding:5px 0;border-bottom:1px dotted rgba(168,131,74,.5)}
+.log b{color:var(--ink3);font-weight:400;font-style:italic}
+.meta{font-size:.82rem;color:var(--ink2)}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(10,6,2,.78);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
+#modal .mbox{max-width:1100px;width:100%;max-height:94vh;overflow:auto;position:relative;padding:18px}
+#modal .mclose{position:absolute;right:8px;top:6px;background:none;border:0;font-size:1.8rem;color:var(--ink2);z-index:2}
+
+/* toasts */
+#toasts{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;z-index:60;pointer-events:none;align-items:center}
+.toast{background:#2b1d0e;color:#f3e2b2;border:1px solid var(--gold);padding:6px 14px;border-radius:16px;font-size:.92rem;
+  animation:tin .3s ease-out,tout .5s 2.6s forwards;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.toast.bad{border-color:#c2543f}.toast.good{border-color:#7fae58}
+@keyframes tin{from{opacity:0;transform:translateY(10px)}}
+@keyframes tout{to{opacity:0;transform:translateY(-8px)}}
+
+/* wraith world flash */
+body.wraith #wrap{filter:grayscale(1) blur(1.5px) contrast(1.3) brightness(.7);transition:filter .3s}
+#eye{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .6s;
+  background:radial-gradient(ellipse 9% 18% at 50% 45%,#000 30%,transparent 32%),radial-gradient(ellipse 22% 26% at 50% 45%,#ff7a12 0%,#c22a00 45%,rgba(120,10,0,.6) 60%,transparent 75%)}
+body.wraith #eye{opacity:.55}
+
+/* games */
+.gwrap{max-width:820px;margin:0 auto}
+.ghead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 8px}
+.ghead .gt{font-family:'Bungee',sans-serif;font-size:1.1rem}
+.ghud{display:flex;gap:14px;flex-wrap:wrap;font-size:.95rem}
+.ghud b{font-family:'Bungee',sans-serif}
+canvas.gc{width:100%;height:auto;display:block;background:#000;border:2px solid #4a3317;border-radius:4px;touch-action:none}
+.gmsg{min-height:1.6em;font-style:italic;text-align:center;margin:8px 0;color:var(--ink2)}
+.gbar{height:16px;background:rgba(0,0,0,.15);border:1px solid var(--edge);border-radius:8px;overflow:hidden;margin:4px 0}
+.gbar i{display:block;height:100%;transition:width .08s}
+.dpad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,44px);gap:6px;justify-content:center;margin:10px auto}
+.dpad button{font-size:1.3rem;border-radius:6px;border:1px solid var(--edge);background:#f2f0e8}
+.pads{display:grid;grid-template-columns:repeat(2,minmax(0,170px));gap:12px;justify-content:center;margin:14px auto}
+.pad{height:110px;border-radius:12px;border:3px solid rgba(0,0,0,.3);font-size:2.4rem;color:rgba(255,255,255,.9);transition:filter .1s,transform .1s}
+.pad.lit{filter:brightness(1.8) drop-shadow(0 0 14px #fff);transform:scale(1.04)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.opts button{padding:10px;border:1px solid var(--edge);background:rgba(252,251,247,.6);border-radius:4px;font-size:1rem}
+.opts button:hover{background:#ffffff}
+.riddle{font-family:'Courier Prime',monospace;font-size:1.2rem;line-height:1.5;text-align:center;padding:14px;background:rgba(255,252,240,.5);border:1px solid var(--edge);border-radius:4px;white-space:pre-line}
+.inline-input{font-family:'Courier Prime',monospace;font-size:1.3rem;padding:6px 12px;border:1px solid var(--edge);border-radius:4px;background:#fffaf0;width:220px;text-align:center}
+.qkeys{display:flex;gap:10px;justify-content:center;margin:12px 0}
+.qkeys button{width:64px;height:64px;font-size:1.8rem;border-radius:8px;border:2px solid var(--edge);background:#f2f0e8}
+.qkeys button.want{background:#ffe08a;border-color:#a57b00;box-shadow:0 0 12px #ffcc33}
+.qprompt{font-size:3.2rem;text-align:center;font-family:'Bungee',sans-serif;margin:4px 0}
+.tcell{cursor:pointer}
+
+/* title */
+.titlescr{text-align:center;padding:30px 10px}
+.titlescr h1{font-family:'Bungee',sans-serif;font-size:2.8rem;margin:10px 0 0;letter-spacing:.06em;color:#3b2408}
+.titlescr .sub{font-family:'Courier Prime',monospace;font-style:italic;font-size:1.25rem;color:var(--ink2)}
+.titlescr .verse{font-family:'Courier Prime',monospace;font-size:1.1rem;line-height:1.6;margin:18px auto;max-width:480px;color:var(--ink2)}
+.titlescr .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.ending h2{font-family:'Bungee',sans-serif;text-align:center;font-size:1.8rem;margin:6px 0}
+.etable{margin:10px auto;border-collapse:collapse;font-size:.95rem}
+.etable td{padding:3px 10px;border-bottom:1px dotted var(--edge)}
+
+/* the Ring makes you vanish: the world goes grey-gold and thin */
+body.wraith #wrap{filter:grayscale(.8) sepia(.4) blur(1.2px) brightness(.82);transition:filter .3s}
+.coin{display:inline-block;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#d9a520 55%,#8a6410);border:1px solid #6b4c00;vertical-align:-3px}
+.greedicon{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#d9a520 55%,#8a6410);transition:all .5s}
+.choice.gold{border:1px solid #b88d1c;background:linear-gradient(90deg,rgba(233,196,90,.35),rgba(252,251,247,.5))}
+.choice.gold::before{content:'◆ ';color:#a57b00}
+.bid{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px dotted var(--edge)}
+.bid .lot{flex:1}.bid .lot b{display:block}.bid .lot small{color:var(--ink2)}
+.smaugline{font-family:'Courier Prime',monospace;font-size:1.15rem;line-height:1.5;padding:12px 16px;background:rgba(60,10,0,.08);border-left:4px solid #8b1e1e;margin:8px 0}
+@media (max-width:900px){
+  #top{position:static;padding:8px 12px;gap:8px}
+  .brand{flex:1}
+  .hbtns{order:2}
+  #stats{order:3;flex:0 0 100%;gap:8px 14px}
+  .side-here{display:none}
+  .sview{overflow:hidden;max-height:62vh;border-radius:4px}
+  .sview canvas.gc{width:860px;max-width:none}
+  .sdpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,50px);gap:6px;justify-content:center;margin:10px auto 0;user-select:none;-webkit-user-select:none}
+  .sdpad button{font-size:1.4rem;border-radius:8px;border:1px solid var(--edge);background:#f2f0e8;touch-action:none}
+  .sdpad button.on{background:#ffe08a}
+  #wrap{grid-template-columns:minmax(0,1fr);padding:8px}
+  #stage,#side{min-width:0}
+  #side{position:static;max-height:none;min-height:0}
+  #stage{padding:14px 14px 20px;min-height:0}
+  .date{margin-left:0}
+  .stat{min-width:0}.bar{width:48px}
+  .text p{font-size:1.05rem}
+  .opts{grid-template-columns:1fr}
+  .brand{font-size:1.05rem}
+}
+
+/* ═══ KOROVA: milk-white paper, black ink, orange and magenta ═══ */
+:root{
+  --ink:#141414;--ink2:#3e3e3e;--ink3:#777;--parch:#f4f1ea;--parch2:#e6e1d6;--edge:#9a958a;
+  --gold:#e2640f;--gold2:#ffd2a8;--red:#b0186a;--elf:#e2640f;--sea:#a9c2c8;--bg:#0b0b0b;--bg2:#1a1a1a;
+}
+body{background:#080808 radial-gradient(ellipse at 50% 0%,#2a1c14 0%,#080808 70%);color:var(--ink)}
+#top{background:linear-gradient(#161616,#060606);border-bottom:3px solid var(--gold);color:#f4f1ea}
+.brand{font-family:'Bungee',sans-serif;color:#fff;text-shadow:0 0 10px rgba(226,100,15,.5);letter-spacing:.06em}
+.brand span{color:#e2640f;letter-spacing:.24em;font-family:'Courier Prime',monospace;font-weight:700}
+.stat .lbl{color:#c9c2b2}
+.bar{background:#000;border-color:#4a4a4a}
+.date{color:#d8d0c0;font-family:'Courier Prime',monospace;font-style:italic}
+.hbtns button{background:#1f1f1f;border-color:#555;color:#fff}
+.hbtns button:hover{background:#333}
+.parch{background:var(--parch);background-image:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.6),transparent 60%),radial-gradient(ellipse at 80% 90%,rgba(226,100,15,.07),transparent 55%);
+  border:1px solid var(--edge);border-radius:2px;box-shadow:0 6px 30px rgba(0,0,0,.75)}
+#tabs button{color:var(--ink2);font-family:'Bungee',sans-serif;font-size:.62rem;letter-spacing:.04em}
+#tabs button.on{background:rgba(226,100,15,.16);color:#a5410a}
+.chaphead .cn{font-family:'Courier Prime',monospace;color:var(--gold);letter-spacing:.3em;font-weight:700}
+.chaphead h2{font-family:'Bungee',sans-serif;font-weight:400;font-size:1.45rem;letter-spacing:.02em}
+.chaphead .where{font-family:'Courier Prime',monospace}
+.rule{background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--red) 80%,transparent) center/100% 3px no-repeat;opacity:.8}
+.text p.first::first-letter{font-family:'Bungee',sans-serif;color:var(--gold);font-size:3em;padding:4px 8px 0 0}
+.text .say{color:#5a1038}
+.text .nad{display:block;font-family:'Courier Prime',monospace;background:#141414;color:#ffd2a8;padding:8px 12px;border-left:4px solid var(--gold);margin:4px 0}
+.text .page{display:block;font-family:'Courier Prime',monospace;background:#fffdf6;border:1px solid #bbb;padding:10px 14px;margin:6px 0;box-shadow:2px 2px 0 #ccc;transform:rotate(-.6deg)}
+.text .sign{display:block;text-align:center;font-family:'Bungee',sans-serif;letter-spacing:.08em;font-size:1.2rem;color:#fff;background:#141414;padding:10px;border:3px solid var(--gold);margin:6px auto;max-width:520px;line-height:1.5}
+.choice{border-radius:2px}
+.choice.talk::before{content:'❝ ';color:var(--gold)}
+.choice.uv{border:1px solid var(--red);background:linear-gradient(90deg,rgba(176,24,106,.14),rgba(252,251,247,.5))}
+.choice.uv::before{content:'✸ ';color:var(--red)}
+.choice.music{border:1px solid var(--gold);background:linear-gradient(90deg,rgba(226,100,15,.14),rgba(252,251,247,.5))}
+.choice.music::before{content:'♫ ';color:var(--gold)}
+.btn{background:linear-gradient(#2a2a2a,#0e0e0e);color:#fff;border:1px solid #000;border-radius:2px}
+.btn.gold{background:linear-gradient(#f07a24,#b44a06);color:#fff;border-color:#5a2402}
+.chip.ring{border-color:var(--red);background:#f8d8e8;color:#7a0e48}
+.toast{background:#121212;color:#fff;border-color:#e2640f;border-radius:2px;font-family:'Courier Prime',monospace;font-size:.88rem}
+.toast.ring{border-color:#d0207a;color:#ffb0d4}
+.song h3{font-family:'Bungee',sans-serif;font-weight:400}
+.song .ln.lit{background:rgba(226,100,15,.25)}
+.log{font-family:'Courier Prime',monospace;font-size:.86rem}
+.log b{color:#a5410a;font-style:normal}
+.word{display:flex;gap:8px;padding:5px 0;border-bottom:1px dotted var(--edge);font-size:.9rem}
+.word b{font-family:'Courier Prime',monospace;min-width:110px;color:#a5410a}
+.titlescr h1{font-family:'Bungee',sans-serif;font-weight:400;color:#141414;font-size:2.8rem;letter-spacing:.02em}
+.titlescr .sub{font-family:'Courier Prime',monospace;font-style:italic;font-size:1.02rem}
+.titlescr .verse{font-family:'Courier Prime',monospace;font-weight:700;color:var(--red);font-size:1.2rem}
+.ending h2{font-family:'Bungee',sans-serif;font-weight:400}
+.heaticon{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#9cf 0%,#246 60%,#012 100%);border:1px solid #000;transition:all .5s}
+.cutter{font-family:'Bungee',sans-serif;color:#ffd2a8}
+.char .av{font-family:'Bungee',sans-serif;border-radius:50%}
+.char.gone .nm{text-decoration:line-through;color:var(--ink3)}
+.char.gone .av{filter:grayscale(1);opacity:.45}
+.smaugline{border-left-color:var(--gold);background:rgba(0,0,0,.05);font-family:'Courier Prime',monospace;font-size:1.02rem}
+.paper{font-family:'Courier Prime',monospace;font-size:1.1rem;color:#141414;min-height:5.5em;padding:12px 18px;line-height:1.5;background:#fffdf6;border:1px solid var(--edge);white-space:pre-wrap;word-break:break-word}
+.riddle{font-family:'Courier Prime',monospace}
+/* the old ultra-violence: a red-orange flash; after the cure, the sickness: green and swimming */
+body.wraith #wrap{filter:saturate(2.2) hue-rotate(-18deg) contrast(1.3);transition:filter .2s}
+body.sick #wrap{filter:hue-rotate(70deg) blur(1.6px) saturate(.6);transition:filter .3s}
+#scan{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .3s;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(176,24,106,.45))}
+body.wraith #scan{opacity:1}
+body.sick #scan{opacity:1;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(90,140,40,.55))}
+</style>
+</head>
+<body>
+<header id="top">
+  <div class="brand">Real Horrorshow<span>A NADSAT TALE IN 21 CHAPTERS</span></div>
+  <div id="stats"></div>
+  <div class="hbtns"><button id="btnSound" title="Sound effects">♪</button><button id="btnMenu" title="Menu">☰</button></div>
+</header>
+<main id="wrap">
+  <section id="stage" class="parch"></section>
+  <aside id="side" class="parch"><nav id="tabs"></nav><div id="panel"></div></aside>
+</main>
+<div id="modal" class="hidden"><div class="mbox parch"><button class="mclose" aria-label="Close">×</button><div id="mbody"></div></div></div>
+<div id="toasts"></div>
+<div id="scan"></div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════════════
+   REAL HORRORSHOW — an unofficial game after Anthony Burgess's novel
+   A Clockwork Orange (1962). You are Alex, your humble narrator.
+   The novel is in copyright, so only short phrases are quoted; the prose,
+   verses and games are new. The book's sexual violence is not depicted.
+   Built on the engine of burglar.html.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// ── UTILITIES ───────────────────────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rnd = (a, b) => a + Math.random() * (b - a);
+const ri = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function hash(s){ let h = 2166136261; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function seeded(seed){ let s = (seed >>> 0) || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+function shuffle(a, r){ r = r || Math.random; for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+const tx = t => typeof t === 'function' ? t(G) : (t || '');
+
+
+// ── NADSAT ──────────────────────────────────────────────────────────────────
+// Collected word by word as you hear them; the quiz draws on them.
+const NADSAT = {
+  droog:'friend', horrorshow:'good, great', viddy:'see, look', moloko:'milk', malchick:'boy', devotchka:'girl',
+  tolchock:'hit, blow', krovvy:'blood', britva:'razor', cutter:'money', deng:'money', rassoodock:'mind',
+  gulliver:'head', litso:'face', millicent:'policeman', nochy:'night', skorry:'quick', starry:'old',
+  ptitsa:'woman', glazzies:'eyes', lewdies:'people', platties:'clothes', slooshy:'listen, hear', govoreet:'speak',
+  'pee and em':'father and mother', bog:'God', baboochka:'old woman', chelloveck:'man', veck:'man, fellow',
+  razdraz:'angry, upset', zoobies:'teeth', rooker:'hand', noga:'foot, leg', staja:'State Jail', charlie:'chaplain',
+  skolliwoll:'school', yahzick:'tongue', smeck:'laugh', bezoomny:'mad', 'appy polly loggy':'apology',
+  sinny:'cinema', cancer:'cigarette', spatchka:'sleep', 'oddy knocky':'alone, on your own', prestoopnik:'criminal',
+  tashtook:'handkerchief', eggiweg:'egg', rabbit:'work', biblio:'library', mesto:'place', 'shiny':'?'
+};
+delete NADSAT.shiny;
+const PAGES = [
+  'A CLOCKWORK ORANGE — by F. Alexander. (Typescript, first page, much crossed out.)',
+  'To wind a man up like a toy, so that he walks only where he is pointed, is the greatest wrong that a state can do.',
+  'A man is a growing thing, sweet like fruit and just as able to go rotten; he is not a mechanism to be oiled and set.',
+  'Better a man who chooses wrongly than a clock that cannot choose at all.'];
+const pageCount = () => [0, 1, 2, 3].filter(i => G.flags['page' + i]).length;
+
+// ── ITEMS (your carmans, O my brothers) ─────────────────────────────────────
+const ITEMS = {
+  britva:{n:'Britva', ic:'🪒', d:'An old-fashioned cut-throat. Very horrorshow for flashing in the light of the street lamps.'},
+  bowler:{n:'Bowler', ic:'🎩', d:'A black bowler on your gulliver, the height of fashion this season, with white platties and the boots for kicking.'},
+  moloko:{n:'Moloko Plus', ic:'🥛', d:'Milk with something in it, from the Korova Milkbar. Sharpens you up for a bit of the old ultra-violence.'},
+  disc_ninth:{n:'Disc: the Ninth', ic:'💿', d:'Ludwig van, the Ninth Symphony, the last movement with the choir. The loveliest thing ever made.'},
+  disc_mozart:{n:'Disc: the Jupiter', ic:'💿', d:'Mozart, the Jupiter Symphony. Bought at Melodia, with real cutter, which surprised the shop-veck.'},
+  disc_bach:{n:'Disc: Brandenburg', ic:'💿', d:'J. S. Bach, a Brandenburg Concerto, for middle and low strings. Calming, like being let off.'},
+  page:{n:'Typescript Pages', ic:'📄', d:'Torn sheets from a book being written by a veck in a cottage called HOME. A Clockwork Orange, it is called. A gloopy title.'},
+  number:{n:'Number 6655321', ic:'🔢', d:'Not a thing in your carman, but on your platties, and in place of your name.'},
+  bible:{n:'The Big Book', ic:'📖', d:'Lent by the prison charlie. You like the bits with the old Yahudis tolchocking each other, and the wine, and less the preachy bits.'},
+  wallet:{n:'A Photograph', ic:'🖼️', d:'Cut from a gazetta and kept in your carman, you don\'t know why. A baby gurgling goo goo goo.'},
+  cash_purse:{n:'A Little Purse', ic:'👛', d:'Picked up in the street, with a few coins in it and a name and address inside.'}
+};
+
+// ── PERSONS ─────────────────────────────────────────────────────────────────
+const CHARS = {
+  pete:{n:'Pete', c:'#4a6a8a', d:'The quiet one of your droogs. Not much for a fight, but always there. Pete will grow up first.'},
+  georgie:{n:'Georgie', c:'#8a4a2a', d:'Ambitious, a thinker of a kind. He has ideas about who should be leader, and about bigger jobs with bigger cutter.'},
+  dim:{n:'Dim', c:'#5a5a2a', d:'Very dim, as the name tells you, with a horrible loud laugh and a chain round his waist. Very strong. Very loyal, until he isn\'t.'},
+  billyboy:{n:'Billyboy', c:'#6a2a2a', d:'Leader of a rival gang. Fat, with a smell like cheap oil, and your sworn enemy since you were nadsats together.'},
+  deltoid:{n:'P. R. Deltoid', c:'#5a5a5a', d:'Your Post-Corrective Adviser. A tired, overworked veck who keeps telling you you\'ll end up in the Staja. He is right, which you hate.'},
+  pee:{n:'Your Pee and Em', c:'#7a6a5a', d:'Your father and mother. They work all day and are frightened of you at night, and do not ask where the money comes from.'},
+  catlady:{n:'The Cat Woman', c:'#8a7a9a', d:'A starry ptitsa who lives alone in a big house called the Manse, with about a dozen cats and some very valuable things.'},
+  falexander:{n:'F. Alexander', c:'#3a5a4a', d:'A writer, living in a cottage out in the country with the name HOME on the gate. He is writing a book called A Clockwork Orange.'},
+  charlie:{n:'The Prison Charlie', c:'#2a2a4a', d:'The chaplain at Staja 84F, who drinks a bit, and preaches a lot, and really does seem to care about choice.'},
+  brodsky:{n:'Dr Brodsky', c:'#2a4a4a', d:'The great man of Ludovico\'s Technique. Small, plump, with curly hair and very thick glasses. Very kind voice.'},
+  branom:{n:'Dr Branom', c:'#4a4a6a', d:'Dr Brodsky\'s assistant, all smiles, like a brother. He gives the injections.'},
+  minister:{n:'The Minister', c:'#1a1a1a', d:'The Minister of the Interior — the Inferior, you call him — who wants the prisons emptied for political prisoners and wants votes for it.'},
+  joe:{n:'Joe the Lodger', c:'#6a6a4a', d:'The lodger who took your room while you were away, and calls your Pee and Em "Dad" and "Mum".'},
+  professor:{n:'The Starry Professor', c:'#7a7a6a', d:'An old veck from the Public Biblio, with books under his arm. You and your droogs tolchocked him once. He has not forgotten.'},
+  drunk:{n:'The Old Drunkie', c:'#5a4a3a', d:'An old veck under the railway bridge, singing the songs of his fathers, very filthy and very loud.'},
+  babooshkas:{n:'The Starry Baboochkas', c:'#9a7a7a', d:'Three old women in the snug of the Duke of New York, always happy to be bought a drink, and to say you never left the pub all night.'},
+  georgina:{n:'Georgina', c:'#b0186a', d:'Pete\'s wife. A nice devotchka who laughs at the way you talk.'},
+  governor:{n:'The Governor', c:'#3a3a3a', d:'The Governor of Staja 84F. A thin veck who is frightened of the Minister.'}
+};
+
+// ── SOUND ───────────────────────────────────────────────────────────────────
+const SND = (() => {
+  let ctx = null, on = false, master = null, playing = [], lineTimers = [];
+  try { on = localStorage.getItem('horrorshowSound') === '1'; } catch (e) {}
+  function ac(){
+    if (!ctx){ const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      ctx = new C(); master = ctx.createGain(); master.gain.value = .5; master.connect(ctx.destination); }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+  function note(m, t, dur, type, vol, dest){
+    const c = ac(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'triangle'; o.frequency.value = mf(m);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || .25, t + .02);
+    g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g); g.connect(dest || master); o.start(t); o.stop(t + dur + .05); playing.push(o);
+  }
+  function noise(t, dur, vol, freq){
+    const c = ac(); if (!c) return;
+    const b = c.createBuffer(1, Math.max(1, c.sampleRate * dur), c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = c.createBufferSource(); s.buffer = b;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq || 3000;
+    const g = c.createGain(); g.gain.setValueAtTime(vol || .2, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); playing.push(s);
+  }
+  function fx(kind){
+    if (!on) return; const c = ac(); if (!c) return; const t = c.currentTime;
+    switch (kind){
+      case 'click': note(84, t, .06, 'square', .05); break;
+      case 'good': note(72, t, .15, 'triangle', .2); note(76, t + .08, .15, 'triangle', .2); note(79, t + .16, .3, 'triangle', .2); break;
+      case 'bad': note(52, t, .3, 'sawtooth', .12); note(47, t + .12, .4, 'sawtooth', .12); break;
+      case 'ring': note(40, t, 1.4, 'sine', .3); note(47, t, 1.4, 'sine', .15); noise(t, 1.2, .08, 400); break;
+      case 'hit': noise(t, .15, .3, 900); break;
+      case 'boom': note(30, t, .6, 'sine', .5); noise(t, .4, .25, 200); break;
+      case 'firework': noise(t, .5, .25, 1800); note(ri(80, 95), t, .2, 'sine', .08); break;
+      case 'splash': noise(t, .35, .2, 1200); break;
+      case 'shriek': { const o = c.createOscillator(), g = c.createGain(); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(1400, t); o.frequency.exponentialRampToValueAtTime(500, t + .9);
+        g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + 1); o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.05); break; }
+      case 'step': noise(t, .05, .12, 500); break;
+    }
+  }
+  function tone(m, dur, type, vol){ if (!on) return; const c = ac(); if (!c) return; note(m, c.currentTime, dur || .3, type, vol); }
+  function toneAlways(m, dur, type, vol){ const c = ac(); if (!c) return; note(m, c.currentTime, dur || .3, type, vol); }
+  // play a generated melody; onLine(i) fires as each line starts
+  function sing(mel, onLine, onEnd){
+    stop(); const c = ac(); if (!c) { if (onEnd) onEnd(); return; }
+    const beat = 60 / mel.tempo; let t = c.currentTime + .15; const t0 = t;
+    mel.lines.forEach((line, li) => {
+      lineTimers.push(setTimeout(() => onLine && onLine(li), (t - t0) * 1000 + 150));
+      line.forEach(([m, d]) => {
+        note(m, t, d * beat * 1.6, mel.voice, .22); note(m + 12, t, d * beat * .8, 'sine', .05);
+        if (mel.drum && d >= 1) noise(t, .05, .06, 4000);
+        t += d * beat;
+      });
+      note(mel.root - 12, t - line.reduce((a, n) => a + n[1], 0) * beat, line.reduce((a, n) => a + n[1], 0) * beat, 'sine', mel.drone ? .08 : .03);
+      t += beat * .5;
+    });
+    lineTimers.push(setTimeout(() => { if (onEnd) onEnd(); }, (t - t0) * 1000 + 300));
+  }
+  function stop(){ lineTimers.forEach(clearTimeout); lineTimers = []; playing.forEach(o => { try { o.stop(); } catch (e) {} }); playing = []; }
+  return { fx, tone, toneAlways, sing, stop, ac,
+    get on(){ return on; }, set on(v){ on = v; try { localStorage.setItem('horrorshowSound', v ? '1' : '0'); } catch (e) {} } };
+})();
+
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+const SAVE_KEY = 'horrorshowSave';
+let G = null;
+const UI = { tab:'map', game:null, inst:null, mapZoom:null };
+
+function newGame(){
+  return {
+    version:1, beat:null, chapter:1, chTitle:'', date:'', map:'wild', loc:'korova',
+    stats:{hum:55, health:100, sus:5, food:15, cash:6},
+    aff:{pete:30, georgie:20, dim:25, billyboy:-40, deltoid:0, pee:10, catlady:0, falexander:0, charlie:0, brodsky:0},
+    met:['pete','georgie','dim','pee'],
+    party:['pete','georgie','dim'], gone:[], words:[],
+    items:['britva','bowler'], flags:{}, songs:[], maps:['wild'], seen:{}, route:['korova'],
+    log:[], ringUses:0, games:{}, pending:null, checkpoint:null, ending:null, started:Date.now()
+  };
+}
+function save(){ if (!G) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); } catch (e) {} }
+function tryLoad(){
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.version === 1 && BEATS[s.beat]) return s; } catch (e) {}
+  return null;
+}
+function snapshot(){ const c = Object.assign({}, G); delete c.checkpoint; return JSON.parse(JSON.stringify(c)); }
+
+const has = k => G.items.indexOf(k) >= 0;
+const flag = k => !!G.flags[k];
+const aff = k => G.aff[k] || 0;
+const inParty = k => G.party.indexOf(k) >= 0;
+const partOf = ch => ch <= 7 ? 1 : ch <= 14 ? 2 : 3;
+const cured = () => G.flags.cured && !G.flags.uncured;
+
+// ── EFFECTS ─────────────────────────────────────────────────────────────────
+// hum = Choice (free will) · food = Grown (maturity) · sus = Heat · cash = cutter
+const STAT_NAME = {hum:'Choice', health:'Health', sus:'Heat', food:'Grown', cash:'Cutter'};
+const STAT_MAX = {hum:100, health:100, sus:100, food:100, cash:999};
+function applyFx(fx){
+  const out = [];
+  if (!fx) return out;
+  ['hum','health','sus','food','cash'].forEach(k => {
+    if (!fx[k]) return;
+    if (k === 'sus' && G.flags.arrested) return;
+    const before = G.stats[k];
+    G.stats[k] = clamp(before + fx[k], 0, STAT_MAX[k]);
+    const d = G.stats[k] - before; if (!d) return;
+    const good = k === 'sus' ? d < 0 : d > 0;
+    out.push({t:`${STAT_NAME[k]} ${d > 0 ? '+' : ''}${d}`, c: k === 'sus' && d > 0 ? 'ring' : good ? 'good' : 'bad'});
+  });
+  if (fx.aff) Object.keys(fx.aff).forEach(k => {
+    const v = fx.aff[k]; G.aff[k] = clamp((G.aff[k] || 0) + v, -100, 100);
+    const nm = (CHARS[k] ? CHARS[k].n : k).replace(/^(The |Your |Dr |P\. R\. )/, '').split(/[ (]/)[0];
+    out.push({t:`${nm} ${v > 0 ? '♥+' + v : '♥' + v}`, c: v > 0 ? 'good' : 'bad'});
+  });
+  [].concat(fx.item || []).forEach(k => { if (!has(k)){ G.items.push(k); out.push({t:'Gained: ' + ITEMS[k].n, c:'good'}); } });
+  [].concat(fx.lose || []).forEach(k => { const i = G.items.indexOf(k); if (i >= 0){ G.items.splice(i, 1); out.push({t:'Lost: ' + ITEMS[k].n, c:'bad'}); } });
+  [].concat(fx.flag || []).forEach(k => { G.flags[k] = true; });
+  if (fx.flags) Object.assign(G.flags, fx.flags);
+  [].concat(fx.song || []).forEach(k => { if (learnSong(k)) out.push({t:'Music: ' + SONGS[k].title, c:'good'}); });
+  [].concat(fx.map || []).forEach(k => { if (unlockMap(k)) out.push({t:'New map: ' + MAPS[k].title, c:'good'}); });
+  [].concat(fx.meet || []).forEach(k => { if (G.met.indexOf(k) < 0) G.met.push(k); });
+  [].concat(fx.join || []).forEach(k => { if (G.party.indexOf(k) < 0) G.party.push(k); if (G.met.indexOf(k) < 0) G.met.push(k); });
+  [].concat(fx.leave || []).forEach(k => { const i = G.party.indexOf(k); if (i >= 0) G.party.splice(i, 1); });
+  [].concat(fx.vaporize || []).forEach(k => { if (G.gone.indexOf(k) < 0){ G.gone.push(k); out.push({t:(CHARS[k] ? CHARS[k].n : k) + ' has snuffed it', c:'bad'}); } });
+  [].concat(fx.word || []).forEach(w => { if (NADSAT[w] && G.words.indexOf(w) < 0){ G.words.push(w); out.push({t:`Nadsat: ${w} — ${NADSAT[w]}`, c:''}); } });
+  [].concat(fx.page === undefined ? [] : fx.page).forEach(i => {
+    if (G.flags['page' + i]) return; G.flags['page' + i] = true;
+    out.push({t:'A page of the typescript (' + pageCount() + '/4)', c:'good'});
+    if (pageCount() === 4 && learnSong('manuscript')) out.push({t:'The whole of F. Alexander\'s page: A Clockwork Orange', c:'good'});
+  });
+  return out;
+}
+// The old ultra-violence: Grown goes down. After Ludovico's Technique, even
+// choosing it brings on the sickness instead.
+function ringUse(cost){
+  G.ringUses++;
+  if (UI.game) { const o = applyFx({hum: -(cost || 2)}); wraithFlash(); return o; }   // innocent face, in a stealth map
+  if (cured()){
+    const o = applyFx({health:-12, hum:-2}); o.unshift({t:'The sickness! The Ludovico sickness!', c:'bad'});
+    SND.fx('bad'); document.body.classList.add('sick'); setTimeout(() => document.body.classList.remove('sick'), 1800);
+    return o;
+  }
+  const out = applyFx({food: -(cost || 3)});
+  wraithFlash();
+  return out;
+}
+function wraithFlash(){
+  SND.fx('hit');
+  document.body.classList.add('wraith');
+  setTimeout(() => { if (!UI.ringHeld) document.body.classList.remove('wraith'); }, 700);
+}
+function learnSong(k){ if (!SONGS[k] || G.songs.indexOf(k) >= 0) return false; G.songs.push(k); return true; }
+function unlockMap(k){ if (!MAPS[k] || G.maps.indexOf(k) >= 0) return false; G.maps.push(k); return true; }
+function addLog(t){ G.log.unshift({d:G.date, t}); if (G.log.length > 150) G.log.length = 150; }
+function markSeen(map, loc){ if (!G.seen[map]) G.seen[map] = []; if (G.seen[map].indexOf(loc) < 0) G.seen[map].push(loc); }
+
+function toast(chips){
+  const box = $('#toasts');
+  chips.forEach((c, i) => setTimeout(() => {
+    const d = document.createElement('div'); d.className = 'toast ' + (c.c || ''); d.textContent = c.t;
+    box.appendChild(d); setTimeout(() => d.remove(), 3300);
+  }, i * 220));
+}
+
+// ── BEAT ENGINE ─────────────────────────────────────────────────────────────
+function failCheck(b, id){
+  if (b.ending) return null;
+  if (G.stats.health <= 0 && id !== 'fallen') return 'fallen';
+  if (!G.flags.arrested && G.stats.sus >= 100 && id !== 'lowered') return 'lowered';
+  return null;
+}
+function goBeat(id){
+  const b = BEATS[id];
+  if (!b){ console.error('Missing beat', id); return; }
+  const re = G.beat === id;
+  G.beat = id; G.pending = null;
+  if (re){ save(); render(); return; }
+  if (b.chapter){ G.chapter = b.chapter; G.chTitle = b.chTitle; G.checkpoint = null; G.checkpoint = snapshot(); }
+  let chips = [];
+  if (b.date) G.date = b.date;
+  if (b.map){ G.map = b.map; unlockMap(b.map); }
+  if (b.loc){ G.loc = b.loc; markSeen(G.map, b.loc); }
+  if (b.w && G.route[G.route.length - 1] !== b.w) G.route.push(b.w);
+  if (b.fx) chips = chips.concat(applyFx(typeof b.fx === 'function' ? b.fx(G) : b.fx));
+  const sg = typeof b.song === 'function' ? b.song(G) : b.song; if (sg) learnSong(sg);
+  if (b.travel){
+    const need = b.travel;
+    if (G.stats.food >= need) chips = chips.concat(applyFx({food:-need}));
+    else { const short = need - G.stats.food; chips = chips.concat(applyFx({food:-G.stats.food, health:-6 * short, hum:-2 * short}));
+      }
+  }
+  if (b.enter) b.enter(G);
+  if (b.log) addLog(tx(b.log));
+  const f = failCheck(b, id); if (f){ save(); return goBeat(f); }
+  if (chips.length) toast(chips);
+  save();
+  render();
+  window.scrollTo(0, 0);
+}
+function visibleChoices(b){ return (b.choices ? tx(b.choices) : []).filter(c => !c.if || c.if(G)); }
+function choose(i){
+  const b = BEATS[G.beat], c = visibleChoices(b)[i]; if (!c) return;
+  SND.fx('click');
+  let chips = applyFx(typeof c.fx === 'function' ? c.fx(G) : c.fx);
+  if (c.dt) chips = chips.concat(ringUse(c.dt === true ? 3 : c.dt));
+  if (c.act) c.act(G);
+  let next = typeof c.go === 'function' ? c.go(G) : (c.go || G.beat);
+  const f = failCheck(BEATS[next] || {}, next); if (f) next = f;
+  const res = tx(c.res);
+  if (res){ G.pending = {text:res, chips, next}; save(); render(); window.scrollTo(0, 0); }
+  else { if (chips.length) toast(chips); goBeat(next); }
+}
+function continuePending(){ const n = G.pending.next; G.pending = null; goBeat(n); }
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+function paras(t, first){
+  return String(t).split(/\n\s*\n/).map((p, i) => `<p class="${first && i === 0 ? 'first' : ''}">${p.trim()}</p>`).join('');
+}
+function chipHTML(chips){ return chips && chips.length ? `<div class="chips">${chips.map(c => `<span class="chip ${c.c || ''}">${esc(c.t)}</span>`).join('')}</div>` : ''; }
+function locName(map, loc){
+  const m = MAPS[map]; if (!m) return ''; const p = m.places.find(p => p.k === loc); return p ? p.n : '';
+}
+function headerHTML(b){
+  return `<div class="chaphead"><div class="cn">PART ${['ONE','TWO','THREE'][partOf(G.chapter) - 1]} · CHAPTER ${G.chapter}</div><h2>${esc(G.chTitle || '')}</h2>
+    <div class="where">${esc(b.title || locName(G.map, G.loc))}</div></div><div class="rule"></div>`;
+}
+function romanize(n){ const r = [['M',1000],['CM',900],['D',500],['CD',400],['C',100],['XC',90],['L',50],['XL',40],['X',10],['IX',9],['V',5],['IV',4],['I',1]]; let s = ''; r.forEach(([k, v]) => { while (n >= v){ s += k; n -= v; } }); return s; }
+function artHTML(b){
+  if (b.art === 'none') return '';
+  if (b.art && VIGNETTES[b.art]) return `<div class="art" data-vig="${b.art}">${VIGNETTES[b.art]()}</div>`;
+  const map = b.map || G.map;
+  return `<div class="art" data-map="${map}">${drawMap(map, {here:G.loc, small:true})}<span class="hint">click to enlarge</span></div>`;
+}
+function render(){
+  renderStats(); renderSide();
+  if (!G){ renderTitle(); return; }
+  if (UI.game) return;
+  const st = $('#stage'), b = BEATS[G.beat];
+  if (b.ending){ st.innerHTML = renderEnding(b); wireStage(); return; }
+  let h = headerHTML(b);
+  if (G.pending){
+    h += `<div class="text">${paras(G.pending.text, true)}</div>${G.pending.chips.length ? `<div class="result">${chipHTML(G.pending.chips)}</div>` : ''}
+      <div class="choices"><button class="choice go" data-cont>Continue…</button></div>`;
+    st.innerHTML = h; wireStage(); return;
+  }
+  h += artHTML(b);
+  h += `<div class="text">${paras(tx(b.text), true)}</div>`;
+  const sg = typeof b.song === 'function' ? b.song(G) : b.song; if (sg) h += songCard(sg);
+  if (b.game){
+    const gc = tx(b.game);
+    h += `<div class="choices"><button class="choice game go" data-game>${esc(gc.label || 'Begin')}</button>
+      <button class="choice" data-skip>Let Bog decide <span class="tag">skip the game · an average outcome</span></button></div>`;
+  } else {
+    const cs = visibleChoices(b);
+    h += `<div class="choices">${cs.map((c, i) => {
+      const cls = ['choice', c.dt ? 'uv' : '', c.talk ? 'talk' : '', c.cls || ''].join(' ');
+      return `<button class="${cls}" data-c="${i}">${tx(c.t)}${c.tag ? `<span class="tag">${tx(c.tag)}</span>` : ''}${c.dt ? `<span class="tag">${G.flags.cured && !G.flags.uncured ? 'the sickness' : 'the old ultra-violence'}</span>` : ''}</button>`;
+    }).join('')}</div>`;
+  }
+  st.innerHTML = h; wireStage();
+}
+function wireStage(){
+  const st = $('#stage');
+  st.querySelectorAll('[data-c]').forEach(el => el.onclick = () => choose(+el.dataset.c));
+  const cont = st.querySelector('[data-cont]'); if (cont) cont.onclick = continuePending;
+  const gb = st.querySelector('[data-game]'); if (gb) gb.onclick = () => startGame(tx(BEATS[G.beat].game));
+  const sk = st.querySelector('[data-skip]'); if (sk) sk.onclick = () => { const gc = tx(BEATS[G.beat].game); UI.game = gc; finishGame({win: Math.random() < .55, score: .5, msg:'You let it all happen, O my brothers, the way things do.', fx: gc.skipFx}); };
+  const art = st.querySelector('.art'); if (art) art.onclick = () => art.dataset.map ? openMap(art.dataset.map) : null;
+  st.querySelectorAll('[data-sing]').forEach(el => el.onclick = () => singSong(el.dataset.sing, el.closest('.song')));
+  st.querySelectorAll('[data-checkpoint]').forEach(el => el.onclick = restoreCheckpoint);
+  st.querySelectorAll('[data-new]').forEach(el => el.onclick = startNew);
+  st.querySelectorAll('[data-load]').forEach(el => el.onclick = () => { G = tryLoad(); render(); });
+}
+function restoreCheckpoint(){
+  if (!G.checkpoint) return;
+  const cp = G.checkpoint; G = JSON.parse(JSON.stringify(cp)); G.checkpoint = cp; G.pending = null;
+  UI.game = null; if (UI.inst && UI.inst.stop) UI.inst.stop(); UI.inst = null;
+  save(); closeModal(); render(); toast([{t:'Back to the start of the chapter, O my brothers.'}]);
+}
+function startNew(){ SND.stop(); if (UI.inst && UI.inst.stop) UI.inst.stop(); UI.inst = null; UI.game = null; G = newGame(); closeModal(); goBeat('start'); }
+
+
+function renderStats(){
+  const el = $('#stats');
+  if (!G){ el.innerHTML = ''; return; }
+  const s = G.stats;
+  const bar = (v, c) => `<span class="bar"><i style="width:${v}%;background:${c}"></i></span>`;
+  const glow = 2 + s.sus / 4, gc = s.sus > 70 ? '#4af' : s.sus > 40 ? '#28c' : '#345';
+  el.innerHTML = `
+    <span class="stat" title="Choice: your free will. When a man cannot choose, he ceases to be a man."><span class="lbl">choice</span>${bar(s.hum, 'linear-gradient(90deg,#b44a06,#ffb070)')}</span>
+    <span class="stat" title="Health: at nothing, your story ends"><span class="lbl">health</span>${bar(s.health, 'linear-gradient(90deg,#7a0e48,#e04a8a)')}</span>
+    <span class="stat" title="Grown: how far you have come from being a nadsat. It falls with every bit of the old ultra-violence."><span class="lbl">grown</span>${bar(s.food, 'linear-gradient(90deg,#3a5a3a,#a8d8a0)')}</span>
+    <span class="stat" title="Heat: the Millicents' interest in you. At 100 they have you."><span class="heaticon" style="box-shadow:0 0 ${glow}px ${gc}"></span><span class="lbl">heat</span> ${G.flags.arrested ? '<b style="color:#8cf">INSIDE</b>' : s.sus}</span>
+    <span class="stat" title="Cutter: money in your carman"><span class="cutter">£</span> ${s.cash}</span>
+    <span class="date">${esc(G.date || '')}</span>`;
+}
+const TABS = [['map','Town'],['fellow','Droogs'],['pack','Carmans'],['songs','Music'],['words','Nadsat'],['maps','Maps'],['log','Diary']];
+function renderSide(){
+  $('#tabs').innerHTML = TABS.map(([k, n]) => `<button data-tab="${k}" class="${UI.tab === k ? 'on' : ''}">${n}</button>`).join('');
+  $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { UI.tab = b.dataset.tab; renderSide(); });
+  const p = $('#panel');
+  if (!G){ p.innerHTML = `<div class="ptitle">The Town</div>${drawMap('wild', {small:true})}<p class="meta">Flatblocks, milkbars and the dark country beyond. What's it going to be then, eh?</p>`; return; }
+  let h = '';
+  if (UI.tab === 'map'){
+    h = `<div class="ptitle">The Town</div><div class="art" data-map="wild">${drawMap('wild', {small:true, worldRoute:true})}</div>
+      <p class="meta">${G.route.length} mesto${G.route.length === 1 ? '' : 's'} on your night's itinerary. Click to enlarge.</p>
+      <div class="side-here"><div class="ptitle">Here</div><div class="art" data-map="${G.map}">${drawMap(G.map, {here:G.loc, small:true})}</div></div>`;
+  } else if (UI.tab === 'fellow'){
+    h = `<div class="ptitle">Droogs, Lewdies &amp; Others</div>`;
+    const order = Object.keys(CHARS).filter(k => G.met.indexOf(k) >= 0);
+    order.sort((a, b) => (inParty(b) ? 1 : 0) - (inParty(a) ? 1 : 0));
+    h += order.map(k => {
+      const c = CHARS[k], a = G.aff[k], gone = G.gone.indexOf(k) >= 0;
+      const ab = a === undefined || gone ? '' : `<div class="abar"><i style="left:${a >= 0 ? 50 : 50 + a / 2}%;width:${Math.abs(a) / 2}%;background:${a >= 0 ? '#e2640f' : '#b0186a'}"></i></div>`;
+      return `<div class="char ${gone ? 'gone' : ''}"><div class="av" style="background:${c.c}">${c.n.replace(/^(The |Your |Dr |P\. R\. )/, '')[0]}</div><div style="flex:1"><span class="nm">${esc(c.n)}</span>${inParty(k) ? '<span class="here">with you</span>' : ''}${gone ? '<span class="here" style="color:#b0186a">snuffed it</span>' : ''}<div class="ds">${esc(c.d)}</div>${ab}</div></div>`;
+    }).join('');
+  } else if (UI.tab === 'pack'){
+    h = `<div class="ptitle">In Your Carmans</div>` + (G.items.length ? G.items.map(k => `<div class="item"><div class="ic">${ITEMS[k].ic}</div><div><div class="nm">${esc(ITEMS[k].n)}</div><div class="ds">${esc(ITEMS[k].d)}</div></div></div>`).join('') : '<p class="meta">Empty, O my brothers. They took the lot.</p>')
+      + `<p class="meta">£${G.stats.cash} in cutter. You have gone in for the old ultra-violence ${G.ringUses} time${G.ringUses === 1 ? '' : 's'}.${pageCount() ? ` Typescript pages: ${pageCount()} of 4.` : ''}</p>`;
+  } else if (UI.tab === 'songs'){
+    h = `<div class="ptitle">Music &amp; Words (${G.songs.length}/${Object.keys(SONGS).length})</div>`
+      + (G.songs.length ? G.songs.map(k => `<button class="songli" data-song="${k}">${esc(SONGS[k].title)}<small>${esc(SONGS[k].by)}</small></button>`).join('') : '<p class="meta">No music yet. That will not last.</p>');
+  } else if (UI.tab === 'words'){
+    const all = Object.keys(NADSAT).length;
+    h = `<div class="ptitle">Nadsat (${G.words.length}/${all})</div><p class="meta">The talk of the nadsats, the teens. Every word you slooshy gets written down here.</p>`
+      + G.words.slice().sort().map(w => `<div class="word"><b>${esc(w)}</b><span>${esc(NADSAT[w])}</span></div>`).join('');
+  } else if (UI.tab === 'maps'){
+    h = `<div class="ptitle">Maps (${G.maps.length}/${Object.keys(MAPS).length})</div><div class="mapgrid">`
+      + Object.keys(MAPS).map(k => G.maps.indexOf(k) >= 0
+        ? `<button data-map="${k}">${drawMap(k, {thumb:true})}${esc(MAPS[k].title)}</button>`
+        : `<button class="lock">${'<svg viewBox="0 0 100 70"><rect width="100" height="70" fill="#e6e1d6"/><text x="50" y="44" text-anchor="middle" font-size="24" fill="#e2640f">?</text></svg>'}Not viddied yet</button>`).join('') + `</div>`;
+  } else if (UI.tab === 'log'){
+    h = `<div class="ptitle">Your Humble Narrator's Diary</div>` + (G.log.length ? G.log.map(l => `<div class="log"><b>${esc(l.d)}</b> — ${esc(l.t)}</div>`).join('') : '<p class="meta">Nothing yet, O my brothers.</p>');
+  }
+  p.innerHTML = h;
+  p.querySelectorAll('[data-map]').forEach(el => el.onclick = () => openMap(el.dataset.map));
+  p.querySelectorAll('[data-song]').forEach(el => el.onclick = () => openSong(el.dataset.song));
+}
+
+function openModal(html){ $('#mbody').innerHTML = html; $('#modal').classList.remove('hidden'); }
+function closeModal(){ $('#modal').classList.add('hidden'); SND.stop(); }
+function openMap(k){
+  const m = MAPS[k];
+  openModal(`<div class="center" style="font-family:Bungee,sans-serif;font-size:1.2rem">${esc(m.title)}</div>
+    <div class="center meta" style="margin-bottom:8px;font-family:'Courier Prime',monospace">${esc(m.sub || '')}</div>
+    ${drawMap(k, {here: G && k === G.map ? G.loc : null, worldRoute: k === 'wild', big:true})}
+    ${m.notes ? `<p class="meta" style="margin-top:8px">${esc(m.notes)}</p>` : ''}`);
+}
+function openSong(k){
+  openModal(songCard(k, true));
+  $('#mbody').querySelectorAll('[data-sing]').forEach(el => el.onclick = () => singSong(k, el.closest('.song')));
+}
+
+
+// ═══ MAPS ═══════════════════════════════════════════════════════════════════
+const MAPS = {
+  wild:{title:'The Town', sub:'Flatblocks, milkbars, the canal, and the dark country beyond', w:1200, h:800,
+    rivers:[
+      [[0,520],[200,500],[420,540],[640,500],[860,540],[1200,520]],
+      [[0,712],[400,694],[800,724],[1200,706]]],
+    roads:[
+      [[300,300],[380,360],[520,250],[600,330],[720,430]],
+      [[300,300],[260,420],[420,520],[480,620],[700,640],[900,600]],
+      [[600,330],[760,260],[900,200]],[[720,430],[880,420],[1040,420]],
+      [[520,250],[380,170],[220,150],[80,90]]],
+    forest:[[[20,160],[180,170],[230,260],[120,330],[30,300]],[[980,100],[1120,90],[1160,190],[1020,220]]],
+    hills:[[740,450],[770,440],[700,462]],
+    dark:[[[820,150],[980,140],[990,250],[830,262]]],
+    places:[
+      {k:'korova',n:'Korova Milkbar',x:300,y:300,t:'inn',a:'l'},{k:'duke',n:'The Duke of New York',x:380,y:360,t:'inn',a:'b'},
+      {k:'flatblock',n:'Flatblock 18A',x:520,y:250,t:'tower',a:'t'},{k:'melodia',n:'Melodia (discs)',x:600,y:330,t:'inn',a:'r'},
+      {k:'casino',n:'Old Casino (derelict)',x:720,y:430,t:'ruin',a:'b'},{k:'biblio',n:'Public Biblio',x:260,y:420,t:'city',a:'l'},
+      {k:'bridge',n:'Railway Bridge',x:420,y:520,t:'ruin',a:'b'},{k:'manse',n:'The Manse',x:900,y:200,t:'city',a:'r'},
+      {k:'staja',n:'Staja 84F',x:1040,y:420,t:'pyramid',a:'t'},{k:'ludovico',n:'Ludovico Institute',x:900,y:600,t:'pyramid',a:'r'},
+      {k:'hospital',n:'Hospital',x:700,y:640,t:'city',a:'b'},{k:'teashop',n:'Tea and Coffee Mesto',x:480,y:620,t:'inn',a:'l'},
+      {k:'filling',n:'Filling Station',x:220,y:150,t:'dot',a:'b'},{k:'home',n:'HOME',x:80,y:90,t:'inn',a:'r'}],
+    labels:[['THE TOWN',600,770,22,0],['OLDTOWN',905,130,13,0],['the canal',1000,550,12,0],['to the dark country',300,130,10,-14],['the river',200,690,11,0],['Marghanita Boulevard',470,300,10,-30]],
+    notes:'The red line is your itinerary, O my brothers. Mostly at nochy.'},
+
+  korova:{title:'The Korova Milkbar', sub:'Moloko plus, and a bit of the old Ludwig van if you\'re lucky', w:1000, h:700, dungeon:true,
+    roads:[[[120,600],[500,600],[880,600]],[[500,600],[500,250]],[[200,350],[800,350]]],
+    places:[{k:'door',n:'The Door',x:120,y:600,t:'dot',a:'b'},{k:'bar',n:'The Counter',x:500,y:250,t:'inn',a:'t'},
+      {k:'booth',n:'Your Booth',x:200,y:350,t:'inn',a:'t'},{k:'statues',n:'The White Statues',x:800,y:350,t:'dot',a:'t'},
+      {k:'jukebox',n:'The Stereo',x:880,y:600,t:'dot',a:'b'},{k:'stool',n:'A Drugged Veck',x:640,y:300,t:'dot',a:'r'}],
+    labels:[['KOROVA',500,110,26,0],['MILKBAR',500,140,14,0],['moloko plus',500,660,11,0]],
+    route:['door','booth','bar']},
+
+  flatblock:{title:'Municipal Flatblock 18A', sub:'Between Kingsley Avenue and Wilsonsway', w:1000, h:700, dungeon:true,
+    roads:[[[500,640],[500,520],[440,420],[440,300],[500,210],[650,190]],[[500,210],[340,200]],[[650,190],[780,240]]],
+    places:[{k:'lobby',n:'The Lobby',x:500,y:620,t:'inn',a:'r'},{k:'mural',n:'The Mural (vandalised)',x:580,y:540,t:'dot',a:'r'},
+      {k:'lift',n:'The Lift (kaput)',x:420,y:560,t:'ruin',a:'l'},{k:'stairs',n:'Ten Floors of Stairs',x:440,y:380,t:'hill',a:'l'},
+      {k:'pee',n:'Pee and Em\'s Room',x:340,y:200,t:'inn',a:'t'},{k:'den',n:'Your Den',x:650,y:190,t:'inn',a:'t'},
+      {k:'stereo',n:'The Stereo',x:780,y:240,t:'dot',a:'r'}],
+    labels:[['FLATBLOCK 18A',500,100,22,0],['the Dignity of Labour',620,668,10,0]],
+    route:['lobby','stairs','den','stereo']},
+
+  staja:{title:'Staja 84F', sub:'State Jail, where you are 6655321 and not Alex at all', w:1000, h:700, dungeon:true,
+    roads:[[[100,620],[900,620]],[[300,620],[300,180]],[[700,620],[700,180]],[[300,180],[700,180]],[[300,400],[700,400]]],
+    places:[{k:'gate',n:'The Gate',x:100,y:620,t:'dot',a:'b'},{k:'cell',n:'Your Cell',x:300,y:400,t:'inn',a:'l'},
+      {k:'chapel',n:'The Chapel',x:700,y:180,t:'city',a:'t'},{k:'yard',n:'The Yard',x:500,y:620,t:'dot',a:'b'},
+      {k:'governor',n:'The Governor',x:300,y:180,t:'inn',a:'t'},{k:'wing',n:'The Wing',x:700,y:400,t:'dot',a:'r'},
+      {k:'medical',n:'Medical',x:900,y:620,t:'pyramid',a:'t'}],
+    labels:[['STAJA 84F',500,90,22,0],['the stereo is in the chapel',700,230,10,0]],
+    route:['gate','cell','chapel','governor','medical']},
+
+  ludovico:{title:'Ludovico\'s Medical Institute', sub:'White and clean, and very kind, and the worst place in the world', w:1000, h:700, dungeon:true,
+    roads:[[[100,600],[500,600],[900,600]],[[500,600],[500,200]],[[250,300],[750,300]]],
+    places:[{k:'ward',n:'The Ward',x:100,y:600,t:'inn',a:'b'},{k:'sinny',n:'The Sinny',x:750,y:300,t:'city',a:'t'},
+      {k:'office',n:'Dr Brodsky',x:250,y:300,t:'inn',a:'t'},{k:'lab',n:'Injections',x:500,y:200,t:'dot',a:'t'},
+      {k:'stage',n:'The Demonstration Hall',x:900,y:600,t:'city',a:'b'}],
+    labels:[['LUDOVICO',500,100,22,0],['viddy well',750,360,11,0]],
+    route:['ward','lab','sinny','stage']},
+
+  country:{title:'The Dark Country', sub:'Out past the filling station, where the lewdies still have money and doors', w:1000, h:700,
+    rivers:[[[0,600],[300,620],[600,590],[1000,612]]],
+    roads:[[[980,640],[760,520],[560,460],[380,380],[220,260],[120,150]],[[560,460],[620,300],[700,200]]],
+    forest:[[[600,80],[880,60],[920,200],[700,260]],[[60,380],[260,360],[300,520],[100,540]]],
+    hills:[[400,520],[430,510],[820,360],[850,370]],
+    places:[{k:'roadin',n:'From the Town',x:960,y:640,t:'dot',a:'t'},{k:'filling',n:'Filling Station',x:560,y:460,t:'dot',a:'b'},
+      {k:'trough',n:'The Trough',x:700,y:200,t:'ruin',a:'r'},{k:'home',n:'HOME',x:120,y:150,t:'inn',a:'r'},
+      {k:'woods',n:'The Woods',x:740,y:150,t:'tree',a:'t'},{k:'lane',n:'The Lane',x:380,y:380,t:'dot',a:'b'}],
+    labels:[['THE DARK COUNTRY',500,690,18,0],['the Durango goes like the wind',650,560,10,-28]],
+    route:['roadin','filling','lane','home']},
+
+  home:{title:'HOME', sub:'A cottage with a name on the gate, and a writer inside', w:1000, h:700, dungeon:true,
+    roads:[[[120,620],[300,520],[500,520],[700,520]],[[500,520],[500,260],[700,200]],[[500,260],[300,200]]],
+    places:[{k:'gate',n:'The Gate (HOME)',x:120,y:620,t:'dot',a:'b'},{k:'hall',n:'The Hall',x:300,y:520,t:'inn',a:'b'},
+      {k:'study',n:'The Study',x:700,y:520,t:'inn',a:'b'},{k:'typewriter',n:'The Typewriter',x:760,y:470,t:'dot',a:'r'},
+      {k:'stair',n:'The Stair',x:500,y:380,t:'hill',a:'r'},{k:'bedroom',n:'The Locked Room',x:700,y:200,t:'inn',a:'t'},
+      {k:'window',n:'The Window',x:820,y:220,t:'ruin',a:'r'},{k:'kitchen',n:'The Kitchen',x:300,y:200,t:'inn',a:'t'}],
+    labels:[['HOME',500,100,26,0]],
+    route:['gate','hall','study','bedroom','window']}
+};
+
+// geometry + map drawing (shared with ringbearer.html)
+function pointInPoly(x, y, poly){
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++){
+    const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function smoothPath(pts, closed){
+  const L = pts.length, f = n => n.toFixed(1);
+  if (L < 3) return 'M' + pts.map(p => f(p[0]) + ',' + f(p[1])).join('L') + (closed ? 'Z' : '');
+  const at = i => closed ? pts[(i + L) % L] : pts[clamp(i, 0, L - 1)];
+  let d = `M${f(pts[0][0])},${f(pts[0][1])}`;
+  const n = closed ? L : L - 1;
+  for (let i = 0; i < n; i++){
+    const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += `C${f(c1x)},${f(c1y)} ${f(c2x)},${f(c2y)} ${f(p2[0])},${f(p2[1])}`;
+  }
+  return d + (closed ? 'Z' : '');
+}
+function samplePolyline(pts, step){
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++){
+    const a = pts[i], b = pts[i + 1], d = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(d / step));
+    for (let k = 0; k < n; k++) out.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]);
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+const INK = '#161616', INK2 = '#4a4a4a', WATER = '#b5c3c6', WATER_INK = '#4f6a72';
+const MAP_CACHE = {};
+function mapBase(k, noPlaces){
+  const ck = k + (noPlaces ? '|np' : '');
+  if (MAP_CACHE[ck]) return MAP_CACHE[ck];
+  const m = MAPS[k], r = seeded(hash(k)), W = m.w, H = m.h;
+  const dun = !!m.dungeon;
+  let s = '';
+  // parchment
+  s += `<rect width="${W}" height="${H}" fill="${m.bg || (dun ? '#e6e2da' : '#f3f0e8')}"/>`;
+  for (let i = 0; i < 9; i++){ const x = r() * W, y = r() * H, rr = 80 + r() * 220;
+    s += `<circle cx="${x | 0}" cy="${y | 0}" r="${rr | 0}" fill="#5a5a52" opacity="${(0.012 + r() * .022).toFixed(3)}"/>`; }
+  if (dun){ // dwarf-hall grid
+    for (let x = 20; x < W; x += 40) s += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="${INK2}" stroke-width=".4" opacity=".35"/>`;
+    for (let y = 20; y < H; y += 40) s += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${INK2}" stroke-width=".4" opacity=".35"/>`;
+  }
+  (m.zones || []).forEach(z => { s += `<path d="${smoothPath(z.p, true)}" fill="${z.c}" opacity=".6" stroke="${INK}" stroke-width="1.4"/>`; });
+  (m.dark || []).forEach(p => { s += `<path d="${smoothPath(p, true)}" fill="#2a2a2a" opacity=".18"/>`; });
+  (m.water || []).forEach(p => {
+    s += `<path d="${smoothPath(p, true)}" fill="${WATER}" stroke="${WATER_INK}" stroke-width="1.6"/>`;
+    s += `<path d="${smoothPath(p, true)}" fill="none" stroke="${WATER_INK}" stroke-width=".6" opacity=".5" transform="translate(4,4)"/>`;
+  });
+  (m.marsh || []).forEach(p => {
+    const xs = p.map(q => q[0]), ys = p.map(q => q[1]);
+    for (let y = Math.min.apply(0, ys); y < Math.max.apply(0, ys); y += 12)
+      for (let x = Math.min.apply(0, xs); x < Math.max.apply(0, xs); x += 16){
+        const jx = x + r() * 8, jy = y + r() * 6; if (!pointInPoly(jx, jy, p)) continue;
+        s += `<path d="M${(jx - 4).toFixed(1)},${jy.toFixed(1)}h8M${jx.toFixed(1)},${jy.toFixed(1)}v-5M${(jx - 2.5).toFixed(1)},${jy.toFixed(1)}l-1.5,-3.5M${(jx + 2.5).toFixed(1)},${jy.toFixed(1)}l1.5,-3.5" stroke="${INK2}" stroke-width=".8" fill="none"/>`;
+      }
+  });
+  (m.rivers || []).forEach((p, i) => { s += `<path d="${smoothPath(p)}" fill="none" stroke="${WATER_INK}" stroke-width="${i === 1 && k === 'wild' ? 3.2 : 2.2}" stroke-linecap="round"/>`; });
+  (m.roads || []).forEach(p => { s += `<path d="${smoothPath(p)}" fill="none" stroke="${dun ? INK : '#8a5a2a'}" stroke-width="${dun ? 9 : 1.6}" ${dun ? 'opacity=".25"' : 'stroke-dasharray="6 4"'} stroke-linecap="round"/>`;
+    if (dun) s += `<path d="${smoothPath(p)}" fill="none" stroke="${INK}" stroke-width="1" opacity=".7" stroke-dasharray="2 3"/>`; });
+  (m.forest || []).forEach(p => {
+    const xs = p.map(q => q[0]), ys = p.map(q => q[1]);
+    s += `<path d="${smoothPath(p, true)}" fill="#6b7a3a" opacity=".12"/>`;
+    for (let y = Math.min.apply(0, ys) + 6; y < Math.max.apply(0, ys); y += 13)
+      for (let x = Math.min.apply(0, xs) + 4; x < Math.max.apply(0, xs); x += 13){
+        const jx = x + (r() - .5) * 7, jy = y + (r() - .5) * 6; if (!pointInPoly(jx, jy, p)) continue;
+        const rr = 3.6 + r() * 2;
+        s += `<line x1="${jx.toFixed(1)}" y1="${jy.toFixed(1)}" x2="${jx.toFixed(1)}" y2="${(jy + rr + 3).toFixed(1)}" stroke="${INK}" stroke-width=".8"/>`
+          + `<circle cx="${jx.toFixed(1)}" cy="${jy.toFixed(1)}" r="${rr.toFixed(1)}" fill="#8d9a55" stroke="${INK}" stroke-width=".8"/>`;
+      }
+  });
+  (m.hills || []).forEach(h => { s += `<path d="M${h[0] - 11},${h[1]} Q${h[0] - 2},${h[1] - 13} ${h[0] + 11},${h[1]} Z" fill="#cfcbbd" stroke="${INK}" stroke-width="1"/><path d="M${h[0] + 1},${h[1] - 6} l3,5 M${h[0] + 4},${h[1] - 4} l2.5,4" stroke="${INK}" stroke-width=".6"/>`; });
+  (m.mts || []).forEach(line => {
+    samplePolyline(line, 17).forEach(([x, y]) => {
+      const w = 9 + r() * 6, h = 13 + r() * 12; x += (r() - .5) * 6; y += (r() - .5) * 6;
+      s += `<path d="M${(x - w).toFixed(1)},${y.toFixed(1)} L${x.toFixed(1)},${(y - h).toFixed(1)} L${(x + w).toFixed(1)},${y.toFixed(1)}" fill="#d9d6cb" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"/>`
+        + `<path d="M${x.toFixed(1)},${(y - h).toFixed(1)} L${(x + w * .35).toFixed(1)},${y.toFixed(1)} M${(x + 2).toFixed(1)},${(y - h * .6).toFixed(1)} l3,4 M${(x + 3).toFixed(1)},${(y - h * .3).toFixed(1)} l3,3" stroke="${INK}" stroke-width=".6" fill="none"/>`;
+    });
+  });
+  (m.labels || []).forEach(([t, x, y, sz, rot]) => {
+    const caps = t === t.toUpperCase();
+    s += `<text x="${x}" y="${y}" font-family="'Courier Prime',Courier,monospace" font-style="${caps ? 'normal' : 'italic'}" font-size="${sz}" fill="${INK2}" text-anchor="middle" letter-spacing="${caps ? sz * .35 : 0}" opacity=".85" transform="rotate(${rot || 0} ${x} ${y})">${esc(t)}</text>`;
+  });
+  // places
+  (noPlaces ? [] : m.places).forEach(p => {
+    const x = p.x, y = p.y;
+    switch (p.t){
+      case 'city': s += `<circle cx="${x}" cy="${y}" r="6" fill="#f1efe7" stroke="${INK}" stroke-width="1.4"/><circle cx="${x}" cy="${y}" r="2.5" fill="${INK}"/>`; break;
+      case 'tower': s += `<path d="M${x - 4},${y + 5} v-9 h-1.5 v-3 h3 v1.5 h1.5 v-1.5 h2 v1.5 h1.5 v-1.5 h3 v3 h-1.5 v9 z" fill="${INK}"/>`; break;
+      case 'peak': s += `<path d="M${x - 11},${y + 4} L${x},${y - 14} L${x + 11},${y + 4}z" fill="#cfcbbd" stroke="${INK}" stroke-width="1.5"/><path d="M${x - 4},${y - 7} L${x},${y - 14} L${x + 4},${y - 7} l-2,2 -2,-2 -2,2z" fill="#fff"/>`; break;
+      case 'hill': s += `<path d="M${x - 8},${y + 3} Q${x},${y - 10} ${x + 8},${y + 3}" fill="#d6d2c4" stroke="${INK}" stroke-width="1.3"/><circle cx="${x}" cy="${y - 1}" r="1.8" fill="${INK}"/>`; break;
+      case 'inn': s += `<rect x="${x - 4}" y="${y - 4}" width="8" height="8" fill="#f1efe7" stroke="${INK}" stroke-width="1.3"/><path d="M${x - 5},${y - 4} L${x},${y - 9} L${x + 5},${y - 4}" fill="${INK}"/>`; break;
+      case 'tree': s += `<circle cx="${x}" cy="${y - 5}" r="8" fill="#5c6b2e" stroke="${INK}" stroke-width="1.2"/><path d="M${x},${y + 4} v-6 M${x},${y} l-5,4 M${x},${y} l5,4" stroke="${INK}" stroke-width="1.6"/>`; break;
+      case 'pyramid': s += `<path d="M${x - 13},${y + 7} L${x},${y - 15} L${x + 13},${y + 7}z" fill="#f1efe7" stroke="${INK}" stroke-width="1.6"/><path d="M${x - 9},${y} h18 M${x - 5},${y - 7} h10" stroke="${INK}" stroke-width=".8"/>`; break;
+      case 'ruin': s += `<path d="M${x - 4},${y - 4} l8,8 M${x + 4},${y - 4} l-8,8" stroke="${INK}" stroke-width="1.6"/>`; break;
+      default: s += `<circle cx="${x}" cy="${y}" r="3.5" fill="${INK}"/>`;
+    }
+    const a = p.a || 'r';
+    const tx = a === 'r' ? x + 9 : a === 'l' ? x - 9 : x, ty = a === 'b' ? y + 18 : a === 't' ? y - 14 : y + 4;
+    s += `<text x="${tx}" y="${ty}" font-family="'Courier Prime',Courier,monospace" font-size="13" fill="${INK}" text-anchor="${a === 'r' ? 'start' : a === 'l' ? 'end' : 'middle'}" paint-order="stroke" stroke="#e7e4d9" stroke-width="3" stroke-opacity=".7">${esc(p.n)}</text>`;
+  });
+  // compass rose
+  const cx = W - 60, cy = H - 64;
+  s += `<g transform="translate(${cx},${cy})" opacity=".85"><circle r="26" fill="none" stroke="${INK}" stroke-width=".8"/><circle r="20" fill="none" stroke="${INK}" stroke-width=".5"/>
+    <path d="M0,-34 L5,0 L0,34 L-5,0z" fill="${INK}"/><path d="M-34,0 L0,5 L34,0 L0,-5z" fill="${INK2}"/>
+    <path d="M0,-34 L5,0 L0,0z" fill="#e7e4d9"/><text y="-38" text-anchor="middle" font-family="Bungee,sans-serif" font-size="11" fill="${INK}">N</text></g>`;
+  // cartouche
+  const tw = Math.max(180, m.title.length * 13 + 30);
+  s += `<g transform="translate(24,22)"><rect width="${tw}" height="38" fill="#f1efe7" stroke="${INK}" stroke-width="1.2"/><rect x="3" y="3" width="${tw - 6}" height="32" fill="none" stroke="${INK}" stroke-width=".6"/>
+    <text x="${tw / 2}" y="25" text-anchor="middle" font-family="Bungee,sans-serif" font-size="17" fill="${INK}">${esc(m.title)}</text></g>`;
+  // frame
+  s += `<rect x="4" y="4" width="${W - 8}" height="${H - 8}" fill="none" stroke="${INK}" stroke-width="2.4"/><rect x="10" y="10" width="${W - 20}" height="${H - 20}" fill="none" stroke="${INK}" stroke-width=".8"/>`;
+  return (MAP_CACHE[ck] = s);
+}
+function drawMap(k, o){
+  o = o || {};
+  const m = MAPS[k]; if (!m) return '';
+  let s = mapBase(k, o.noPlaces);
+  if (!o.thumb && G){
+    const P = key => m.places.find(p => p.k === key);
+    if (k === 'wild' && o.worldRoute !== false){
+      const pts = G.route.map(P).filter(Boolean).map(p => [p.x, p.y]);
+      if (pts.length > 1) s += `<path d="${smoothPath(pts)}" fill="none" stroke="#a31f1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`;
+      pts.forEach(p => { s += `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#a31f1f"/>`; });
+      const last = pts[pts.length - 1];
+      if (last) s += hereMarker(last[0], last[1]);
+    } else if (m.route){
+      const seen = G.seen[k] || [];
+      let far = -1; m.route.forEach((key, i) => { if (seen.indexOf(key) >= 0) far = i; });
+      const pts = m.route.slice(0, far + 1).map(P).filter(Boolean).map(p => [p.x, p.y]);
+      if (pts.length > 1) s += `<path d="${smoothPath(pts)}" fill="none" stroke="#a31f1f" stroke-width="2.6" stroke-dasharray="7 5" stroke-linecap="round" opacity=".85"/>`;
+      if (o.here){ const h = P(o.here); if (h) s += hereMarker(h.x, h.y); }
+    }
+  }
+  return `<svg viewBox="0 0 ${m.w} ${m.h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(m.title)}">${s}</svg>`;
+}
+function hereMarker(x, y){
+  return `<g><circle cx="${x}" cy="${y}" r="10" fill="none" stroke="#a31f1f" stroke-width="2.5"><animate attributeName="r" values="8;18;8" dur="2.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.2;1" dur="2.2s" repeatCount="indefinite"/></circle>
+    <circle cx="${x}" cy="${y}" r="4.5" fill="#a31f1f" stroke="#fff3d0" stroke-width="1.5"/></g>`;
+}
+
+
+// ═══ VIGNETTES ══════════════════════════════════════════════════════════════
+const VB = (inner, bg) => `<svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">${bg || ''}${inner}<rect x="3" y="3" width="794" height="334" fill="none" stroke="#111" stroke-width="3"/></svg>`;
+const skyGrad = (id, a, b) => `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="800" height="340" fill="url(#${id})"/>`;
+const tree = (x, y, s, c) => `<path d="M${x},${y} v${-40 * s}" stroke="#1a1a12" stroke-width="${5 * s}"/><circle cx="${x}" cy="${y - 55 * s}" r="${28 * s}" fill="${c || '#2a3a1a'}"/>`;
+const DROOG = (x, y, s, col, cane) => `<g transform="translate(${x},${y}) scale(${s})"><ellipse cx="0" cy="-74" rx="22" ry="5" fill="#111"/><path d="M-14,-74 q0,-22 14,-22 q14,0 14,22z" fill="#111"/>
+  <circle cx="0" cy="-60" r="13" fill="#e8dcc8"/><circle cx="-5" cy="-62" r="2" fill="#111"/><path d="M3,-66 l6,-3 M3,-62 l7,0" stroke="#111" stroke-width="1.4"/>
+  <path d="M-18,-46 h36 l6,60 h-48z" fill="${col || '#f4f1ea'}" stroke="#111" stroke-width="2"/><path d="M-12,14 v46 M12,14 v46" stroke="${col || '#f4f1ea'}" stroke-width="12"/><path d="M-12,14 v46 M12,14 v46" stroke="#111" stroke-width="1" opacity=".3"/>
+  <path d="M-20,60 h16 M4,60 h20" stroke="#111" stroke-width="8"/>${cane ? '<path d="M22,-30 l14,90" stroke="#111" stroke-width="4"/>' : ''}</g>`;
+const VIGNETTES = {
+  orange: () => VB(`<rect width="800" height="340" fill="#f4f1ea"/><circle cx="400" cy="180" r="110" fill="#e2640f" stroke="#111" stroke-width="4"/>
+    ${Array.from({length:40}, (_, i) => `<circle cx="${400 + Math.cos(i * 2.4) * (30 + (i * 7) % 70)}" cy="${180 + Math.sin(i * 2.4) * (30 + (i * 7) % 70)}" r="2" fill="#b44a06" opacity=".6"/>`).join('')}
+    <path d="M400,70 q-10,-30 20,-40" stroke="#2a4a1a" stroke-width="6" fill="none"/><path d="M420,32 q40,-10 50,20 q-30,6 -50,-20z" fill="#3a6a2a"/>
+    <g transform="translate(520,180)"><rect x="0" y="-8" width="70" height="16" fill="#888" stroke="#111" stroke-width="2"/><circle cx="90" cy="-20" r="22" fill="none" stroke="#111" stroke-width="7"/><circle cx="90" cy="20" r="22" fill="none" stroke="#111" stroke-width="7"/>
+    <animateTransform attributeName="transform" type="rotate" values="0 520 180;0 520 180" dur="1s"/></g>
+    ${[[160, 300], [640, 300]].map(([x, y]) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="Bungee,sans-serif" font-size="14" fill="#111">TICK</text>`).join('')}`),
+  korova: () => VB(`<rect width="800" height="340" fill="#0c0c0c"/><rect y="250" width="800" height="90" fill="#1c1c1c"/>
+    ${[90, 690].map(x => `<g transform="translate(${x},250)"><path d="M-20,0 q-6,-60 0,-90 q-20,-30 0,-50 q20,-10 22,10 q8,40 0,40 q10,40 -2,90z" fill="#f4f1ea" stroke="#999"/></g>`).join('')}
+    <rect x="200" y="150" width="400" height="16" fill="#f4f1ea"/><text x="400" y="110" text-anchor="middle" font-family="Bungee,sans-serif" font-size="44" fill="#e2640f" letter-spacing="6">KOROVA</text>
+    <text x="400" y="140" text-anchor="middle" font-family="'Courier Prime',monospace" font-size="16" fill="#f4f1ea" letter-spacing="10">MILKBAR</text>
+    ${DROOG(280, 260, .9)}${DROOG(360, 262, .9)}${DROOG(440, 258, 1.05, null, 1)}${DROOG(520, 262, .9)}
+    ${[230, 310, 390, 470, 550].map(x => `<rect x="${x}" y="215" width="12" height="20" fill="#fff" opacity=".85"/>`).join('')}`),
+  flatblock: () => VB(`<rect y="270" width="800" height="70" fill="#4a4844"/>
+    ${[[120, 60, 140], [300, 30, 180], [520, 70, 130], [660, 40, 120]].map(([x, y, w]) => `<rect x="${x}" y="${y}" width="${w}" height="${270 - y}" fill="#8a8680" stroke="#111" stroke-width="2"/>${Array.from({length:Math.floor((270 - y) / 30) * 4}, (_, i) => `<rect x="${x + 12 + (i % 4) * (w - 24) / 4}" y="${y + 12 + Math.floor(i / 4) * 30}" width="${(w - 24) / 4 - 10}" height="14" fill="${(i * 7 + x) % 11 === 0 ? '#e2c070' : '#2a2a2a'}"/>`).join('')}`).join('')}
+    <text x="370" y="262" text-anchor="middle" font-family="Bungee,sans-serif" font-size="12" fill="#111">18A</text>
+    <path d="M300,250 l20,-14 l14,10 l20,-20" stroke="#b0186a" stroke-width="3" fill="none"/><path d="M0,330 Q400,300 800,330" stroke="#666" fill="none"/>`, skyGrad('fb', '#2a2a3a', '#6a5a5a')),
+  home: () => VB(`<rect y="240" width="800" height="100" fill="#2a3a1a"/>${tree(120, 250, 1.5)}${tree(700, 250, 1.8)}
+    <rect x="300" y="150" width="220" height="110" fill="#c8b898" stroke="#111" stroke-width="2"/><path d="M280,150 L410,80 L540,150z" fill="#5a3a2a" stroke="#111" stroke-width="2"/>
+    <rect x="390" y="200" width="40" height="60" fill="#3a2a1a"/><rect x="320" y="175" width="40" height="30" fill="#ffd27a"/><rect x="460" y="175" width="40" height="30" fill="#ffd27a"/>
+    <rect x="560" y="230" width="70" height="26" fill="#f4f1ea" stroke="#111"/><text x="595" y="249" text-anchor="middle" font-family="Bungee,sans-serif" font-size="13" fill="#111">HOME</text>
+    <path d="M550,256 v40 M640,256 v40" stroke="#111" stroke-width="3"/><circle cx="680" cy="60" r="26" fill="#f4f1ea"/>`, skyGrad('hb', '#0a0a1a', '#2a2a3a')),
+  staja: () => VB(`<rect width="800" height="340" fill="#6a6a66"/><rect x="100" y="60" width="600" height="230" fill="#8a8a84" stroke="#111" stroke-width="3"/>
+    ${Array.from({length:30}, (_, i) => `<path d="M${110 + i * 20},60 v230" stroke="#3a3a3a" stroke-width="5"/>`).join('')}
+    <rect x="300" y="20" width="200" height="34" fill="#111"/><text x="400" y="44" text-anchor="middle" font-family="Bungee,sans-serif" font-size="18" fill="#e2640f">STAJA 84F</text>
+    <text x="400" y="320" text-anchor="middle" font-family="'Courier Prime',monospace" font-size="18" fill="#111" font-weight="700">6655321</text>`),
+  chapel: () => VB(`<rect width="800" height="340" fill="#2a2a34"/><path d="M300,340 V120 L400,40 L500,120 V340z" fill="#3a3a4a" stroke="#111" stroke-width="3"/>
+    <path d="M400,80 v80 M370,110 h60" stroke="#e2c070" stroke-width="8"/>
+    <rect x="560" y="200" width="120" height="70" fill="#5a3a2a" stroke="#111" stroke-width="2"/><circle cx="590" cy="235" r="18" fill="#222"/><circle cx="650" cy="235" r="18" fill="#222"/>
+    ${[0, 1, 2].map(i => `<path d="M${700 + i * 20},${180 - i * 20} q10,-10 0,-20" stroke="#ffd2a8" stroke-width="2" fill="none"/>`).join('')}
+    ${Array.from({length:12}, (_, i) => `<rect x="${60 + (i % 6) * 40}" y="${250 + Math.floor(i / 6) * 40}" width="30" height="24" fill="#555"/>`).join('')}`),
+  ludovico: () => VB(`<rect width="800" height="340" fill="#0a0a0a"/><rect x="250" y="30" width="520" height="280" fill="#d8d8d0"/>
+    <rect x="270" y="50" width="480" height="240" fill="#4a1a1a"><animate attributeName="fill" values="#4a1a1a;#6a0a0a;#2a2a2a;#4a1a1a" dur="2s" repeatCount="indefinite"/></rect>
+    <g transform="translate(130,170)"><ellipse rx="70" ry="44" fill="#f4f1ea" stroke="#111" stroke-width="3"/><circle r="26" fill="#3a6a8a"/><circle r="12" fill="#000"/>
+    <path d="M-70,-10 L-100,-60 M70,-10 L100,-60 M-60,24 L-96,70 M60,24 L96,70" stroke="#aaa" stroke-width="5"/><path d="M-70,-10 q70,-60 140,0" stroke="#aaa" stroke-width="4" fill="none"/></g>
+    <text x="510" y="180" text-anchor="middle" font-family="Bungee,sans-serif" font-size="20" fill="#f4f1ea" opacity=".6">VIDDY WELL</text>`),
+  stage: () => VB(`<rect width="800" height="340" fill="#1a1a1a"/><path d="M0,260 h800 v80 h-800z" fill="#5a3a2a"/>
+    <path d="M0,0 h120 q-20,140 0,260 h-120z M800,0 h-120 q20,140 0,260 h120z" fill="#7a0e28"/><circle cx="400" cy="-40" r="180" fill="#fff" opacity=".12"/>
+    ${DROOG(330, 250, 1.1, '#bbb')}<g transform="translate(470,250)"><circle cy="-62" r="14" fill="#e8dcc8"/><path d="M-20,-46 h40 l4,60 h-48z" fill="#333"/><path d="M-10,14 v46 M10,14 v46" stroke="#333" stroke-width="12"/><path d="M20,-40 l30,10" stroke="#333" stroke-width="8"/></g>
+    ${Array.from({length:20}, (_, i) => `<circle cx="${20 + i * 40}" cy="330" r="16" fill="#0a0a0a"/>`).join('')}`),
+  biblio: () => VB(`<rect width="800" height="340" fill="#d8ccb0"/>${Array.from({length:5}, (_, r) => Array.from({length:30}, (_, i) => `<rect x="${20 + i * 26}" y="${30 + r * 56}" width="${16 + i % 3 * 3}" height="46" fill="${['#7a2a2a', '#2a4a6a', '#4a6a2a', '#6a5a2a'][(i + r) % 4]}"/>`).join('')).join('')}
+    <rect y="300" width="800" height="40" fill="#5a4a3a"/>`),
+  bridge: () => VB(`<rect width="800" height="340" fill="#141420"/><path d="M0,120 h800 v26 h-800z" fill="#2a2a2a"/>${[100, 300, 500, 700].map(x => `<path d="M${x - 40},146 q40,60 80,0" fill="#141420" stroke="#2a2a2a" stroke-width="10"/><rect x="${x - 50}" y="146" width="20" height="200" fill="#2a2a2a"/>`).join('')}
+    <rect y="290" width="800" height="50" fill="#1e2a34"/><g transform="translate(400,280)"><circle cy="-50" r="13" fill="#b8a888"/><path d="M-20,-36 h40 l10,40 h-60z" fill="#4a3a2a"/><path d="M14,-30 l26,-18" stroke="#4a3a2a" stroke-width="6"/><rect x="36" y="-56" width="8" height="18" fill="#5a7a3a"/></g>
+    ${[360, 420, 470].map((x, i) => `<text x="${x}" y="${190 + i * 14}" font-family="'Courier Prime',monospace" font-size="16" fill="#ffd2a8" opacity=".7">♪</text>`).join('')}`),
+  hospital: () => VB(`<rect width="800" height="340" fill="#eef2f2"/><rect x="200" y="200" width="400" height="60" fill="#fff" stroke="#999"/><rect x="200" y="180" width="70" height="40" fill="#fff" stroke="#999"/>
+    <g transform="translate(300,200)"><circle cy="-14" r="16" fill="#e8dcc8"/><path d="M-10,-30 h20" stroke="#fff" stroke-width="10"/></g>
+    <rect x="620" y="60" width="120" height="160" fill="#cfe4ee" stroke="#999" stroke-width="3"/><path d="M680,60 v160 M620,140 h120" stroke="#999" stroke-width="3"/>
+    ${Array.from({length:6}, (_, i) => `<circle cx="${120 + i * 14}" cy="100" r="6" fill="#e2640f"/>`).join('')}<path d="M110,110 h100" stroke="#999"/>`),
+  teashop: () => VB(`<rect width="800" height="340" fill="#e8dcc0"/><rect y="260" width="800" height="80" fill="#8a6a4a"/>
+    <rect x="260" y="200" width="300" height="12" fill="#5a3a2a"/><path d="M290,212 v60 M530,212 v60" stroke="#3a2a1a" stroke-width="6"/>
+    ${[340, 470].map(x => `<path d="M${x},200 h24 v-18 h-24z" fill="#fff" stroke="#999"/>`).join('')}
+    <g transform="translate(230,260)"><circle cy="-80" r="14" fill="#e8dcc8"/><path d="M-20,-66 h40 l4,66 h-48z" fill="#3a4a6a"/></g>
+    <g transform="translate(590,260)"><circle cy="-80" r="14" fill="#e8dcc8"/><path d="M-22,-66 h44 l10,66 h-64z" fill="#b0186a"/><path d="M-16,-94 q16,-16 32,0" stroke="#5a3a1a" stroke-width="8" fill="none"/></g>
+    <rect x="80" y="40" width="160" height="120" fill="#cfe0e8" stroke="#5a3a2a" stroke-width="4"/>`)
+};
+
+// ═══ MUSIC & WORDS ══════════════════════════════════════════════════════════
+// Schiller's ode is in the public domain (translated here); the Ninth carries
+// its own true melody. Pop songs, hymns and the drunk's song are invented.
+// read:true texts can't be sung.
+const SONGS = {
+  ninth:{title:'Ludwig van: the Ninth (Ode to Joy)', by:'Freude, schöner Götterfunken — Schiller\'s words, Ludwig van\'s tune, the last movement', mode:'major', tempo:108,
+    v:[['Joy, bright spark of the immortals,','Daughter of Elysium,','Drunk with fire we tread, O holy one,','Into your sanctuary.'],
+       ['Your magic binds together again','What custom sternly drove apart;','All men become brothers','Where your gentle wing abides.']]},
+  jupiter:{title:'Mozart: the Jupiter', by:'Symphony No. 41, as you hum it in your den, eyes shut', mode:'major', tempo:132,
+    v:[['(no words — brass and strings,','climbing up and up like a ladder of gold,','four little notes that build and build','into a whole heaven of noise)']]},
+  bach:{title:'Bach: a Brandenburg Concerto', by:'For middle and low strings, on the prison charlie\'s stereo', mode:'dorian', tempo:116,
+    v:[['(no words — the strings walk','one after the other, very polite,','like starry lewdies going down a staircase','arm in arm, and nobody falls)']]},
+  heaven:{title:'"You Blister My Paint"', by:'The pop disc of the week at Melodia. Invented; the novel only mocks it', mode:'mixo', tempo:150, drum:true,
+    v:[['Baby, baby, you blister my paint,','I\'m a saint, oh, I\'m a saint,','Ooh ooh, I\'m feeling faint,','Baby, baby, you blister my paint.']]},
+  drunkie:{title:'The Old Drunkie\'s Song', by:'Bawled under the railway bridge. Invented for this game', mode:'aeolian', tempo:80,
+    v:[['Oh, I\'ll go back to the old town,','When the lamps are lit and the beer is brown,','And nobody there will know my name,','And the rain will fall on me just the same.']]},
+  hymn:{title:'The Prison Hymn', by:'Bawled by the plennies in the chapel of Staja 84F. Invented for this game', mode:'major', tempo:76, drone:true,
+    v:[['O weak and wicked are we all,','And wicked and weak we rise and fall;','Lord, mend the hand that wields the stick,','And make us well when we are sick.']]},
+  sermon:{title:'The Charlie\'s Sermon', by:'What the prison chaplain says to you, alone, beside the stereo', read:true, mode:'dorian', tempo:80,
+    v:[['"Goodness comes from within, 6655321. Goodness is something chosen."','"When a man cannot choose he ceases to be a man."'],
+       ['"Is it better for a man to have chosen evil than to have good imposed upon him?"','"Deep and hard questions, little 6655321."']]},
+  brodsky:{title:'Dr Brodsky Explains', by:'In the sinny, as kindly as an uncle', read:true, mode:'aeolian', tempo:80,
+    v:[['"The drug makes you feel very ill, just as you see the violence. The body learns to link the two."','"You will soon feel as sick at the thought of it as at the sight."'],
+       ['"The music? A pity. Can\'t be helped. Each man kills the thing he loves, as the poet said."']]},
+  manuscript:{title:'A Clockwork Orange, by F. Alexander', by:'The typescript, put back together a torn page at a time', read:true, mode:'aeolian', tempo:80,
+    v:[[PAGES[0], PAGES[1]],[PAGES[2], PAGES[3]]]},
+  youth:{title:'Youth Must Go', by:'What your humble narrator thinks, at eighteen, over a cup of chai', read:true, mode:'major', tempo:80,
+    v:[['Being young is like being one of those clockwork toys that you wind up and that walk in a straight line until they bump into a wall.','You go on bumping, and you cannot help it.'],
+       ['And then one day you are tired of it, and you want a wife and a malenky son, and a fire in the grate.','And all that cal.']]}
+};
+// The Ninth gets Beethoven's own melody (public domain), not a generated one.
+(() => {
+  const L1 = [[66,1],[66,1],[67,1],[69,1],[69,1],[67,1],[66,1],[64,1],[62,1],[62,1],[64,1],[66,1],[66,1.5],[64,.5],[64,2]];
+  const L2 = [[66,1],[66,1],[67,1],[69,1],[69,1],[67,1],[66,1],[64,1],[62,1],[62,1],[64,1],[66,1],[64,1.5],[62,.5],[62,2]];
+  const L3 = [[64,1],[64,1],[66,1],[62,1],[64,1],[66,.5],[67,.5],[66,1],[62,1],[64,1],[66,.5],[67,.5],[66,1],[64,1],[62,1],[64,1],[57,2]];
+  SONGS.ninth._mel = {lines:[L1, L2, L3, L2, L1, L2, L3, L2], tempo:108, voice:'triangle', root:62, drone:true, drum:false};
+})();
+function songMelody(k){
+  const s = SONGS[k];
+  if (s._mel) return s._mel;
+  const SC = {major:[0,2,4,5,7,9,11], mixo:[0,2,4,5,7,9,10], dorian:[0,2,3,5,7,9,10], aeolian:[0,2,3,5,7,8,10]}[s.mode];
+  const r = seeded(hash(k)), root = s.mode === 'major' || s.mode === 'mixo' ? 62 : 60;
+  const deg2m = d => root + 12 * Math.floor(d / 7) + SC[((d % 7) + 7) % 7];
+  const lines = [];
+  // one musical phrase per text line; phrases A/B repeat across stanzas
+  const phrase = (len, end, seedR) => {
+    const out = []; let d = Math.floor(seedR() * 5);
+    for (let i = 0; i < len; i++){
+      const last = i === len - 1;
+      if (last) d = end;
+      else { const st = seedR(); d += st < .35 ? 1 : st < .7 ? -1 : st < .85 ? 2 : -2; d = clamp(d, -2, 9); }
+      const dur = last ? 2 : (seedR() < .25 && i < len - 2 ? .5 : 1);
+      out.push([deg2m(d), dur]);
+      if (dur === .5) out.push([deg2m(d + (seedR() < .5 ? 1 : -1)), .5]);
+    }
+    return out;
+  };
+  const phrases = [0, 1, 2, 3].map(i => phrase(7 + (i % 2), i === 3 ? 0 : i === 1 ? 4 : 2, seeded(hash(k + i))));
+  s.v.forEach(st => st.forEach((ln, i) => lines.push(phrases[(i + (st.length === 2 ? i : 0)) % 4])));
+  return (s._mel = {lines, tempo:s.tempo, voice: s.drum ? 'square' : 'triangle', root, drone:!!s.drone, drum:!!s.drum});
+}
+function songCard(k, full){
+  const s = SONGS[k];
+  let li = 0;
+  const st = s.v.map(stz => `<div class="st">${stz.map(l => `<span class="ln" data-l="${li++}">${esc(l)}</span>`).join('')}</div>`).join('');
+  return `<div class="song"><h3>${esc(s.title)}</h3><div class="by">${esc(s.by)}</div>${st}${s.read ? '' : `<button class="btn gold sing" data-sing="${k}">♪ Play it</button>`}</div>`;
+}
+function singSong(k, card){
+  const mel = songMelody(k), lines = card ? card.querySelectorAll('.ln') : [];
+  const btn = card && card.querySelector('.sing');
+  if (btn){ if (btn.dataset.on){ SND.stop(); lines.forEach(l => l.classList.remove('lit')); btn.textContent = '♪ Play it'; delete btn.dataset.on; return; }
+    btn.dataset.on = 1; btn.textContent = '■ Stop'; }
+  SND.sing(mel, i => { lines.forEach(l => l.classList.remove('lit')); if (lines[i]) lines[i].classList.add('lit'); },
+    () => { lines.forEach(l => l.classList.remove('lit')); if (btn){ btn.textContent = '♪ Play it'; delete btn.dataset.on; } });
+}
+
+
+
+// ═══ STORY ══════════════════════════════════════════════════════════════════
+// A beat: {text, choices|game|ending, title, map, loc, w (town route key),
+// date, chapter+chTitle (checkpoint), fx/song on entry}.
+// A choice: {t, go, fx, res, dt (the old ultra-violence: Grown cost), if, talk, tag, cls}.
+const talk = (id, t, res, fx, cond) => ({t, talk:true, res, fx:Object.assign({}, fx || {}, {flag:[].concat((fx || {}).flag || [], 't_' + id)}), if: G => !G.flags['t_' + id] && (!cond || cond(G))});
+const NS = s => `<span class="nad">${s}</span>`;
+const PG = s => `<span class="page">${s}</span>`;
+const SG = s => `<span class="sign">${s}</span>`;
+const BEATS = {};
+
+// ── PART ONE ── 1. WHAT'S IT GOING TO BE THEN, EH? ──────────────────────────
+Object.assign(BEATS, {
+start:{chapter:1, chTitle:'What\'s It Going to Be Then, Eh?', date:'A winter nochy', map:'korova', loc:'booth', w:'korova', art:'korova',
+  text:`"What's it going to be then, eh?"
+
+There is me, that is Alex, your humble narrator, and my three droogs, that is Pete, Georgie and Dim, sitting in the Korova Milkbar making up our rassoodocks what to do with the evening. A flip dark chill winter nochy, though dry.
+
+The Korova is a milk-plus mesto, O my brothers. They sell moloko with things in it, and you can sit and sip it and feel very horrorshow and ready for anything. We are dressed in the height of fashion: black tights, white shirts, boots for kicking, and bowlers on our gullivers.
+
+We have cutter enough in our carmans, so there is no real need to go out crasting. But, as they say, money isn't everything.
+
+${NS('Nadsat: the talk of the nadsats, the teens. Every new word you slooshy goes in the Nadsat tab.')}`,
+  fx:{word:['droog','rassoodock','moloko','gulliver','nochy','horrorshow']},
+  choices:[
+    talk('moloko', 'Order another moloko plus.', `It comes in a tall glass, white and cold, with something in it that sharpens you up like a britva. Dim laughs his horrible loud laugh at nothing at all. The white statues of devotchkas along the walls look on with their blank glazzies.`, {item:'moloko', cash:-1, health:-2, word:['glazzies','britva']}),
+    talk('stool', 'Viddy the veck at the counter, far away on his drugs.', `He is sitting on a stool babbling, gone right off, in the land of the mind. Lots of them in here, staring at nothing. That's for cowards, O my brothers. You like your evenings real, and to remember them.`, {food:2, word:['viddy','veck']}),
+    {t:'"Out out out out!" Lead your droogs into the nochy.', go:'professor', fx:{aff:{dim:4, georgie:2}}},
+    {t:'Suggest something quieter tonight. A disc, perhaps.', go:'professor', fx:{hum:4, food:3, aff:{dim:-6, georgie:-4}}, res:`Georgie looks at you sideways. Dim does not understand. Pete smiles into his moloko. "Next time, Alex," says Georgie. "Tonight we go out." And somehow, you go out anyway.`}
+  ]},
+professor:{title:'Marghanita Boulevard', map:'wild', loc:'korova', art:'biblio',
+  text:`Out on the boulevard there is a starry schoolmaster type veck, glasses on, coming round the corner from the Public Biblio, with books under his arm and a crappy umbrella.
+
+"Pardon me, brother," you say, very polite. "I see you have books under your arm. It is a rare pleasure these days to come across somebody that still reads."
+
+Your droogs are already grinning. You know what comes next. Everybody knows what comes next.`,
+  fx:{meet:'professor', word:['starry','chelloveck']},
+  choices:[
+    {t:'Tear up his books, and give him a bit of the old ultra-violence.', go:'shop', dt:6, fx:{sus:8, aff:{dim:6, georgie:4}, cash:2, word:['tolchock','krovvy']}, res:`I will not tell you all of it, O my brothers. The pages went fluttering down Marghanita Boulevard like snow, and Dim did the tolchocking with his heavy rookers, and there was krovvy on the starry veck's litso.\n\nAfterwards you turn out his carmans: a few coins, some old letters. Then you leave him there. You will meet him again, though you don't know it yet.`},
+    {t:'Tear up the books, but stop Dim before the fists come out.', go:'shop', fx:{sus:4, hum:5, food:2, aff:{dim:-4, pete:3}}, res:`You rip a book or two for show, and laugh, and when Dim lifts his rooker you catch his arm. "Enough, Dim. He's not worth the sweat." Dim looks at you with his dim glazzies. The starry veck runs off, clutching what's left. Pete looks at you thoughtfully.`},
+    {t:'"Off you go, brother." Let him pass.', go:'shop', fx:{hum:8, food:4, aff:{dim:-10, georgie:-8, pete:4}}, res:`The veck scuttles off like a starry spider. Georgie spits. "What's the matter with you, Alex? Gone soft?" Dim makes a noise like a lorry. It's a long time before anybody says anything.`}
+  ]},
+shop:{title:'A Little Shop', loc:'duke', art:'none',
+  text:`Then it is the little shop of Slouse, the one that sells cancers and chocolates and gazettas, run by a fat starry veck and his fat starry wife. You pull on your maskies — very horrorshow, faces of historical personalities — and Georgie says it's an easy job.
+
+The plan is to crast the till, then get across to the Duke of New York for an alibi.`,
+  fx:{word:['cancer','cutter','deng']},
+  choices:[
+    {t:'Go in first, britva out.', go:'duke', dt:5, fx:{cash:12, sus:10, aff:{georgie:5, dim:5}}, res:`It's very quick. The starry ptitsa screams, and the starry veck goes down behind the counter, and the till goes ping. Dim knocks over a whole stand of cancers. Then you are out in the nochy with your carmans full of deng, and nobody saw your litso, you hope.`},
+    {t:'Keep watch outside. You don\'t need the cutter.', go:'duke', fx:{cash:4, sus:5, hum:4, aff:{georgie:-4}}, res:`You stand in the cold and viddy the street while the others go in. You hear a scream, then the till. When they come out, Georgie hands you a share anyway, and looks at you as if adding a sum.`},
+    {t:'Walk off before it starts. Let them get on with it.', go:'duke', fx:{hum:8, food:3, aff:{georgie:-10, dim:-8, pete:-2}}, res:`You turn your back and walk. Nobody follows. You hear it all happen behind you anyway, which turns out to be no better. Later, in the Duke of New York, nobody saves you a seat.`}
+  ]},
+duke:{title:'The Duke of New York', loc:'duke', w:'duke', art:'none',
+  text:`The Duke of New York is a pub on Amis Avenue, warm and brown and very old-fashioned. In the snug sit three starry baboochkas, drinking black and suds on their state pensions.
+
+For an alibi, O my brothers, there is nothing like a few starry ptitsas who will swear blind you have been sitting with them since seven o'clock.`,
+  fx:{meet:'babooshkas', word:['baboochka','ptitsa','mesto']},
+  choices:[
+    {t:'"Same again for the ladies!" Buy them all a round.', if:G => G.stats.cash >= 3, go:'rumble', fx:{cash:-3, sus:-8, aff:{babooshkas:20}}, res:`"Thank you, lads! Bless you, boys!" The starry baboochkas will tell anyone who asks that you have been here all night, nice polite young malchicks. It costs you hardly anything. Cutter is for spending, you think, and anyway it is somebody else's.`},
+    {t:'Buy them a round — and a packet of crisps each. They look hungry.', if:G => G.stats.cash >= 5, go:'rumble', fx:{cash:-5, sus:-8, food:4, aff:{babooshkas:30}}, res:`One of them squeezes your rooker with a hand like a bag of bones. "You're a good boy," she says, and you laugh it off, but it stays with you, somehow, for the rest of the nochy.`},
+    {t:'Sit quiet and drink your own.', go:'rumble', fx:{sus:2}}
+  ]}
+});
+
+// ── 2. BILLYBOY ─────────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+rumble:{chapter:2, chTitle:'Billyboy', map:'wild', loc:'casino', w:'casino', art:'none',
+  text:`Out again, and near the old derelict casino you come on Billyboy and his five droogs, just getting ready to do something to a weepy young devotchka not more than ten. She runs off, crying, into the dark, and that is a good thing at least.
+
+Billyboy is fat and smells of oily fried food. "Well, if it isn't fat stinking Billygoat Billyboy," you say, and then a few more choice words about chip-oil.
+
+And then it's on. Chains and britvas and knives in the light of the street lamps. This one is a fair fight, as fights go: two gangs who came looking for it.`,
+  fx:{meet:'billyboy', word:['devotchka','malchick']},
+  game:{type:'qte', label:'Rumble with Billyboy\'s gang', n:7, time:1.4, win:'durango', lose:'durango', fxWin:{aff:{dim:6, georgie:4}, food:-2, health:-4}, fxLose:{health:-16, aff:{georgie:-4}},
+    lines:['Billyboy comes at you with a knife — dodge!','One of his droogs swings a chain — duck!','Dim\'s chain whistles round — keep clear!','Billyboy lunges again, puffing — sidestep!','Your britva flashes in the lamplight — slash at his coat!','Somebody kicks at your noga — jump!','Sirens! The Millicents! Run!'],
+    winText:'You give Billyboy a few malenky slashes on his platties and he goes back like a fat pig. Then sirens, and the Millicents coming, and everybody runs, fast as they can, into the dark.',
+    loseText:'A chain catches you across the gulliver and you see stars. Then sirens, and the Millicents, and you are running, very wobbly, with krovvy in your eyes.'}},
+durango:{title:'A Durango 95', map:'country', loc:'roadin', art:'none',
+  text:`Round the corner there is a car parked, a Durango 95, very new and shiny. You get in, and Dim at the back with Pete, and Georgie beside you, and off you go into the dark, the old Durango purring away like a cat.
+
+Out of town, into the dark country, the headlights picking out trees and walls and the odd starry veck walking home. Real horrorshow.`,
+  fx:{word:['skorry','lewdies']},
+  game:{type:'durango', label:'Drive the Durango into the dark country', win:'homegate', lose:'homegate', fxWin:{sus:4}, fxLose:{sus:10, health:-6},
+    winText:'You drive like the wind, O my brothers, and the hedges go by like black waves, and nobody can catch you.',
+    loseText:'You clip a wall, then a hedge, and Dim bangs his gulliver on the roof and laughs and laughs. Somebody in a cottage window saw your lights.'}},
+homegate:{title:'A Cottage Called HOME', loc:'home', w:'home', art:'home',
+  text:`You stop by a little cottage with a light on and a garden and a gate, and on the gate a name: HOME.
+
+You know the trick. You knock, polite, and say there has been an accident on the road, and could you use the telephone, please, missus? And a nice young woman opens the door on the chain, and then...
+
+${SG('What happened next I will not tell you, O my brothers.')}
+
+It was the worst thing the four of you ever did, and your humble narrator turns his litso away from it now, as he would not then. A writer lives at HOME, a veck called F. Alexander, and his wife, and after that nochy neither of them was ever the same again.
+
+Only this is clear: whether you went in at all is your choice.`,
+  fx:{meet:'falexander', word:['litso']},
+  choices:[
+    {t:'Go in with your droogs.', go:'typescript', dt:15, fx:{sus:12, flag:'wentIn', aff:{dim:6, georgie:6}}, res:`You go in. That's all your humble narrator will say. You smash his typewriter. You tear up the book he is writing. When you come out into the dark you are laughing, and Pete is not.`},
+    {t:'Stay in the Durango with the engine running.', go:'typescript', fx:{hum:10, food:6, sus:6, flag:'stayedOut', aff:{georgie:-10, dim:-10, pete:6}}, res:`You sit in the car with your rookers on the wheel and the engine purring, and you do not go in. You hear it anyway. It does not make you innocent, O my brothers. But it was a choice, and you made it, and later you will find it counts for something.`},
+    {t:'Try to stop them at the door.', go:'typescript', fx:{hum:14, food:8, health:-10, sus:6, flag:'triedStop', aff:{georgie:-16, dim:-14, pete:8}}, res:`"Leave it! Not this one!" Dim shoves you so hard you go over the gate. When you get up they are already inside. You were too late and too small, and you will remember the shape of that door for the rest of your life.`}
+  ]},
+typescript:{title:'HOME, after', art:'none',
+  text:G => `Pages everywhere, O my brothers, all over the floor and the garden path: a typescript, torn and kicked about. You pick one up and read it by the light from the door.
+
+${PG(PAGES[0])}
+
+"A gloopy title," you say. "Who ever heard of a clockwork orange?" ${G.flags.wentIn ? 'You read a bit out loud in a high parsony voice, and the others laugh.' : 'Nobody laughs. They are all coming out now, breathing hard.'}`,
+  choices:[
+    {t:'Stuff the page in your carman.', go:'ninth', fx:{item:'page', page:0}},
+    {t:'Let it blow away into the dark.', go:'ninth'}
+  ]}
+});
+
+// ── 3. LUDWIG VAN ───────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+ninth:{chapter:3, chTitle:'Ludwig Van', map:'flatblock', loc:'lobby', w:'flatblock', art:'flatblock', date:'Late, the same nochy',
+  text:`Home to Municipal Flatblock 18A, the lift kaput as usual, some malchicks having taken it apart, so you walk up ten floors. In the lobby the big mural of the Dignity of Labour, all those starry men and women working away at machines, has had rude words and pictures added by the young malchicks of the flatblock.
+
+Your pee and em are asleep. You go into your den, with its stereo, the one thing in the world you really love, and you take a disc out of its sleeve.
+
+Oh, bliss, bliss and heaven. Ludwig van. The Ninth.`,
+  fx:{meet:'pee', word:['pee and em','rabbit']},
+  game:{type:'rhythm', song:'ninth', label:'Play the Ninth, loud', win:'deltoid', lose:'deltoid', fxWin:{hum:6, health:6}, fxLose:{hum:2},
+    winText:'Oh, it was gorgeousness and gorgeosity made flesh, O my brothers. You lie on your bed with your glazzies shut and the music all round you like a bird of rarest-spun heaven-metal. You sleep like a baby.',
+    loseText:'The neighbours bang on the wall halfway through, so you have to turn it down, which spoils it. But even turned down, it is the loveliest thing ever made.'}},
+deltoid:{chapter:4, chTitle:'P. R. Deltoid', map:'flatblock', loc:'den', date:'The next morning', art:'none',
+  text:`You do not go to the skolliwoll. Your em knocks and you say you have a headache, and she goes off to her rabbit.
+
+Then the bell. It is P. R. Deltoid, your Post-Corrective Adviser, a very tired and overworked veck with a sort of blue look. He sits on your bed and sighs.
+
+"Just a friendly warning, Alex boy. You know what I mean. Somebody did something very nasty last nochy. I'm not saying it was you. But next time it's not going to be the corrective school, you know that. It's going to be the barry place, and all my work ruined."`,
+  fx:{meet:'deltoid', word:['skolliwoll','staja','govoreet','yahzick']},
+  choices:[
+    talk('why', '"Why do you care, brother?"', `"Why?" He looks at you like a sum that will not come out. They have studied boys like you for years and years, he says, and they still don't know what gets into you.\n\nYou almost tell him. Being bad is just you, O my brothers, the way being good is somebody else. You don't say it.`, {hum:3, aff:{deltoid:3}}),
+    {t:'Promise to be good. Mean it a little.', go:'melodia', fx:{sus:-6, food:3, aff:{deltoid:8}}},
+    {t:'Smile your nicest smile and say nothing.', go:'melodia', fx:{sus:-2, aff:{deltoid:-4}}}
+  ]},
+melodia:{title:'Melodia', map:'wild', loc:'melodia', w:'melodia', art:'none',
+  text:`In the afternoon you go to Melodia, the disc-bootick, where they sell the Nadsat pops and also the real music, for those who know. The pops are all in the front, for the young malchicks and devotchkas who come in after skolliwoll. The real horrorshow stuff is at the back, and they know you there.`,
+  fx:{word:['slooshy','cutter']},
+  choices:[
+    {t:'Buy the Jupiter. Mozart. (£4)', if:G => G.stats.cash >= 4 && !has('disc_mozart'), fx:{cash:-4, item:'disc_mozart', song:'jupiter', hum:3, food:2}, res:`You pay with real cutter, for once, which the shop-veck notices with eyebrows. You listen to a bit in the booth with your glazzies shut. Brass climbing up and up like a golden ladder.`},
+    {t:'Buy a Brandenburg. Bach. (£3)', if:G => G.stats.cash >= 3 && !has('disc_bach'), fx:{cash:-3, item:'disc_bach', song:'bach', hum:3, food:2}, res:`Strings walking down a staircase, very polite. You put it under your arm with care.`},
+    talk('pops', 'Slooshy the pop of the week, out of curiosity.', `It is called "You Blister My Paint", by a group who all have the same hair. The young devotchkas in the front are wild for it. It is cal, O my brothers. But it gets in your gulliver anyway, the way cal does.`, {song:'heaven'}),
+    {t:'Walk home with your discs.', go:'mutiny'}
+  ]}
+});
+
+// ── 5. MUTINY ───────────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+mutiny:{chapter:5, chTitle:'Mutiny', map:'wild', loc:'flatblock', date:'Evening', art:'none',
+  text:`When you come downstairs your three droogs are waiting at the bottom of the flatblock, and something has changed. You can viddy it in their litsos.
+
+Georgie does the talking. Bigger jobs, he says. Bigger cutter. A man-sized crast, not malenky shop-tills. And — here it is — maybe there should not always be one veck giving all the orders.
+
+Dim, behind him, grins his dim grin. Pete looks at his boots.`,
+  fx:{word:['razdraz']},
+  choices:[
+    {t:'Teach them who leads. The britva, by the canal.', go:'canal', dt:8, fx:{sus:6, aff:{dim:-20, georgie:-10, pete:-6}, flag:'cutDim'}, res:`By the canal, under the lamps, you do it quick: a slash at Dim's rooker with the britva, a chain-swipe from him that misses, Georgie stepping back with his hands up. Krovvy on Dim's fingers. "All right, Alex. All right. You're the leader."\n\nThey say it. They do not mean it. You know that, deep in your gulliver, and you decide not to know it.`},
+    {t:'"Let\'s talk it over, droogs, like brothers."', go:'canal', fx:{hum:6, food:6, aff:{georgie:6, dim:2, pete:6}, flag:'talked'}, res:`You surprise them, and yourself. You sit on the wall and talk, and Georgie talks, and Dim mostly laughs. Nobody gets cut. Georgie still wants the big job tonight, the big house in Oldtown with the starry ptitsa and her cats. You say yes, because it is easier than no.`},
+    {t:'"Go on without me, then."', go:'cutloose', fx:{hum:12, food:10, aff:{georgie:-20, dim:-20, pete:-4}}, res:`You turn round and go back up the stairs. Behind you, Georgie laughs, not nicely. "Your loss, little brother."`}
+  ]},
+cutloose:{title:'Your Den', map:'flatblock', loc:'den', art:'none',
+  text:`You sit in your den with the Jupiter on, but you cannot listen. You keep seeing their three litsos at the bottom of the stairs.
+
+At ten o'clock Pete comes up alone. "They're doing the Manse tonight," he says. "Georgie said to tell you. He said you'd come. He said you couldn't keep away."
+
+And the horrible thing, O my brothers, is that Georgie is right. You put on your bowler.`,
+  choices:[{t:'Go.', go:'canal', fx:{hum:-6, food:-4}}, {t:'Don\'t go. Stay in, with the Jupiter, all nochy.', go:'end_early', fx:{hum:10, food:10}}]},
+canal:{title:'By the Canal', loc:'bridge', w:'bridge', art:'bridge',
+  text:`On the way you pass under the railway bridge, where an old drunkie lies in the wet, singing the songs of his fathers, very filthy and loud.
+
+He stops singing when he viddies you. "Go on, do me in, you cowardly bastards. I don't want to live anyway, not in a stinking world like this." He goes on about the world, where young malchicks are let to beat up old vecks, and men on the moon, and no attention paid to earthly law and order no more.`,
+  fx:{meet:'drunk', song:'drunkie', word:['bezoomny','smeck']},
+  choices:[
+    {t:'Give him a bit of the old boot.', go:'manse', dt:6, fx:{sus:6, aff:{dim:4}}, res:`Dim laughs. The drunkie stops singing. Your humble narrator will tell you no more of that, only that the old veck's song went on in your gulliver for a long time afterwards, very quiet.`},
+    {t:'Drop a few coins in his hat and walk on.', go:'manse', if:G => G.stats.cash >= 2, fx:{cash:-2, hum:4, food:5, aff:{drunk:20, dim:-3}}, res:`"God bless you, young sir," he says, astonished. Then he starts singing again, louder, and Dim looks at you as if you have grown another gulliver.`},
+    {t:'Walk on past, quick.', go:'manse', fx:{food:2}}
+  ]}
+});
+
+// ── 6. THE CAT WOMAN ────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+manse:{chapter:6, chTitle:'The Cat Woman', map:'wild', loc:'manse', w:'manse', art:'none', date:'Late nochy',
+  text:`The Manse, in Oldtown: a big old house where a starry ptitsa lives on her oddy knocky with a dozen cats and a lot of very valuable silver and starry things, Georgie says.
+
+The door is locked and she will not open it, not even for the accident trick. So you, being the smallest, are to go in by the window upstairs, then let your droogs in at the front.
+
+Inside it is dark and full of cats. They mew and slither round your nogas. And on a table in the hall, gleaming in the moonlight, is a little bust of Ludwig van himself, with his hair all wild.`,
+  fx:{meet:'catlady', word:['oddy knocky','noga']},
+  choices:[
+    {t:'Go for the starry ptitsa before she reaches the phone.', go:'betrayal', dt:10, fx:{sus:20, flag:'struckHer'}, res:`She comes at you with a stick, waving it like a starry witch, and the cats go everywhere, and you grab the first thing to hand — the little Ludwig van — and then it is done, and she is lying on the floor, and somewhere far off, very faint, a siren.`},
+    {t:'She\'s on the phone to the Millicents. Get out — now.', go:'betrayal', fx:{hum:8, sus:12, flag:'fledHer'}, res:`You hear her voice in the next room — "the police, yes, there's a boy" — and you go for the front door, skorry as you can, cats under your boots. You never touch her. It does not matter, as it turns out, as much as it should.`}
+  ]},
+betrayal:{title:'Outside the Manse', art:'none',
+  text:`You fling open the front door and there are your three droogs at the gate, and the siren is very near now.
+
+"Let's get out, skorry!" you say. And Dim, grinning, swings something white at your litso. A milk bottle, O my brothers. It smashes across your glazzies, and you are on the ground, blind with pain and krovvy.
+
+"You don't go about tolchocking your droogs with a britva," Dim says. "Not all the time." And then their boots, running away, and laughter, and the siren.`,
+  fx:{health:-20, aff:{dim:-40, georgie:-30}, leave:['dim', 'georgie', 'pete']},
+  choices:[{t:'Lie there. There is nothing else.', go:'rozz'}]}
+});
+
+// ── 7. THE ROZZ SHOP ────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+rozz:{chapter:7, chTitle:'The Rozz Shop', map:'wild', loc:'staja', art:'none', date:'Morning',
+  text:G => `In the rozz shop, the police station, they give you a bit of the old ultra-violence of their own, O my brothers, all in the name of law and order. Then they make you sign a statement.
+
+Then P. R. Deltoid comes in, very white. He stands in front of you. Then he spits, full in your litso.
+
+"Did you hear that, boy?" a Millicent says. ${G.flags.struckHer ? '"The starry ptitsa has snuffed it. In hospital, an hour ago. You\'re a murderer now, little boy."' : '"The starry ptitsa has snuffed it. Heart, they say. Your droogs say it was you. You\'re a murderer now, little boy, as far as anyone writing it down cares."'}`,
+  fx:G => ({vaporize:'catlady', flags:{arrested:true}, health:-10, word:['millicent', 'prestoopnik']}),
+  enter:G => { G.stats.sus = 100; },
+  choices:[
+    {t:'Sign the statement. Sign anything.', go:'cell', fx:{hum:-6}},
+    {t:'Wipe your litso, slowly, and sign nothing until they make you.', go:'cell', fx:{hum:6, health:-8}}
+  ]}
+});
+
+
+// ── PART TWO ── 8. 6655321 ──────────────────────────────────────────────────
+Object.assign(BEATS, {
+cell:{chapter:8, chTitle:'6655321', map:'staja', loc:'cell', w:'staja', art:'staja', date:'Two years later',
+  text:`"What's it going to be then, eh?"
+
+That's what you ask yourself now, O my brothers, in Staja 84F, where you have been two years, and where you are not Alex any more but 6655321, in a horrible cage of a cell built for three with six plennies in it, all stinking.
+
+The only bright spot is the chapel, where the prison charlie preaches on a Sunday, and where you are allowed to work the stereo before the service. Bach, O my brothers. Handel. Ludwig van. Real music, in this place.`,
+  fx:{item:'number', lose:['britva', 'bowler', 'moloko'], meet:'charlie', word:['staja', 'charlie']},
+  choices:[
+    {t:'Slip off to the chapel early, to be alone with the stereo.', go:'chapelsneak'},
+    {t:'Go with the others, in line, the proper way.', go:'chapel', fx:{sus:0, aff:{charlie:2}}}
+  ]},
+chapelsneak:{title:'The Wing', loc:'wing', art:'none',
+  text:`The warders patrol the wing and the yard. If you can slip past them to the chapel before the service, you can have the stereo all to yourself for ten minutes. Ten minutes of Bach.
+
+If they catch you out of line, it's the hole.`,
+  game:{type:'sneak', map:'staja', label:'Sneak to the chapel', win:'chapel', lose:'chapel', fxWin:{hum:6, health:4, song:'bach'}, fxLose:{health:-10, hum:-2},
+    winText:'You make it. The chapel is empty and cold and you put on the Brandenburg, low, and close your glazzies, and for ten minutes Staja 84F is not there at all.',
+    loseText:'A warder has you by the collar. A tolchock in the kidneys, and a day without food. But the charlie, when he hears why, looks at you oddly, and kindly.'}},
+chapel:{title:'The Chapel', loc:'chapel', art:'chapel', song:'hymn',
+  text:`The plennies bawl the hymn, very out of tune, while you work the stereo, and the charlie preaches about the hell that awaits the wicked, smelling of the old Scotch.
+
+Afterwards he keeps you back. He has heard of a new thing, he says, a treatment called Ludovico's Technique. It's said to get you out of prison in two weeks, never to come back.
+
+"It may not be nice to be good, little 6655321. It may be horrible to be good."`,
+  fx:{aff:{charlie:8}, item:'bible', word:['bog']},
+  choices:[
+    talk('sermon', 'Ask him what he means.', `He looks at you a long time, very sad.\n\n"Goodness comes from within, 6655321. Goodness is something chosen. When a man cannot choose he ceases to be a man."\n\nYou nod, very serious. You don't quite understand. You will.`, {song:'sermon', hum:5, aff:{charlie:6}}),
+    talk('bible', 'Tell him how much you\'re enjoying the Big Book.', `"Oh, splendid, splendid." You don't tell him which bits: the old Yahudis tolchocking each other and drinking their wine. You fancy yourself helping with the whipping of the Christ, in a nice Roman toga. The charlie beams at you, and you beam back.`, {hum:-2, aff:{charlie:4}}),
+    {t:'Go back to the cell.', go:'newprisoner'}
+  ]},
+newprisoner:{chapter:9, chTitle:'The New Prisoner', loc:'cell', art:'staja',
+  text:`That nochy they put a new plenny in your cell, a loud stinking veck who calls you all names and says he is having the bottom bunk, and starts to put his rookers where they are not wanted.
+
+Then the whole cell is on him, in the dark, and it gets very ugly very fast.`,
+  choices:[
+    {t:'Join in. The old ultra-violence, in the dark.', go:'governor', dt:12, fx:{flag:'killedPrisoner', health:-4}, res:`It is like old times, in the dark, and you are the one who keeps going longest. In the morning the new plenny is very white and very still and not breathing at all.`},
+    {t:'Pull the others off him.', go:'governor', fx:{hum:10, food:8, health:-14}, res:`You get two of them off and take a fist in the litso for it. Then somebody pulls you back, and it goes on without you. In the morning the new plenny is not breathing. And the others all say the same: it was 6655321.`},
+    {t:'Stay on your bunk, face to the wall.', go:'governor', fx:{hum:2}, res:`You lie and listen. In the morning the new plenny is dead, and the others, very quick, all point at you. You were the one with the record, after all.`}
+  ]},
+governor:{title:'The Governor\'s Office', loc:'governor', art:'none',
+  text:`It is just then, O my brothers, that the Minister of the Inferior — the Interior, that is — comes round Staja 84F with the Governor, looking at the plennies like goods in a shop.
+
+The prisons are full, he says, and must be emptied, to make room for the political ones. These common thieves and thugs need curing, not punishing. "Kill the criminal reflex, that's all."
+
+He stops in front of you. "This one," he says. "He'll do. Enterprising, aggressive, outgoing, young, bold, vicious. He'll do."`,
+  fx:{meet:['governor', 'minister']},
+  choices:[
+    {t:'"Yes, sir. Thank you, sir." Volunteer for Ludovico\'s Technique.', go:'ludovico', fx:{hum:-4}},
+    {t:'Ask the charlie first.', go:'ludovico', fx:{hum:4, aff:{charlie:4}}, res:`The charlie, very drunk and very sad, says: "Who am I to say? It is a hard choice, 6655321. Perhaps by choosing to be deprived of choice you are in some sense choosing the good." Then he cries a little. You go anyway. Two weeks, and out.`}
+  ]}
+});
+
+// ── 10. LUDOVICO'S TECHNIQUE ────────────────────────────────────────────────
+Object.assign(BEATS, {
+ludovico:{chapter:10, chTitle:'Ludovico\'s Technique', map:'ludovico', loc:'ward', w:'ludovico', art:'ludovico', date:'Day one',
+  text:`The Ludovico Institute is all white and clean, with nice beds and nice food, and kind young doctors in white coats. Dr Branom smiles at you like a brother and gives you an injection in the arm. Vitamins, he says.
+
+Then they take you in a wheelchair to a sort of sinny, and they strap you in, and they clip your eyelids open so you cannot shut them, however you try. Dr Brodsky, small and plump with very thick ochkies, is in the dark at the back, watching.
+
+Then the film comes on. It is a very good film, very real, a starry veck being given the old ultra-violence by some young malchicks. Just like old times. And then you begin to feel sick.`,
+  fx:{meet:['brodsky', 'branom'], word:['sinny', 'veck'], health:35},
+  game:{type:'film', label:'Viddy well', win:'viddy', lose:'viddy', fxWin:{hum:-10, health:-10}, fxLose:{hum:-14, health:-18},
+    winText:'You get through it, O my brothers, though by the end you are begging them to stop. "Stop it, stop it, please." Dr Brodsky makes a note. "Excellent," he says. "Excellent."',
+    loseText:'You are sick, very sick, all over the straps, and they keep the film going anyway. Dr Brodsky makes a note. "Excellent," he says.'}},
+viddy:{chapter:11, chTitle:'Viddy Well', loc:'sinny', art:'ludovico', date:'Day five',
+  text:`Every day the sinny, and every day the injection that is not vitamins. Films of war and krovvy and tolchocking, and every time the sickness, and it gets worse.
+
+On the fifth day the film is of the war, with soldiers and explosions, and the music behind it is — oh no, O my brothers — Ludwig van. The Ninth. The last movement.
+
+"Stop it! It's a sin!" you scream. "Using Ludwig van like that! He did no harm to anyone. Beethoven just wrote music!"
+
+Dr Brodsky, in the dark: "Can't be helped. Each man kills the thing he loves, as the poet-prisoner said. Here is the punishment element, perhaps."`,
+  fx:{song:'brodsky', flags:{ninthSick:true}, hum:-8},
+  choices:[
+    talk('brodsky', 'Beg Dr Brodsky to leave the music out.', `"Delightful," he says, writing. "You're in a position to see that violence and music both carry the sickness now. The two are linked. I am truly sorry. But there it is." He sounds sorry, which is worse.`, {hum:-2}),
+    {t:'Try to think of the Ninth the way it was, in your den, at night.', go:'demo', fx:{hum:6, health:-10}, res:`You try, O my brothers. The bird of rarest-spun heaven-metal. The choir. But the sickness comes up through it like dirty water through a floor, and you are retching in the straps. They have taken that too.`},
+    {t:'Stop fighting it. Let them have it.', go:'demo', fx:{hum:-10}}
+  ]},
+demo:{chapter:12, chTitle:'The Demonstration', loc:'stage', art:'stage', date:'Day fourteen',
+  text:`After two weeks they put you on a stage, with lights in your glazzies and an audience of important vecks in the dark: the Minister, the Governor, the charlie, doctors, and newspaper men.
+
+"Our subject is, you see, impelled towards the good by, paradoxically, being impelled towards evil," says Dr Brodsky.
+
+A big veck comes on to the stage, an actor, and starts insulting you, and then tolchocking you, and stamping on your nogas.`,
+  game:{type:'stage', label:'Face the actor', win:'cured', lose:'cured'}},
+cured:{chapter:13, chTitle:'Cured', loc:'stage', art:'stage',
+  text:G => `The audience claps. The Minister is very pleased. "He will be your true Christian," says Dr Brodsky, "ready to turn the other cheek."
+
+The charlie stands up at the back, his litso red. "Choice!" he cries. "He has no real choice, has he?" He goes on: it is fear that made the boy grovel, fear of pain and nothing else. He is not good. He is only unable to be bad. That is not the same thing at all.
+
+The Minister smiles. Subtleties, he says. The point is that crime goes down.
+
+${G.games.stage && G.games.stage.win ? 'You managed, somewhere inside the sickness, to keep a malenky bit of yourself. You are not sure what it is. It is very small.' : 'You licked the actor\'s boot, O my brothers. In front of everyone. And meant it, to make the sickness stop.'}`,
+  fx:{flags:{cured:true}, hum:-15, health:20},
+  choices:[{t:'Leave the Ludovico Institute, a free man.', go:'lodger'}]},
+lodger:{chapter:14, chTitle:'Joe the Lodger', map:'flatblock', loc:'den', w:'flatblock', art:'flatblock', date:'The day of release',
+  text:`Home to Flatblock 18A, up the stairs (the lift is working, for once), to your pee and em.
+
+They are sitting at the table, eating, with a man you never viddied before in your life: big and burly, in your chair. Joe. The lodger. He has your room. He calls your pee and em "Dad" and "Mum".
+
+Your discs, your stereo, all your things — the Millicents took them away and sold them, to pay for the cats of the starry ptitsa you killed.
+
+"Well," says Joe. "Here's the boy. Here's the boy that's made your lives a misery."`,
+  fx:{meet:'joe', lose:['disc_mozart', 'disc_bach'], aff:{pee:-6}},
+  choices:[
+    {t:'Want to smash his litso.', go:'lodger2', dt:6, res:`You want to give him the boot, right in his big litso. And the sickness comes up from your belly like a rising flood, and you have to sit down on the floor, white and sweating. Joe laughs. Your em cries.`},
+    {t:'"Appy polly loggies. I\'ll go."', go:'lodger2', fx:{hum:4, food:5, word:'appy polly loggy'}, res:`You say it quiet. Your em cries. Your pee looks at the table. Joe says it's for the best, really, for everyone. Nobody stops you.`}
+  ]},
+lodger2:{title:'The Stairs', art:'none',
+  text:`You go down the stairs of Flatblock 18A with nothing but the platties you stand up in and a few coins they gave you at the Institute. Past the Dignity of Labour, still covered in rude words.
+
+Where now, O my brothers? There is the Public Biblio, which is warm, and free, and where you could find a book about how to die without pain. You have been thinking about that. Just a malenky bit.`,
+  fx:{cash:-99, word:['platties']},
+  enter:G => { G.stats.cash = 3; },
+  choices:[{t:'Go to the Public Biblio.', go:'biblio'}]}
+});
+
+
+// ── PART THREE ── 15. THE PUBLIC BIBLIO ─────────────────────────────────────
+Object.assign(BEATS, {
+biblio:{chapter:15, chTitle:'The Public Biblio', map:'wild', loc:'biblio', w:'biblio', art:'biblio', date:'The same day',
+  text:`In the Public Biblio it is warm, and quiet, and full of starry vecks reading the gazettas to keep out of the cold. You sit down with a big book on medicine.
+
+Then an old veck at the next table looks up, and looks harder, and goes white, and then red. It's the starry professor, O my brothers, him with the books, from that first nochy long ago.
+
+"I know you," he says, very loud. "I never forget a shape. Here's the one that tore up my books and beat me!"
+
+And then all the starry vecks of the Biblio are on you, weak old fists and walking sticks, and you cannot lift a rooker against them, because of the sickness.`,
+  fx:{word:['biblio', 'rooker'], health:-12},
+  choices:[
+    {t:'Try to fight back.', go:'millicents', dt:4, res:`You raise your fist, and the sickness hits you like a lorry, and you go down on your knees among the starry vecks, retching, while they hit you with their sticks and squeak like mice.`},
+    {t:'Cover your gulliver and take it.', go:'millicents', fx:{hum:-2, health:-6}},
+    {t:'Say you\'re sorry. Say it to his face.', go:'millicents', fx:{hum:6, food:8, aff:{professor:10}}, res:`"I'm sorry," you say, on the floor, between the sticks. "I'm sorry, brother. Truly." The starry professor stops, his stick up. For a moment he looks at you like a person. Then the others push him on, and it goes on, but he is not hitting any more.`}
+  ]},
+millicents:{chapter:16, chTitle:'Old Droogs', loc:'biblio', art:'none',
+  text:`Then the Millicents come, two of them, young and smart in uniform, and drag you out of it. You are almost grateful.
+
+Then you viddy their litsos. One is Billyboy. The other — O my brothers — is Dim.
+
+"Well, well, well," says Dim, grinning, his old horrible laugh. "Look who it is. Little Alex. Our old droog."
+
+They have joined the police, O my brothers. That's what happens to nadsats like Dim and Billyboy: the state takes them in and gives them uniforms.`,
+  fx:{word:['millicent']},
+  choices:[{t:'Get in the police car.', go:'trough'}]},
+trough:{title:'The Dark Country', map:'country', loc:'trough', w:'home', art:'none',
+  text:`They drive you out into the dark country, past the filling station, to a place with a horse-trough full of icy water.
+
+They give you the old ultra-violence, O my brothers, just like old times, only you are on the wrong end of it now, and you cannot even lift a rooker. Then they hold your gulliver in the trough until you think you are going to snuff it.
+
+Then they drive off and leave you there, in the rain, laughing.`,
+  fx:{health:-20, word:['krovvy']},
+  choices:[
+    {t:'Crawl to the nearest lighted window.', go:'home2'}
+  ]}
+});
+
+// ── 17. HOME ────────────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+home2:{chapter:17, chTitle:'HOME', map:'home', loc:'gate', w:'home', art:'home', date:'Nochy, in the rain',
+  text:G => `There's a light, and a garden, and a gate, and on the gate a name: HOME.
+
+You knock, and a man opens it, a man in middle age with glasses, and he takes one look at you, all krovvy and wet, and says: "Come in, come in, you poor boy."
+
+He doesn't recognise you, O my brothers. ${G.flags.wentIn ? 'Of course he doesn\'t. You had a maskie on that nochy.' : 'Why would he? You stayed outside in the dark.'} He gives you a bath and dry platties and hot tea and food, and he talks and talks. His wife is dead, he says. She was attacked, here, in this house, by young hooligans, and she died of it later. He lives alone now.
+
+And you know where you are.`,
+  fx:{health:15, word:['eggiweg', 'tashtook']},
+  choices:[
+    {t:'Say nothing. Eat.', go:'study', fx:{food:2}},
+    {t:'Tell him the truth.', if:G => G.flags.stayedOut || G.flags.triedStop, go:'study', fx:{hum:10, food:12, aff:{falexander:-30}, flag:'confessed'}, res:`You put your cup down. "I was there," you say. "That nochy. I was one of them. I didn't go in. I didn't stop it either." His litso does not change for a long time. Then he says, very quiet, "Then you are exactly the boy I need." Something in his voice frightens you more than Dim ever did.`}
+  ]},
+study:{title:'The Study', loc:'study', art:'none',
+  text:G => `In his study, F. Alexander shows you a newspaper with your own litso on it: the boy who was cured, the new crime-free state. "You are a victim of the modern age," he says, "and I can use you." The government, he says, has turned you into a clockwork thing, and he and his friends, Rubinstein and D. B. da Silva and the rest, will show you to the people before the election and bring the government down.
+
+On his desk, under the typewriter, is a typescript: ${PG(PAGES[1])}
+
+${pageCount() ? 'You recognise the paper. You have one of its sisters in your carman.' : 'You have the strangest feeling of having seen it before.'}`,
+  choices:[
+    talk('pages', 'Read the pages on his desk while he telephones his friends.', `More of it: ${PG(PAGES[2])} He writes well, the old veck, you think. Better than the gazettas, anyway.`, {page:[1, 2], hum:4}),
+    talk('drawer', 'Look in the waste-paper basket.', `A torn, crumpled sheet, retyped and thrown away. ${PG(PAGES[3])} You smooth it flat and put it in your carman.`, {page:3, item:'page'}),
+    {t:'Go to bed. You are so tired, O my brothers.', go:'window'}
+  ]},
+window:{chapter:18, chTitle:'The Window', loc:'bedroom', art:'none', date:'The next day',
+  text:G => `In the morning his friends come: smart vecks with pipes and political faces, who talk about you as if you were not in the room. And somewhere in the talk, you let slip a word — a little word, a word you used on that nochy at HOME. F. Alexander stops, very still, and looks at you.
+
+${G.flags.confessed ? 'He knew already. He has known since last nochy.' : 'And you see him remembering.'}
+
+Then you are in a flat in town, a locked room, and through the wall, very loud, there is music. Ludwig van. The Ninth. Over and over and over. The sickness comes up in waves. You bang on the wall. Nobody comes.
+
+There is a window, and it is a long way down.`,
+  choices:[
+    {t:'Jump. Anything to make it stop.', go:'hospital', fx:{health:-45, hum:4}, res:`You go out of the window, O my brothers, and the world goes up and you go down, and then there is nothing, nothing at all.`},
+    {t:'Put your gulliver under the pillow and hold on.', if:G => G.stats.hum >= 35, go:'hospital', fx:{health:-20, hum:10}, res:`You hold on. Hours. The Ninth goes round and round. Something in you holds — something they did not manage to burn out — until somebody downstairs, sick of the noise, breaks the door down. You are carried out, half dead, to the hospital.`}
+  ]},
+hospital:{chapter:19, chTitle:'The Minister', map:'wild', loc:'hospital', w:'hospital', art:'hospital', date:'Weeks later',
+  text:`You wake up in a hospital bed, bandaged all over, with grapes on the table.
+
+The government is in very bad trouble, O my brothers. The boy driven to suicide by the cruel new Ludovico's Technique: it is in every gazetta. And so, while you were sleeping, the doctors have been at your gulliver again, undoing what was done. They show you pictures, and ask what you would do, and you find you would do all sorts of horrorshow things to the lewdies in the pictures, and it doesn't make you sick at all.
+
+Then the Minister himself comes in, with photographers. He wants to be your friend. A good job, a good salary, a new stereo. F. Alexander, he says, has been put away where he can do you no harm.`,
+  fx:{flags:{uncured:true}, hum:20, health:20},
+  choices:[
+    {t:'Shake his hand for the photographers. Ask for the Ninth.', go:'uncured', fx:{cash:40, aff:{minister:20}}, res:`Flash, flash, the cameras go. And then they wheel in a stereo, a beautiful one, and they put on the Ninth, the last movement, and you lie there with your glazzies shut. No sickness. Only the music, all of it, back again.\n\nOh, it was gorgeosity and yumyumyum.`},
+    {t:'"Leave the Ludovico in me. I don\'t want it undone."', go:'end_clockwork', fx:{hum:-30}},
+    {t:'Turn your face to the wall.', go:'uncured', fx:{hum:6}}
+  ]},
+uncured:{title:'The Hospital', art:'hospital', song:'ninth',
+  text:`When the scherzo comes round you can viddy yourself, plain as day, skorry on your nogas through the nochy town, britva out, and the whole world screaming. And it doesn't make you sick at all.
+
+You were cured all right, O my brothers.
+
+What's it going to be then, eh?`,
+  choices:[{t:'Get out of hospital. Go back to the Korova.', go:'newdroogs'}]}
+});
+
+// ── 20. NEW DROOGS ──────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+newdroogs:{chapter:20, chTitle:'What\'s It Going to Be Now?', map:'korova', loc:'booth', w:'korova', art:'korova', date:'A winter nochy, again',
+  text:`"What's it going to be then, eh?"
+
+There is me, that is Alex, and my three new droogs, that is Len, Rick and Bully, in the Korova Milkbar, making up our rassoodocks what to do with the evening. You have a good job now, in the National Grammodisc Archives, and cutter in your carman, and the Minister's friendship.
+
+But the moloko plus doesn't taste like it did. And the things you used to do seem like a lot of trouble for not much.
+
+In your carman there is a photograph, cut out of a gazetta, that you don't remember cutting out. A baby, gurgling goo goo goo.`,
+  fx:{item:'wallet', word:['spatchka', 'zoobies']},
+  choices:[
+    {t:'"Out out out out!" Lead them into the nochy.', go:'oldways', dt:10},
+    {t:'Tell them you\'re tired. Go out for a walk alone.', go:'teashop', fx:{food:10, hum:6}}
+  ]},
+oldways:{title:'The Old Ways', art:'none',
+  text:`You lead them out, and you do the old things, O my brothers. But all the time your gulliver is somewhere else. Bully starts on an old veck, and you find you don't care, one way or the other, and that frightens you more than any sickness.
+
+Afterwards you go off on your oddy knocky, and walk, and walk.`,
+  choices:[{t:'Keep walking.', go:'teashop', fx:{food:4}}]},
+teashop:{chapter:21, chTitle:'Youth Must Go', map:'wild', loc:'teashop', w:'teashop', art:'teashop', date:'The same nochy',
+  text:`In a tea-and-coffee mesto on Marghanita Boulevard you viddy, sitting at a table with a devotchka, a veck you know. Pete. Your old droog Pete, in ordinary platties, with a wife — a wife, O my brothers — called Georgina.
+
+"Alex! Well, well, well," he says, and he is pleased to see you, really pleased. He has a job in an insurance office. They have a little flat. Georgina laughs at the way you talk. "He talks like a nadsat," she says. Pete smiles at you, a bit sad. "We all did, once," he says.
+
+He is nineteen. Just turned. You are eighteen.`,
+  fx:{meet:'georgina', aff:{pete:20}},
+  choices:[
+    talk('photo', 'Show them the photograph in your carman.', `"Whose baby is that?" says Georgina. You don't know. You cut it out of the gazetta without knowing why. Pete looks at you very kindly and says nothing.`, {food:8, hum:4}),
+    talk('chai', 'Ask Pete what happened to Georgie.', `"Georgie? He snuffed it, Alex. A job that went wrong, a big house, a man with a gun. Didn't you know?" You didn't. You sit with that a while. Georgie, who wanted the big jobs and the big cutter.`, {food:6, vaporize:'georgie'}),
+    {t:'Teach Georgina some Nadsat, to make her laugh.', if:G => !G.flags.quizDone, go:'quiz', fx:{flag:'quizDone'}},
+    {t:'Say goodbye, and walk out into the nochy.', go:G => G.stats.food >= 50 && G.stats.hum >= 40 ? 'end_grown' : 'end_cured'}
+  ]},
+quiz:{title:'The Tea and Coffee Mesto', art:'none',
+  text:`"Go on then," says Georgina, "say something in that funny talk of yours." Pete grins. "He used to talk nothing else."`,
+  game:{type:'nadsat', label:'Teach Georgina Nadsat', win:'teashop2', lose:'teashop2', fxWin:{food:8, aff:{georgina:15, pete:5}}, fxLose:{food:5, aff:{georgina:8}},
+    winText:'Georgina is laughing so hard she spills her chai. And you are laughing too, O my brothers, and it is the first time in a long time that you have laughed at something that did not hurt anybody.',
+    loseText:'You have forgotten half of it already. Pete has to help you. It is a strange thing, to forget the words you used to live in.'}},
+teashop2:{title:'The Tea and Coffee Mesto', art:'teashop',
+  text:`Pete looks at his watch. They have to get home; Georgina has work in the morning. "Come round some time, Alex," Pete says, and means it. You say you will. You are not sure you will.`,
+  choices:[{t:'Say goodbye, and walk out into the nochy.', go:G => G.stats.food >= 50 && G.stats.hum >= 40 ? 'end_grown' : 'end_cured'}]}
+});
+
+// ── ENDINGS ─────────────────────────────────────────────────────────────────
+Object.assign(BEATS, {
+end_grown:{ending:'good', title:'Youth Must Go', art:'teashop', text:`Out in the street you walk, very slow, and you think.
+
+Being young is like being one of those malenky clockwork toys, O my brothers, that you wind up and set down, and off it goes, in a straight line, and bangs into a wall, and keeps on banging, and cannot help it. That's what you were. That's what all nadsats are.
+
+And now you are tired of the wall. What you want is a wife, waiting at home, with the tea on, and a son — you will explain to him all about the world, though he won't listen, and he will do all the things you did, and you won't be able to stop him. And he will grow out of it too, perhaps. That's how it goes, round and round, like the world itself, like an orange, turned by a great hand.
+
+But first, a girl. Somewhere there is a girl.
+
+Youth must go, ah yes. And all that cal.`},
+end_cured:{ending:'bad', title:'Cured All Right', art:'orange', text:`You walk out into the nochy, and you light a cancer, and you find Len and Rick and Bully waiting for you on the corner, grinning.
+
+"What's it going to be then, eh?"
+
+And you know exactly what it's going to be, O my brothers. The same as before, and the same again. Round and round, like clockwork.
+
+You were cured all right.
+
+<em>(This is the ending most readers in America knew for years, and the one in the film. The book has one more chapter, and in it Alex grows up. To get there, become more grown before you reach the tea-shop.)</em>`},
+end_clockwork:{ending:'bad', title:'A Clockwork Orange', art:'orange', text:`"Leave it in me," you say. "Please. I don't want to be the way I was."
+
+The Minister looks at his photographers. The doctors look at each other. And they leave it, O my brothers, because it suits them, and because you asked.
+
+You go out into the world a very good boy indeed. You turn the other cheek. You flinch at raised voices. You cannot slooshy the Ninth, ever again, and you cannot lift a hand, even to stop somebody else being hurt. You are sweet and juicy on the outside, all smiles. And inside you are wheels and springs, wound up by somebody else's key.
+
+A clockwork orange, F. Alexander would have called it. He was in prison by then, and did not write it down.`},
+end_early:{ending:'good', title:'A Quiet Nochy In', art:'flatblock', text:`You stay in your den all nochy with the Jupiter on, and you do not go.
+
+In the morning there are Millicents all over Oldtown. A starry ptitsa in the Manse has been hurt, very badly, by a young malchick who got in by a window. Dim and Georgie are taken that same day. Your name comes up, but your pee swears you were in all night, and for once it is true.
+
+You never really see your droogs again. Some nochys you are very lonely, O my brothers. But you go to Melodia, and you buy discs, and one day you get a job, and one day a girl laughs at the way you talk.
+
+It isn't the story everybody knows. It's a better one, maybe. It's just a quieter one.`},
+fallen:{ending:'fail', title:'Snuffed It', text:`It's all over for your humble narrator, O my brothers. The krovvy and the cold and the boots have done for you.
+
+<em>But that's not how the story goes. Go back to the start of the chapter.</em>`},
+lowered:{ending:'fail', title:'The Millicents', art:'staja', text:`They were waiting for you, O my brothers, outside the Korova, with their vans. Too many nochys, too many lewdies who viddied your litso. It's the Staja for you, a lot earlier than in the story, and no Ludovico, and no charlie, and no music at all.
+
+<em>Too much heat. Go back to the start of the chapter, and stay out of the lamplight.</em>`}
+});
+
+function renderEnding(b){
+  const g = b.ending, art = b.art && VIGNETTES[b.art] ? `<div class="art">${VIGNETTES[b.art]()}</div>` : '';
+  const id = Object.keys(BEATS).find(k => BEATS[k] === b);
+  const titleEarned = {end_grown:'Alex, grown up', end_cured:'Alex, cured all right', end_clockwork:'A clockwork orange', end_early:'Alex, oddy knocky'}[id] || '';
+  return `<div class="ending">${art}<div class="chaphead"><div class="cn">${g === 'fail' ? 'THE STORY STOPS' : 'THE END'}</div></div><h2>${esc(b.title)}</h2><div class="rule"></div>
+    <div class="text">${paras(tx(b.text), true)}</div>
+    ${g === 'fail' ? '' : `<table class="etable">
+      <tr><td>What you became</td><td><b>${esc(titleEarned)}</b></td></tr>
+      <tr><td>Choice</td><td>${G.stats.hum}</td></tr>
+      <tr><td>Grown</td><td>${G.stats.food}</td></tr>
+      <tr><td>The old ultra-violence</td><td>${G.ringUses} time${G.ringUses === 1 ? '' : 's'}</td></tr>
+      <tr><td>At HOME, that nochy</td><td>${G.flags.wentIn ? 'You went in' : G.flags.triedStop ? 'You tried to stop them' : G.flags.stayedOut ? 'You stayed in the car' : '—'}</td></tr>
+      <tr><td>Nadsat words</td><td>${G.words.length} of ${Object.keys(NADSAT).length}</td></tr>
+      <tr><td>Music</td><td>${G.songs.length} of ${Object.keys(SONGS).length}</td></tr>
+      <tr><td>Typescript pages</td><td>${pageCount()} of 4</td></tr>
+      <tr><td>Maps</td><td>${G.maps.length} of ${Object.keys(MAPS).length}</td></tr>
+    </table>`}
+    <div class="choices" style="align-items:center">
+      ${g === 'fail' && G.checkpoint ? '<button class="btn gold" data-checkpoint>Back to the start of the chapter</button>' : ''}
+      <button class="btn" data-new>What's it going to be then, eh? (begin again)</button></div></div>`;
+}
+
+
+// ═══ GAMES ══════════════════════════════════════════════════════════════════
+const SNEAK_GRIDS = {
+  staja:[
+    "########################################",
+    "#,,,,,,,,,,,,,,,,,#####,,,,,,,,,,,,,,,,#",
+    "#,1,,,,,,,,,,,,,2,#####,,,,,,,,,,,,,,,,#",
+    "#,,,,,,,,,,,,,,,,,=====,,,3,,,,,,,,,EEE#",
+    "#,,,h,,,,,h,,,,,,,=====,,,,,,,,,,,,,EEE#",
+    "##=####=####=####=#####,,,,,,,,,,,,,,,,#",
+    "#h,##h,,##h,,##h,,#####,,,T,,,T,,,T,,,,#",
+    "#,,##,,,##,,,##,,,#####,,,,,,,,,,,,,,,,#",
+    "#,,##,,,##,,,##,,,#####,,,,,,,,4,,,,,,,#",
+    "##=####=####=####=#####,,,,,,,,,,,,,,,,#",
+    "#,,,,,,,,,,,,,,,,,#####,,,T,,,T,,,T,,,,#",
+    "#,5,,,,,,,,,,,,,6,#####,,,,,,,,,,,,,,,,#",
+    "#,,,,,,,,,,,,,,,,,=====,,,,,,,,,,,,,,,,#",
+    "##=####=####=####=#####,,,,,,,,,,,,,,,,#",
+    "#h,##h,,##h,,##h,,#############==#######",
+    "#,,##,,,##,,,##,,,#############==#######",
+    "#,,##,,,##,,,##,,,#,,,,,,,,,,,,,,,,,,,,#",
+    "##=####=####=####=#,,,,7,,,,,,,,,8,,,,,#",
+    "#,,,,,,,,,,,,,,,,,=,,,,,,,,h,,,,,,,,,,,#",
+    "#,S,,,,,,,,,,,,,,,=,,,,,,,,,,,,,,,,,,,,#",
+    "#,,,,,,,,,,9,,,,,,=,,,,,,,,,,,,,,0,,,,,#",
+    "#,,,,,,,,,,,,,,,,,#,,,,,,,,,,,,,,,,,,,,#",
+    "#,,,,,,,,,,,,,,,,,#,,,,,,,,,,,,,,,,,,,,#",
+    "########################################"]
+};
+const SNEAK = {
+  staja:{title:'Staja 84F, Sunday Morning', goal:'the chapel', theme:'halls', limit:140, dark:0, hide:'cell doorway', sig:'From the memory of 6655321',
+    labels:[['the chapel',38.6,2.4,'r'],['your cell',2.5,22.4,'l'],['the yard',30,22.4]],
+    party:[],
+    foes:[{n:'Warder',k:'pol',route:'12',sp:1.9,r:4.5},{n:'Warder',k:'pol',route:'56',sp:1.9,r:4.5},{n:'Chief Warder',k:'pol',route:'34',sp:1.5,r:5},
+      {n:'Warder',k:'pol',route:'78',sp:1.8,r:4.5},{n:'Plenny (a nark)',k:'man',route:'90',sp:1.3,r:3.5}]}
+};
+const SHORT = {};
+const THEME = {
+  halls:{bg:'#e2ded4', field:'rgba(120,120,110,.08)', road:'rgba(226,100,15,.14)', wall:'#4a4a50', ink:'#141414'}
+};
+
+// Each game is GAMES[type](cfg, wrap, done) → {stop, key?}; done({win, score, msg, ...}).
+const GAMES = {};
+function startGame(cfg){
+  SND.ac();
+  UI.game = cfg;
+  const st = $('#stage');
+  st.innerHTML = headerHTML(BEATS[G.beat]) + `<div class="gwrap" id="gwrap"></div>`;
+  UI.inst = GAMES[cfg.type](cfg, $('#gwrap'), res => finishGame(res)) || {};
+  window.scrollTo(0, 0);
+}
+function finishGame(res){
+  if (UI.inst && UI.inst.stop) UI.inst.stop();
+  UI.inst = null; UI.keys = {};
+  const cfg = UI.game; UI.game = null;
+  if (!cfg) return;
+  G.games[cfg.type] = res;
+  let chips = applyFx(res.win ? cfg.fxWin : cfg.fxLose);
+  if (res.fx) chips = chips.concat(applyFx(res.fx));
+  if (res.ringOn) chips = chips.concat(ringUse(res.ringCost || 10));
+  SND.fx(res.win ? 'good' : 'bad');
+  let next = res.win ? cfg.win : (cfg.lose || cfg.win); if (typeof next === 'function') next = next(G);
+  if (G.stats.health <= 0) next = 'fallen';
+  if (!G.flags.arrested && G.stats.sus >= 100) next = 'lowered';
+  const text = [res.msg, res.win ? cfg.winText : cfg.loseText].filter(Boolean).join('\n\n');
+  G.pending = {text: text || (res.win ? 'Well done.' : 'It could have gone better.'), chips, next};
+  save(); render(); window.scrollTo(0, 0);
+}
+function gameShell(wrap, title, hud, help){
+  wrap.innerHTML = `<div class="ghead"><span class="gt">${title}</span><span class="ghud" id="ghud">${hud || ''}</span></div>
+    <div id="gbody"></div><div class="gmsg" id="gmsg"></div>${help ? `<p class="meta center">${help}</p>` : ''}`;
+  return {body:$('#gbody'), hud:$('#ghud'), msg:$('#gmsg')};
+}
+function mkCanvas(parent, w, h){
+  const c = document.createElement('canvas'); c.width = w; c.height = h; c.className = 'gc'; parent.appendChild(c);
+  return {c, x:c.getContext('2d')};
+}
+function canvasPos(c, e){
+  const r = c.getBoundingClientRect(), t = e.touches ? e.touches[0] : e;
+  return [(t.clientX - r.left) / r.width * c.width, (t.clientY - r.top) / r.height * c.height];
+}
+function ticker(fn){
+  let last = performance.now(), dead = false;
+  const id = setInterval(() => { if (dead) return; const now = performance.now(); const dt = Math.min(.1, (now - last) / 1000); last = now; fn(dt); }, 16);
+  return () => { dead = true; clearInterval(id); };
+}
+UI.keys = {};
+const KEYMAP = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right'};
+
+function carveMaze(cw, ch, r, loops){
+  const W = cw * 2 + 1, H = ch * 2 + 1, g = [];
+  for (let y = 0; y < H; y++) g.push(new Array(W).fill(1));
+  const st = [[0, 0]], seen = {}; seen['0,0'] = 1; g[1][1] = 0;
+  while (st.length){
+    const [cx, cy] = st[st.length - 1];
+    const nb = [[1,0],[-1,0],[0,1],[0,-1]].map(([dx, dy]) => [cx + dx, cy + dy, dx, dy]).filter(([nx, ny]) => nx >= 0 && ny >= 0 && nx < cw && ny < ch && !seen[nx + ',' + ny]);
+    if (!nb.length){ st.pop(); continue; }
+    const [nx, ny, dx, dy] = nb[Math.floor(r() * nb.length)];
+    seen[nx + ',' + ny] = 1; g[cy * 2 + 1 + dy][cx * 2 + 1 + dx] = 0; g[ny * 2 + 1][nx * 2 + 1] = 0; st.push([nx, ny]);
+  }
+  for (let i = 0; i < loops; i++){ const x = 1 + Math.floor(r() * (W - 2)), y = 1 + Math.floor(r() * (H - 2)); if ((x + y) % 2 === 1) g[y][x] = 0; }
+  return g;
+}
+function gridPath(g, sx, sy, tx, ty){
+  const H = g.length, W = g[0].length, prev = new Int32Array(W * H).fill(-1), s = sy * W + sx, t = ty * W + tx, q = [s]; prev[s] = s;
+  for (let h = 0; h < q.length; h++){ const cur = q[h]; if (cur === t) break; const cx = cur % W, cy = (cur / W) | 0;
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H || g[ny][nx] === 1) continue; const n = ny * W + nx; if (prev[n] !== -1) continue; prev[n] = cur; q.push(n); } }
+  if (tx < 0 || ty < 0 || tx >= W || ty >= H || prev[t] === -1) return null; const path = []; let cur = t; while (cur !== s){ path.push([cur % W, (cur / W) | 0]); cur = prev[cur]; } return path.reverse();
+}
+// ── Simple reused games: rhythm, qte, riddles ───────────────────────────────
+GAMES.rhythm = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, SONGS[cfg.song].title, '', 'Hit the notes as they reach the line: keys <b>A S D</b> (or <b>←↓→</b>), or tap the lanes.');
+  const {c, x} = mkCanvas(ui.body, 600, 440);
+  const mel = songMelody(cfg.song), beat = 60 / mel.tempo, lines = SONGS[cfg.song].v[0].concat(SONGS[cfg.song].v[1] || []);
+  const notes = []; let tt = 2;
+  mel.lines.forEach((ln, li) => { ln.forEach(([m, d]) => { notes.push({t:tt, lane:m % 3, m, li, hit:null}); tt += d * beat; }); tt += beat * .5; });
+  const end = tt + 1.2, HIT = 380, SPEED = 260, keys = {a:0, s:1, d:2, ArrowLeft:0, ArrowDown:1, ArrowRight:2, j:0, k:1, l:2};
+  let t = 0, good = 0, ok = 0, miss = 0, combo = 0, over = false, flashL = [0, 0, 0];
+  function press(lane){
+    if (over) return; flashL[lane] = .15;
+    let best = null, bd = .26;
+    notes.forEach(n => { if (n.hit === null && n.lane === lane){ const d = Math.abs(n.t - t); if (d < bd){ bd = d; best = n; } } });
+    if (!best){ combo = 0; return; }
+    best.hit = bd < .11 ? 'good' : 'ok'; if (best.hit === 'good') good++; else ok++; combo++;
+    SND.toneAlways(best.m, .25, 'square', .12);
+  }
+  c.addEventListener('pointerdown', e => { const [px] = canvasPos(c, e); press(Math.min(2, Math.floor(px / 200))); });
+  const stop = ticker(dt => {
+    if (over) return;
+    t += dt;
+    notes.forEach(n => { if (n.hit === null && t - n.t > .26){ n.hit = 'miss'; miss++; combo = 0; } });
+    x.fillStyle = '#121212'; x.fillRect(0, 0, 600, 440);
+    for (let l = 0; l < 3; l++){ x.fillStyle = flashL[l] > 0 ? 'rgba(255,215,106,.25)' : (l % 2 ? '#1e1e1e' : '#191919'); x.fillRect(l * 200, 0, 200, 440); flashL[l] = Math.max(0, flashL[l] - dt); }
+    x.fillStyle = '#e2640f'; x.fillRect(0, HIT - 2, 600, 4);
+    ['A','S','D'].forEach((k, l) => { x.fillStyle = '#8a6c45'; x.font = '16px Cinzel,serif'; x.textAlign = 'center'; x.fillText(k, l * 200 + 100, HIT + 34); });
+    let cur = 0;
+    notes.forEach(n => {
+      if (n.t - t < 2.2 && n.t - t > -1) cur = Math.max(cur, n.li);
+      if (n.hit && n.hit !== 'miss') return;
+      const y = HIT - (n.t - t) * SPEED; if (y < -20 || y > 460) return;
+      x.fillStyle = n.hit === 'miss' ? '#553' : ['#f4f1ea','#e2640f','#d0207a'][n.lane];
+      x.beginPath(); x.ellipse(n.lane * 200 + 100, y, 34, 12, 0, 0, 7); x.fill();
+    });
+    const curLine = notes.filter(n => n.t <= t + .3).reduce((a, n) => n.li, 0);
+    x.fillStyle = 'rgba(0,0,0,.55)'; x.fillRect(0, 0, 600, 56);
+    x.fillStyle = '#ffe9b0'; x.font = 'italic 15px "IM Fell English",serif'; x.textAlign = 'center';
+    const L = lines[curLine] || ''; x.fillText(L.length > 70 ? L.slice(0, 68) + '…' : L, 300, 24);
+    x.fillStyle = '#b99a62'; x.font = 'italic 12px "IM Fell English",serif'; const L2 = lines[curLine + 1] || ''; x.fillText(L2.length > 80 ? L2.slice(0, 78) + '…' : L2, 300, 44);
+    ui.hud.innerHTML = `<span>Combo <b>${combo}</b></span><span>Hits <b>${good + ok}/${notes.length}</b></span>`;
+    if (t > end){ over = true; const acc = (good + ok * .6) / notes.length; done({win: acc >= .55, score:acc, msg:`You hit ${good + ok} of ${notes.length} notes.`}); }
+  });
+  return {stop, key(e){ if (keys[e.key] !== undefined){ e.preventDefault(); press(keys[e.key]); } }};
+};
+// ── QTE: quick reactions ────────────────────────────────────────────────────
+GAMES.qte = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, cfg.label, '', 'Press the arrow shown, quickly — on the keyboard or the buttons.');
+  const AR = {up:'▲', down:'▼', left:'◀', right:'▶'};
+  ui.body.innerHTML = `<div class="riddle" id="qline" style="min-height:3em"></div><div class="qprompt" id="qp"></div><div class="gbar" style="max-width:420px;margin:0 auto"><i id="qt" style="background:linear-gradient(90deg,#c22,#ffb030)"></i></div>
+    <div class="qkeys">${['left','up','down','right'].map(d => `<button data-d="${d}">${AR[d]}</button>`).join('')}</div>`;
+  let i = -1, want = null, left = 0, okc = 0, over = false, gap = 0;
+  const n = cfg.n || 6, T = cfg.time || 1.5;
+  function nextP(){ i++; if (i >= n){ over = true; return done({win: okc / n >= .6, score:okc / n, msg:`You got ${okc} of ${n} right.`}); }
+    want = pick(['up','down','left','right']); left = T * (1 - i * .03); $('#qline').textContent = (cfg.lines && cfg.lines[i]) || '…'; $('#qp').textContent = AR[want];
+    ui.body.querySelectorAll('[data-d]').forEach(b => b.classList.toggle('want', b.dataset.d === want)); }
+  function press(d){ if (over || !want) return; if (d === want){ okc++; SND.fx('hit'); ui.msg.textContent = 'Yes!'; } else { SND.fx('bad'); ui.msg.textContent = 'Wrong!'; } want = null; gap = .35; }
+  ui.body.querySelectorAll('[data-d]').forEach(b => b.onclick = () => press(b.dataset.d));
+  const stop = ticker(dt => {
+    if (over) return;
+    if (gap > 0){ gap -= dt; if (gap <= 0) nextP(); return; }
+    if (want){ left -= dt; $('#qt').style.width = Math.max(0, left / T * 100) + '%'; if (left <= 0){ want = null; gap = .35; ui.msg.textContent = 'Too slow!'; SND.fx('bad'); } }
+    ui.hud.innerHTML = `<span><b>${Math.max(0, i + 1)}/${n}</b></span>`;
+  });
+  gap = .6;
+  return {stop, key(e){ const d = KEYMAP[e.key]; if (d && e.key.indexOf('Arrow') === 0){ e.preventDefault(); press(d); } }};
+};
+function losGrid(g, x0, y0, x1, y1){
+  const dx = x1 - x0, dy = y1 - y0, n = Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) * 3);
+  for (let i = 1; i < n; i++){ const x = x0 + dx * i / n, y = y0 + dy * i / n; if (g[Math.floor(y)][Math.floor(x)] !== 0) return false; }
+  return true;
+}
+function drawFeet(c, e, ts, col, label, alpha){
+  const px = e.x * ts, py = e.y * ts, hd = e.hd, ph = Math.floor(e.step * 2.4) % 2, nx = -Math.sin(hd), ny = Math.cos(hd);
+  for (let i = 0; i < 2; i++){
+    const back = i === 0 ? .1 : -.35, side = ((i + ph) % 2) ? 1 : -1;
+    const fx = px + Math.cos(hd) * back * ts + nx * side * .17 * ts, fy = py + Math.sin(hd) * back * ts + ny * side * .17 * ts;
+    c.save(); c.translate(fx, fy); c.rotate(hd); c.globalAlpha = (i === 0 ? .95 : .5) * (alpha || 1); c.fillStyle = col;
+    c.beginPath(); c.ellipse(0, 0, .22 * ts, .1 * ts, 0, 0, 7); c.fill(); c.restore();
+  }
+  c.globalAlpha = alpha || 1; c.fillStyle = col; c.font = `italic ${Math.max(10, ts * .62)}px 'IM Fell English', Georgia, serif`; c.textAlign = 'center';
+  if (label) c.fillText(label, px, py - ts * .55);
+  c.globalAlpha = 1;
+}
+GAMES.sneak = (cfg, wrap, done) => {
+  const S = SNEAK[cfg.map], rows = SNEAK_GRIDS[cfg.map], H = rows.length, W = rows[0].length, T = THEME[S.theme];
+  const g = [], wps = {}, hides = {}, goal = {}, open = [];
+  let start = [1, 1];
+  for (let y = 0; y < H; y++){ g.push([]); for (let x = 0; x < W; x++){
+    const ch = rows[y][x], walk = '#T~'.indexOf(ch) < 0; g[y].push(walk ? 0 : 1);
+    if (walk) open.push([x, y]);
+    if (ch >= '0' && ch <= '9') wps[ch] = [x, y];
+    if (ch === 'S') start = [x, y]; if (ch === 'E') goal[x + ',' + y] = 1; if (ch === 'h') hides[x + ',' + y] = 1;
+  } }
+  const M = {px:start[0] + .5, py:start[1] + .5, hd:-Math.PI / 2, step:0, path:[], sus:0, t:0, moving:false, ringT:0, ringCD:0, trail:[], seenBy:null, over:false};
+  const foes = S.foes.map(f => {
+    const route = f.route ? f.route.split('').map(c => wps[c]) : null;
+    let p = route ? route[0] : null;
+    if (!p){ let tries = 0; do { p = pick(open); tries++; } while (Math.hypot(p[0] - start[0], p[1] - start[1]) < 14 && tries < 80); }
+    return {n:f.n, k:f.k, route, wi:0, x:p[0] + .5, y:p[1] + .5, path:[], hd:0, step:0, sp:f.sp, r:f.r, sees:false};
+  });
+  const who = S.who || 'Alex';
+  const canRing = true;
+  const ui = gameShell(wrap, S.title, '', `Arrow keys / WASD to move, or click where you want to go. Stand still in a ${S.hide} to hide. ${canRing ? 'Press <b>R</b> to put on your <b>innocent face</b>: a nice young malchick out for a walk, sir. Nobody looks twice while it lasts — but every use costs a little of your Choice.' : ''}`);
+  ui.body.innerHTML = `<div class="ghud" style="justify-content:space-between;margin-bottom:6px"><span id="sobj"></span><span id="stime"></span></div>
+    <div class="gbar"><i id="ssus" style="background:#c9a24a"></i></div><div id="scv" class="sview"></div>
+    <div class="sdpad"><span></span><button data-h="up">▲</button><span></span><button data-h="left">◀</button><button data-h="down">▼</button><button data-h="right">▶</button></div>
+    ${canRing ? '<div class="center" style="margin-top:8px"><button class="btn gold" id="sring">Innocent face (R)</button></div>' : ''}`;
+  const ts = 24, {c, x} = mkCanvas($('#scv'), W * ts, H * ts);
+  // static layer
+  const st = document.createElement('canvas'); st.width = W * ts; st.height = H * ts; const s = st.getContext('2d');
+  s.fillStyle = T.bg; s.fillRect(0, 0, st.width, st.height);
+  for (let i = 0; i < 26; i++){ const gx = ((i * 97) % 100) / 100 * st.width, gy = ((i * 57) % 100) / 100 * st.height, gr = s.createRadialGradient(gx, gy, 0, gx, gy, st.width * .15);
+    gr.addColorStop(0, 'rgba(150,110,50,.12)'); gr.addColorStop(1, 'rgba(150,110,50,0)'); s.fillStyle = gr; s.fillRect(0, 0, st.width, st.height); }
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++){
+    const ch = rows[y][xx], X = xx * ts, Y = y * ts;
+    if (ch === ',') { s.fillStyle = T.field; s.fillRect(X, Y, ts, ts); }
+    else if (ch === '=') { s.fillStyle = T.road; s.fillRect(X, Y, ts, ts); }
+    else if (ch === '~') { s.fillStyle = '#a8bdb0'; s.fillRect(X, Y, ts + .5, ts + .5); s.strokeStyle = 'rgba(70,100,100,.5)'; s.beginPath(); s.moveTo(X + 3, Y + ts / 2); s.quadraticCurveTo(X + ts / 2, Y + ts / 2 - 4, X + ts - 3, Y + ts / 2); s.stroke(); }
+    else if (ch === '#') {
+      if (S.theme === 'shire'){ s.fillStyle = 'rgba(92,107,46,.55)'; s.beginPath(); s.arc(X + ts / 2, Y + ts / 2, ts * .5, 0, 7); s.fill(); }
+      else { s.fillStyle = 'rgba(60,40,20,.13)'; s.fillRect(X, Y, ts + .5, ts + .5); s.strokeStyle = 'rgba(60,40,20,.25)'; s.beginPath(); s.moveTo(X, Y + ts); s.lineTo(X + ts, Y); s.stroke(); }
+    }
+    else if (ch === 'T') {
+      if (S.theme === 'goblin' || S.theme === 'halls'){ s.fillStyle = '#8a8070'; for (let k = 0; k < 3; k++){ s.beginPath(); s.arc(X + 5 + k * 7, Y + 8 + (k % 2) * 8, 5, 0, 7); s.fill(); } }
+      else { s.fillStyle = '#7d8c4a'; s.strokeStyle = T.ink; s.lineWidth = 1; s.beginPath(); s.arc(X + ts / 2, Y + ts / 2 - 2, ts * .42, 0, 7); s.fill(); s.stroke(); s.beginPath(); s.moveTo(X + ts / 2, Y + ts / 2 + 6); s.lineTo(X + ts / 2, Y + ts); s.stroke(); }
+    }
+    else if (ch === 'h') {
+      if (S.hide === 'haystack'){ s.fillStyle = '#d8b850'; s.strokeStyle = T.ink; s.beginPath(); s.moveTo(X + 3, Y + ts - 3); s.quadraticCurveTo(X + ts / 2, Y - 2, X + ts - 3, Y + ts - 3); s.closePath(); s.fill(); s.stroke(); }
+      else if (S.hide === 'bush'){ s.fillStyle = '#6a8a3a'; s.beginPath(); s.arc(X + 8, Y + 14, 7, 0, 7); s.arc(X + 16, Y + 12, 8, 0, 7); s.fill(); }
+      else if (S.hide === 'barrel'){ s.fillStyle = '#8a5a2a'; s.strokeStyle = T.ink; s.beginPath(); s.ellipse(X + ts / 2, Y + ts / 2, ts * .36, ts * .44, 0, 0, 7); s.fill(); s.stroke(); }
+      else { s.fillStyle = 'rgba(40,30,20,.55)'; for (let k = 0; k < 3; k++) s.fillRect(X + ts * (.2 + k * .25), Y + ts * .15, ts * .12, ts * .7); }
+    }
+  }
+  // ink outlines between walkable and solid cells
+  s.strokeStyle = T.ink; s.lineWidth = 2.2; s.lineCap = 'round'; s.beginPath();
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++){
+    if (g[y][xx] !== 0) continue; const X = xx * ts, Y = y * ts;
+    if (!g[y - 1] || g[y - 1][xx] !== 0){ s.moveTo(X, Y); s.lineTo(X + ts, Y); }
+    if (!g[y + 1] || g[y + 1][xx] !== 0){ s.moveTo(X, Y + ts); s.lineTo(X + ts, Y + ts); }
+    if (g[y][xx - 1] !== 0 && xx > 0){ s.moveTo(X, Y); s.lineTo(X, Y + ts); }
+    if (g[y][xx + 1] !== 0 && xx < W - 1){ s.moveTo(X + ts, Y); s.lineTo(X + ts, Y + ts); }
+  }
+  s.stroke();
+  s.fillStyle = T.ink; s.textAlign = 'center'; s.textBaseline = 'middle';
+  S.labels.forEach(([t, lx, ly, a]) => { s.font = `italic ${ts * .78}px 'IM Fell English', Georgia, serif`; s.textAlign = a === 'r' ? 'right' : a === 'l' ? 'left' : 'center';
+    s.fillStyle = 'rgba(255,248,225,.75)'; const w = s.measureText(t).width; s.fillRect((a === 'r' ? lx * ts - w : a === 'l' ? lx * ts : lx * ts - w / 2) - 3, ly * ts - ts * .45, w + 6, ts * .9);
+    s.fillStyle = T.ink; s.fillText(t, lx * ts, ly * ts); });
+  s.textAlign = 'right'; s.font = `italic ${ts * .7}px 'IM Fell English', Georgia, serif`;
+  { const w = s.measureText(S.sig).width; s.fillStyle = 'rgba(245,235,205,.85)'; s.fillRect(st.width - ts * .6 - w - 6, st.height - ts * 1.25, w + 12, ts * .95); }
+  s.fillStyle = 'rgba(74,44,18,.85)'; s.fillText(S.sig, st.width - ts * .6, st.height - ts * .75);
+  s.textBaseline = 'alphabetic';
+  const walkable = (xx, yy) => { const r = g[Math.floor(yy)]; return !!r && r[Math.floor(xx)] === 0; };
+  const isHide = (xx, yy) => !!hides[Math.floor(xx) + ',' + Math.floor(yy)];
+  function ringToggle(){
+    if (!canRing || M.over) return;
+    if (M.ringT > 0){ M.ringT = 0; UI.ringHeld = false; document.body.classList.remove('wraith'); return; }
+    if (M.ringCD > 0){ ui.msg.textContent = 'Not yet, O my brothers. Even your litso needs a rest.'; return; }
+    M.ringT = 6; M.ringCD = 10; UI.ringHeld = true;
+    toast(ringUse(2));
+    document.body.classList.add('wraith'); renderStats();
+    ui.msg.textContent = foes.some(f => f.k === 'rider') ? 'The world goes grey and thin. The Riders\' heads turn as one, like hounds catching a scent.' : 'You put on your nicest litso. Just a young malchick on his way home to his mum, sir.';
+  }
+  const rb = $('#sring'); if (rb) rb.onclick = ringToggle;
+  // hold-to-walk pad for touch screens
+  ui.body.querySelectorAll('[data-h]').forEach(b => {
+    const on = e => { e.preventDefault(); UI.keys[b.dataset.h] = true; b.classList.add('on'); M.path = []; };
+    const off = () => { UI.keys[b.dataset.h] = false; b.classList.remove('on'); };
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  // on a phone the canvas is wider than its window; keep the walker in view
+  const view = $('#scv');
+  function follow(){
+    if (view.scrollWidth <= view.clientWidth + 2 && view.scrollHeight <= view.clientHeight + 2) return;
+    const sc = c.getBoundingClientRect().width / c.width;
+    view.scrollLeft = clamp(M.px * ts * sc - view.clientWidth / 2, 0, view.scrollWidth - view.clientWidth);
+    view.scrollTop = clamp(M.py * ts * sc - view.clientHeight / 2, 0, view.scrollHeight - view.clientHeight);
+  }
+  c.addEventListener('pointerdown', e => { if (M.over) return; const [px, py] = canvasPos(c, e); const p = gridPath(g, Math.floor(M.px), Math.floor(M.py), Math.floor(px / ts), Math.floor(py / ts)); if (p) M.path = p; });
+  function end(win, by){
+    M.over = true; UI.ringHeld = false; document.body.classList.remove('wraith');
+    setTimeout(() => done({win, score: win ? 1 - M.sus : .3, msg: win ? '' : by === 'dawn' ? 'You took too long, and the Millicents had you.' : `${by} has seen you!`}), 700);
+  }
+  const stop = ticker(dt => {
+    if (M.over) return;
+    M.t += dt; M.ringCD = Math.max(0, M.ringCD - dt);
+    if (M.ringT > 0){ M.ringT -= dt; if (M.ringT <= 0){ UI.ringHeld = false; document.body.classList.remove('wraith'); ui.msg.textContent = 'The act slips. You are Alex again, and every glazzy can see it.'; } }
+    let vx = 0, vy = 0; const k = UI.keys;
+    if (k.left) vx -= 1; if (k.right) vx += 1; if (k.up) vy -= 1; if (k.down) vy += 1;
+    const sp = 4.0 * dt; let viaPath = false;
+    if (vx || vy){ M.path = []; const l = Math.hypot(vx, vy); vx /= l; vy /= l; }
+    else if (M.path.length){ const n = M.path[0], dx = n[0] + .5 - M.px, dy = n[1] + .5 - M.py, d = Math.hypot(dx, dy);
+      if (d <= sp){ M.px = n[0] + .5; M.py = n[1] + .5; M.path.shift(); } else { vx = dx / d; vy = dy / d; viaPath = true; } }
+    if (viaPath){ M.px += vx * sp; M.py += vy * sp; }
+    else if (vx || vy){ const r = .28;
+      if (vx){ const nx = M.px + vx * sp; if (walkable(nx + Math.sign(vx) * r, M.py - r + .02) && walkable(nx + Math.sign(vx) * r, M.py + r - .02)) M.px = nx; }
+      if (vy){ const ny = M.py + vy * sp; if (walkable(M.px - r + .02, ny + Math.sign(vy) * r) && walkable(M.px + r - .02, ny + Math.sign(vy) * r)) M.py = ny; } }
+    M.moving = !!(vx || vy);
+    if (M.moving){ M.hd = Math.atan2(vy, vx); M.step += sp;
+      const last = M.trail[M.trail.length - 1]; if (!last || Math.hypot(last.x - M.px, last.y - M.py) > .12) M.trail.push({x:M.px, y:M.py, hd:M.hd}); if (M.trail.length > 200) M.trail.shift(); }
+    foes.forEach(e => {
+      if (!e.path.length){ let tg; if (e.route){ e.wi = (e.wi + 1) % e.route.length; tg = e.route[e.wi]; } else tg = pick(open); e.path = gridPath(g, Math.floor(e.x), Math.floor(e.y), tg[0], tg[1]) || []; }
+      if (e.path.length){ const n = e.path[0], cx = n[0] + .5, cy = n[1] + .5, dx = cx - e.x, dy = cy - e.y, d = Math.hypot(dx, dy), s2 = e.sp * dt;
+        if (d <= s2){ e.x = cx; e.y = cy; e.path.shift(); } else { e.x += dx / d * s2; e.y += dy / d * s2; } if (d > .001) e.hd = Math.atan2(dy, dx); e.step += s2; }
+    });
+    const ringOn = M.ringT > 0, hidden = !M.moving && isHide(M.px, M.py);
+    let best = 0, seen = null;
+    foes.forEach(e => {
+      const rider = e.k === 'rider', r = e.r * (ringOn ? (rider ? 1.8 : .28) : 1), d = Math.hypot(e.x - M.px, e.y - M.py);
+      e.sees = false;
+      if (r <= 0) return;
+      const seeThroughHide = rider && d < 1.6;
+      if ((!hidden || seeThroughHide) && d < r && losGrid(g, e.x, e.y, M.px, M.py)){ e.sees = true; const v = (.7 + 1.6 * (1 - d / r)) * (ringOn && rider ? 1.5 : 1); if (v > best){ best = v; seen = e; } }
+    });
+    if (seen){ M.sus += best * dt; M.seenBy = seen.n; if (seen.k === 'rider' && Math.random() < dt * .8) SND.fx('shriek'); }
+    else M.sus = Math.max(0, M.sus - .3 * dt);
+    if (M.sus >= 1) return end(false, M.seenBy);
+    if (goal[Math.floor(M.px) + ',' + Math.floor(M.py)]) return end(true);
+    if (M.t >= S.limit) return end(false, 'dawn');
+    // draw
+    x.drawImage(st, 0, 0);
+    x.fillStyle = `rgba(60,140,60,${.18 + .12 * Math.sin(M.t * 4)})`; Object.keys(goal).forEach(kk => { const [gx, gy] = kk.split(',').map(Number); x.fillRect(gx * ts, gy * ts, ts, ts); });
+    foes.forEach(e => {
+      const rider = e.k === 'rider', r = e.r * (ringOn ? (rider ? 1.8 : .28) : 1);
+      if (r > 0){ x.strokeStyle = e.sees ? 'rgba(200,40,20,.65)' : 'rgba(74,44,18,.25)'; x.setLineDash([3, 3]); x.beginPath(); x.arc(e.x * ts, e.y * ts, r * ts, 0, 7); x.stroke(); x.setLineDash([]); }
+      drawFeet(x, e, ts, e.sees ? '#b0200f' : rider ? '#111' : '#5a2e14', e.n);
+    });
+    const party = (S.party || []);
+    party.forEach((p, i) => { const tr = M.trail[M.trail.length - 1 - (i + 1) * 9]; if (tr) drawFeet(x, {x:tr.x, y:tr.y, hd:tr.hd, step:M.step + i}, ts * .8, '#3a5a2a', SHORT[p] || p, .7); });
+    drawFeet(x, {x:M.px, y:M.py, hd:M.hd, step:M.step}, ts, ringOn ? 'rgba(14,58,122,.35)' : '#111', who);
+    if (hidden){ x.fillStyle = 'rgba(14,58,122,.8)'; x.font = `italic ${ts * .65}px serif`; x.fillText('(hidden)', M.px * ts, M.py * ts + ts * .95); }
+    if (S.dark){
+      const ov = document.createElement('canvas'); ov.width = c.width; ov.height = c.height; const o = ov.getContext('2d');
+      o.fillStyle = 'rgba(8,6,4,.88)'; o.fillRect(0, 0, ov.width, ov.height); o.globalCompositeOperation = 'destination-out';
+      const hole = (hx, hy, rr) => { const gr = o.createRadialGradient(hx, hy, 0, hx, hy, rr); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(.6, 'rgba(0,0,0,.8)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); o.fillStyle = gr; o.beginPath(); o.arc(hx, hy, rr, 0, 7); o.fill(); };
+      hole(M.px * ts, M.py * ts, S.dark * ts);
+      foes.forEach(e => hole(e.x * ts, e.y * ts, 2.6 * ts));
+      Object.keys(goal).forEach(kk => { const [gx, gy] = kk.split(',').map(Number); hole(gx * ts + ts / 2, gy * ts + ts / 2, ts * 1.4); });
+      x.drawImage(ov, 0, 0);
+      foes.forEach(e => { x.fillStyle = 'rgba(255,150,40,.85)'; x.beginPath(); x.arc(e.x * ts + 6, e.y * ts - 6, 3, 0, 7); x.fill(); });
+    }
+    follow();
+    $('#sobj').innerHTML = `Reach <b>${esc(S.goal)}</b>${M.ringT > 0 ? ' · <b style="color:#b0186a">innocent face</b>' : ''}`;
+    const left = Math.max(0, S.limit - M.t); $('#stime').textContent = `${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`;
+    const b = $('#ssus'); b.style.width = Math.min(100, M.sus * 100) + '%'; b.style.background = M.sus > .6 ? '#c8553d' : '#c9a24a';
+    if (rb) rb.textContent = M.ringT > 0 ? `Drop the act (${Math.ceil(M.ringT)})` : M.ringCD > 0 ? `Innocent face in ${Math.ceil(M.ringCD)})` : 'Innocent face (R)';
+  });
+  return {stop(){ stop(); UI.ringHeld = false; document.body.classList.remove('wraith'); }, key(e){ if (e.key === 'r' || e.key === 'R') ringToggle(); }, held:true};
+};
+
+
+// ── Durango 95: into the dark country ───────────────────────────────────────
+GAMES.durango = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, 'The Durango 95', '', 'Change lanes with <b>↑ ↓</b> (or W / S), or tap above or below the car. Miss the oncoming cars and the hedges. Don\'t hit the starry vecks walking home — the Millicents will know.');
+  const {c, x} = mkCanvas(ui.body, 760, 300);
+  const LY = [90, 150, 210], PX = 140, DUR = 26;
+  let lane = 1, py = LY[1], t = 0, obs = [], next = .8, hp = 3, over = false, scroll = 0, inv = 0, hitVeck = 0;
+  const move = d => { lane = clamp(lane + d, 0, 2); };
+  c.addEventListener('pointerdown', e => { const [, yy] = canvasPos(c, e); move(yy < py ? -1 : 1); });
+  const stop = ticker(dt => {
+    if (over) return;
+    t += dt; const sp = 300 + t * 9; scroll += sp * dt; py += (LY[lane] - py) * Math.min(1, dt * 14); inv = Math.max(0, inv - dt);
+    next -= dt;
+    if (next <= 0){ next = rnd(.45, .9); obs.push({k:pick(['car','car','hedge','veck']), lane:ri(0, 2), x:800}); }
+    obs.forEach(o => { o.x -= (o.k === 'car' ? sp * 1.4 : sp) * dt;
+      if (!o.hit && o.lane === lane && Math.abs(o.x - PX) < 36 && inv <= 0){ o.hit = true; inv = .9;
+        if (o.k === 'veck'){ hitVeck++; SND.fx('hit'); ui.msg.textContent = 'A starry veck goes over the hedge, shouting. He\'ll remember the car.'; }
+        else { hp--; SND.fx('boom'); ui.msg.textContent = o.k === 'car' ? 'Headlights! Metal screams on metal!' : 'Into the hedge, and out again, in a shower of leaves!'; } } });
+    obs = obs.filter(o => o.x > -60);
+    x.fillStyle = '#05060a'; x.fillRect(0, 0, 760, 300); x.fillStyle = '#1a1f14'; x.fillRect(0, 0, 760, 56); x.fillRect(0, 244, 760, 56);
+    x.fillStyle = '#26262a'; x.fillRect(0, 56, 760, 188);
+    x.strokeStyle = 'rgba(255,255,255,.4)'; x.setLineDash([30, 30]); x.lineDashOffset = scroll % 60; x.beginPath(); x.moveTo(0, 120); x.lineTo(760, 120); x.moveTo(0, 180); x.lineTo(760, 180); x.stroke(); x.setLineDash([]);
+    for (let i = 0; i < 12; i++){ const tx2 = ((i * 90 - scroll * .9) % 900 + 900) % 900 - 60; x.fillStyle = '#0e140a'; x.beginPath(); x.arc(tx2, 30, 30, 0, 7); x.arc(tx2 + 40, 272, 26, 0, 7); x.fill(); }
+    const g = x.createLinearGradient(PX, 0, PX + 300, 0); g.addColorStop(0, 'rgba(255,240,180,.35)'); g.addColorStop(1, 'rgba(255,240,180,0)');
+    x.fillStyle = g; x.beginPath(); x.moveTo(PX + 30, py - 8); x.lineTo(PX + 330, py - 60); x.lineTo(PX + 330, py + 60); x.lineTo(PX + 30, py + 8); x.fill();
+    obs.forEach(o => { const y = LY[o.lane];
+      if (o.k === 'car'){ x.fillStyle = '#555'; x.fillRect(o.x - 30, y - 16, 60, 32); x.fillStyle = '#ffe'; x.beginPath(); x.arc(o.x - 30, y - 9, 5, 0, 7); x.arc(o.x - 30, y + 9, 5, 0, 7); x.fill(); }
+      else if (o.k === 'hedge'){ x.fillStyle = '#2a4a1a'; x.beginPath(); x.arc(o.x, y, 24, 0, 7); x.arc(o.x + 18, y - 6, 18, 0, 7); x.fill(); }
+      else { x.fillStyle = '#b8a888'; x.beginPath(); x.arc(o.x, y - 16, 7, 0, 7); x.fill(); x.fillStyle = '#4a3a2a'; x.fillRect(o.x - 7, y - 9, 14, 24); } });
+    x.globalAlpha = inv > 0 && Math.floor(t * 12) % 2 ? .4 : 1;
+    x.fillStyle = '#f4f1ea'; x.fillRect(PX - 34, py - 16, 68, 32); x.fillStyle = '#e2640f'; x.fillRect(PX - 34, py - 3, 68, 6); x.fillStyle = '#111'; x.fillRect(PX - 6, py - 13, 22, 26); x.globalAlpha = 1;
+    const prog = Math.min(1, t / DUR); x.fillStyle = 'rgba(255,255,255,.2)'; x.fillRect(20, 8, 720, 6); x.fillStyle = '#e2640f'; x.fillRect(20, 8, 720 * prog, 6);
+    ui.hud.innerHTML = `<span>Durango <b>${'♦'.repeat(Math.max(0, hp))}</b></span>${hitVeck ? `<span>Starry vecks <b>${hitVeck}</b></span>` : ''}`;
+    if (hp <= 0){ over = true; done({win:false, score:prog, fx: hitVeck ? {sus:6 * hitVeck, food:-3 * hitVeck} : null}); }
+    else if (t >= DUR){ over = true; done({win:true, score:1, fx: hitVeck ? {sus:6 * hitVeck, food:-3 * hitVeck} : null}); }
+  });
+  return {stop, key(e){ const d = KEYMAP[e.key]; if (d === 'up'){ e.preventDefault(); move(-1); } else if (d === 'down'){ e.preventDefault(); move(1); } }};
+};
+
+// ── The Film: Ludovico's Technique ──────────────────────────────────────────
+GAMES.film = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, 'Viddy Well', '', 'Your eyelids are clamped open; you cannot look away. Hold <b>Space</b> (or the button) to think of something else — Ludwig van, in your den — and the sickness ebbs. But when the music on the soundtrack <b>is</b> Ludwig van, thinking of him makes it worse. Last out the reel.');
+  ui.body.innerHTML = `<div class="art" style="cursor:default">${VIGNETTES.ludovico()}</div>
+    <div style="max-width:560px;margin:10px auto">
+      <div class="meta">The reel</div><div class="gbar"><i id="freel" style="background:#888"></i></div>
+      <div class="meta">The sickness</div><div class="gbar"><i id="fsick" style="background:linear-gradient(90deg,#6a8a2a,#b0186a)"></i></div>
+      <div class="center" style="margin-top:10px"><button class="btn gold" id="fhold">Think of something else (hold Space)</button></div></div>`;
+  let reel = 0, sick = 15, phase = 'film', pt = 3, holding = false, over = false;
+  const SCENES = ['A starry veck on the screen, and young malchicks with boots…','Krovvy, very red, very real…','A razor in the lamplight…','A shop, a till, a scream…'];
+  const btn = $('#fhold'), on = e => { if (e) e.preventDefault(); holding = true; }, off = () => { holding = false; };
+  btn.addEventListener('pointerdown', on); btn.addEventListener('pointerup', off); btn.addEventListener('pointerleave', off);
+  ui.msg.textContent = pick(SCENES);
+  const stop = ticker(dt => {
+    if (over) return;
+    reel += dt * 3.4; pt -= dt;
+    if (pt <= 0){
+      if (phase === 'film'){ phase = 'warn'; pt = .9; ui.msg.textContent = 'The soundtrack swells… is that…?'; }
+      else if (phase === 'warn'){ phase = 'ninth'; pt = rnd(1.8, 2.8); ui.msg.textContent = 'Ludwig van! The Ninth! On the soundtrack!'; if (SND.on) SND.toneAlways(66, .4, 'triangle', .12); }
+      else { phase = 'film'; pt = rnd(2.2, 3.6); ui.msg.textContent = pick(SCENES); }
+    }
+    const base = 9;
+    if (phase === 'ninth') sick += (holding ? 46 : 14) * dt;
+    else sick += (holding ? -16 : base) * dt;
+    sick = clamp(sick, 0, 100);
+    if (holding && phase === 'ninth' && Math.random() < dt * 3) { document.body.classList.add('sick'); setTimeout(() => document.body.classList.remove('sick'), 300); }
+    $('#freel').style.width = Math.min(100, reel) + '%'; $('#fsick').style.width = sick + '%';
+    ui.hud.innerHTML = `<span>${phase === 'ninth' ? '<b style="color:#b0186a">THE NINTH</b>' : phase === 'warn' ? '<b>Careful…</b>' : 'The film'}</span>`;
+    if (sick >= 100){ over = true; done({win:false, score:reel / 100}); }
+    else if (reel >= 100){ over = true; done({win:true, score:1 - sick / 100}); }
+  });
+  return {stop, key(e){ if (e.key === ' ' || e.code === 'Space'){ e.preventDefault(); holding = true; } }, keyup(e){ if (e.key === ' ' || e.code === 'Space') holding = false; }};
+};
+
+// ── The Stage: the demonstration ────────────────────────────────────────────
+GAMES.stage = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, 'The Demonstration', '', 'An actor insults you and hits you in front of the Minister. Hitting back brings on the sickness. Grovelling makes it stop — and costs you something worth more. Try to come out with your self still in one piece.');
+  const R = [
+    {s:'The actor shoves you. "Well, look what\'s crawled out of the drain. Smells like it, too."', o:[{t:'Shove him back.', k:'hit'},{t:'Stand there and take it.', k:'endure'},{t:'"I\'m sorry, sir. I\'ll wash."', k:'grovel'}]},
+    {s:'He treads on your foot, hard. "And what are you going to do about it, eh?"', o:[{t:'Make a fist.', k:'hit'},{t:'Say nothing. Breathe.', k:'endure'},{t:'"Please — anything — I\'ll do anything."', k:'grovel'}]},
+    {s:'He tweaks your nose and twists your ear. The audience laughs.', o:[{t:'Go for his throat.', k:'hit'},{t:'Look past him, at the lights.', k:'endure'},{t:'Get down on your knees.', k:'grovel'}]},
+    {s:'He holds out his boot. "Lick it," he says.', o:[{t:'Kick it away.', k:'hit'},{t:'Stay standing. Shake, but stand.', k:'endure'},{t:'Lick it.', k:'grovel'}]},
+    {s:'Dr Brodsky: "He will be your true Christian, ready to turn the other cheek." The audience waits.', o:[{t:'Spit at the actor.', k:'hit'},{t:'Turn and look at the charlie.', k:'endure'},{t:'Smile at the Minister.', k:'grovel'}]}];
+  const W = {hit:[38, 6], endure:[12, 6], grovel:[-18, -16]};   // [sickness, self]
+  let i = 0, sick = 20, self = 40, over = false;
+  function show(){
+    if (i >= R.length){ over = true; return done({win:self >= 40, score:self / 100, fx:{hum:Math.round((self - 40) / 3)},
+      msg: self >= 40 ? 'You stood. You shook and you sweated, but you stood.' : 'You did what they wanted, every time, to make the sickness stop.'}); }
+    const r = R[i];
+    ui.body.innerHTML = `<div class="art" style="cursor:default">${VIGNETTES.stage()}</div><div class="smaugline">${esc(r.s)}</div>
+      <div style="max-width:560px;margin:6px auto"><div class="meta">The sickness</div><div class="gbar"><i style="width:${sick}%;background:#6a8a2a"></i></div>
+      <div class="meta">What is left of you</div><div class="gbar"><i style="width:${self}%;background:#e2640f"></i></div></div>
+      <div class="choices">${shuffle(r.o.slice()).map(o => `<button class="choice talk" data-k="${o.k}">${esc(o.t)}</button>`).join('')}</div>`;
+    ui.body.querySelectorAll('[data-k]').forEach(b => b.onclick = () => answer(b.dataset.k));
+    ui.hud.innerHTML = `<span>Round <b>${i + 1}/${R.length}</b></span>`;
+  }
+  function answer(k){
+    if (over) return;
+    const [s, f] = W[k]; sick = clamp(sick + s, 0, 100); self = clamp(self + f, 0, 100);
+    ui.msg.textContent = k === 'hit' ? 'Your fist comes up — and the sickness floods up with it. You double over.' : k === 'endure' ? 'You stand, sweating. The sickness creeps, but holds off.' : 'The sickness drains away at once. The audience applauds.';
+    SND.fx(k === 'grovel' ? 'click' : 'bad');
+    if (sick >= 100){ over = true; return done({win:false, score:0, fx:{health:-15, hum:Math.round((self - 40) / 3)}, msg:'The sickness has you. You are on the floor of the stage, retching, while they clap.'}); }
+    i++; setTimeout(show, 900);
+  }
+  show();
+  return {stop(){}};
+};
+
+// ── Nadsat quiz: teaching Georgina ──────────────────────────────────────────
+GAMES.nadsat = (cfg, wrap, done) => {
+  const ui = gameShell(wrap, 'Teaching Georgina Nadsat', '', 'Georgina reads a word; pick what it means. Five words. She laughs either way.');
+  const pool = (G.words.length >= 6 ? G.words : Object.keys(NADSAT)).slice();
+  const qs = shuffle(pool).slice(0, 5); let i = 0, right = 0, over = false, lock = false;
+  function show(){
+    if (i >= qs.length){ over = true; return done({win:right >= 3, score:right / 5, msg:`You got ${right} of 5.`}); }
+    const w = qs[i], a = NADSAT[w];
+    const wrong = shuffle(Object.keys(NADSAT).filter(k => NADSAT[k] !== a).map(k => NADSAT[k]).filter((v, j, arr) => arr.indexOf(v) === j)).slice(0, 3);
+    lock = false;
+    ui.body.innerHTML = `<div class="riddle">"${esc(w)}?"</div><div class="opts">${shuffle([a].concat(wrong)).map(o => `<button data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
+    ui.body.querySelectorAll('[data-o]').forEach(b => b.onclick = () => answer(b.dataset.o));
+    ui.hud.innerHTML = `<span>Word <b>${i + 1}/5</b></span><span>Right <b>${right}</b></span>`;
+  }
+  function answer(o){
+    if (lock || over) return; lock = true;
+    const ok = o === NADSAT[qs[i]]; if (ok){ right++; SND.fx('good'); } else SND.fx('bad');
+    ui.msg.textContent = ok ? pick(['Georgina claps. "Horrorshow!"','Pete laughs. "He\'s still got it."','"Viddy him go!"']) : `"No, silly, it means ${NADSAT[qs[i]]}," says Pete, who remembers.`;
+    i++; setTimeout(show, 1200);
+  }
+  show();
+  return {stop(){}};
+};
+
+// ═══ TITLE, MENU, BOOT ══════════════════════════════════════════════════════
+function renderTitle(){
+  const sv = tryLoad();
+  $('#stage').innerHTML = `<div class="titlescr">${VIGNETTES.korova()}
+    <h1>Real Horrorshow</h1><div class="sub">being the story of your humble narrator, Alex, and his droogs, and Ludwig van, and the Ludovico Technique</div>
+    <div class="verse">"What's it going to be then, eh?"</div>
+    <div class="btns">${sv ? `<button class="btn gold" data-load>Continue — Chapter ${sv.chapter}: ${esc(sv.chTitle || '')}</button>` : ''}<button class="btn" data-new>Out out out out!</button></div>
+    <p class="meta" style="margin-top:18px;max-width:600px;margin-left:auto;margin-right:auto">Three parts and twenty-one chapters, the age of being grown. ${Object.keys(SONGS).length} pieces of music and words, ${Object.keys(MAPS).length} maps, ${Object.keys(NADSAT).length} words of Nadsat to collect, typescript pages to find, and eight trials. Watch your <b>Choice</b>, <b>Health</b> and <b>Grown</b>, and keep your <b>Heat</b> down. An unofficial game after Anthony Burgess's novel; short phrases quoted, prose new. Contains violence (mostly off-screen); the novel's sexual violence is not depicted.</p></div>`;
+  wireStage();
+  const nb = $('#stage').querySelector('[data-new]');
+  if (nb && sv) nb.onclick = () => { if (confirm('Begin again? Your saved game will be lost.')) startNew(); };
+}
+function openMenu(){
+  openModal(`<div class="ptitle" style="font-size:1.2rem;text-align:center">Menu</div>
+    <div class="choices" style="max-width:420px">
+      ${G && G.checkpoint ? `<button class="choice" id="mcp">↺ Back to the start of this chapter (${esc(G.chTitle)})</button>` : ''}
+      <button class="choice" id="mhelp">How to play</button>
+      <button class="choice" id="msnd">${SND.on ? '♪ Sound: on' : '♪ Sound: off'}</button>
+      <button class="choice" id="mnew">Begin again</button>
+      ${G ? '<button class="choice" id="mtitle">Back to the title page</button>' : ''}
+    </div><p class="meta center">Your progress is saved after every step, O my brothers.</p>`);
+  const q = id => document.getElementById(id);
+  if (q('mcp')) q('mcp').onclick = () => { if (confirm('Go back to the start of this chapter?')) restoreCheckpoint(); };
+  q('mhelp').onclick = () => openModal(`<div class="ptitle" style="font-size:1.2rem">How to play</div><div class="text">${paras(`You are Alex, fifteen, leader of three droogs, lover of Ludwig van, and very fond of the old ultra-violence. Read, choose, and play your way through the three parts of your story.
+
+<b>Choice</b> is your free will. The state will try to take it away. <b>Grown</b> is how far you've come from being a nadsat: it falls every time you choose the old ultra-violence (the choices marked ✸), and rises when you hold back, and listen, and think. <b>Heat</b> is the Millicents' interest in you: at 100, they have you early. <b>Health</b> is your body. <b>Cutter</b> is money.
+
+After Ludovico's Technique, choosing violence doesn't hurt anyone but you: it brings on the sickness instead.
+
+How grown you are, and how much choice you have left, decide which of the book's endings you get — the twenty-first chapter, which American readers never saw, or the one before it.
+
+Trials: a rumble with Billyboy, the Durango 95 on the dark country roads, the Ninth on your stereo (a rhythm game, with Beethoven's real tune), a stealth map through Staja 84F to the chapel stereo (arrow keys or click; R for your innocent face), the Ludovico film, the stage demonstration, and teaching Nadsat. Every one can be skipped.
+
+Collect Nadsat words as you hear them (the Nadsat tab), music and words, maps, and the four torn pages of F. Alexander's typescript.`)}</div>`);
+  q('msnd').onclick = () => { SND.on = !SND.on; openMenu(); updateSoundBtn(); };
+  q('mnew').onclick = () => { if (!G || confirm('Begin again? Your current progress will be lost.')) startNew(); };
+  if (q('mtitle')) q('mtitle').onclick = () => { closeModal(); if (UI.inst && UI.inst.stop) UI.inst.stop(); UI.inst = null; UI.game = null; G = null; render(); };
+}
+function updateSoundBtn(){ $('#btnSound').style.opacity = SND.on ? 1 : .45; $('#btnSound').title = SND.on ? 'Sound on' : 'Sound off'; }
+
+$('#btnMenu').onclick = openMenu;
+$('#btnSound').onclick = () => { SND.on = !SND.on; updateSoundBtn(); if (SND.on) SND.fx('good'); };
+$('#modal .mclose').onclick = closeModal;
+$('#modal').addEventListener('pointerdown', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.key === 'Escape' && !$('#modal').classList.contains('hidden')){ closeModal(); return; }
+  if (UI.game && UI.inst){
+    const d = KEYMAP[e.key];
+    if (UI.inst.held && d){ UI.keys[d] = true; e.preventDefault(); }
+    if (UI.inst.key) UI.inst.key(e);
+    return;
+  }
+  if (G && !UI.game && /^[1-9]$/.test(e.key) && $('#modal').classList.contains('hidden')){
+    const btns = $('#stage').querySelectorAll('.choices button'); const b = btns[+e.key - 1]; if (b) b.click();
+  }
+});
+document.addEventListener('keyup', e => { const d = KEYMAP[e.key]; if (d) UI.keys[d] = false; if (UI.game && UI.inst && UI.inst.keyup) UI.inst.keyup(e); });
+window.addEventListener('blur', () => { UI.keys = {}; });
+
+updateSoundBtn();
+G = null;
+render();
+</script>
+</body>
+</html>
