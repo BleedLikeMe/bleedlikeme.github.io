@@ -900,12 +900,26 @@ function renderCompare() {
 
 /* ---------- crossword ---------- */
 function cwCandidates(n) {
-  const seen = new Set(), out = [];
+  // Prefer repeated 2- and 3-word phrases (they make more specific, accurate answers), then fill with single words.
+  const seen = new Set(), used = new Set(), out = [];
+  const { bi, tri } = phraseData(state.doc, state.A);
+  const phrases = [...tri, ...bi].map(p => ({ ...p, parts: p.k.split(' ') }))
+    .filter(p => p.parts.every(w => /^[a-z]+$/.test(w)) && p.parts.every(w => w.length >= 2) && p.parts.join('').length <= 15)
+    .sort((a, b) => b.c - a.c || b.parts.length - a.parts.length);
+  const maxPhrases = Math.max(2, Math.round(n * 0.6));
+  for (const p of phrases) {
+    if (out.length >= maxPhrases) break;
+    const word = p.parts.join('');
+    // skip phrases that overlap one already chosen (e.g. "world war" vs "second world war")
+    if (seen.has(word) || p.parts.some(w => used.has(w))) continue;
+    seen.add(word); p.parts.forEach(w => used.add(w));
+    out.push({ word, key: null, parts: p.parts, enumr: p.parts.map(w => w.length).join(',') });
+  }
   for (const e of [...state.A.map.values()].filter(e => e.count >= state.s.minCount).sort((a, b) => b.count - a.count)) {
-    const w = e.display;
-    if (!/^[a-z]+$/.test(w) || w.length < 3 || w.length > 13 || seen.has(w)) continue;
-    seen.add(w); out.push({ word: w, key: e.key });
     if (out.length >= n) break;
+    const w = e.display;
+    if (!/^[a-z]+$/.test(w) || w.length < 3 || w.length > 13 || seen.has(w) || used.has(w)) continue;
+    seen.add(w); out.push({ word: w, key: e.key, enumr: String(w.length) });
   }
   return out;
 }
@@ -957,7 +971,31 @@ function layoutCW(words, MAX) {
   }
   return { cells, placed, b };
 }
+function makePhraseClue(w) {
+  const doc = state.doc, toks = doc.tokens.filter(t => inc(doc, t)), n = w.parts.length, hits = [];
+  for (let i = 0; i + n <= toks.length; i++) {
+    const g = toks.slice(i, i + n);
+    if (g[n - 1].sent !== g[0].sent || g[n - 1].i - g[0].i !== n - 1) continue;
+    if (g.every((t, j) => t.w === w.parts[j])) hits.push(g);
+  }
+  if (!hits.length) return `Phrase from the article (${w.enumr})`;
+  const len = si => doc.sentences[si].text.length;
+  const score = si => { const L = len(si); return L < 40 ? 1000 - L : Math.abs(L - 120); };
+  const si = hits.map(g => g[0].sent).sort((a, b) => score(a) - score(b))[0];
+  const blank = w.parts.map(() => '_____').join(' ');
+  let out = doc.sentences[si].text;
+  for (const g of hits.filter(g => g[0].sent === si).sort((a, b) => b[0].off - a[0].off)) {
+    const last = g[n - 1];
+    out = out.slice(0, g[0].off) + blank + out.slice(last.off + last.raw.length);
+  }
+  if (out.length > 200) {
+    const p = out.indexOf('_____'), a = Math.max(0, p - 90), z = Math.min(out.length, p + 110);
+    out = (a ? '…' : '') + out.slice(a, z) + (z < out.length ? '…' : '');
+  }
+  return out;
+}
 function makeClue(w) {
+  if (w.parts) return makePhraseClue(w);
   const doc = state.doc, sw = stem(w.word);
   const match = t => keyOf(t.w) === w.key || t.w.startsWith(w.word) || stem(t.w) === sw;
   const sentIdx = [...new Set(doc.tokens.filter(t => inc(doc, t) && match(t)).map(t => t.sent))];
@@ -1018,9 +1056,9 @@ function renderGrid() {
   }
   g += '</table>';
   const list = dir => cw.placed.map((p, i) => ({ p, i })).filter(x => x.p.dir === dir).sort((a, b) => a.p.num - b.p.num)
-    .map(({ p, i }) => `<li data-action="cwClue" data-arg="${i}" data-idx="${i}"><b>${p.num}</b>${esc(p.clue)} <span class="forms">(${p.word.length})</span></li>`).join('');
+    .map(({ p, i }) => `<li data-action="cwClue" data-arg="${i}" data-idx="${i}"><b>${p.num}</b>${esc(p.clue)} <span class="forms">(${p.enumr || p.word.length})</span></li>`).join('');
   return `<div class="card" id="cwArea">${bar}
-    <p class="note">${cw.placed.length} of ${cw.tried} top words fit into the grid. Each clue is a real sentence from the article with the answer blanked out. Tap a cell twice to switch between across and down.</p>
+    <p class="note">${cw.placed.length} of ${cw.tried} top words and phrases fit into the grid${cw.placed.some(p => p.parts) ? ' (phrase answers are entered without spaces; the numbers in brackets give each word’s length)' : ''}. Each clue is a real sentence from the article with the answer blanked out. Tap a cell twice to switch between across and down.</p>
     <div class="cw-wrap"><div><div class="cw-cur" id="cwCur">Tap a square or a clue to start.</div><div class="cw-scroll">${g}</div></div>
     <div class="clues"><h4>Across</h4><ol>${list('a')}</ol><h4>Down</h4><ol>${list('d')}</ol></div></div></div>`;
 }
@@ -1037,7 +1075,7 @@ function cwHighlight() {
   }
   document.querySelector(`#panel td.cell[data-k="${cw.cur}"]`)?.classList.add('cur');
   document.querySelector(`#panel .clues li[data-idx="${idx}"]`)?.classList.add('active');
-  const cur = $('#cwCur'); if (cur) cur.innerHTML = `<b>${p.num} ${p.dir === 'a' ? 'across' : 'down'}</b>${esc(p.clue)} <span class="forms">(${p.word.length})</span>`;
+  const cur = $('#cwCur'); if (cur) cur.innerHTML = `<b>${p.num} ${p.dir === 'a' ? 'across' : 'down'}</b>${esc(p.clue)} <span class="forms">(${p.enumr || p.word.length})</span>`;
 }
 function cwStep(delta) {
   const cw = state.cw, cell = cw.cells.get(cw.cur), idx = cell && cell[cw.dir]; if (idx === undefined) return;
