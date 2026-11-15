@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Daily Gambit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f3eddd; --paper2:#ebe3cf; --sq:#faf6ea; --ink:#171512; --ink2:#3b3630; --muted:#6d655a;
+  --red:#b3261e; --rule:#171512;
+  --bs: max(300px, min(92vw, calc(100vh - 372px), 600px));     /* board size */
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Old Standard TT",Georgia,"Times New Roman",serif}
+body{background:
+  radial-gradient(ellipse at 50% 40%, transparent 55%, #0000001a 100%),
+  linear-gradient(var(--paper),var(--paper2));min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.33;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .4 0 0 0 0 .32 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+button{font:inherit;cursor:pointer;color:var(--ink);background:var(--sq);border:1.5px solid var(--ink);border-radius:0;padding:.35em .8em;font-weight:700;letter-spacing:.02em;box-shadow:2px 2px 0 var(--ink);transition:transform .06s, box-shadow .06s}
+button:hover:not(:disabled){background:#fff}
+button:active:not(:disabled){transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+button:disabled{opacity:.35;cursor:default}
+button.inv{background:var(--ink);color:var(--paper)}
+button.inv:hover:not(:disabled){background:#000}
+input,select{font:inherit;color:var(--ink);background:var(--sq);border:1.5px solid var(--ink);border-radius:0;padding:.3em .45em}
+input[type=range]{accent-color:var(--ink);padding:0;border:0;background:none}
+[hidden]{display:none!important}
+
+/* ---------- masthead ---------- */
+#paper{max-width:1240px;margin:0 auto;padding:10px 18px 30px}
+.topline{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--rule);padding-bottom:4px;gap:10px}
+.mast{text-align:center;padding:4px 0 2px;line-height:1}
+.mast h1{font-family:"UnifrakturMaguntia",serif;font-weight:400;font-size:clamp(40px,7vw,72px);margin:0;letter-spacing:.01em}
+.dateline{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:3px double var(--rule);border-bottom:3px double var(--rule);padding:4px 2px;font-size:13px;font-style:italic;flex-wrap:wrap}
+.dateline b{font-style:normal;letter-spacing:.1em;text-transform:uppercase;font-size:12px}
+#headline{font-family:"Playfair Display",Georgia,serif;font-weight:900;text-transform:uppercase;text-align:center;font-size:clamp(22px,3.2vw,38px);line-height:1.05;margin:8px 0 2px;letter-spacing:-.005em}
+#headline.extra::before{content:'EXTRA! ';color:var(--red)}
+#subhead{text-align:center;font-style:italic;font-size:clamp(14px,1.6vw,17px);color:var(--ink2);margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+
+/* ---------- columns ---------- */
+#cols{display:grid;grid-template-columns:minmax(200px,1fr) auto minmax(230px,1fr);gap:0}
+.col{padding:0 16px}
+.col+.col{border-left:1px solid var(--rule)}
+.kicker{font-family:"Playfair Display",serif;font-weight:900;text-transform:uppercase;font-size:13px;letter-spacing:.14em;border-bottom:2px solid var(--rule);padding-bottom:3px;margin:0 0 8px}
+.byline{font-size:12px;font-style:italic;color:var(--muted);margin:-4px 0 8px}
+#report p{margin:0 0 .7em;font-size:15px;line-height:1.45;text-align:justify;hyphens:auto}
+#report p:first-child::first-letter{font-family:"Playfair Display",serif;font-weight:900;float:left;font-size:3.1em;line-height:.82;padding:4px 5px 0 0}
+.facts{font-size:14px;line-height:1.55;border-top:1px solid var(--rule);margin-top:10px;padding-top:8px}
+.facts b{font-variant:small-caps;letter-spacing:.04em}
+
+/* ---------- players & clocks ---------- */
+.player{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;width:var(--bs)}
+.pname{font-family:"Playfair Display",serif;font-weight:700;font-size:18px;line-height:1.1}
+.pname small{font-family:"Old Standard TT",serif;font-weight:400;font-style:italic;font-size:13px;color:var(--muted);margin-left:4px}
+.caps{display:flex;align-items:center;gap:0;min-height:20px;font-size:13px;font-weight:700}
+.caps i{display:inline-block;width:19px;height:19px;background-size:contain;margin-right:-6px}
+.caps span{margin-left:10px}
+.clock{font-family:"Playfair Display",serif;font-weight:900;font-variant-numeric:tabular-nums;font-size:clamp(22px,2.6vw,30px);border:2px solid var(--ink);padding:0 12px;min-width:118px;text-align:center;background:var(--sq);box-shadow:3px 3px 0 var(--ink);position:relative}
+.clock.run{background:var(--ink);color:var(--paper)}
+.clock.low{color:var(--red);border-color:var(--red);box-shadow:3px 3px 0 var(--red)}
+.clock.run.low{background:var(--red);color:#fff}
+.clock.none{font-size:15px;font-weight:700;padding:4px 10px}
+.thinking{font-size:12px;font-style:italic;color:var(--muted);min-height:16px}
+
+/* ---------- board ---------- */
+#boardWrap{position:relative;width:var(--bs);margin:2px 0 0}
+#frame{position:relative;border:3px solid var(--ink);outline:1px solid var(--ink);outline-offset:3px;margin:6px;background:var(--sq)}
+#board{position:relative;width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);touch-action:none;user-select:none;-webkit-user-select:none}
+.sq{position:relative;background:var(--sq)}
+.sq.dk{background:repeating-linear-gradient(-45deg,var(--ink) 0 1.15px,transparent 1.15px 4.6px),var(--sq)}
+.sq.last::after{content:'';position:absolute;inset:0;background:radial-gradient(circle,#171512 0 1.05px,transparent 1.5px) 0 0/5px 5px;opacity:.55}
+.sq.dk.last::after{background:radial-gradient(circle,var(--sq) 0 1.3px,transparent 1.7px) 0 0/5px 5px;opacity:.9}
+.sq.sel{box-shadow:inset 0 0 0 3px var(--ink)}
+.sq.check::before{content:'';position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle,var(--red) 0 1.4px,transparent 1.9px) 0 0/4.5px 4.5px;border:2px solid var(--red)}
+.sq.dot::after{content:'';position:absolute;left:50%;top:50%;width:22%;height:22%;transform:translate(-50%,-50%);border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--sq)}
+.sq.ring::after{content:'';position:absolute;inset:4%;border-radius:50%;border:3px solid var(--ink);box-shadow:0 0 0 2px var(--sq) inset}
+.sq.hover{box-shadow:inset 0 0 0 3px var(--ink)}
+#pieces{position:absolute;inset:0;pointer-events:none;filter:url(#ink)}
+.pc{position:absolute;width:12.5%;height:12.5%;background-size:92%;background-position:center;background-repeat:no-repeat;will-change:transform}
+.pc.anim{transition:transform .22s cubic-bezier(.3,.7,.3,1)}
+.pc.lift{opacity:.25}
+#ghost{position:fixed;pointer-events:none;z-index:50;background-size:92%;background-repeat:no-repeat;background-position:center;transform:translate(-50%,-50%) scale(1.08);filter:drop-shadow(3px 4px 0 #0003)}
+.coord{position:absolute;font-size:12px;font-style:italic;color:var(--ink2)}
+.coord.f{bottom:-20px;transform:translateX(-50%)}
+.coord.r{left:-17px;transform:translateY(-50%)}
+#arrows{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
+#promo{position:absolute;z-index:20;display:flex;flex-direction:column;background:var(--sq);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);width:12.5%}
+#promo div{aspect-ratio:1;background-size:88%;background-position:center;background-repeat:no-repeat;cursor:pointer}
+#promo div:hover{background-color:#fff;box-shadow:inset 0 0 0 2px var(--ink)}
+.caption{text-align:center;font-style:italic;font-size:14px;margin:26px 0 0;width:var(--bs)}
+.caption b{font-style:normal;font-variant:small-caps;letter-spacing:.06em}
+
+/* ---------- blindfold ---------- */
+#blindBar{width:var(--bs);margin-top:8px;border:1.5px solid var(--ink);background:var(--sq);padding:6px 8px;box-shadow:3px 3px 0 var(--ink)}
+#blindBar .brow{display:flex;gap:6px;align-items:center}
+#blindBar input{flex:1;min-width:0;font-size:17px;font-weight:700;padding:.3em .5em}
+#blindBar button{padding:.35em .7em;box-shadow:none}
+#peek{user-select:none;-webkit-user-select:none;touch-action:none}
+#blindMsg{font-size:13px;font-style:italic;min-height:1.2em;margin-top:3px}
+#blindMsg.err{color:var(--red);font-style:normal;font-weight:700}
+.blind-tag{display:inline-block;border:1.5px solid var(--ink);padding:0 6px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-left:6px;vertical-align:middle}
+#board.blind .sq.sel{box-shadow:inset 0 0 0 4px var(--ink)}
+.hidden-sheet{text-align:center;font-style:italic;padding:16px 6px;color:var(--ink2)}
+
+/* ---------- problems ---------- */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;margin-top:8px}
+.pcard{border:1.5px solid var(--ink);background:var(--sq);padding:6px;cursor:pointer;text-align:center;position:relative;transition:transform .08s}
+.pcard:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.pcard .mini{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;border:1.5px solid var(--ink)}
+.pcard .mini i{background-size:94%;background-position:center;background-repeat:no-repeat}
+.pcard .mini i.dk{background-color:transparent;background-image:var(--pc,none),repeating-linear-gradient(-45deg,#17151270 0 .7px,transparent .7px 3px)}
+.pcard .pt{font-family:"Playfair Display",serif;font-weight:900;font-size:14px;margin-top:4px}
+.pcard .ps{font-size:12px;font-style:italic;color:var(--muted)}
+.pcard .stamp{position:absolute;top:10px;right:-6px;transform:rotate(12deg);border:2px solid var(--red);color:var(--red);font-weight:700;font-size:11px;letter-spacing:.1em;padding:0 5px;background:var(--sq);text-transform:uppercase}
+.pcard .stamp.rev{border-color:var(--muted);color:var(--muted)}
+.sol{font-size:15px;line-height:1.6}
+.sol b{font-family:"Playfair Display",serif}
+.ptools{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-style:italic;font-size:14px}
+@media (min-width:981px){ body.blindmode{--bs:max(300px, min(92vw, calc(100vh - 440px), 600px))} }
+
+/* ---------- right column ---------- */
+#verdict{font-size:14px;margin-bottom:10px}
+#verdict .bar{height:10px;border:1.5px solid var(--ink);margin-top:4px;background:repeating-linear-gradient(-45deg,var(--ink) 0 1px,transparent 1px 3.5px),var(--sq);position:relative}
+#verdict .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--sq);border-right:1.5px solid var(--ink);transition:width .5s}
+#moves{font-size:15px;line-height:1.55;max-height:min(46vh,430px);overflow-y:auto;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:4px 2px;column-gap:0}
+#moves table{border-collapse:collapse;width:100%}
+#moves td{padding:0 4px;vertical-align:top}
+#moves td.n{width:2.4em;text-align:right;color:var(--muted);font-style:italic;padding-right:6px}
+#moves .mv{cursor:pointer;padding:0 3px;white-space:nowrap}
+#moves .mv:hover{text-decoration:underline}
+#moves .mv.cur{background:var(--ink);color:var(--paper)}
+#moves .ann{font-weight:700;margin-left:1px}
+#moves .ann.bad{color:var(--red)}
+#moves .res{text-align:center;font-weight:700;padding-top:4px}
+.nav{display:flex;gap:6px;margin:8px 0;justify-content:center}
+.nav button{padding:.2em .7em}
+.ctrls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ctrls button{padding:.45em .4em}
+.opts{margin-top:12px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.opts input{accent-color:var(--ink)}
+.small{font-size:12.5px;color:var(--muted);font-style:italic}
+
+/* ---------- modal ---------- */
+#modal{position:fixed;inset:0;background:#17151299;display:grid;place-items:center;z-index:200;padding:14px}
+.box{background:var(--paper);border:3px double var(--ink);outline:1px solid var(--ink);outline-offset:-8px;max-width:620px;width:100%;max-height:92vh;overflow:auto;padding:22px 24px;box-shadow:8px 8px 0 #171512aa;position:relative}
+.box h2{font-family:"Playfair Display",serif;font-weight:900;text-transform:uppercase;text-align:center;font-size:28px;margin:0 0 2px;line-height:1.05}
+.box .dek{text-align:center;font-style:italic;margin-bottom:14px;border-bottom:1px solid var(--ink);padding-bottom:10px}
+.box h3{font-family:"Playfair Display",serif;font-weight:900;text-transform:uppercase;font-size:13px;letter-spacing:.14em;margin:14px 0 6px;border-bottom:1px solid var(--ink);padding-bottom:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{box-shadow:none;padding:.3em .7em;font-weight:400}
+.seg button.on{background:var(--ink);color:var(--paper);font-weight:700}
+.tcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.tcg button{box-shadow:none;padding:.35em .2em;font-weight:400;line-height:1.1}
+.tcg button small{display:block;font-size:11px;font-style:italic;opacity:.75}
+.tcg button.on{background:var(--ink);color:var(--paper);font-weight:700}
+.elo-row{display:flex;align-items:center;gap:10px}
+.elo-row input[type=range]{flex:1}
+.elo-big{font-family:"Playfair Display",serif;font-weight:900;font-size:30px;min-width:80px;text-align:right}
+.elo-desc{font-style:italic;font-size:14px;color:var(--ink2);margin-top:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.box .go{display:flex;gap:10px;justify-content:center;margin-top:18px}
+.box .go button{font-size:17px;padding:.5em 1.4em}
+.result-big{font-family:"Playfair Display",serif;font-weight:900;font-size:48px;text-align:center;margin:6px 0}
+textarea{width:100%;font:13px/1.4 "Old Standard TT",serif;background:var(--sq);border:1.5px solid var(--ink);padding:6px;resize:vertical}
+
+@media (max-width:980px){
+  :root{--bs:min(94vw, 600px)}
+  #cols{grid-template-columns:1fr;}
+  .col{padding:0}
+  .col+.col{border-left:0;border-top:1px solid var(--rule);margin-top:14px;padding-top:12px}
+  #colBoard{order:-1;display:flex;flex-direction:column;align-items:center}
+  #colRight{order:0}
+  #colLeft{order:1;border-top:1px solid var(--rule);margin-top:14px;padding-top:12px}
+  #colBoard{border-top:0!important;margin-top:0!important;padding-top:0!important}
+  #colBoard .player,#colBoard .caption,#boardWrap{width:min(94vw,600px)}
+  #moves{max-height:none}
+  .topline span:nth-child(2){display:none}
+}
+@media (max-width:520px){
+  .topline{display:none}
+  .mast h1{font-size:36px}
+  .dateline{padding:2px}
+  #headline{font-size:19px;margin:5px 0 0}
+  #subhead{font-size:13px;margin-bottom:4px;padding-bottom:5px}
+  .player{padding:3px 0}
+  .thinking{min-height:14px;font-size:11px}
+  .caption{margin-top:20px}
+  #paper{padding:6px 8px 20px}
+  .dateline{font-size:11.5px}
+  .clock{min-width:96px;font-size:22px}
+  .pname{font-size:16px}
+  .coord{font-size:10px}
+  .coord.r{left:-13px}
+}
+/* phones held sideways: board left, score sheet and controls right */
+@media (max-height:520px) and (orientation:landscape){
+  :root{--bs:max(180px, calc(100vh - 156px))}
+  .topline,.mast,.dateline,#subhead,.caption,.thinking{display:none}
+  #paper{padding:4px 10px 16px}
+  #headline{font-size:17px;margin:2px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #cols{grid-template-columns:auto 1fr}
+  #colBoard{order:0;grid-row:1;align-items:flex-start}
+  #frame{margin-bottom:22px}
+  #colBoard .player,#boardWrap{width:var(--bs)}
+  #colRight{order:0;grid-row:1;border-top:0;margin-top:0;padding:0 0 0 14px;border-left:1px solid var(--rule)}
+  #colLeft{grid-column:1/-1}
+  #moves{max-height:calc(100vh - 250px);min-height:60px}
+  .player{padding:2px 0}
+  .clock{font-size:19px;min-width:80px;box-shadow:2px 2px 0 var(--ink)}
+  .pname{font-size:14px}.pname small{font-size:11px}
+  .caps{min-height:14px}.caps i{width:14px;height:14px}
+  .kicker{font-size:11px;margin-bottom:4px}
+  .nav{margin:4px 0}
+  .ctrls{grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px}
+  .ctrls button{padding:.3em .2em;font-size:12.5px}
+  #bPgn{grid-column:auto!important}
+  .opts{font-size:12px;margin-top:6px;gap:1px}
+  #blindBar{margin-top:4px;padding:4px 6px}
+  #blindBar input{font-size:15px}
+  #verdict{font-size:12.5px;margin-bottom:4px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <filter id="ink" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#171512"/></marker></defs>
+</svg>
+
+<div id="paper">
+  <div class="topline"><span id="edition">Late Edition</span><span>All the moves fit to print</span><span id="price">Price: One Pawn</span></div>
+  <div class="mast"><h1>The Daily Gambit</h1></div>
+  <div class="dateline"><span id="dateTxt"></span><b id="volTxt"></b><span id="tcTxt"></span></div>
+  <div id="headline">Readers Invited to the Board</div>
+  <div id="subhead">Our chess correspondent reports from the board as the game unfolds</div>
+
+  <div id="cols">
+    <div class="col" id="colLeft">
+      <div class="kicker">Match Report</div>
+      <div class="byline">From our chess correspondent</div>
+      <div id="report"></div>
+      <div class="facts" id="facts"></div>
+    </div>
+
+    <div class="col" id="colBoard">
+      <div class="player" id="pTop"></div>
+      <div class="thinking" id="thinkTop"></div>
+      <div id="boardWrap">
+        <div id="frame">
+          <div id="board"></div>
+          <div id="pieces"></div>
+          <svg id="arrows" viewBox="0 0 8 8" preserveAspectRatio="none"></svg>
+          <div id="coords"></div>
+        </div>
+      </div>
+      <div class="caption" id="caption"></div>
+      <div id="blindBar" hidden>
+        <div class="brow">
+          <input type="text" id="moveIn" placeholder="Your move, e.g. Nf3" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+          <button id="moveGo" class="inv">Play</button>
+          <button id="peek" title="Hold to see the pieces">Peek</button>
+        </div>
+        <div id="blindMsg"></div>
+      </div>
+      <div class="player" id="pBot"></div>
+      <div class="thinking" id="thinkBot"></div>
+    </div>
+
+    <div class="col" id="colRight">
+      <div class="kicker">The Score Sheet</div>
+      <div id="verdict"></div>
+      <div id="moves"></div>
+      <div class="nav">
+        <button id="nFirst" title="Start (Home)">⏮</button><button id="nPrev" title="Back (←)">◀</button>
+        <button id="nNext" title="Forward (→)">▶</button><button id="nLast" title="Latest (End)">⏭</button>
+      </div>
+      <div class="ctrls">
+        <button id="bNew" class="inv">New Game</button>
+        <button id="bFlip">Flip Board</button>
+        <button id="bHint">Hint</button>
+        <button id="bBack">Take Back</button>
+        <button id="bDraw">Offer Draw</button>
+        <button id="bResign">Resign</button>
+        <button id="bProblems" class="inv">Problems</button>
+        <button id="bPgn">PGN</button>
+      </div>
+      <div class="opts">
+        <label><input type="checkbox" id="oEval"> Show the correspondent's verdict</label>
+        <label><input type="checkbox" id="oAnn"> Annotate moves during play</label>
+        <label><input type="checkbox" id="oSound" checked> Sound</label>
+        <label><input type="checkbox" id="oSpeak"> Read the moves aloud</label>
+        <label>Blindfold <select id="oBlind"><option value="off">Off</option><option value="board">Hide the pieces</option><option value="all">Hide pieces and score sheet</option></select></label>
+        <div class="small" id="engineStatus">Engine: loading…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" hidden><div class="box" id="modalBox"></div></div>
+
+<script>
+'use strict';
+/* =========================================================
+   Piece artwork: lichess "alpha" set (Eric Bentzen), recoloured to ink & paper
+   ========================================================= */
+const PIECE_SVG = {"wK":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m501.6 1811 48.4-354.4-260-269.2s-166.4-288.2 29.9-481C582.2 448.7 826 727.2 826 727.2l195.6-165.7 184 165.7s216.4-232.5 430.4-76 255.4 317.6 117.4 531.6c-138.1 214-250.9 280.7-250.9 280.7L1558 1811z\"/><path fill=\"#101010\" d=\"M977 298v-95h94v95h107v95h-107v153q-48-16-94 0V393H870v-95zm47 314q-47 0-136 121-31-36-50-55 93-140 186-140 92 0 186 140-20 19-50 55-90-121-136-121m-447 907-26 156 145-84zm410-206q-1-147-36.5-274.5T870 845q-45-88-131.5-153T570 627q-103 0-208 93T257 949q0 109 86.5 236T546 1408q212-88 441-95m37 530H448l61-365q-325-280-326-535-1-159 125-274.5T575 553q78 0 158.5 47T876 719q61 74 98.5 164.5T1024 1034q12-60 49-150.5t99-164.5q61-72 142-119t159-47q140 0 266 115.5T1865 943q-2 255-326 535l61 365zm0-74h489l-50-298q-216-84-439-84t-439 84l-50 298zm447-250 26 156-145-84zm-410-206q229 7 441 95 115-96 202-223t87-236q0-136-105.5-229T1478 627q-83 0-169.5 65T1178 845q-46 66-81.5 193.5T1061 1313m-176 233 141-84 137 86-141 84z\"/></svg>","wQ":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m508.5 1815.6 48.4-356.7-216.3-554.6-135.8-20.7-16.1-126.5 112.7-43.8 78.3 73.7-18.4 99 246.2 197.8 112.8-568.3L635 428l78.3-108 112.8 43.7-23 161 223.2 474 244-490-66.8-105.9 92-92 105.9 73.6L1337 534l103.5 529.2 260-161-16-142.7 131-46 57.6 131.1-207 103.6-175 529.2 48.4 308.4z\"/><path fill=\"#101010\" d=\"M1024 1769h478q-53-130-43-280-100-39-213-67.5t-222-28.5q-110 0-223 28.5T589 1489q9 150-43 280zm0-450q111 0 223.5 26.5T1468 1413q17-105 60.5-212.5T1634 988l-220 155-123-601-267 555-267-555-123 601-220-155q61 105 104.5 212.5T580 1413q108-41 220.5-67.5T1024 1319m0 524H441q114-231 57.5-456.5T296 937q-12 2-19 2-54 0-92.5-38.5T146 808t38.5-92.5T277 677t92.5 38.5T408 808q0 20-6 38-4 14-15 33l196 139 100-486q-64-31-72-103-5-44 29-91t88-53q54-5 96 29t48 88q7 68-46 114l198 412 198-412q-54-46-46-114 6-54 48-88t96-29q54 6 87.5 53t29.5 91q-9 72-72 103l100 486 196-139q-12-19-15-33-6-18-6-38 0-54 38.5-92.5T1771 677t92.5 38.5T1902 808t-38.5 92.5T1771 939q-7 0-19-2-147 224-203 449.5t58 456.5zM276 746q-62 0-62 62t62 62q63 0 63-62t-63-62m466-394q-62 0-62 62t62 62 62-62-62-62M590 1519l119 72-134 86q19-86 15-158m1182-773q-63 0-63 62t63 62q62 0 62-62t-62-62m-466-394q-62 0-62 62t62 62 62-62-62-62m152 1167-119 72 134 86q-20-86-15-158m-573 47 139-83 139 86-139 84z\"/></svg>","wR":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m435 1804 16-212 152-115 51-688-148-115-7-276 210-2 4 138 198 2 7-140 212-3 14 145 193-4 5-138h204l-7 285-145 106 42 693 172 124 19 207z\"/><path fill=\"#101010\" d=\"M1024 1501H643l5-74h752l5 74zm0-661H692l5-74h654l5 74zm0 1003H383l29-264 159-118 50-659-149-107-17-341h289v147h137V354h286v147h137V354h289l-17 341-149 107 50 659 159 118 29 264zm0-74h557l-15-149-161-119-54-735 152-109 13-230h-138v148h-285V427H955v148H670V427H532l13 230 152 109-54 735-161 119-15 149z\"/></svg>","wB":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m948 366 1-139 148-7 1 147zM564 860c114-267 456-443 456-443s392 176 476 502c-9 209-183 332-183 332l27 221-653 6 46-233s-230-171-169-385m-101 790c175 6 355 23 425-142h92s0 190-88 246c-163 103-625 38-625 38s-15-146 196-142m631 37-36-185 102 5s22 153 315 131c381-17 318 153 318 153l-483 5z\"/><path fill=\"#101010\" d=\"M1024 356q66 0 64-66 1-55-64-55-66 0-64 55-3 66 64 66m0 1204q0 114-101 199t-223 84H205q0-117 65-179t142-62h250q51 0 88-7t71-60l10-16h76q-7 21-3 13-45 105-109 125t-146 19H409q-52 0-86 40t-34 53h424q66 0 159-65t93-185H624q67-116 72-229-114-119-162-223t-6-224q33-96 118-189t312-247q-17-11-46-36t-29-79q0-58 41-96t100-38q58 0 100 38t41 96q0 54-29 79t-46 36q226 153 311 247t119 189q42 119-6 224t-162 223q4 113 72 229h-341q0 120 93 185t159 65h424q0-13-34-53t-86-40h-240q-83 0-146-19t-109-125q4 8-3-13h76l10 16q33 53 70 60t89 7h250q76 0 142 62t65 179h-495q-123 0-223-84t-101-199m0-114h283q-28-84-29-154-120-41-254-38-135-3-254 38-2 70-29 154zm0-267q159-1 285 42 189-180 142-346-60-193-427-431-368 238-427 431-48 166 142 346 125-43 285-42m-47-361V714h94v104h95v89h-95v165h-94V907h-95v-89z\"/></svg>","wN":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m352 861 787-569 94 148s336 103 398 388c63 286 51 974 51 974l-1088 9s-37-290 184-460c221-171 221-212 221-212s-226-71-295-16-117 138-117 138l-129-67 74-85-88-97-94 56z\"/><path fill=\"#101010\" d=\"m1151 178-115 154c-74 50-147 98-220 144-73 45-112 81-116 107L304 846l12 297 122-86 51 50-115 82 217 121 56-102c37-68 135-88 292-60l-55 85c-25 37-63 60-115 71a608 608 0 0 0-183 238c-32 82-45 182-39 301h1242c-23-55-42-118-57-190-15-73-17-152-5-237 29-239 13-440-47-603-61-164-205-303-433-418zm-17 145 59 133a664 664 0 0 1 262 188c55 72 100 150 134 234 27 97 40 181 41 253 0 71-3 140-9 205-7 65-11 131-13 199-2 67 9 145 32 234H621c-4-84 12-158 48-223s85-124 146-177c78-22 129-56 152-102s53-90 90-131c13-10 27-15 38-15 10-1 21 0 33-2 52-7 95-36 129-85 33-49 51-104 52-165l-19-67c-37 159-99 245-188 257l-45 6c-16 1-33 10-52 26-41-25-87-35-138-31q-111 9-165 27l-108 73-39 45-47-28 78-65-138-144-64 41-4-125 366-241c15-34 58-74 131-120l208-131zM960 564c-6 0-12 2-18 7L826 671l212 2c23 0 17-21-16-63-24-31-44-46-62-46M502 868l-33 4-33 56 57 26 46-55z\"/></svg>","wP":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m734 981 196-193s-189-82-79-288c79-149 303-114 361 50 63 179-113 240-113 240l226 197Zm-235 799s-8-107 50-154c196-173 338-386 371-599l210 2c33 206 182 447 321 561 101 59 99 199 99 199z\"/><path fill=\"#101010\" d=\"M520 1769h1008q8-97-132-182-132-101-196-239t-80-309H928q-15 170-79 309t-197 239q-141 85-132 182m504 74H446v-74q-4-80 42-137t125-108q117-91 172-217t78-268H576l284-239q-86-74-86-188 0-103 73-177t177-74q103 0 177 74t73 177q0 114-86 188l284 239h-287q23 141 78 268t172 217q79 51 125 108t42 137v74zM756 974h536l-225-191q134-31 134-171 0-76-52-126t-125-51q-73 0-125 51t-52 126q0 140 134 171z\"/></svg>","bK":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m553 1485-55 320 1048 5-48-335s324-313 330-467c7-153-35-331-241-406-183-67-372 121-372 121l-182-161-190 160S658 586 587 592a373 373 0 0 0-362 333c10 331 328 560 328 560\"/><path fill=\"#101010\" d=\"M1024 1769h489l-12-73H547l-12 73zm0-921q-25-60-62-111 31-48 62-65 30 17 62 65-38 51-62 111m-97 454q-154 11-303 58-123-108-200-213t-77-202q0-89 74-159t148-70q67 0 135 63t102 130q30 54 75 175t46 218m-350 217-26 156 145-84zm447-907q-47 0-136 121-31-36-50-55 93-140 186-140 92 0 186 140-20 19-50 55-90-121-136-121m0 775q-1-126-42-267t-84-227l-14-27-12-23q-28-43-48-69-51-63-120-105t-134-42q-103 0-208 93T257 949q0 120 99 255t249 259q201-74 419-76m0 456H448l61-365q-325-280-326-535-1-159 125-274t267-116q78 0 159 47t142 119q61 74 99 165t49 150q12-60 49-150t99-165q61-72 142-119t159-47q140 0 266 116t126 274q-2 255-326 535l61 365zm97-541q0-97 45-218t76-175q34-68 102-130t135-63q74 0 148 70t74 159q0 96-77 202t-200 213q-150-47-303-58m350 217-119 72 145 84zm-447-132q217 2 419 76 150-125 249-259t99-255q0-136-105-229t-208-93q-66 0-135 42t-119 105q-21 26-48 69l-12 23-14 27q-44 85-85 227t-41 267m-139 159 139 86 139-84-139-86zm92-1248v-95h94v95h107v95h-107v153q-48-16-94 0V393H870v-95z\"/></svg>","bQ":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m520 1801.8 41.5-448.7 474-128.9 458 133.5 34.4 446.4z\"/><path fill=\"#101010\" d=\"M590 1519q4 72-15 158l134-86zm434 324H441q114-231 57.5-456.5T296 937q-12 2-19 2-54 0-92.5-38.5T146 808t38.5-92.5T277 677t92.5 38.5T408 808q0 20-6 38-4 14-15 33l196 139 100-486q-64-31-72-103-5-44 29-91t88-53q54-5 96 29t48 88q7 68-46 114l198 412 198-412q-54-46-46-114 6-54 48-88t96-29q54 6 87.5 53t29.5 91q-9 72-72 103l100 486 196-139q-12-19-15-33-6-18-6-38 0-54 38.5-92.5T1771 677t92.5 38.5T1902 808t-38.5 92.5T1771 939q-7 0-19-2-147 224-203 449.5t58 456.5zm0-450q109 0 222 28.5t213 67.5q2-41 11-89-108-42-221.5-68t-224.5-26-225 26-221 68q8 48 11 89 99-39 212-67.5t223-28.5m0 376h478q-15-34-24-73H570q-10 39-24 73zm434-250-119 72 134 86q-20-86-15-158m-573 47 139 87 139-84-139-86z\"/></svg>","bR":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"m674 732-76 807 851 14-75-833z\"/><path fill=\"#101010\" d=\"M1024 1843H383l29-264 159-118 50-659-149-107-17-341h289v147h137V354h286v147h137V354h289l-17 341-149 107 50 659 159 118 29 264zm0-989h333l-6-88H697l-6 88zm0 647h381l-6-87H649l-6 87z\"/></svg>","bB":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"M732 1290 628 993l386-417 421 375-132 380 49 152-658-9z\"/><path fill=\"#101010\" d=\"M768 1365q-5 39-26 82h564q-18-36-26-82zm495-73 46-73q-142-49-285-47-144-2-285 47l46 73q118-40 239-38 120-2 239 38m-432 227H624q67-116 72-229-114-119-162-223t-6-224q33-96 118-189t312-247q-17-11-46-36t-29-79q0-58 41-96t100-38q58 0 100 38t41 96q0 54-29 79t-46 36q226 153 311 247t119 189q42 119-6 224t-162 223q4 113 72 229h-207l10 16q33 53 70 60t89 7h250q76 0 142 62t65 179h-495q-123 0-223-84t-101-199q0 114-101 199t-223 84H205q0-117 65-179t142-62h250q51 0 88-7t71-60zm146-701h-95v89h95v165h94V907h95v-89h-95V714h-94z\"/></svg>","bN":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#f9f9f9\" d=\"M1658 1806c-408-301-71-920-452-1343l60-16s296 167 320 257c182 468 41 691 135 1077zM972 523l120 176-312-3zM498 981l-93-41 42-93 127 28z\"/><path fill=\"#101010\" d=\"m502 868-52 1-26 64 69 21 46-55zm536-187q34 1-16-68t-80-42L826 680zm-338-98q6-39 116-107t220-144l115-154 96 217q342 172 433 418t47 603q-18 128 5 236t57 190l-1242 1q-9-178 39-301t183-238q50-11 83-39t53-59l63-1 138-29 139-97 66-207q0-17-8-34t-12-37q-62 228-161 289t-191 58q-236-42-292 60l-56 102-217-121 115-82-51-50-122 86-12-297zm981 1192q-102-130-85-308t27-363-50-351-316-276q220 164 253 342t16 351-12 329 167 276\"/></svg>","bP":"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2048 2048\"><path fill=\"#101010\" d=\"M1024 1843H446v-74q-4-80 42-137t125-108q117-91 172-217t78-268H576l284-239q-86-74-86-188 0-103 73-177t177-74q103 0 177 74t73 177q0 114-86 188l284 239h-287q23 141 78 268t172 217q79 51 125 108t42 137v74z\"/></svg>"};
+const PIECE_URL = {};
+for (const k in PIECE_SVG){
+  const svg = PIECE_SVG[k].replace(/#101010/gi,'#171512').replace(/#f9f9f9/gi,'#faf6ea');
+  PIECE_URL[k] = `url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg).replace(/'/g,'%27')}')`;
+}
+const pieceKey = p => (p===p.toUpperCase() ? 'w' : 'b') + p.toUpperCase();
+
+/* =========================================================
+   Rules
+   Board: 64 array, index 0 = a8 ... 63 = h1. Pieces 'PNBRQK' (white) / 'pnbrqk'.
+   ========================================================= */
+const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const FILES = 'abcdefgh';
+const sqName = i => FILES[i&7] + (8-(i>>3));
+const sqIndex = n => (8-(+n[1]))*8 + FILES.indexOf(n[0]);
+const colorOf = p => p ? (p===p.toUpperCase() ? 'w' : 'b') : null;
+const other = c => c==='w' ? 'b' : 'w';
+const N_OFF=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+const K_OFF=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+const B_DIR=[[-1,-1],[-1,1],[1,-1],[1,1]], R_DIR=[[-1,0],[1,0],[0,-1],[0,1]];
+
+function parseFen(f){
+  const parts=f.trim().split(/\s+/);
+  const rows=parts[0].split('/');
+  if (rows.length!==8) throw new Error('A FEN needs 8 ranks');
+  const b=Array(64).fill(null); let i=0;
+  for (const ch of parts[0]){
+    if (ch==='/') continue;
+    if (/[1-8]/.test(ch)) i+=+ch;
+    else if (/[pnbrqkPNBRQK]/.test(ch)) b[i++]=ch;
+    else throw new Error('Bad character in FEN: '+ch);
+  }
+  if (i!==64) throw new Error('FEN ranks do not add up to 64 squares');
+  if (b.filter(p=>p==='K').length!==1 || b.filter(p=>p==='k').length!==1) throw new Error('Each side needs exactly one king');
+  const s={ b, turn: parts[1]==='b'?'b':'w', castle: parts[2] && parts[2]!=='-' ? parts[2] : '',
+            ep: parts[3] && parts[3]!=='-' ? sqIndex(parts[3]) : -1, half:+parts[4]||0, full:+parts[5]||1 };
+  // drop castling rights that the position can't have
+  s.castle = s.castle.split('').filter(c=>({K:b[60]==='K'&&b[63]==='R',Q:b[60]==='K'&&b[56]==='R',k:b[4]==='k'&&b[7]==='r',q:b[4]==='k'&&b[0]==='r'})[c]).join('');
+  if (attacked(s.b, kingSq(s.b, other(s.turn)), s.turn)) throw new Error('The side not to move is in check');
+  return s;
+}
+function toFen(s){
+  let out='';
+  for (let r=0;r<8;r++){ let e=0;
+    for (let f=0;f<8;f++){ const p=s.b[r*8+f]; if (!p) e++; else { if (e){ out+=e; e=0; } out+=p; } }
+    if (e) out+=e; if (r<7) out+='/'; }
+  return `${out} ${s.turn} ${s.castle||'-'} ${s.ep>=0?sqName(s.ep):'-'} ${s.half} ${s.full}`;
+}
+const posKey = s => toFen(s).split(' ').slice(0,4).join(' ');
+function kingSq(b, c){ const k=c==='w'?'K':'k'; return b.indexOf(k); }
+function attacked(b, sq, by){
+  const r=sq>>3, f=sq&7;
+  const pr = by==='w' ? r+1 : r-1, pawn = by==='w' ? 'P' : 'p';
+  if (pr>=0 && pr<8){ if (f>0 && b[pr*8+f-1]===pawn) return true; if (f<7 && b[pr*8+f+1]===pawn) return true; }
+  const kn = by==='w'?'N':'n', kg = by==='w'?'K':'k';
+  for (const [dr,df] of N_OFF){ const rr=r+dr, ff=f+df; if (rr>=0&&rr<8&&ff>=0&&ff<8&&b[rr*8+ff]===kn) return true; }
+  for (const [dr,df] of K_OFF){ const rr=r+dr, ff=f+df; if (rr>=0&&rr<8&&ff>=0&&ff<8&&b[rr*8+ff]===kg) return true; }
+  const [B,R,Q] = by==='w' ? ['B','R','Q'] : ['b','r','q'];
+  for (const [dr,df] of B_DIR){ let rr=r+dr, ff=f+df; while (rr>=0&&rr<8&&ff>=0&&ff<8){ const p=b[rr*8+ff]; if (p){ if (p===B||p===Q) return true; break; } rr+=dr; ff+=df; } }
+  for (const [dr,df] of R_DIR){ let rr=r+dr, ff=f+df; while (rr>=0&&rr<8&&ff>=0&&ff<8){ const p=b[rr*8+ff]; if (p){ if (p===R||p===Q) return true; break; } rr+=dr; ff+=df; } }
+  return false;
+}
+const inCheck = s => attacked(s.b, kingSq(s.b, s.turn), other(s.turn));
+function pseudoMoves(s){
+  const out=[], b=s.b, side=s.turn;
+  const add=(from,to,p,cap,extra)=>{
+    if (p.toLowerCase()==='p' && ((to>>3)===0 || (to>>3)===7)){ for (const pr of 'qrbn') out.push({from,to,p,cap,promo:pr}); }
+    else out.push(Object.assign({from,to,p,cap},extra||{}));
+  };
+  for (let i=0;i<64;i++){
+    const p=b[i]; if (!p || colorOf(p)!==side) continue;
+    const r=i>>3, f=i&7, t=p.toLowerCase();
+    if (t==='p'){
+      const dir = side==='w' ? -1 : 1, startR = side==='w' ? 6 : 1, r1=r+dir;
+      if (r1<0||r1>7) continue;
+      if (!b[r1*8+f]){ add(i, r1*8+f, p, null); if (r===startR && !b[(r+2*dir)*8+f]) out.push({from:i,to:(r+2*dir)*8+f,p,cap:null,flag:'double'}); }
+      for (const df of [-1,1]){ const ff=f+df; if (ff<0||ff>7) continue; const to=r1*8+ff;
+        if (b[to] && colorOf(b[to])!==side) add(i,to,p,b[to]);
+        else if (to===s.ep) out.push({from:i,to,p,cap:side==='w'?'p':'P',flag:'ep'}); }
+    } else if (t==='n' || t==='k'){
+      for (const [dr,df] of (t==='n'?N_OFF:K_OFF)){ const rr=r+dr, ff=f+df; if (rr<0||rr>7||ff<0||ff>7) continue; const to=rr*8+ff;
+        if (!b[to] || colorOf(b[to])!==side) add(i,to,p,b[to]); }
+      if (t==='k'){
+        const opp=other(side), home = side==='w' ? 60 : 4;
+        if (i===home && !attacked(b, home, opp)){
+          const [K,Q] = side==='w' ? ['K','Q'] : ['k','q'];
+          if (s.castle.includes(K) && !b[home+1] && !b[home+2] && !attacked(b,home+1,opp) && !attacked(b,home+2,opp)) out.push({from:i,to:home+2,p,cap:null,flag:'K'});
+          if (s.castle.includes(Q) && !b[home-1] && !b[home-2] && !b[home-3] && !attacked(b,home-1,opp) && !attacked(b,home-2,opp)) out.push({from:i,to:home-2,p,cap:null,flag:'Q'});
+        }
+      }
+    } else {
+      const dirs = t==='b' ? B_DIR : t==='r' ? R_DIR : B_DIR.concat(R_DIR);
+      for (const [dr,df] of dirs){ let rr=r+dr, ff=f+df;
+        while (rr>=0&&rr<8&&ff>=0&&ff<8){ const to=rr*8+ff, q=b[to];
+          if (!q) add(i,to,p,null); else { if (colorOf(q)!==side) add(i,to,p,q); break; }
+          rr+=dr; ff+=df; } }
+    }
+  }
+  return out;
+}
+function makeMove(s, m){
+  const b=s.b.slice(), side=s.turn;
+  b[m.to] = m.promo ? (side==='w' ? m.promo.toUpperCase() : m.promo) : m.p;
+  b[m.from] = null;
+  if (m.flag==='ep') b[(m.from&~7) + (m.to&7)] = null;
+  if (m.flag==='K'){ b[m.to-1]=b[m.to+1]; b[m.to+1]=null; }
+  if (m.flag==='Q'){ b[m.to+1]=b[m.to-2]; b[m.to-2]=null; }
+  let castle=s.castle;
+  const strip = chars => { for (const c of chars) castle=castle.replace(c,''); };
+  if (m.p==='K') strip('KQ'); if (m.p==='k') strip('kq');
+  for (const sq of [m.from, m.to]){ if (sq===63) strip('K'); if (sq===56) strip('Q'); if (sq===7) strip('k'); if (sq===0) strip('q'); }
+  return { b, turn:other(side), castle, ep: m.flag==='double' ? (m.from+m.to)/2 : -1,
+           half: (m.p.toLowerCase()==='p' || m.cap) ? 0 : s.half+1, full: s.full + (side==='b'?1:0) };
+}
+function legalMoves(s){
+  const side=s.turn;
+  return pseudoMoves(s).filter(m=>{ const n=makeMove(s,m); return !attacked(n.b, kingSq(n.b,side), other(side)); });
+}
+const uciOf = m => sqName(m.from)+sqName(m.to)+(m.promo||'');
+function sanOf(s, m, legal){
+  let base;
+  if (m.flag==='K') base='O-O';
+  else if (m.flag==='Q') base='O-O-O';
+  else {
+    const t=m.p.toLowerCase();
+    if (t==='p') base=(m.cap ? FILES[m.from&7]+'x' : '') + sqName(m.to) + (m.promo ? '='+m.promo.toUpperCase() : '');
+    else {
+      const rivals=legal.filter(o=>o.p===m.p && o.to===m.to && o.from!==m.from);
+      let d='';
+      if (rivals.length){
+        if (!rivals.some(o=>(o.from&7)===(m.from&7))) d=FILES[m.from&7];
+        else if (!rivals.some(o=>(o.from>>3)===(m.from>>3))) d=String(8-(m.from>>3));
+        else d=sqName(m.from);
+      }
+      base=t.toUpperCase()+d+(m.cap?'x':'')+sqName(m.to);
+    }
+  }
+  const n=makeMove(s,m);
+  if (inCheck(n)) base += legalMoves(n).length ? '+' : '#';
+  return base;
+}
+function insufficient(b){
+  const pcs=[]; b.forEach((p,i)=>{ if (p && p.toLowerCase()!=='k') pcs.push([p.toLowerCase(), i]); });
+  if (!pcs.length) return true;
+  if (pcs.length===1 && (pcs[0][0]==='n' || pcs[0][0]==='b')) return true;
+  if (pcs.every(([t])=>t==='b')){ const col=new Set(pcs.map(([,i])=>((i>>3)+(i&7))%2)); return col.size===1; }
+  return false;
+}
+const onlyKing = (b, c) => b.every(p => !p || colorOf(p)!==c || p.toLowerCase()==='k');
+
+/* =========================================================
+   Engines: Stockfish 16 (WASM, single-threaded) from jsDelivr, run as a blob worker
+   ========================================================= */
+const SF_BASE = 'https://cdn.jsdelivr.net/npm/stockfish@16.0.0/src/stockfish-nnue-16-single';
+let SF_BLOB = null;
+async function sfBlob(){
+  if (!SF_BLOB){
+    const r=await fetch(SF_BASE+'.js'); if (!r.ok) throw new Error('HTTP '+r.status);
+    SF_BLOB=URL.createObjectURL(new Blob([await r.text()], {type:'application/javascript'}));
+  }
+  return SF_BLOB;
+}
+class UciEngine {
+  constructor(){ this.listeners=[]; this.queue=Promise.resolve(); this.ok=false; }
+  async start(){
+    const url=await sfBlob();
+    this.w=new Worker(url+'#'+encodeURIComponent(SF_BASE+'.wasm'));
+    this.w.onmessage=e=>{ const l=String(e.data); for (const fn of this.listeners.slice()) fn(l); };
+    this.w.onerror=e=>{ console.warn('engine error', e.message); };
+    this.send('uci'); await this.waitFor(l=>l==='uciok', 25000);
+    this.send('setoption name Hash value 16');
+    await this.ready(); this.ok=true;
+  }
+  send(c){ this.w.postMessage(c); }
+  off(fn){ this.listeners=this.listeners.filter(x=>x!==fn); }
+  waitFor(pred, ms){
+    return new Promise((res,rej)=>{
+      const fn=l=>{ if (pred(l)){ this.off(fn); clearTimeout(t); res(l); } };
+      const t = ms ? setTimeout(()=>{ this.off(fn); rej(new Error('engine timeout')); }, ms) : 0;
+      this.listeners.push(fn);
+    });
+  }
+  async ready(){ this.send('isready'); await this.waitFor(l=>l==='readyok', 25000); }
+  // queued so a new search never picks up a stopped search's bestmove
+  search(pos, go, opts=[]){
+    const run=()=>new Promise(res=>{
+      let score=null, mate=null, depth=0;
+      const fn=l=>{
+        if (l.startsWith('info') && l.includes(' pv ') && !/ multipv [2-9]/.test(l)){
+          const m=l.match(/score (cp|mate) (-?\d+)/), d=l.match(/ depth (\d+)/);
+          if (m){ if (m[1]==='cp'){ score=+m[2]; mate=null; } else { mate=+m[2]; score=null; } }
+          if (d) depth=+d[1];
+        } else if (l.startsWith('bestmove')){ this.off(fn); res({ best:l.split(' ')[1], score, mate, depth }); }
+      };
+      this.listeners.push(fn);
+      for (const o of opts) this.send(o);
+      this.send(pos); this.send(go);
+    });
+    const p=this.queue.then(run); this.queue=p.catch(()=>{}); return p;
+  }
+  stop(){ if (this.w) this.send('stop'); }
+  newGame(){ if (this.w){ this.send('stop'); this.send('ucinewgame'); } }
+}
+let PLAYER=null, ANALYST=null, ENGINE_OK=false, ENGINE_FAILED=false;
+async function bootEngines(){
+  setStatus('Engine: wiring the press room… (loading Stockfish 16)');
+  try {
+    PLAYER=new UciEngine(); ANALYST=new UciEngine();
+    await PLAYER.start(); await ANALYST.start();
+    ENGINE_OK=true;
+    setStatus('Engine: Stockfish 16 (WebAssembly, running in your browser)');
+  } catch(e){
+    console.warn(e); ENGINE_OK=false; ENGINE_FAILED=true; PLAYER=ANALYST=null;
+    setStatus('Engine: Stockfish could not be loaded (offline?). Playing the House Engine, a much weaker built-in player.');
+  }
+  if (G && !G.over){ analyseMissing(); maybeEngineMove(); }
+  renderAll();
+}
+// mate-aware score in centipawns from White's point of view
+function wcp(res, turn){
+  let cp = res.mate!=null ? (res.mate>0 ? 10000-res.mate : -10000-res.mate) : (res.score||0);
+  return turn==='w' ? cp : -cp;
+}
+
+/* ---------- House Engine (fallback when offline) ---------- */
+const VAL={p:100,n:310,b:330,r:500,q:900,k:0};
+function evalBoard(b){
+  let s=0;
+  for (let i=0;i<64;i++){ const p=b[i]; if (!p) continue; const t=p.toLowerCase(), w=p!==t;
+    let v=VAL[t]; const r=i>>3, f=i&7, centre=3.5-Math.max(Math.abs(3.5-r),Math.abs(3.5-f));
+    if (t==='n'||t==='b') v+=centre*8;
+    if (t==='p') v+= (w ? 6-r : r-1)*6 + (f>1&&f<6?centre*3:0);
+    s += w ? v : -v; }
+  return s;
+}
+function houseSearch(s, depth, alpha, beta){
+  const moves=legalMoves(s);
+  if (!moves.length) return inCheck(s) ? -100000-depth : 0;
+  if (depth===0){ const e=evalBoard(s.b); return s.turn==='w' ? e : -e; }
+  moves.sort((a,b)=>(b.cap?VAL[b.cap.toLowerCase()]:0)-(a.cap?VAL[a.cap.toLowerCase()]:0));
+  for (const m of moves){ const v=-houseSearch(makeMove(s,m), depth-1, -beta, -alpha); if (v>=beta) return beta; if (v>alpha) alpha=v; }
+  return alpha;
+}
+function houseMove(s, elo){
+  const moves=legalMoves(s), depth = elo<900 ? 1 : 2;
+  const noise = Math.max(10, 260-(elo-400)/6);
+  let best=moves[0], bv=-Infinity;
+  for (const m of moves){ const v=-houseSearch(makeMove(s,m), depth-1, -Infinity, Infinity)+Math.random()*noise; if (v>bv){ bv=v; best=m; } }
+  return uciOf(best);
+}
+
+/* =========================================================
+   Settings & game state
+   ========================================================= */
+const SAVE_KEY='dailyGambitSave', SET_KEY='dailyGambitSettings';
+const TCS=[
+  {k:'1+0',base:60,inc:0,cat:'Bullet'},{k:'2+1',base:120,inc:1,cat:'Bullet'},
+  {k:'3+0',base:180,inc:0,cat:'Blitz'},{k:'3+2',base:180,inc:2,cat:'Blitz'},{k:'5+0',base:300,inc:0,cat:'Blitz'},{k:'5+3',base:300,inc:3,cat:'Blitz'},
+  {k:'10+0',base:600,inc:0,cat:'Rapid'},{k:'10+5',base:600,inc:5,cat:'Rapid'},{k:'15+10',base:900,inc:10,cat:'Rapid'},
+  {k:'30+0',base:1800,inc:0,cat:'Classical'},{k:'30+20',base:1800,inc:20,cat:'Classical'},
+  {k:'none',base:0,inc:0,cat:'Unlimited'},{k:'custom',base:0,inc:0,cat:'Custom'},
+];
+const DEF_SET={ side:'w', elo:1500, tc:'10+0', cmin:20, cinc:10, name:'Reader', fen:'', eval:false, ann:false, sound:true, flip:false, blind:'off', speak:false };
+let SET=Object.assign({}, DEF_SET, load(SET_KEY)||{});
+function load(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function store(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+let G=null;
+const UI={ sel:-1, drag:null, promo:null, hint:null, anim:null, gameNo:1 };
+const now = () => performance.now();
+function eloLabel(e){
+  return e<800?'Rank beginner: hangs pieces and misses threats' : e<1100?'Casual player: knows the moves, little more' : e<1400?'Improving club player' :
+    e<1700?'Solid club player' : e<2000?'Strong club player' : e<2200?'Expert' : e<2400?'National Master' : e<2600?'International Master' :
+    e<2800?'Grandmaster' : e<3000?'World Champion class' : 'Full strength engine: abandon hope';
+}
+function newGame(cfg){
+  const startFen = cfg.fen || START_FEN;
+  const s0 = parseFen(startFen);
+  const human = cfg.side==='r' ? (Math.random()<.5?'w':'b') : cfg.side;
+  const tcDef = TCS.find(t=>t.k===cfg.tc) || TCS[6];
+  const tc = cfg.tc==='none' ? null : cfg.tc==='custom' ? { base:Math.max(.25,+cfg.cmin||10)*60000, inc:Math.max(0,+cfg.cinc||0)*1000, k:`${cfg.cmin}+${cfg.cinc}` } : { base:tcDef.base*1000, inc:tcDef.inc*1000, k:tcDef.k };
+  if (G){ G.gen++; }
+  PLAYER && PLAYER.newGame(); ANALYST && ANALYST.newGame();
+  G = { gen:(G?G.gen:0)+1, startFen, states:[s0], moves:[], sans:[], human, elo:+cfg.elo, name:cfg.name||'Reader', tc,
+        clock: tc ? {w:tc.base, b:tc.base} : null, clocks:[tc?{w:tc.base,b:tc.base}:null], turnStart:now(),
+        over:null, view:null, thinking:false, evals:[], anns:[], report:[], hints:0, badStreak:0, number:(load(SAVE_KEY)?.number||0)+1, created:Date.now(),
+        blind:cfg.blind||'off', peeks:0 };
+  G.legal = legalMoves(s0);
+  UI.sel=-1; UI.hint=null; UI.promo=null; UI.flip = human==='b';
+  const opp = engineName();
+  setHeadline(`${G.name} Takes on ${opp}`, `${tc?tc.k.replace('+',' minutes, ')+' second increment':'No clock'} · ${G.human==='w'?G.name+' has White':G.name+' has Black'}`);
+  addReport(`The game began this evening, ${G.name} taking the ${G.human==='w'?'white':'black'} pieces against ${opp}${tc?`, with ${fmtTC(tc)} on the clock`:', with no clock to hurry either side'}.${startFen!==START_FEN?' Play started from a set position supplied by a reader.':''}`);
+  if (G.blind!=='off') addReport(`${G.name} is playing blindfold${G.blind==='all'?', without even the score sheet to lean on':''}, so the moves are being called out.`);
+  checkOver(true);
+  save(); renderAll(); analyseMissing(); maybeEngineMove();
+  blindFocus();
+}
+function fmtTC(tc){ const m=tc.base/60000; return `${m>=1?m:Math.round(m*60)+' seconds'}${m>=1?(m===1?' minute':' minutes'):''}${tc.inc?` plus ${tc.inc/1000} second${tc.inc===1000?'':'s'} a move`:''}`; }
+const engineName = () => !ENGINE_FAILED ? `Stockfish (${G?G.elo:SET.elo})` : `the House Engine (${G?G.elo:SET.elo})`;
+const live = () => G.states[G.states.length-1];
+const ply = () => G.states.length-1;
+const viewPly = () => G.view===null ? ply() : G.view;
+const nameOf = c => c===G.human ? G.name : G.mode==='problem' ? (c==='w'?'White':'Black') : engineName().replace(/^the /,'');
+
+/* =========================================================
+   Playing moves
+   ========================================================= */
+function playMove(m, byEngine){
+  const s=live(), t=now();
+  if (G.tc && G.clock){
+    if (ply()>=2) G.clock[s.turn] -= (t-G.turnStart);
+    if (G.clock[s.turn] <= 0){ G.clock[s.turn]=0; return flag(s.turn); }
+    if (ply()>=1 || s.turn==='b') G.clock[s.turn] += G.tc.inc;
+  }
+  const san=sanOf(s, m, G.legal);
+  const ns=makeMove(s, m);
+  G.states.push(ns); G.moves.push(m); G.sans.push(san);
+  G.clocks.push(G.clock ? {...G.clock} : null);
+  G.legal=legalMoves(ns); G.turnStart=t; G.view=null; UI.sel=-1; UI.hint=null;
+  UI.anim={ from:m.from, to:m.to, flag:m.flag, ply:ply() };
+  sound(m.cap ? 'cap' : 'move');
+  if (byEngine && (G.blind!=='off' || SET.speak)) speak(sayMove(san));
+  if (G.blind!=='off') setBlindMsg(byEngine ? `${nameOf(s.turn)} played ${san}. Your move.` : `You played ${san}.`);
+  if (san.endsWith('+')) setTimeout(()=>sound('check'), 90);
+  narrate(s, m, san);
+  if (G.mode==='problem'){ renderAll(); problemStep(byEngine); return; }
+  checkOver(false);
+  save(); renderAll(); analyseMissing();
+  if (!G.over) maybeEngineMove();
+  blindFocus();
+}
+function checkOver(initial){
+  const s=live();
+  if (!G.legal.length){
+    if (inCheck(s)) return endGame(s.turn==='w'?'0-1':'1-0', 'checkmate');
+    return endGame('½-½', 'stalemate');
+  }
+  if (s.half>=100) return endGame('½-½', 'the fifty-move rule');
+  if (insufficient(s.b)) return endGame('½-½', 'insufficient material');
+  const key=posKey(s); let n=0; for (const st of G.states) if (posKey(st)===key) n++;
+  if (n>=3) return endGame('½-½', 'threefold repetition');
+}
+function flag(side){
+  const opp=other(side), b=live().b;
+  if (onlyKing(b, opp) || (insufficient(b) )) endGame('½-½', `${nameOf(side)}'s flag falling with no mating material on the board`);
+  else endGame(side==='w'?'0-1':'1-0', 'time');
+  renderAll();
+}
+function endGame(result, reason){
+  if (G.over) return;
+  G.over={ result, reason }; G.thinking=false;
+  PLAYER && PLAYER.stop();
+  const s=live(); const moves=Math.ceil(G.moves.length/2);
+  const winner = result==='1-0' ? 'w' : result==='0-1' ? 'b' : null;
+  let head, sub;
+  if (!winner){
+    head = reason==='stalemate' ? 'Stalemate! Honours Even' : reason.includes('repetition') ? 'Draw by Repetition' : reason.startsWith('agreement') ? 'Players Agree a Draw' : 'Game Drawn';
+    sub = `The game was drawn by ${reason} after ${moves} move${moves===1?'':'s'}.`;
+  } else {
+    const W=nameOf(winner), L=nameOf(other(winner));
+    const humanWon = winner===G.human;
+    if (reason==='checkmate') head = humanWon ? `${W} Checkmates ${L} in ${moves}` : `${W} Delivers Mate in ${moves} Moves`;
+    else if (reason==='time') head = `${L} Loses on Time!`;
+    else if (reason==='resignation') head = humanWon ? `${L} Resigns! Victory for ${W}` : `${L} Resigns After ${moves} Moves`;
+    else head = `${W} Wins`;
+    sub = `${W} wins by ${reason} after ${moves} move${moves===1?'':'s'} (${result}).`;
+  }
+  setHeadline(head, sub, true);
+  addReport(sub + (G.hints ? ` ${G.name} took ${G.hints} hint${G.hints>1?'s':''} from this newspaper along the way.` : '') + (G.blind!=='off' ? ` The game was played blindfold, and ${G.peeks ? `${G.name} peeked ${G.peeks} time${G.peeks>1?'s':''}` : `${G.name} never once peeked`}.` : ''));
+  if (G.blind!=='off'){ speak(sub); setBlindMsg('Game over: the pieces are back on the board.'); }
+  sound('end');
+  save(); renderAll(); analyseMissing();
+  setTimeout(()=>showResult(head, sub), initialDelay());
+}
+const initialDelay = () => 700;
+
+/* ---------- engine turn ---------- */
+async function maybeEngineMove(){
+  if (!G || G.over || G.thinking || G.mode==='problem') return;
+  const s=live(); if (s.turn===G.human) return;
+  const gen=G.gen; G.thinking=true; renderPanels();
+  const t0=now();
+  let uci=null, res=null;
+  try {
+    if (ENGINE_OK) res = await engineSearch(s);
+    else { await sleep(350); uci = houseMove(s, G.elo); }
+  } catch(e){ console.warn(e); }
+  if (!G || gen!==G.gen || G.over) return;
+  if (res){
+    uci=res.best;
+    // resign hopeless positions (stronger settings only)
+    const mine = res.mate!=null ? (res.mate<0 ? -99999 : 99999) : res.score;
+    if (G.elo>=1500 && mine!=null && mine<=-900){ G.badStreak++; } else G.badStreak=0;
+    if (G.badStreak>=3 && ply()>20){ G.thinking=false; addReport(`Facing a hopeless position, ${nameOf(s.turn)} stopped the clocks and offered a hand.`); return endGame(s.turn==='w'?'0-1':'1-0', 'resignation'); }
+  }
+  // pace: never reply instantly unless short of time
+  const spent=now()-t0, rem = G.clock ? G.clock[s.turn]-(now()-G.turnStart) : 1e9;
+  const minThink = rem<15000 ? 0 : 350+Math.random()*500;
+  if (spent<minThink) await sleep(minThink-spent);
+  if (!G || gen!==G.gen || G.over) return;
+  G.thinking=false;
+  let m=G.legal.find(x=>uciOf(x)===uci);
+  if (!m){ console.warn('engine move not legal?', uci); m=G.legal[(Math.random()*G.legal.length)|0]; }
+  playMove(m, true);
+}
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+function posCmd(upTo){ const u=G.moves.slice(0, upTo).map(uciOf).join(' '); return `position fen ${G.startFen}${u?' moves '+u:''}`; }
+async function engineSearch(s){
+  const elo=G.elo, legal=G.legal;
+  // below Stockfish's 1320 floor: shallow search plus the occasional outright mistake
+  if (elo<1320){
+    const pRandom = Math.max(0, (1320-elo)/920*0.28);
+    if (Math.random()<pRandom){
+      await sleep(250);
+      const quiet = legal.filter(m=>!m.cap); const pool = quiet.length && Math.random()<.6 ? quiet : legal;
+      return { best: uciOf(pool[(Math.random()*pool.length)|0]), score:null, mate:null };
+    }
+    const depth = elo<700 ? 1 : elo<1000 ? 2 : 4;
+    return PLAYER.search(posCmd(ply()), `go depth ${depth} movetime 800`,
+      ['setoption name UCI_LimitStrength value false', `setoption name Skill Level value ${elo<800?0:elo<1100?2:4}`]);
+  }
+  const opts=['setoption name Skill Level value 20', 'setoption name UCI_LimitStrength value '+(elo<3190), `setoption name UCI_Elo value ${Math.min(3190,elo)}`];
+  // a casual pace: a share of the remaining clock, capped by strength (stronger = longer thought)
+  const cap = 900 + (Math.min(elo,3190)-1320)/1870*3600;
+  let mt = cap;
+  if (G.clock){
+    const rem = G.clock[s.turn] - (ply()>=2 ? now()-G.turnStart : 0);
+    mt = Math.min(cap, rem/45 + G.tc.inc*.6);
+  }
+  const go=`go movetime ${Math.max(120, Math.round(mt))}`;
+  return PLAYER.search(posCmd(ply()), go, opts);
+}
+
+/* ---------- analysis: evals & annotations ---------- */
+async function analyseMissing(){
+  if (!ENGINE_OK || !G || G.mode==='problem') return;
+  if (G._analysing) return; G._analysing=true;
+  const gen=G.gen;
+  try {
+    for (let i=0;i<=ply();i++){
+      if (!G || gen!==G.gen) return;
+      if (G.evals[i]!==undefined) continue;
+      const st=G.states[i];
+      if (!legalMoves(st).length){ G.evals[i] = inCheck(st) ? (st.turn==='w' ? -10000 : 10000) : 0; continue; }
+      const r=await ANALYST.search(posCmd(i), 'go depth 12 movetime 900');
+      if (!G || gen!==G.gen) return;
+      G.evals[i]=wcp(r, st.turn);
+      annotate(i); annotate(i+1);
+      renderPanels();
+    }
+    save();
+  } finally { if (G && gen===G.gen) G._analysing=false; }
+  if (G && gen===G.gen && G.evals.length<=ply()) analyseMissing();
+}
+function annotate(k){            // move k-1 leads from state k-1 to state k
+  if (k<1 || G.evals[k]===undefined || G.evals[k-1]===undefined) return;
+  const mover=G.states[k-1].turn, cl=v=>Math.max(-1500, Math.min(1500, v));
+  const loss=(cl(G.evals[k-1])-cl(G.evals[k]))*(mover==='w'?1:-1);
+  G.anns[k-1] = loss>=300 ? '??' : loss>=120 ? '?' : loss>=60 ? '?!' : '';
+}
+
+/* =========================================================
+   Narrative: headlines and the match report
+   ========================================================= */
+const PNAME={p:'pawn',n:'knight',b:'bishop',r:'rook',q:'queen',k:'king'};
+function setHeadline(h, sub, extra){
+  const el=document.getElementById('headline');
+  el.textContent=h; el.classList.toggle('extra', !!extra);
+  document.getElementById('subhead').textContent=sub||'';
+}
+function addReport(t){ G.report.unshift(t); if (G.report.length>14) G.report.length=14; }
+function narrate(s, m, san){
+  const who=nameOf(s.turn), n=Math.ceil(G.moves.length/2), at=sqName(m.to), mv=`${n}${s.turn==='w'?'.':'...'}${san}`;
+  const cap=m.cap ? m.cap.toLowerCase() : null;
+  if (san.endsWith('#')) return; // endGame writes the mate story
+  if (m.promo){ setHeadline(`Pawn Crowned on ${at}!`, `${who} promotes to a ${PNAME[m.promo]} with ${mv}`, true); addReport(`On move ${n} ${who} pushed a pawn all the way to ${at} and crowned it a ${PNAME[m.promo]} (${mv}).`); return; }
+  if (cap==='q'){ setHeadline(`Queen Falls on ${at}!`, `${who} captures the queen with ${mv}`, true); addReport(`Sensation on move ${n}: ${who} took the queen on ${at} with ${mv}.`); return; }
+  if (m.flag==='K' || m.flag==='Q'){ setHeadline(`${who} Castles ${m.flag==='K'?'Kingside':'Queenside'}`, `The king is tucked away with ${mv}`); addReport(`${who} castled ${m.flag==='K'?'short':'long'} on move ${n}.`); return; }
+  if (san.endsWith('+')){ setHeadline(`Check! King Harried on Move ${n}`, `${who} gives check with ${mv}`); if (cap) addReport(`${who} captured on ${at} with check (${mv}).`); return; }
+  if (cap==='r'){ setHeadline(`Rook Snatched on ${at}`, `${who} wins the exchange or better with ${mv}`); addReport(`${who} collected a rook on ${at} (${mv}).`); return; }
+  if (cap==='n' || cap==='b'){ setHeadline(`${PNAME[cap][0].toUpperCase()+PNAME[cap].slice(1)} Taken on ${at}`, `${who} captures with ${mv}`); if (Math.random()<.6) addReport(`On move ${n} the ${PNAME[cap]} on ${at} fell to ${who} (${mv}).`); return; }
+  if (m.flag==='ep'){ setHeadline('En Passant! Readers Reach for Rulebooks', `${who} captures in passing with ${mv}`, true); addReport(`${who} captured en passant on move ${n}, to the delight of the rules enthusiasts (${mv}).`); return; }
+  if (G.moves.length===1){ setHeadline(`${who} Opens With ${san}`, 'Battle is joined at the board'); return; }
+  const quiet=[`Tension Mounts After ${san}`, `${who} Plays ${san}`, `Manoeuvring Continues: ${san}`, `Quiet Move ${san} Hides Intentions`, `${who} Weighs Options, Plays ${san}`, `Spectators Puzzle Over ${san}`];
+  setHeadline(quiet[G.moves.length%quiet.length], `Move ${n}: ${mv}`);
+}
+
+/* =========================================================
+   Rendering
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let SQS=[];
+function buildBoard(){
+  const bd=$('#board'); bd.innerHTML=''; SQS=[];
+  for (let v=0; v<64; v++){ const d=document.createElement('div'); d.className='sq'; d.dataset.v=v; bd.appendChild(d); SQS.push(d); }
+}
+const vToSq = v => UI.flip ? 63-v : v;      // visual index -> board index
+const sqToV = i => UI.flip ? 63-i : i;
+const blindNow = () => G && G.blind!=='off' && !G.over && !UI.peek;
+function renderBoard(){
+  if (!G) return;
+  const vp=viewPly(), s=G.states[vp], lastM=vp>0 ? G.moves[vp-1] : null;
+  const isLive = G.view===null;
+  const blind = blindNow();
+  $('#board').classList.toggle('blind', blind);
+  const targets = UI.sel>=0 && isLive && !blind ? G.legal.filter(m=>m.from===UI.sel) : [];
+  const ck = inCheck(s) ? kingSq(s.b, s.turn) : -1;
+  SQS.forEach((el,v)=>{
+    const i=vToSq(v), dark=((i>>3)+(i&7))%2===1;
+    let c='sq'+(dark?' dk':'');
+    if (lastM && (i===lastM.from || i===lastM.to)) c+=' last';
+    if (i===UI.sel && isLive) c+=' sel';
+    if (i===ck) c+=' check';
+    const t=targets.find(m=>m.to===i);
+    if (t) c+= s.b[i] || t.flag==='ep' ? ' ring' : ' dot';
+    if (UI.drag && UI.drag.over===i && UI.drag.moving) c+=' hover';
+    el.className=c;
+  });
+  // pieces
+  const layer=$('#pieces'); let html='';
+  const anim = UI.anim && UI.anim.ply===vp && isLive ? UI.anim : null;
+  s.b.forEach((p,i)=>{
+    if (!p || blind) return;
+    const v=sqToV(i), x=(v&7)*12.5, y=(v>>3)*12.5;
+    const lift = UI.drag && UI.drag.moving && UI.drag.from===i ? ' lift' : '';
+    html+=`<div class="pc${lift}" data-i="${i}" style="left:${x}%;top:${y}%;background-image:${PIECE_URL[pieceKey(p)]}"></div>`;
+  });
+  layer.innerHTML=html;
+  if (anim){
+    const slide=(from,to)=>{
+      const el=layer.querySelector(`.pc[data-i="${to}"]`); if (!el) return;
+      const a=sqToV(from), b=sqToV(to), dx=((a&7)-(b&7))*100, dy=((a>>3)-(b>>3))*100;
+      el.style.transform=`translate(${dx}%,${dy}%)`;
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.classList.add('anim'); el.style.transform=''; }));
+    };
+    if (!anim.dragged) slide(anim.from, anim.to);
+    if (anim.flag==='K') slide(anim.to+1, anim.to-1);
+    if (anim.flag==='Q') slide(anim.to-2, anim.to+1);
+    UI.anim=null;
+  }
+  // coordinates
+  let co='';
+  for (let k=0;k<8;k++){
+    const file = UI.flip ? FILES[7-k] : FILES[k], rank = UI.flip ? k+1 : 8-k;
+    co+=`<span class="coord f" style="left:${k*12.5+6.25}%">${file}</span><span class="coord r" style="top:${k*12.5+6.25}%">${rank}</span>`;
+  }
+  $('#coords').innerHTML=co;
+  // hint arrow
+  let ar='';
+  if (UI.hint && isLive){
+    const a=sqToV(UI.hint.from), b=sqToV(UI.hint.to);
+    const x1=(a&7)+.5, y1=(a>>3)+.5, x2=(b&7)+.5, y2=(b>>3)+.5, L=Math.hypot(x2-x1,y2-y1), k=(L-.32)/L;
+    ar=(UI.hint.half ? '' : `<line x1="${x1}" y1="${y1}" x2="${x1+(x2-x1)*k}" y2="${y1+(y2-y1)*k}" stroke="#171512" stroke-width=".14" stroke-linecap="round" stroke-dasharray=".02 .18" marker-end="url(#ah)" opacity=".9"/>`)+
+        `<circle cx="${x1}" cy="${y1}" r=".42" fill="none" stroke="#171512" stroke-width=".06"/>`;
+  }
+  $('#arrows').innerHTML=ar;
+  renderPromo();
+}
+function renderPromo(){
+  const old=$('#promo'); if (old) old.remove();
+  if (!UI.promo) return;
+  const {to}=UI.promo, v=sqToV(to), c=live().turn;
+  const d=document.createElement('div'); d.id='promo';
+  const fromTop = (v>>3)===0;
+  d.style.left=((v&7)*12.5)+'%';
+  d.style[fromTop?'top':'bottom']='0';
+  d.innerHTML=['q','n','r','b'].map(p=>`<div data-p="${p}" title="${PNAME[p]}" style="background-image:${PIECE_URL[c+p.toUpperCase()]}"></div>`).join('');
+  if (!fromTop) d.style.flexDirection='column-reverse';
+  $('#frame').appendChild(d);
+}
+function fmtClock(ms){
+  ms=Math.max(0,ms);
+  if (ms<10000) return (ms/1000).toFixed(1);
+  const t=Math.ceil(ms/1000), h=Math.floor(t/3600), m=Math.floor(t%3600/60), s=t%60;
+  return h ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${m}:${String(s).padStart(2,'0')}`;
+}
+function clockNow(c){
+  if (!G.clock) return null;
+  const vp=viewPly();
+  if (G.view!==null) return G.clocks[vp] ? G.clocks[vp][c] : 0;
+  let t=G.clock[c];
+  if (!G.over && live().turn===c && ply()>=2) t-=now()-G.turnStart;
+  return t;
+}
+function material(b){
+  const cnt={}; for (const p of b) if (p) cnt[p]=(cnt[p]||0)+1;
+  const start={}; for (const p of G.states[0].b) if (p) start[p]=(start[p]||0)+1;
+  for (const p of 'PNBRQpnbrq') start[p]=start[p]||0;
+  const lost={w:[],b:[]}; let diff=0;
+  for (const p of 'QRBNP'){ const k=Math.max(0,start[p]-(cnt[p]||0)); for(let i=0;i<k;i++) lost.w.push(p); diff-=(cnt[p]||0)*VAL[p.toLowerCase()]; }
+  for (const p of 'qrbnp'){ const k=Math.max(0,start[p]-(cnt[p]||0)); for(let i=0;i<k;i++) lost.b.push(p); diff+=(cnt[p]||0)*VAL[p]; }
+  return { lost, diff:-diff };   // diff > 0: white ahead
+}
+function playerHTML(c){
+  const s=G.states[viewPly()], mat=material(s.b);
+  const takenBy = c==='w' ? mat.lost.b : mat.lost.w;   // pieces this side has captured
+  const adv = c==='w' ? mat.diff : -mat.diff;
+  const caps = blindNow() ? (c===G.human ? '<span class="blind-tag">Blindfold</span>' : '') : takenBy.map(p=>`<i style="background-image:${PIECE_URL[pieceKey(p)]}"></i>`).join('') + (adv>0?`<span>+${Math.round(adv/100)}</span>`:'');
+  const isHuman=c===G.human;
+  const nm = isHuman ? `${esc(G.name)}<small>${c==='w'?'White':'Black'}</small>` : `${!ENGINE_FAILED?'Stockfish':'House Engine'}<small>${c==='w'?'White':'Black'} · ${G.elo} Elo</small>`;
+  let clk;
+  if (G.mode==='problem'){
+    const nm2 = c==='w' ? `${esc(G.name)}<small>White · to play and mate</small>` : `Black<small>Defending</small>`;
+    return `<div><div class="pname">${nm2}</div><div class="caps">${c===G.human&&blindNow()?'<span class="blind-tag">Blindfold</span>':''}</div></div><div class="clock none">${c==='w'?'Mate in 2':'No. '+G.prob.n}</div>`;
+  }
+  if (G.clock){
+    const t=clockNow(c), run = G.view===null && !G.over && live().turn===c && ply()>=2;
+    clk=`<div class="clock${run?' run':''}${t<20000?' low':''}" data-c="${c}">${fmtClock(t)}</div>`;
+  } else clk=`<div class="clock none${G.view===null&&!G.over&&live().turn===c?' run':''}">${G.view===null&&!G.over&&live().turn===c?'To move':'Untimed'}</div>`;
+  return `<div><div class="pname">${nm}</div><div class="caps">${caps}</div></div>${clk}`;
+}
+function renderPanels(){
+  if (!G) return;
+  const top = UI.flip ? 'w' : 'b', bot = other(top);
+  $('#pTop').innerHTML=playerHTML(top); $('#pBot').innerHTML=playerHTML(bot);
+  const think = !G.thinking ? '' : G.mode==='problem' ? (live().turn==='b' ? 'Black is choosing a defence…' : 'Resetting the diagram…') : `${ENGINE_OK?'Stockfish':'The House Engine'} is considering its move…`;
+  $('#thinkTop').textContent = top!==G.human ? think : '';
+  $('#thinkBot').textContent = bot!==G.human ? think : '';
+  // caption
+  const vp=viewPly(), s=G.states[vp];
+  const reviewing = G.view!==null;
+  let cap;
+  if (reviewing) cap=`<b>Diagram ${vp}.</b> Position after ${vp?moveLabel(vp-1):'the start'} · <a href="#" id="backLive">return to the game</a>`;
+  else if (G.over) cap=`<b>Final position.</b> ${esc(G.over.result)}, ${esc(G.over.reason)}.`;
+  else if (G.mode==='problem') cap=`<b>Problem No. ${G.prob.n}.</b> White to play and mate in two (${G.prob.w} + ${G.prob.bl}).`;
+  else cap=`<b>Diagram ${G.number}.</b> ${s.turn==='w'?'White':'Black'} to play${s.turn===G.human?` (${esc(G.name)})`:''}${inCheck(s)?', in check':''}.`;
+  $('#caption').innerHTML=cap;
+  const bl=$('#backLive'); if (bl) bl.onclick=e=>{ e.preventDefault(); G.view=null; renderAll(); };
+  // move list
+  const showAnn = G.over || SET.ann;
+  let rows='';
+  for (let i=0;i<G.sans.length;i+=2){
+    const cell = j => j<G.sans.length ? `<span class="mv${viewPly()===j+1&&reviewing?' cur':''}${!reviewing&&j===G.sans.length-1?' cur':''}" data-p="${j+1}">${esc(G.sans[j])}${showAnn&&G.anns[j]?`<span class="ann${G.anns[j].includes('??')||G.anns[j]==='?'?' bad':''}">${G.anns[j]}</span>`:''}</span>` : '';
+    const n = G.states[0].full + Math.floor((i + (G.states[0].turn==='b'?1:0))/2);
+    if (i===0 && G.states[0].turn==='b') { rows+=`<tr><td class="n">${G.states[0].full}.</td><td>…</td><td>${cell(0)}</td></tr>`; i=-1; continue; }
+    rows+=`<tr><td class="n">${n}.</td><td>${cell(i)}</td><td>${cell(i+1)}</td></tr>`;
+  }
+  if (G.over) rows+=`<tr><td colspan="3" class="res">${esc(G.over.result)}</td></tr>`;
+  const mv=$('#moves');
+  const atBottom = mv.scrollTop+mv.clientHeight >= mv.scrollHeight-30;
+  if (G.blind==='all' && !G.over && !UI.peek) mv.innerHTML = `<div class="hidden-sheet">The score sheet is hidden while you play blindfold.<br>${G.moves.length ? `Last move: <b>${esc(moveLabel(G.moves.length-1))}</b>` : 'No moves yet.'}</div>`;
+  else mv.innerHTML = rows ? `<table>${rows}</table>` : '<div class="small" style="text-align:center;padding:10px">No moves yet.</div>';
+  $('#blindBar').hidden = G.blind==='off' || !!G.over;
+  $('#moveIn').disabled = !canMove(); $('#moveGo').disabled = !canMove();
+  $('#oBlind').value = G.blind;
+  if (atBottom && !reviewing) mv.scrollTop=mv.scrollHeight;
+  // verdict
+  const ev=G.evals[vp];
+  if ((SET.eval || G.over) && ENGINE_OK && G.mode!=='problem'){
+    if (ev===undefined) $('#verdict').innerHTML='<div class="small">The correspondent is studying the position…</div>';
+    else {
+      const p = Math.max(2, Math.min(98, 50+50*(2/(1+Math.exp(-ev/350))-1)));
+      $('#verdict').innerHTML=`<div><b>Our verdict:</b> ${verdictText(ev)}</div><div class="bar" title="White's share"><i style="width:${p}%"></i></div>`;
+    }
+  } else $('#verdict').innerHTML='';
+  // report & facts
+  $('#report').innerHTML=G.report.map(t=>`<p>${esc(t)}</p>`).join('');
+  if (G.mode==='problem') $('#facts').innerHTML=`<b>Stipulation:</b> White to play and mate in two<br><b>Pieces:</b> ${G.prob.w} white + ${G.prob.bl} black (a Meredith)<br><b>Difficulty:</b> ${'★'.repeat(G.prob.stars)}${'☆'.repeat(3-G.prob.stars)}<br><b>Attempts:</b> ${G.attempts}${G.hints?`<br><b>Hints taken:</b> ${G.hints}`:''}<br><b>Composed by:</b> the Daily Gambit puzzle desk (computer-composed; every line checked by our solver)`;
+  else $('#facts').innerHTML=`<b>White:</b> ${esc(nameOf('w'))}<br><b>Black:</b> ${esc(nameOf('b'))}<br><b>Time control:</b> ${G.tc?esc(fmtTC(G.tc)):'None'}<br><b>Engine strength:</b> ${G.elo} (${esc(eloLabel(G.elo))})<br><b>Moves played:</b> ${Math.ceil(G.moves.length/2)}${G.hints?`<br><b>Hints taken:</b> ${G.hints}`:''}`;
+  // masthead bits
+  $('#volTxt').textContent=`No. ${G.number}`;
+  $('#tcTxt').textContent = G.tc ? `${G.tc.k.replace('+',' + ')} ${catOf(G.tc)}` : 'Unhurried edition';
+  document.body.classList.toggle('blindmode', G.blind!=='off' && !G.over);
+  // buttons
+  const myTurn = !G.over && live().turn===G.human && G.view===null;
+  const P_ = G.mode==='problem';
+  $('#bHint').textContent = P_ ? 'Hint' : 'Hint';
+  $('#bBack').textContent = P_ ? 'Restart' : 'Take Back';
+  $('#bDraw').textContent = P_ ? 'Solution' : 'Offer Draw';
+  $('#bResign').textContent = P_ ? 'Next Problem' : 'Resign';
+  $('#bNew').textContent = P_ ? 'Play a Game' : 'New Game';
+  if (P_){
+    $('#bHint').disabled = !myTurn || G.moves.length>0;
+    $('#bBack').disabled = G.moves.length===0 && !G.over;
+    $('#bDraw').disabled = false; $('#bResign').disabled = false;
+    $('#nFirst').disabled=$('#nPrev').disabled = viewPly()===0;
+    $('#nNext').disabled=$('#nLast').disabled = G.view===null;
+    return;
+  }
+  $('#bHint').disabled = !myTurn || !ENGINE_OK;
+  $('#bBack').disabled = G.over || G.moves.length===0 || (G.human==='b' && G.moves.length<2 && G.states[0].turn==='w');
+  $('#bDraw').disabled = G.over || !myTurn || G.moves.length<2;
+  $('#bResign').disabled = !!G.over;
+  $('#nFirst').disabled=$('#nPrev').disabled = viewPly()===0;
+  $('#nNext').disabled=$('#nLast').disabled = G.view===null;
+}
+function catOf(tc){ const est=tc.base/1000+40*tc.inc/1000; return est<180?'Bullet':est<480?'Blitz':est<1500?'Rapid':'Classical'; }
+function verdictText(ev){
+  if (Math.abs(ev)>=9000){ const n=10000-Math.abs(ev); return `${ev>0?'White':'Black'} has mate in ${Math.ceil(n/2)||1}`; }
+  const a=Math.abs(ev)/100, side=ev>0?'White':'Black', s=`(${ev>0?'+':'−'}${a.toFixed(1)})`;
+  if (a<.35) return `Level pegging ${s}`;
+  if (a<.9) return `${side} is slightly better ${s}`;
+  if (a<2) return `${side} is clearly better ${s}`;
+  return `${side} is winning ${s}`;
+}
+function moveLabel(j){
+  const s=G.states[j]; return `${s.full}${s.turn==='w'?'.':'...'} ${G.sans[j]}`;
+}
+function renderAll(){ renderBoard(); renderPanels(); }
+function setStatus(t){ const el=$('#engineStatus'); if (el) el.textContent=t; }
+function tick(){
+  if (!G || !G.clock) return;
+  for (const el of document.querySelectorAll('.clock[data-c]')){
+    const c=el.dataset.c, t=clockNow(c);
+    el.textContent=fmtClock(t); el.classList.toggle('low', t<20000);
+  }
+  if (!G.over && G.view===null && ply()>=2){
+    const c=live().turn; if (G.clock[c]-(now()-G.turnStart) <= 0){ G.clock[c]=0; G.turnStart=now(); flag(c); }
+  }
+}
+
+/* =========================================================
+   Input: click, drag and promotion
+   ========================================================= */
+function canMove(){ return G && !G.over && G.view===null && live().turn===G.human && !UI.promo && !G.thinking; }
+function sqFromPoint(x,y){
+  const r=$('#board').getBoundingClientRect();
+  if (x<r.left||x>=r.right||y<r.top||y>=r.bottom) return -1;
+  const f=Math.floor((x-r.left)/r.width*8), k=Math.floor((y-r.top)/r.height*8);
+  return vToSq(k*8+f);
+}
+function tryMove(from, to, dragged){
+  const cands=G.legal.filter(m=>m.from===from && m.to===to);
+  if (!cands.length) return false;
+  if (cands.length>1){ UI.promo={from,to}; UI.sel=-1; renderBoard(); return true; }
+  UI.anim=null; if (dragged) UI.dragDone=true;
+  playMove(cands[0]);
+  if (dragged && UI.anim===null){} // nothing
+  return true;
+}
+function onDown(e){
+  if (!G || e.button>0) return;
+  const i=sqFromPoint(e.clientX, e.clientY); if (i<0) return;
+  if (G.view!==null){ G.view=null; renderAll(); return; }
+  if (!canMove()) return;
+  const s=live(), p=s.b[i];
+  if (UI.sel>=0 && UI.sel!==i && G.legal.some(m=>m.from===UI.sel && m.to===i)){ tryMove(UI.sel, i, false); e.preventDefault(); return; }
+  if (blindNow() && UI.sel>=0 && UI.sel!==i && !(p && colorOf(p)===G.human)){
+    setBlindMsg(`That isn't a legal move (${sqName(UI.sel)} to ${sqName(i)}).`, true); UI.sel=-1; renderBoard(); return;
+  }
+  if (blindNow() && !(p && colorOf(p)===G.human)){ setBlindMsg(`You have nothing on ${sqName(i)}.`, true); UI.sel=-1; renderBoard(); return; }
+  if (blindNow()) setBlindMsg(`${sqName(i)} selected. Now choose where it goes.`);
+  if (p && colorOf(p)===G.human){
+    const was=UI.sel===i;
+    UI.sel=i; UI.drag={ from:i, x:e.clientX, y:e.clientY, moving:false, over:i, was };
+    $('#board').setPointerCapture(e.pointerId);
+    renderBoard(); e.preventDefault();
+  } else { UI.sel=-1; renderBoard(); }
+}
+function onMove(e){
+  const d=UI.drag; if (!d) return;
+  if (!d.moving && Math.hypot(e.clientX-d.x, e.clientY-d.y)>5){
+    d.moving=true;
+    if (blindNow()){ renderBoard(); return; }
+    const g=document.createElement('div'); g.id='ghost';
+    const w=$('#board').getBoundingClientRect().width/8;
+    g.style.width=g.style.height=w+'px'; g.style.backgroundImage=PIECE_URL[pieceKey(live().b[d.from])];
+    document.body.appendChild(g); renderBoard();
+  }
+  if (d.moving){
+    const g=$('#ghost'); if (g){ g.style.left=e.clientX+'px'; g.style.top=e.clientY+'px'; }
+    const o=sqFromPoint(e.clientX,e.clientY); if (o!==d.over){ d.over=o; renderBoard(); }
+  }
+}
+function onUp(e){
+  const d=UI.drag; if (!d) return;
+  UI.drag=null; const g=$('#ghost'); if (g) g.remove();
+  if (d.moving){
+    const to=sqFromPoint(e.clientX,e.clientY);
+    if (to>=0 && to!==d.from && G.legal.some(m=>m.from===d.from && m.to===to)){
+      const cands=G.legal.filter(m=>m.from===d.from && m.to===to);
+      if (cands.length>1){ UI.promo={from:d.from,to}; UI.sel=-1; renderBoard(); return; }
+      playMove(cands[0]);
+      return;
+    }
+    renderBoard(); return;
+  }
+  if (d.was){ UI.sel=-1; renderBoard(); }      // second click on the same piece deselects
+}
+function onPromoClick(e){
+  const t=e.target.closest('#promo div'); if (!t) return;
+  const {from,to}=UI.promo; UI.promo=null;
+  const m=G.legal.find(x=>x.from===from && x.to===to && x.promo===t.dataset.p);
+  if (m) playMove(m); else renderBoard();
+}
+
+/* =========================================================
+   Meredith problems (mate in two, 8-12 units), computer-composed and solver-verified
+   ========================================================= */
+const PROBLEMS = [{"n":1,"fen":"7R/4K2p/6b1/2p5/N1k3P1/4Q1P1/5N1P/8 w - - 0 1","key":"Rb8","threat":["Qxc5#"],"vars":[{"d":"h6","mates":["Qxc5#"]},{"d":"h5","mates":["Qxc5#"]},{"d":"Bf7","mates":["Qxc5#","Qe4#","Qd3#"]},{"d":"Be8","mates":["Qxc5#","Qe4#","Qd3#"]},{"d":"Bf5","mates":["Qxc5#"]},{"d":"Be4","mates":["Qxc5#","Qxe4#"]},{"d":"Bd3","mates":["Qxc5#","Qxd3#"]},{"d":"Bc2","mates":["Qxc5#"]},{"d":"Bb1","mates":["Qxc5#"]},{"d":"Bh5","mates":["Qxc5#","Qe4#","Qd3#"]},{"d":"Kd5","mates":["Qxc5#"]}],"w":8,"bl":4,"stars":1},{"n":2,"fen":"8/pN2B2k/4K3/2p2R2/6b1/5p1p/8/Q2B4 w - - 0 1","key":"Kf7","threat":["Qg7#"],"vars":[{"d":"a6","mates":["Qg7#"]},{"d":"a5","mates":["Qg7#"]},{"d":"Kh6","mates":["Qg7#","Qh8#"]},{"d":"c4","mates":["Qg7#"]},{"d":"Bxf5","mates":["Qg7#"]},{"d":"Bh5+","mates":["Rxh5#"]},{"d":"f2","mates":["Qg7#"]},{"d":"h2","mates":["Qg7#"]}],"w":6,"bl":6,"stars":1},{"n":3,"fen":"1B3Q2/3k4/8/2K4b/P7/1b4P1/pP6/5BR1 w - - 0 1","key":"Ba6","threat":["Bc8#"],"vars":[{"d":"Ke6","mates":["Bc8#"]},{"d":"Bg6","mates":["Bc8#"]},{"d":"Bhf7","mates":["Bc8#"]},{"d":"Be8","mates":["Qd6#"]},{"d":"Bg4","mates":["Bc8#"]},{"d":"Bf3","mates":["Bc8#"]},{"d":"Be2","mates":["Bc8#"]},{"d":"Bhd1","mates":["Bc8#"]},{"d":"Bxa4","mates":["Bc8#"]},{"d":"Bc4","mates":["Bc8#"]},{"d":"Bd5","mates":["Bc8#"]},{"d":"Be6","mates":["Bc8#","Bb5#"]},{"d":"Bbf7","mates":["Bc8#"]},{"d":"Bg8","mates":["Bc8#"]},{"d":"Bc2","mates":["Bc8#"]},{"d":"Bbd1","mates":["Bc8#"]},{"d":"a1=Q","mates":["Bc8#"]},{"d":"a1=R","mates":["Bc8#"]},{"d":"a1=B","mates":["Bc8#"]},{"d":"a1=N","mates":["Bc8#"]}],"w":8,"bl":4,"stars":1},{"n":4,"fen":"k7/2B5/4P2n/KP3N2/8/8/NQ5n/8 w - - 0 1","key":"Kb6","threat":["Qa3#"],"vars":[{"d":"Ng8","mates":["Qa3#"]},{"d":"Nf7","mates":["Qa3#"]},{"d":"Nxf5","mates":["Qa3#","Qh8#"]},{"d":"N6g4","mates":["Qa3#","Qh8#"]},{"d":"N2g4","mates":["Qa3#","Qg2#"]},{"d":"Nf3","mates":["Qa3#"]},{"d":"Nf1","mates":["Qa3#","Qg2#"]}],"w":7,"bl":3,"stars":1},{"n":5,"fen":"2K1k3/1P6/p7/3P1P2/1Q6/5P2/3B4/1n6 w - - 0 1","key":"Bh6","threat":["Qf8#"],"vars":[{"d":"Kf7","mates":["Qf8#"]},{"d":"a5","mates":["Qf8#"]},{"d":"Na3","mates":["Qf8#"]},{"d":"Nc3","mates":["Qf8#"]},{"d":"Nd2","mates":["Qf8#"]}],"w":7,"bl":3,"stars":1},{"n":6,"fen":"7Q/p7/8/p7/k2K2B1/7n/P7/8 w - - 0 1","key":"Qb8","threat":["Qb3#"],"vars":[{"d":"a6","mates":["Qb3#"]},{"d":"Ka3","mates":["Qb3#"]},{"d":"Ng5","mates":["Qb3#"]},{"d":"Nf4","mates":["Qb3#"]},{"d":"Nf2","mates":["Qb3#"]},{"d":"Ng1","mates":["Qb3#"]}],"w":4,"bl":4,"stars":1},{"n":7,"fen":"1B6/4n2P/8/4R3/3p1N1P/K4N2/5N2/2k5 w - - 0 1","key":"Kb3","threat":["Re1#"],"vars":[{"d":"Nc8","mates":["Re1#"]},{"d":"Ng8","mates":["Re1#"]},{"d":"Nc6","mates":["Re1#"]},{"d":"Ng6","mates":["Re1#"]},{"d":"Nd5","mates":["Re1#"]},{"d":"Nf5","mates":["Re1#"]},{"d":"d3","mates":["Re1#"]},{"d":"Kb1","mates":["Re1#"]}],"w":8,"bl":3,"stars":1},{"n":8,"fen":"8/8/1QR4p/8/B1p3N1/1pK5/8/1k6 w - - 0 1","key":"Qf2","threat":["Qb2#"],"vars":[{"d":"h5","mates":["Qb2#"]},{"d":"b2","mates":["Qxb2#"]},{"d":"Ka1","mates":["Qb2#"]},{"d":"Kc1","mates":["Qe1#","Qg1#","Qf1#"]}],"w":5,"bl":4,"stars":1},{"n":9,"fen":"8/4P3/8/2b4N/8/5pp1/kNK5/4Q3 w - - 0 1","key":"Nc4","threat":["Qb1#"],"vars":[{"d":"Bb6","mates":["Qb1#"]},{"d":"Ba7","mates":["Qa5#","Qb1#"]},{"d":"Bd6","mates":["Qb1#"]},{"d":"Bxe7","mates":["Qb1#"]},{"d":"Bb4","mates":["Qb1#"]},{"d":"Ba3","mates":["Qb1#"]},{"d":"Bd4","mates":["Qa5#","Qb1#"]},{"d":"Be3","mates":["Qa5#","Qb1#"]},{"d":"Bf2","mates":["Qa5#","Qb1#"]},{"d":"Bg1","mates":["Qa5#","Qb1#"]},{"d":"f2","mates":["Qb1#"]},{"d":"g2","mates":["Qb1#"]}],"w":5,"bl":4,"stars":1},{"n":10,"fen":"4n3/8/8/n1B3P1/1Bp2K1B/3k4/p3b3/5Q2 w - - 0 1","key":"Qc1","threat":["Qd2#","Qc3#"],"vars":[{"d":"Nc7","mates":["Qd2#","Qc3#"]},{"d":"Ng7","mates":["Qd2#","Qc3#"]},{"d":"Nd6","mates":["Qd2#","Qc3#"]},{"d":"Nf6","mates":["Qd2#","Qc3#"]},{"d":"Nb7","mates":["Qd2#","Qc3#"]},{"d":"Nc6","mates":["Qd2#","Qc3#"]},{"d":"Nb3","mates":["Qc3#"]},{"d":"c3","mates":["Qxc3#"]},{"d":"a1=Q","mates":["Qd2#"]},{"d":"a1=R","mates":["Qd2#","Qc3#"]},{"d":"a1=B","mates":["Qd2#","Qb1#"]},{"d":"a1=N","mates":["Qd2#","Qc3#"]},{"d":"Bf3","mates":["Qd2#"]},{"d":"Bg4","mates":["Qd2#"]},{"d":"Bh5","mates":["Qd2#"]},{"d":"Bd1","mates":["Qd2#","Qxd1#"]},{"d":"Bf1","mates":["Qd2#","Qd1#"]}],"w":6,"bl":6,"stars":1},{"n":11,"fen":"8/3K2p1/R7/2p5/7n/7Q/2P2kP1/4R3 w - - 0 1","key":"Rae6","threat":["R6e2#"],"vars":[{"d":"g6","mates":["R6e2#"]},{"d":"g5","mates":["R6e2#"]},{"d":"c4","mates":["R6e2#"]},{"d":"Ng6","mates":["R6e2#","Qf3#"]},{"d":"Nf5","mates":["R6e2#","Qf3#"]},{"d":"Nf3","mates":["R6e2#","Qxf3#"]},{"d":"Nxg2","mates":["R6e2#"]}],"w":6,"bl":4,"stars":1},{"n":12,"fen":"8/2Q3R1/7p/pN5K/7n/6P1/k2P4/n6R w - - 0 1","key":"Qc3","threat":["Qa3#","Rxa1#"],"vars":[{"d":"a4","mates":["Qa3#","Rxa1#"]},{"d":"Ng6","mates":["Qa3#","Rxa1#"]},{"d":"Nf5","mates":["Qa3#","Rxa1#"]},{"d":"Nf3","mates":["Qa3#","Rxa1#"]},{"d":"Ng2","mates":["Qa3#","Rxa1#"]},{"d":"Nb3","mates":["Qc2#"]},{"d":"Nc2","mates":["Qxc2#"]}],"w":7,"bl":5,"stars":1},{"n":13,"fen":"3N3Q/2pK4/4P1k1/7b/3PP3/2P5/8/5N1n w - - 0 1","key":"Nf7","threat":["Qh6#"],"vars":[{"d":"c6","mates":["Qh6#"]},{"d":"c5","mates":["Qh6#"]},{"d":"Bg4","mates":["Qh6#"]},{"d":"Bf3","mates":["Qh6#"]},{"d":"Be2","mates":["Qh6#"]},{"d":"Bd1","mates":["Qh6#"]},{"d":"Ng3","mates":["Qh6#"]},{"d":"Nf2","mates":["Qh6#"]}],"w":8,"bl":4,"stars":2},{"n":14,"fen":"2B5/7K/2p5/1p5k/3N2p1/8/5NP1/2R5 w - - 0 1","key":"Ne4","threat":["Rh1#"],"vars":[{"d":"c5","mates":["Rh1#"]},{"d":"b4","mates":["Rh1#"]},{"d":"Kh4","mates":["Rh1#"]},{"d":"g3","mates":["Rh1#"]}],"w":6,"bl":4,"stars":2},{"n":15,"fen":"8/4p3/8/7Q/3k4/6p1/2B1K3/R1N5 w - - 0 1","key":"Qa5","threat":["Ra4#"],"vars":[{"d":"e6","mates":["Ra4#"]},{"d":"e5","mates":["Ra4#"]},{"d":"Kc4","mates":["Ra4#"]},{"d":"g2","mates":["Ra4#"]}],"w":5,"bl":3,"stars":2},{"n":16,"fen":"8/4Q3/4p3/1K1k3P/8/3N1bb1/2R5/8 w - - 0 1","key":"Rc4","threat":["Qc5#"],"vars":[{"d":"e5","mates":["Qd7#","Nb4#"]},{"d":"Be4","mates":["Qc5#"]},{"d":"Bg4","mates":["Qc5#"]},{"d":"Bxh5","mates":["Qc5#"]},{"d":"Be2","mates":["Qc5#"]},{"d":"Bd1","mates":["Qc5#"]},{"d":"Bg2","mates":["Qc5#"]},{"d":"Bh1","mates":["Qc5#"]},{"d":"Bf4","mates":["Qc5#"]},{"d":"Be5","mates":["Qc5#","Nb4#"]},{"d":"Bd6","mates":["Qb7#"]},{"d":"Bc7","mates":["Qc5#"]},{"d":"Bb8","mates":["Qc5#"]},{"d":"Bh4","mates":["Qc5#","Qd7#"]},{"d":"Bf2","mates":["Qd8#","Qd7#"]},{"d":"Be1","mates":["Qd8#","Qc5#","Qd7#"]},{"d":"Bh2","mates":["Qc5#"]}],"w":5,"bl":4,"stars":2},{"n":17,"fen":"1BN2Q2/6b1/3R1b2/8/1P2kNK1/8/p3N3/8 w - - 0 1","key":"Rd3","threat":["Ng3#"],"vars":[{"d":"Bxf8","mates":["Ng3#"]},{"d":"Bh8","mates":["Ng3#"]},{"d":"Bh6","mates":["Ng3#"]},{"d":"Be7","mates":["Qf5#","Ng3#"]},{"d":"Bd8","mates":["Qf5#","Ng3#"]},{"d":"Be5","mates":["Qf5#","Ng3#"]},{"d":"Bd4","mates":["Qf5#","Ng3#"]},{"d":"Bc3","mates":["Qf5#","Ng3#"]},{"d":"Bb2","mates":["Qf5#","Ng3#"]},{"d":"Ba1","mates":["Qf5#","Ng3#"]},{"d":"Bg5","mates":["Qf5#","Ng3#"]},{"d":"Bh4","mates":["Qf5#"]},{"d":"a1=Q","mates":["Ng3#"]},{"d":"a1=R","mates":["Ng3#"]},{"d":"a1=B","mates":["Ng3#"]},{"d":"a1=N","mates":["Ng3#"]}],"w":8,"bl":4,"stars":2},{"n":18,"fen":"3n3b/8/K1P5/5R2/2k2N2/5Q2/8/8 w - - 0 1","key":"Rb5","threat":["Qd3#"],"vars":[{"d":"Nb7","mates":["Qd3#"]},{"d":"Nf7","mates":["Qd3#"]},{"d":"Nxc6","mates":["Qd3#"]},{"d":"Ne6","mates":["Qd3#"]},{"d":"Bg7","mates":["Qd3#"]},{"d":"Bf6","mates":["Qd3#"]},{"d":"Be5","mates":["Qd3#"]},{"d":"Bd4","mates":["Qd3#","Qb3#"]},{"d":"Bc3","mates":["Qd5#","Qd3#"]},{"d":"Bb2","mates":["Qd3#"]},{"d":"Ba1","mates":["Qd3#"]},{"d":"Kd4","mates":["Qd3#"]}],"w":5,"bl":3,"stars":2},{"n":19,"fen":"4b3/6N1/4P1bK/8/7k/R2N2b1/1p1Q4/8 w - - 0 1","key":"Nf2","threat":["Qg5#","Qd8#"],"vars":[{"d":"Bd7","mates":["Qg5#"]},{"d":"Bc6","mates":["Qg5#","Qd8#"]},{"d":"Bb5","mates":["Qg5#","Qd8#"]},{"d":"Ba4","mates":["Qg5#","Qd8#"]},{"d":"Bef7","mates":["Qg5#","Qd8#"]},{"d":"Bgf7","mates":["Nf5#","Qg5#","Qd8#"]},{"d":"Bh7","mates":["Qg5#","Qd8#"]},{"d":"Bf5","mates":["Nxf5#","Qg5#","Qd8#"]},{"d":"Be4","mates":["Qg5#","Qd8#"]},{"d":"Bd3","mates":["Qg5#"]},{"d":"Bc2","mates":["Qg5#","Qd8#"]},{"d":"Bb1","mates":["Qg5#","Qd8#"]},{"d":"Bh5","mates":["Nf5#","Qg5#","Qd8#"]},{"d":"Bf4+","mates":["Qxf4#"]},{"d":"Be5","mates":["Rh3#","Qg5#"]},{"d":"Bd6","mates":["Rh3#","Qg5#"]},{"d":"Bc7","mates":["Rh3#","Qg5#"]},{"d":"Bb8","mates":["Rh3#","Qg5#","Qd8#"]},{"d":"Bxf2","mates":["Qf4#","Qg5#"]},{"d":"Bh2","mates":["Rh3#","Qg5#","Qd8#"]},{"d":"b1=Q","mates":["Qg5#","Qd8#"]},{"d":"b1=R","mates":["Qg5#","Qd8#"]},{"d":"b1=B","mates":["Qg5#","Qd8#"]},{"d":"b1=N","mates":["Qg5#","Qd8#"]}],"w":6,"bl":5,"stars":2},{"n":20,"fen":"2B5/1p6/5P1R/k7/5QP1/1K5p/8/8 w - - 0 1","key":"f7","threat":["Qb4#","Qa4#"],"vars":[{"d":"b6","mates":["Qb4#","Qa4#"]},{"d":"b5","mates":["Ra6#","Qc7#","Qb4#"]},{"d":"Kb5","mates":["Qe5#","Qg5#","Qf5#","Qb4#"]},{"d":"h2","mates":["Qb4#","Qa4#"]}],"w":6,"bl":3,"stars":2},{"n":21,"fen":"2R5/7k/5P2/5p1K/7N/5R2/7b/8 w - - 0 1","key":"Ng6","threat":["Rh8#"],"vars":[{"d":"f4","mates":["Rh8#"]},{"d":"Bg3","mates":["Rh8#"]},{"d":"Bf4","mates":["Rh8#"]},{"d":"Be5","mates":["Rh8#"]},{"d":"Bd6","mates":["Rh8#"]},{"d":"Bc7","mates":["Rh8#"]},{"d":"Bb8","mates":["Rh8#"]},{"d":"Bg1","mates":["Rh8#"]}],"w":5,"bl":3,"stars":2},{"n":22,"fen":"1N6/6p1/4B3/7p/2K1Q3/8/2N5/3k3N w - - 0 1","key":"Kc3","threat":["Qe1#"],"vars":[{"d":"g6","mates":["Qe1#"]},{"d":"g5","mates":["Qe1#"]},{"d":"h4","mates":["Qe1#"]},{"d":"Kc1","mates":["Qe1#"]}],"w":6,"bl":3,"stars":2},{"n":23,"fen":"2k2B2/1R2P3/4P1K1/8/8/n7/n7/8 w - - 0 1","key":"Rd7","threat":["e8=Q#","e8=R#"],"vars":[{"d":"Kb8","mates":["e8=Q#","e8=R#"]},{"d":"Nb5","mates":["e8=Q#","e8=R#"]},{"d":"Nc4","mates":["e8=Q#","e8=R#"]},{"d":"Nc2","mates":["e8=Q#","e8=R#"]},{"d":"Nb1","mates":["e8=Q#","e8=R#"]},{"d":"Nb4","mates":["e8=Q#","e8=R#"]},{"d":"Nc3","mates":["e8=Q#","e8=R#"]},{"d":"Nc1","mates":["e8=Q#","e8=R#"]}],"w":5,"bl":3,"stars":2},{"n":24,"fen":"8/2p5/pP5k/5P2/3Q1p2/2R2K2/p7/5R2 w - - 0 1","key":"Rg1","threat":["Qh8#"],"vars":[{"d":"c6","mates":["Qh8#"]},{"d":"c5","mates":["Qh8#"]},{"d":"cxb6","mates":["Qh8#"]},{"d":"a5","mates":["Qh8#"]},{"d":"Kh7","mates":["Qg7#"]},{"d":"Kh5","mates":["Qh8#"]},{"d":"a1=Q","mates":["Qh8#"]},{"d":"a1=R","mates":["Qh8#"]},{"d":"a1=B","mates":["Qh8#"]},{"d":"a1=N","mates":["Qh8#"]}],"w":6,"bl":5,"stars":2},{"n":25,"fen":"8/6br/1K1R4/8/7k/2R5/R7/3Q4 w - - 0 1","key":"Rg2","threat":["Qg4#","Qh1#"],"vars":[{"d":"Bf8","mates":["Rd4#","Qg4#","Qh1#"]},{"d":"Bh8","mates":["Qg4#","Qh1#"]},{"d":"Bf6","mates":["Qg4#","Qh1#"]},{"d":"Be5","mates":["Qg4#"]},{"d":"Bd4+","mates":["Rxd4#"]},{"d":"Bxc3","mates":["Qg4#","Qh1#"]},{"d":"Bh6","mates":["Qg4#","Qh1#"]},{"d":"Rh8","mates":["Qg4#","Qh1#"]},{"d":"Rh6","mates":["Qg4#","Qh1#"]},{"d":"Rh5","mates":["Rg4#","Qg4#","Qe1#","Qh1#"]}],"w":5,"bl":3,"stars":3},{"n":26,"fen":"4R3/4K3/4P3/8/p6k/1Q4p1/8/3B4 w - - 0 1","key":"Qf3","threat":["Qg4#","Qh5#"],"vars":[{"d":"a3","mates":["Qg4#","Qh5#"]},{"d":"Kg5","mates":["Qf6#"]},{"d":"Kh3","mates":["Rh8#","Qh1#"]},{"d":"g2","mates":["Qg4#"]}],"w":5,"bl":3,"stars":3},{"n":27,"fen":"8/1NKBk2n/8/P7/5Q2/8/5p2/8 w - - 0 1","key":"Nd8","threat":["Nc6#","Qd6#","Qf7#"],"vars":[{"d":"Nf8","mates":["Nc6#","Qd6#","Qg5#","Qf7#","Qh4#"]},{"d":"Nf6","mates":["Qd6#","Qb4#"]},{"d":"Ng5","mates":["Nc6#","Qd6#"]},{"d":"f1=Q","mates":["Nc6#","Qd6#"]},{"d":"f1=R","mates":["Nc6#","Qd6#"]},{"d":"f1=B","mates":["Nc6#","Qd6#","Qf7#"]},{"d":"f1=N","mates":["Nc6#","Qd6#","Qf7#"]}],"w":5,"bl":3,"stars":3},{"n":28,"fen":"1r6/8/4Br2/1N1B4/8/3KB3/8/3k1B2 w - - 0 1","key":"Bd2","threat":["Nc3#","Bb3#","Be2#"],"vars":[{"d":"Rb7","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rb6","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rxb5","mates":["Be2#"]},{"d":"Ra8","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rc8","mates":["Be2#"]},{"d":"Rd8","mates":["Nc3#","Be2#"]},{"d":"Re8","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rbf8","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rg8","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rh8","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rf7","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rff8","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rf5","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rf4","mates":["Nc3#","Bb3#","Be2#"]},{"d":"Rf3+","mates":["Bxf3#"]},{"d":"Rf2","mates":["Nc3#","Bb3#"]},{"d":"Rxf1","mates":["Nc3#","Bb3#"]},{"d":"Rxe6","mates":["Nc3#","Bb3#"]},{"d":"Rg6","mates":["Nc3#","Bb3#","Bf3#","Be2#"]},{"d":"Rh6","mates":["Bg4#","Nc3#","Bb3#","Bf3#","Be2#"]}],"w":6,"bl":3,"stars":3},{"n":29,"fen":"B7/n2Q1KPp/8/8/1p6/2kB4/3R4/8 w - - 0 1","key":"Bb5","threat":["Qd3#"],"vars":[{"d":"Nc8","mates":["Qd3#"]},{"d":"Nc6","mates":["Qd3#"]},{"d":"Nxb5","mates":["Qd3#"]},{"d":"h6","mates":["Qd3#"]},{"d":"h5","mates":["Qd3#"]},{"d":"b3","mates":["Qd4#"]},{"d":"Kb3","mates":["Qh3#","Qd3#"]}],"w":6,"bl":4,"stars":3},{"n":30,"fen":"8/8/n3B2p/1Q1R4/1R3p2/4k3/8/2K5 w - - 0 1","key":"Rd2","threat":["Qd3#","Qe2#"],"vars":[{"d":"Nb8","mates":["Qd3#","Qe2#"]},{"d":"Nc7","mates":["Qd3#","Qe2#"]},{"d":"Nc5","mates":["Qe2#"]},{"d":"Nxb4","mates":["Qe2#"]},{"d":"h5","mates":["Qd3#","Qe2#"]},{"d":"f3","mates":["Qd3#","Qe5#"]},{"d":"Kf3","mates":["Qd3#"]}],"w":5,"bl":4,"stars":3},{"n":31,"fen":"8/n2N4/K7/B7/2k3n1/3RB3/6R1/8 w - - 0 1","key":"Rgd2","threat":["Nb6#","Rc3#"],"vars":[{"d":"Nc8","mates":["Rc3#"]},{"d":"Nc6","mates":["Nb6#","Rc3#"]},{"d":"Nb5","mates":["Nb6#"]},{"d":"Nf6","mates":["Nb6#","Ne5#","Rc3#"]},{"d":"Nh6","mates":["Nb6#","Ne5#","Rc3#"]},{"d":"Ne5","mates":["Nb6#","Nxe5#","Rc3#"]},{"d":"Nxe3","mates":["Rc3#"]},{"d":"Nf2","mates":["Nb6#","Ne5#","Rc3#"]},{"d":"Nh2","mates":["Nb6#","Ne5#","Rc3#"]}],"w":6,"bl":3,"stars":3},{"n":32,"fen":"8/1N6/2K5/5Qb1/3k1P2/8/2R5/5n2 w - - 0 1","key":"Nc5","threat":["Qe4#","Qd3#","Qe5#"],"vars":[{"d":"Bf6","mates":["Qe4#","Qd3#"]},{"d":"Be7","mates":["Qe4#","Qd3#","Qe5#"]},{"d":"Bd8","mates":["Qe4#","Qd3#","Qe5#"]},{"d":"Bh6","mates":["Qe4#","Qd3#","Qe5#"]},{"d":"Bxf4","mates":["Qe4#","Qxf4#"]},{"d":"Bh4","mates":["Qe4#","Qd3#","Qe5#"]},{"d":"Ke3","mates":["Qe4#"]},{"d":"Ne3","mates":["Ne6#","Nb3#","Qe4#","Qd3#","Qe5#"]},{"d":"Ng3","mates":["Qd3#","Qe5#"]},{"d":"Nd2","mates":["Qd3#","Qe5#"]},{"d":"Nh2","mates":["Qe4#","Qd3#","Qe5#"]}],"w":5,"bl":3,"stars":3},{"n":33,"fen":"3B4/4p1P1/1R6/4k3/4p2K/1Q6/8/1B6 w - - 0 1","key":"Qc4","threat":["Qxe4#"],"vars":[{"d":"e6","mates":["Qxe4#"]},{"d":"Kf5","mates":["Qxe4#"]},{"d":"Kf4","mates":["Qxe4#"]},{"d":"e3","mates":["Bc7#","Re6#","Qe4#"]}],"w":6,"bl":3,"stars":3},{"n":34,"fen":"n6Q/P1kB1p2/1R6/4P3/4p3/8/7K/1b2B3 w - - 0 1","key":"Rd6","threat":["Qc8#","Qb8#"],"vars":[{"d":"Nb6","mates":["Qb8#"]},{"d":"Kb7","mates":["Qb8#"]},{"d":"f6","mates":["Qc8#","Qb8#"]},{"d":"f5","mates":["Qc8#","Qb8#"]},{"d":"e3","mates":["Qc8#","Qb8#"]},{"d":"Ba2","mates":["Qc8#","Qb8#"]},{"d":"Bc2","mates":["Qc8#","Qb8#"]},{"d":"Bd3","mates":["Qc8#","Qb8#"]}],"w":7,"bl":5,"stars":3},{"n":35,"fen":"BK6/Q7/8/R7/1p2R1b1/8/1k5n/2R5 w - - 0 1","key":"Raa1","threat":["Qa2#","Rxb4#","Rab1#"],"vars":[{"d":"b3","mates":["Qd4#","Qa3#","Qg7#","Rab1#"]},{"d":"Bf5","mates":["Qa2#","Rxb4#","Rab1#"]},{"d":"Be6","mates":["Rab1#"]},{"d":"Bd7","mates":["Qa2#","Rxb4#","Rab1#"]},{"d":"Bc8","mates":["Qa2#","Rxb4#","Rab1#"]},{"d":"Bh5","mates":["Qa2#","Rxb4#","Rab1#"]},{"d":"Bf3","mates":["Qa2#","Rxb4#","Rab1#"]},{"d":"Be2","mates":["Qa2#","Rxb4#","Rab1#"]},{"d":"Bd1","mates":["Qa2#","Rab1#"]},{"d":"Bh3","mates":["Qa2#","Rxb4#","Rab1#"]},{"d":"Kb3","mates":["Qa2#","Rab1#"]},{"d":"Nf3","mates":["Qa2#","Rxb4#","Rab1#"]},{"d":"Nf1","mates":["Qa2#","Rxb4#","Rab1#"]}],"w":6,"bl":4,"stars":3},{"n":36,"fen":"B7/3K3Q/3N4/r7/R6P/2pB4/4R3/b2k4 w - - 0 1","key":"Ba6","threat":["Qc2#","Qb1#"],"vars":[{"d":"Rxa6","mates":["Qc2#"]},{"d":"Rxa4","mates":["Qc2#","Qb1#"]},{"d":"Rb5","mates":["Qc2#"]},{"d":"Rc5","mates":["Qc2#","Qb1#","Rxa1#"]},{"d":"Rd5","mates":["Qc2#","Qb1#","Rxa1#"]},{"d":"Re5","mates":["Qc2#","Qb1#","Rxa1#"]},{"d":"Rf5","mates":["Rxa1#"]},{"d":"Rg5","mates":["Qc2#","Qb1#","Rxa1#"]},{"d":"Rh5","mates":["Qc2#","Qb1#","Rxa1#"]},{"d":"c2","mates":["Qxc2#"]},{"d":"Bb2","mates":["Qc2#"]},{"d":"Kc1","mates":["Qc2#"]}],"w":8,"bl":4,"stars":3}];
+const PROG_KEY='dailyGambitProblems';
+let PROG = load(PROG_KEY) || {};
+const isMateS = s => inCheck(s) && legalMoves(s).length===0;
+function hasMate1(s){ for (const m of legalMoves(s)){ const n=makeMove(s,m); if (inCheck(n) && !legalMoves(n).length) return true; } return false; }
+function mates1(s){ return legalMoves(s).filter(m=>isMateS(makeMove(s,m))); }
+function startProblem(idx){
+  const pr=PROBLEMS[idx]; if (!pr) return;
+  if (G){ G.gen++; G.dead=true; }
+  PLAYER && PLAYER.stop();
+  const s0=parseFen(pr.fen);
+  G={ gen:(G?G.gen:0)+1, mode:'problem', prob:pr, pidx:idx, startFen:pr.fen, states:[s0], moves:[], sans:[], human:'w', elo:0, name:SET.name||'Reader', tc:null,
+      clock:null, clocks:[null], turnStart:now(), over:null, view:null, thinking:false, evals:[], anns:[], report:[], hints:0, badStreak:0,
+      number:pr.n, created:Date.now(), blind:SET.blind||'off', peeks:0, attempts:0 };
+  G.legal=legalMoves(s0);
+  UI.sel=-1; UI.hint=null; UI.promo=null; UI.flip=false;
+  setHeadline(`Problem No. ${pr.n}: White Mates in Two`, `${pr.w} white and ${pr.bl} black pieces · difficulty ${'★'.repeat(pr.stars)}${'☆'.repeat(3-pr.stars)}`);
+  addReport(`Problem No. ${pr.n}. White to play and mate in two moves, against any defence. Find the key: the one first move that forces mate next move whatever Black replies.`);
+  if (G.blind!=='off') addReport('You are solving blindfold. Peek if you must; we are counting.');
+  renderAll(); blindFocus();
+}
+function problemStep(byEngine){
+  if (byEngine){ renderAll(); blindFocus(); return; }
+  const gen=G.gen, k=ply(), s=live(), pr=G.prob;
+  if (k===1){
+    const reps=G.legal;
+    const bad = reps.find(r=>!hasMate1(makeMove(s,r)));
+    if (!reps.length || bad){
+      G.attempts++;
+      const why = !reps.length ? 'it leaves Black stalemated' : `${sanOf(s,bad,reps)} defends`;
+      setHeadline(`Not the Key! ${G.sans[0]} Fails`, `After 1.${G.sans[0]}, ${why}. Back to the diagram…`);
+      addReport(`A reader tried 1.${G.sans[0]}, but ${why}.`);
+      if (G.blind!=='off'){ speak(`Not the key. ${!reps.length?'Stalemate.':sayMove(sanOf(s,bad,reps))+' defends.'}`); setBlindMsg(`Not the key: ${why}.`, true); }
+      renderAll();
+      if (bad && reps.length){ setTimeout(()=>{ if (G.gen===gen && ply()===1){ G.thinking=false; playMove(bad, true); G.thinking=true; setHeadline(`Not the Key! 1.${G.sans[0]}?`, `1...${G.sans[1]} and there is no mate. Back to the diagram…`); renderAll(); setTimeout(()=>{ if (G.gen===gen) problemRestart(true); }, 1500); } }, 650); }
+      else setTimeout(()=>{ if (G.gen===gen) problemRestart(true); }, 1800);
+      G.thinking=true; renderPanels();
+      return;
+    }
+    setHeadline(`1.${G.sans[0]}! Readers Await Black's Reply`, 'That is the key. Now Black chooses a defence…', true);
+    if (G.blind!=='off') setBlindMsg(`1.${G.sans[0]} is the key! Black is choosing a defence.`);
+    // Black picks the defence that leaves White the fewest mates
+    let best=[], fewest=99;
+    for (const r of reps){ const n=mates1(makeMove(s,r)).length; if (n<fewest){ fewest=n; best=[r]; } else if (n===fewest) best.push(r); }
+    const r=best[(Math.random()*best.length)|0];
+    G.thinking=true; renderPanels();
+    setTimeout(()=>{ if (G.gen!==gen) return; G.thinking=false; playMove(r, true);
+      setHeadline(`1...${G.sans[1]}: Now Mate in One`, 'White to play and deliver mate'); renderAll(); }, 700);
+    return;
+  }
+  if (k===3){
+    if (isMateS(s)){
+      G.over={ result:'Solved', reason:'mate in two' };
+      const first = !PROG[pr.n] || !PROG[pr.n].solved;
+      PROG[pr.n] = Object.assign(PROG[pr.n]||{}, { solved:true, attempts:(PROG[pr.n]?.attempts||0)+G.attempts+1, blind:G.blind!=='off'||PROG[pr.n]?.blind });
+      store(PROG_KEY, PROG);
+      setHeadline(`Problem No. ${pr.n} Solved!`, `1.${G.sans[0]}! ${G.sans[1]} 2.${G.sans[2]}${G.attempts?` · solved at attempt ${G.attempts+1}`:' · solved first time'}`, true);
+      addReport(`Solved: 1.${G.sans[0]}! ${G.sans[1]} 2.${G.sans[2]}.${G.attempts?` It took ${G.attempts+1} attempts.`:' Solved at the first attempt.'}${G.blind!=='off'?` Solved blindfold${G.peeks?` with ${G.peeks} peek${G.peeks>1?'s':''}`:', without a single peek'}.`:''}`);
+      sound('end'); if (G.blind!=='off') speak('Checkmate. Problem solved.');
+      renderAll();
+      setTimeout(()=>problemSolution(true), 900);
+      return;
+    }
+    G.attempts++;
+    setHeadline('Not Mate! The King Slips Away', `2.${G.sans[2]} is not checkmate. Back to the diagram…`);
+    addReport(`2.${G.sans[2]} was not mate, so the problem was reset.`);
+    if (G.blind!=='off'){ speak('That is not checkmate.'); setBlindMsg(`2.${G.sans[2]} is not mate. Starting again.`, true); }
+    G.thinking=true; renderAll();
+    setTimeout(()=>{ if (G.gen===gen) problemRestart(true); }, 1600);
+  }
+}
+function problemRestart(auto){
+  if (!G || G.mode!=='problem') return;
+  G.gen++; G.thinking=false; G.over=null;
+  G.states.length=1; G.moves=[]; G.sans=[]; G.clocks=[null];
+  G.legal=legalMoves(G.states[0]); G.view=null; UI.sel=-1; UI.hint=null;
+  if (!auto) setHeadline(`Problem No. ${G.prob.n}: White Mates in Two`, 'The pieces are back in their places');
+  if (G.blind!=='off') setBlindMsg(auto ? 'Back to the start position. White to play.' : 'Restarted. White to play.');
+  renderAll(); blindFocus();
+}
+function problemHint(){
+  if (!G || G.mode!=='problem' || G.moves.length) return;
+  const s=G.states[0], km=G.legal.find(m=>sanOf(s,m,G.legal)===G.prob.key);
+  if (!km) return;
+  if (!UI.hint){ UI.hint={from:km.from,to:km.to,half:true}; G.hints++; setHeadline('A Clue for Solvers', `The key move is made by the piece on ${sqName(km.from)}`); if (G.blind!=='off') speak(`The key is played by the piece on ${sqName(km.from).split('').join(' ')}`); }
+  else if (UI.hint.half){ UI.hint={from:km.from,to:km.to}; G.hints++; setHeadline(`The Key Is ${G.prob.key}`, 'Now find the mates that follow'); if (G.blind!=='off') speak('The key is '+sayMove(G.prob.key)); }
+  renderAll();
+}
+function solutionHTML(pr){
+  const groups=new Map();
+  for (const v of pr.vars){ const k=v.mates.join(' / '); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(v.d); }
+  const lines=[...groups].map(([m,ds])=>`1...${ds.join(', ')} &nbsp;2.${m}`).join('<br>');
+  return `<div class="sol"><b>1.${esc(pr.key)}!</b>${pr.threat.length?` &nbsp;(threat: 2.${esc(pr.threat.join(' / '))})`:' &nbsp;(no threat: a waiting move)'}<br>${lines}</div>`;
+}
+async function problemSolution(solved){
+  if (!G || G.mode!=='problem') return;
+  const pr=G.prob;
+  if (!solved){ PROG[pr.n]=Object.assign(PROG[pr.n]||{}, { revealed:true }); store(PROG_KEY, PROG); }
+  const r=await modal(`<h2>${solved?`Problem No. ${pr.n} Solved`:`Solution to No. ${pr.n}`}</h2><div class="dek">White to play and mate in two (${pr.w} + ${pr.bl})</div>${solutionHTML(pr)}
+    <p class="small" style="margin-top:12px">Black's moves are grouped by the mate that answers them. Where two mates are given, either works.</p>`,
+    [['next','Next Problem','inv'],['list','All Problems'],['close','Close']]);
+  if (r==='next') problemNext();
+  if (r==='list') problemsPage();
+}
+function problemNext(){
+  if (!PROBLEMS.length) return;
+  let i = G && G.mode==='problem' ? G.pidx : -1;
+  for (let k=1;k<=PROBLEMS.length;k++){ const j=(i+k)%PROBLEMS.length; if (!PROG[PROBLEMS[j].n]?.solved){ startProblem(j); return; } }
+  startProblem((i+1)%PROBLEMS.length);
+}
+function miniBoard(fen){
+  const b=parseFen(fen).b; let h='';
+  for (let i=0;i<64;i++){ const dk=((i>>3)+(i&7))%2===1, p=b[i];
+    h+= dk ? `<i class="dk" style="${p?`--pc:${PIECE_URL[pieceKey(p)]}`:''}"></i>` : `<i style="${p?`background-image:${PIECE_URL[pieceKey(p)]}`:''}"></i>`; }
+  return `<div class="mini">${h}</div>`;
+}
+async function problemsPage(){
+  const solved=PROBLEMS.filter(p=>PROG[p.n]?.solved).length;
+  const touched=PROBLEMS.filter(p=>PROG[p.n]).length;
+  const saved=load(SAVE_KEY), canBack = G && G.mode==='problem' && saved && saved.ucis && saved.ucis.length && !saved.over;
+  const cards=PROBLEMS.map((p,i)=>{
+    const pg=PROG[p.n]||{};
+    const stamp = pg.solved ? `<span class="stamp">Solved${pg.blind?' blind':''}</span>` : pg.revealed ? '<span class="stamp rev">Seen</span>' : '';
+    return `<div class="pcard" data-i="${i}">${stamp}${miniBoard(p.fen)}<div class="pt">No. ${p.n} ${'★'.repeat(p.stars)}${'☆'.repeat(3-p.stars)}</div><div class="ps">Mate in 2 · ${p.w} + ${p.bl}</div></div>`;
+  }).join('');
+  $('#modalBox').innerHTML=`<h2>The Problem Corner</h2><div class="dek">Meredith problems: 8 to 12 pieces, White to play and mate in two. Each has a single key move.</div>
+    <div class="ptools"><span>${solved===PROBLEMS.length ? `You have solved all ${PROBLEMS.length}! Clear your progress below to start the column afresh.` : `You have solved ${solved} of ${PROBLEMS.length}.`}</span><span>${G&&G.blind!=='off'?'Blindfold solving is on.':'Tip: switch on blindfold to solve without seeing the pieces.'}</span></div>
+    <div class="pgrid">${cards}</div>
+    <div class="go">${canBack?'<button data-k="back">Back to My Game</button>':''}${touched?'<button data-k="reset">Reset to Zero</button>':''}<button data-k="close" class="inv">Close</button></div>`;
+  $('#modal').hidden=false;
+  return new Promise(res=>{
+    $('#modalBox').onclick=async e=>{
+      const c=e.target.closest('.pcard'), b=e.target.closest('.go button');
+      if (c){ $('#modal').hidden=true; startProblem(+c.dataset.i); res(); }
+      else if (b){
+        $('#modal').hidden=true;
+        if (b.dataset.k==='back') backToGame();
+        if (b.dataset.k==='reset'){
+          const ok=await modal(`<h2>Reset the Problem Corner?</h2><div class="dek">All ${solved} solved stamp${solved===1?'':'s'} and any "Seen" marks will be cleared, and the count goes back to 0 of ${PROBLEMS.length}.</div>`, [['yes','Reset to Zero','inv'],['no','Keep My Progress']]);
+          if (ok==='yes'){ PROG={}; store(PROG_KEY, PROG); }
+          problemsPage();
+        }
+        res();
+      }
+    };
+  });
+}
+function backToGame(){
+  const d=load(SAVE_KEY);
+  if (G){ G.gen++; G.dead=true; }
+  if (d && d.v===1 && d.ucis){ try { resume(d); maybeEngineMove(); analyseMissing(); return; } catch(e){ console.warn(e); } }
+  startFromDialog(false);
+}
+
+/* =========================================================
+   Blindfold: typed moves, spoken moves, peeking
+   ========================================================= */
+function parseMoveText(txt){
+  let t=txt.trim().replace(/[!?+#\s]+/g,'').replace(/0/g,'O');
+  if (!t) return { err:'Type a move first.' };
+  const legal=G.legal;
+  if (/^O-?O-?O$/i.test(t)){ const m=legal.find(x=>x.flag==='Q'); return m ? {m} : { err:"You can't castle queenside now." }; }
+  if (/^O-?O$/i.test(t)){ const m=legal.find(x=>x.flag==='K'); return m ? {m} : { err:"You can't castle kingside now." }; }
+  t=t.replace(/[-:]/g,'');
+  const u=t.toLowerCase();
+  if (/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(u)){
+    let ms=legal.filter(x=>sqName(x.from)===u.slice(0,2) && sqName(x.to)===u.slice(2,4));
+    if (ms.length>1) ms=ms.filter(x=>x.promo===(u[4]||'q'));
+    return ms.length===1 ? {m:ms[0]} : { err:`${u.slice(0,2)} to ${u.slice(2,4)} isn't legal.` };
+  }
+  const tries=[];
+  if (/^[nrqkNRQK]/.test(t)) tries.push(t[0].toUpperCase()+t.slice(1));
+  else if (t[0]==='B' ) tries.push(t);
+  else { tries.push(t); if (t[0]==='b') tries.push('B'+t.slice(1)); }
+  let lastErr="That doesn't look like a move. Try e4, Nf3, exd5, O-O or e8=Q.";
+  for (const cand of tries){
+    const mt=cand.match(/^([NBRQK])?([a-h])?([1-8])?x?([a-h][1-8])=?([NBRQnbrq])?$/);
+    if (!mt) continue;
+    const [,pc,ff,fr,to,pr]=mt, type=(pc||'P').toLowerCase();
+    let ms=legal.filter(x=>x.p.toLowerCase()===type && sqName(x.to)===to && (!ff || FILES[x.from&7]===ff) && (!fr || String(8-(x.from>>3))===fr));
+    if (ms.some(x=>x.promo)) ms=ms.filter(x=>x.promo===(pr?pr.toLowerCase():'q'));
+    if (ms.length===1) return {m:ms[0]};
+    if (ms.length>1){ return { err:`Which one? ${ms.map(x=>sanOf(live(),x,legal)).join(' or ')}.` }; }
+    lastErr = `No ${PNAME[type]} of yours can go to ${to}.`;
+  }
+  return { err:lastErr };
+}
+function submitTyped(){
+  if (!canMove()) return;
+  const inp=$('#moveIn'), r=parseMoveText(inp.value);
+  if (r.err){ setBlindMsg(r.err, true); sound('err'); return; }
+  inp.value='';
+  playMove(r.m);
+}
+function setBlindMsg(t, err){ const el=$('#blindMsg'); if (!el) return; el.textContent=t; el.classList.toggle('err', !!err); }
+function blindFocus(){
+  if (!G || G.blind==='off' || G.over || !canMove()) return;
+  if (window.matchMedia && matchMedia('(pointer:fine)').matches) setTimeout(()=>{ const i=$('#moveIn'); if (i && !i.disabled && $('#modal').hidden) i.focus(); }, 30);
+}
+function sayMove(san){
+  if (san.startsWith('O-O-O')) return 'castles queenside' + (san.endsWith('+')?', check':san.endsWith('#')?', checkmate':'');
+  if (san.startsWith('O-O')) return 'castles kingside' + (san.endsWith('+')?', check':san.endsWith('#')?', checkmate':'');
+  const P={N:'knight',B:'bishop',R:'rook',Q:'queen',K:'king'};
+  const m=san.match(/^([NBRQK])?([a-h]?[1-8]?)(x)?([a-h][1-8])(?:=([NBRQ]))?([+#])?$/);
+  if (!m) return san;
+  const [,pc,dis,x,to,pr,ck]=m, sq=q=>q.split('').join(' ');
+  let out = pc ? P[pc] + (dis ? ' '+sq(dis) : '') : (x ? sq(dis)+' pawn' : 'pawn');
+  out += x ? ' takes '+sq(to) : ' to '+sq(to);
+  if (pr) out+=', promotes to '+P[pr];
+  if (ck==='+') out+=', check'; if (ck==='#') out+=', checkmate';
+  return out;
+}
+function speak(text){
+  if (!('speechSynthesis' in window)) return;
+  try { speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='en-GB'; u.rate=.95; speechSynthesis.speak(u); } catch(e){}
+}
+function setPeek(on){
+  if (!G || G.blind==='off' || G.over) return;
+  if (on && !UI.peek){ G.peeks++; save(); }
+  UI.peek=on; renderAll();
+}
+
+/* =========================================================
+   Controls
+   ========================================================= */
+async function doHint(){
+  if (!ENGINE_OK || !canMove()) return;
+  const gen=G.gen, p=ply();
+  $('#bHint').disabled=true; setHeadline('Correspondent Consulted', 'Our analyst is studying the position…');
+  const r=await ANALYST.search(posCmd(p), 'go depth 15 movetime 2500');
+  if (!G || gen!==G.gen || ply()!==p) return;
+  const m=G.legal.find(x=>uciOf(x)===r.best); if (!m) return;
+  UI.hint={from:m.from,to:m.to}; G.hints++;
+  setHeadline(`Correspondent Suggests ${sanOf(live(), m, G.legal)}`, `Our analyst recommends ${moveLabel(ply()).replace(/[^ ]+$/,'')}${sanOf(live(), m, G.legal)} for ${G.name}`);
+  renderAll(); save();
+}
+function doTakeback(){
+  if (!G || G.over || !G.moves.length) return;
+  G.gen++; G.thinking=false; PLAYER && PLAYER.stop();
+  // remove the engine's reply (if any) and the human's last move
+  let n = live().turn===G.human ? 2 : 1;
+  n=Math.min(n, G.moves.length);
+  if (live().turn===G.human && G.moves.length===1) n=1;
+  for (let k=0;k<n;k++){ G.states.pop(); G.moves.pop(); G.sans.pop(); G.clocks.pop(); G.anns.length=Math.min(G.anns.length, G.moves.length); }
+  G.evals.length=Math.min(G.evals.length, ply()+1);
+  if (G.clock) G.clock={...G.clocks[ply()]};
+  G.legal=legalMoves(live()); G.turnStart=now(); G.view=null; UI.sel=-1; UI.hint=null; G._analysing=false; G.badStreak=0;
+  setHeadline('Readers Witness a Change of Heart', `${G.name} takes back a move`);
+  addReport(`${G.name} asked to take back a move${n>1?' and the reply':''}, and the game resumed from move ${live().full}.`);
+  save(); renderAll(); analyseMissing(); maybeEngineMove();
+}
+async function doDraw(){
+  if (!canMove()) return;
+  const gen=G.gen, eng=other(G.human);
+  setHeadline('Draw Offered', `${G.name} proposes a draw…`); renderPanels();
+  let accept;
+  if (ENGINE_OK){
+    const r=await ANALYST.search(posCmd(ply()), 'go depth 12 movetime 900');
+    if (!G || gen!==G.gen) return;
+    const ev=wcp(r, live().turn), mine = eng==='w' ? ev : -ev;
+    accept = mine <= -150 || (mine <= 40 && G.moves.length>=40) || insufficient(live().b);
+  } else accept = Math.random()<.2;
+  if (accept){ addReport(`${G.name} offered a draw, and ${nameOf(eng)} accepted.`); endGame('½-½', 'agreement'); }
+  else { setHeadline(`${nameOf(eng)} Declines Draw Offer`, 'Play continues'); addReport(`A draw offer from ${G.name} on move ${live().full} was turned down.`); renderPanels(); save(); }
+}
+async function doResign(){
+  if (!G || G.over) return;
+  const r=await modal(`<h2>Resign the Game?</h2><div class="dek">The papers will print it either way.</div>`, [['yes','Resign','inv'],['no','Play On']]);
+  if (r!=='yes' || G.over) return;
+  addReport(`${G.name} resigned on move ${live().full}.`);
+  endGame(G.human==='w'?'0-1':'1-0', 'resignation');
+}
+function pgn(){
+  const d=new Date(G.created), ds=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const tags=[['Event','The Daily Gambit casual game'],['Site','Your browser'],['Date',ds],['Round',String(G.number)],
+    ['White',nameOf('w')],['Black',nameOf('b')],['Result',G.over?G.over.result.replace('½-½','1/2-1/2'):'*'],
+    ['TimeControl',G.tc?`${G.tc.base/1000}+${G.tc.inc/1000}`:'-']];
+  if (G.startFen!==START_FEN) tags.push(['SetUp','1'],['FEN',G.startFen]);
+  let body=''; G.sans.forEach((s,j)=>{ const st=G.states[j]; if (st.turn==='w') body+=`${st.full}. `; else if (j===0) body+=`${st.full}... `; body+=s+(G.over&&G.anns[j]?G.anns[j]:'')+' '; });
+  body+= G.over ? G.over.result.replace('½-½','1/2-1/2') : '*';
+  return tags.map(([k,v])=>`[${k} "${v.replace(/"/g,"'")}"]`).join('\n')+'\n\n'+body.replace(/(.{1,78})(\s|$)/g,'$1\n').trim()+'\n';
+}
+async function doPgn(){
+  const text=pgn();
+  const r=await modal(`<h2>The Score Sheet</h2><div class="dek">Portable Game Notation, ready for any chess program</div><textarea rows="10" readonly>${esc(text)}</textarea>`,
+    [['copy','Copy','inv'],['save','Download'],['close','Close']]);
+  if (r==='copy'){ try { await navigator.clipboard.writeText(text); setHeadline('Score Sheet Copied', 'The PGN is on your clipboard'); } catch(e){} }
+  if (r==='save'){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type:'application/x-chess-pgn'})); a.download=`daily-gambit-${G.number}.pgn`; a.click(); }
+}
+function nav(to){
+  if (!G) return;
+  const p=ply(); let v = to==='first' ? 0 : to==='last' ? null : to==='prev' ? viewPly()-1 : viewPly()+1;
+  if (v!==null){ v=Math.max(0,Math.min(p,v)); if (v===p) v=null; }
+  G.view=v; UI.sel=-1; renderAll();
+}
+
+/* =========================================================
+   Modals: new game, result
+   ========================================================= */
+function modal(html, buttons){
+  return new Promise(res=>{
+    $('#modalBox').innerHTML = html + (buttons ? `<div class="go">${buttons.map(([k,l,c])=>`<button data-k="${k}" class="${c||''}">${l}</button>`).join('')}</div>` : '');
+    $('#modal').hidden=false;
+    $('#modalBox').onclick=e=>{ const b=e.target.closest('.go button'); if (!b) return; $('#modal').hidden=true; res(b.dataset.k); };
+  });
+}
+function newGameDialog(first){
+  const cfg=Object.assign({}, SET);
+  const draw=()=>{
+    const tc=TCS.map(t=>`<button data-tc="${t.k}" class="${cfg.tc===t.k?'on':''}">${t.k==='none'?'∞':t.k==='custom'?'Custom':t.k}<small>${t.cat}</small></button>`).join('');
+    $('#modalBox').innerHTML=`
+      <h2>${first?'Wanted: A Worthy Opponent':'A Fresh Game'}</h2>
+      <div class="dek">Set your terms below. Stockfish is ready to play.</div>
+      <h3>Your pieces</h3>
+      <div class="seg" id="dSide">${[['w','White'],['b','Black'],['r','Toss a coin']].map(([k,l])=>`<button data-side="${k}" class="${cfg.side===k?'on':''}">${l}</button>`).join('')}</div>
+      <h3>Engine strength</h3>
+      <div class="elo-row"><input type="range" id="dElo" min="400" max="3190" step="10" value="${cfg.elo}"><span class="elo-big" id="dEloN">${cfg.elo}</span></div>
+      <div class="elo-desc" id="dEloD">${esc(eloLabel(cfg.elo))}</div>
+      <div class="seg" style="margin-top:6px">${[600,1000,1320,1600,2000,2400,2800,3190].map(e=>`<button data-elo="${e}">${e}</button>`).join('')}</div>
+      <h3>Time control <span style="font-weight:400;text-transform:none;letter-spacing:0;font-family:'Old Standard TT'">(minutes + seconds added per move)</span></h3>
+      <div class="tcg" id="dTc">${tc}</div>
+      <div class="row" id="dCustom" style="margin-top:8px;${cfg.tc==='custom'?'':'display:none'}">
+        <label>Minutes <input type="number" id="dMin" min="0.25" max="300" step="0.25" value="${cfg.cmin}" style="width:80px"></label>
+        <label>Increment (s) <input type="number" id="dInc" min="0" max="180" value="${cfg.cinc}" style="width:70px"></label>
+      </div>
+      <h3>Blindfold</h3>
+      <div class="seg">${[['off','Off'],['board','Hide the pieces'],['all','Hide pieces and score sheet']].map(([k,l])=>`<button data-blind="${k}" class="${cfg.blind===k?'on':''}">${l}</button>`).join('')}</div>
+      <div class="small" style="margin-top:4px">Type your moves (Nf3, exd5, O-O) or click the squares. Stockfish's replies are read aloud.</div>
+      <h3>Your name</h3>
+      <input type="text" id="dName" maxlength="20" value="${esc(cfg.name)}" style="width:100%">
+      <h3>Starting position <span style="font-weight:400;text-transform:none;letter-spacing:0;font-family:'Old Standard TT'">(optional FEN, leave blank for the usual start)</span></h3>
+      <input type="text" id="dFen" value="${esc(cfg.fen||'')}" placeholder="${START_FEN}" style="width:100%;font-size:13px">
+      <div class="small" id="dErr" style="color:var(--red);min-height:1em"></div>
+      <div class="go">${first?'':'<button data-k="cancel">Cancel</button>'}<button data-k="go" class="inv">Start the Game</button></div>`;
+  };
+  return new Promise(res=>{
+    draw(); $('#modal').hidden=false;
+    const box=$('#modalBox');
+    box.oninput=e=>{
+      if (e.target.id==='dElo'){ cfg.elo=+e.target.value; $('#dEloN').textContent=cfg.elo; $('#dEloD').textContent=eloLabel(cfg.elo); }
+    };
+    box.onclick=e=>{
+      const b=e.target.closest('button'); if (!b) return;
+      const grab=()=>{ cfg.name=($('#dName').value.trim()||'Reader').slice(0,20); cfg.fen=$('#dFen').value.trim(); cfg.cmin=+$('#dMin').value||10; cfg.cinc=+$('#dInc').value||0; };
+      if (b.dataset.side){ grab(); cfg.side=b.dataset.side; draw(); }
+      else if (b.dataset.blind){ grab(); cfg.blind=b.dataset.blind; draw(); }
+      else if (b.dataset.elo){ grab(); cfg.elo=+b.dataset.elo; draw(); }
+      else if (b.dataset.tc){ grab(); cfg.tc=b.dataset.tc; draw(); }
+      else if (b.dataset.k==='cancel'){ $('#modal').hidden=true; res(null); }
+      else if (b.dataset.k==='go'){
+        grab();
+        if (cfg.fen){ try { parseFen(cfg.fen); } catch(err){ $('#dErr').textContent='That FEN won\'t do: '+err.message; return; } }
+        if (cfg.tc==='custom' && !(cfg.cmin>0)){ $('#dErr').textContent='Custom time needs some minutes on the clock.'; return; }
+        Object.assign(SET, cfg); store(SET_KEY, SET);
+        $('#modal').hidden=true; res(cfg);
+      }
+    };
+  });
+}
+async function showResult(head, sub){
+  if (!G || !G.over) return;
+  const r=await modal(`<h2>${esc(head)}</h2><div class="dek">${esc(sub)}</div><div class="result-big">${esc(G.over.result)}</div>
+    <p style="text-align:center">The score sheet now carries our correspondent's annotations: <b>?!</b> dubious, <b>?</b> a mistake, <b>??</b> a blunder. Step through the game with the arrows or the ← → keys.</p>`,
+    [['new','New Game','inv'],['pgn','PGN'],['close','Review the Game']]);
+  if (r==='new') startFromDialog(false);
+  if (r==='pgn') doPgn();
+}
+async function startFromDialog(first){
+  const cfg=await newGameDialog(first);
+  if (cfg) newGame(cfg);
+}
+
+/* =========================================================
+   Save / resume
+   ========================================================= */
+function save(){
+  if (!G || G.mode==='problem') return;
+  store(SAVE_KEY, { v:1, startFen:G.startFen, ucis:G.moves.map(uciOf), human:G.human, elo:G.elo, name:G.name, tc:G.tc,
+    clocks:G.clocks, over:G.over, blind:G.blind, peeks:G.peeks, evals:G.evals, report:G.report, hints:G.hints, number:G.number, created:G.created,
+    headline:$('#headline').textContent, sub:$('#subhead').textContent });
+}
+function resume(d){
+  const s0=parseFen(d.startFen);
+  G={ gen:1, startFen:d.startFen, states:[s0], moves:[], sans:[], human:d.human, elo:d.elo, name:d.name, tc:d.tc, clock:null,
+      clocks:d.clocks||[], turnStart:now(), over:d.over, view:null, thinking:false, evals:d.evals||[], anns:[], report:d.report||[], hints:d.hints||0, blind:d.blind||'off', peeks:d.peeks||0,
+      badStreak:0, number:d.number||1, created:d.created||Date.now() };
+  for (const u of d.ucis){
+    const st=G.states[G.states.length-1], lm=legalMoves(st), m=lm.find(x=>uciOf(x)===u);
+    if (!m) break;
+    G.sans.push(sanOf(st,m,lm)); G.moves.push(m); G.states.push(makeMove(st,m));
+  }
+  G.legal=legalMoves(live());
+  if (G.tc){ const c=G.clocks[ply()]; G.clock = c ? {...c} : {w:G.tc.base,b:G.tc.base}; }
+  for (let k=1;k<=ply();k++) annotate(k);
+  UI.flip = G.human==='b';
+  setHeadline(d.headline||'Game Resumed', d.sub||'', !!G.over);
+  if (!G.over) addReport('The game was adjourned and has now resumed.');
+  renderAll();
+}
+
+/* =========================================================
+   Sound: tiny synthesized clicks
+   ========================================================= */
+let AC=null;
+function sound(kind){
+  if (!SET.sound) return;
+  try {
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const t=AC.currentTime;
+    const click=(at, freq, dur, vol)=>{
+      const len=Math.floor(AC.sampleRate*dur), buf=AC.createBuffer(1,len,AC.sampleRate), d=buf.getChannelData(0);
+      for (let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,4);
+      const src=AC.createBufferSource(); src.buffer=buf;
+      const f=AC.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq; f.Q.value=1.2;
+      const g=AC.createGain(); g.gain.value=vol;
+      src.connect(f).connect(g).connect(AC.destination); src.start(t+at);
+    };
+    if (kind==='move') click(0, 1800, .05, 1.4);
+    if (kind==='err') click(0, 300, .12, 1.2);
+    if (kind==='cap'){ click(0, 1400, .06, 1.6); click(.07, 900, .07, 1.2); }
+    if (kind==='check'){ const o=AC.createOscillator(), g=AC.createGain(); o.frequency.value=880; g.gain.setValueAtTime(.08,t); g.gain.exponentialRampToValueAtTime(.001,t+.25); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+.26); }
+    if (kind==='end'){ [523,659,784].forEach((fr,i)=>{ const o=AC.createOscillator(), g=AC.createGain(); o.type='triangle'; o.frequency.value=fr; g.gain.setValueAtTime(.0001,t+i*.12); g.gain.exponentialRampToValueAtTime(.09,t+i*.12+.02); g.gain.exponentialRampToValueAtTime(.0001,t+i*.12+.6); o.connect(g).connect(AC.destination); o.start(t+i*.12); o.stop(t+i*.12+.62); }); }
+  } catch(e){}
+}
+
+/* =========================================================
+   Boot
+   ========================================================= */
+function init(){
+  buildBoard();
+  const d=new Date();
+  $('#dateTxt').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  $('#oEval').checked=SET.eval; $('#oAnn').checked=SET.ann; $('#oSound').checked=SET.sound;
+  $('#oEval').onchange=e=>{ SET.eval=e.target.checked; store(SET_KEY,SET); renderPanels(); };
+  $('#oAnn').onchange=e=>{ SET.ann=e.target.checked; store(SET_KEY,SET); renderPanels(); };
+  $('#oSound').onchange=e=>{ SET.sound=e.target.checked; store(SET_KEY,SET); };
+  $('#oSpeak').checked=SET.speak;
+  $('#oSpeak').onchange=e=>{ SET.speak=e.target.checked; store(SET_KEY,SET); };
+  $('#oBlind').onchange=e=>{ if (!G) return; const was=G.blind; G.blind=SET.blind=e.target.value; store(SET_KEY,SET); UI.sel=-1;
+    if (was==='off' && G.blind!=='off' && !G.over) addReport(`On move ${live().full} ${G.name} put on the blindfold.`);
+    if (was!=='off' && G.blind==='off' && !G.over) addReport(`On move ${live().full} ${G.name} took the blindfold off.`);
+    save(); renderAll(); blindFocus(); };
+  $('#moveIn').addEventListener('keydown', e=>{ if (e.key==='Enter'){ e.preventDefault(); submitTyped(); } });
+  $('#moveGo').onclick=submitTyped;
+  const pk=$('#peek');
+  pk.addEventListener('pointerdown', e=>{ e.preventDefault(); pk.setPointerCapture(e.pointerId); setPeek(true); });
+  for (const ev of ['pointerup','pointercancel','lostpointercapture']) pk.addEventListener(ev, ()=>{ if (UI.peek) setPeek(false); });
+  const bd=$('#board');
+  bd.addEventListener('pointerdown', onDown);
+  bd.addEventListener('pointermove', onMove);
+  bd.addEventListener('pointerup', onUp);
+  bd.addEventListener('pointercancel', ()=>{ UI.drag=null; const g=$('#ghost'); if (g) g.remove(); renderBoard(); });
+  $('#frame').addEventListener('click', onPromoClick);
+  $('#moves').addEventListener('click', e=>{ const m=e.target.closest('.mv'); if (!m) return; const p=+m.dataset.p; G.view = p===ply() ? null : p; UI.sel=-1; renderAll(); });
+  $('#bNew').onclick=()=>{ if (G && G.mode==='problem'){ const d=load(SAVE_KEY); if (d && d.ucis && d.ucis.length && !d.over){ backToGame(); return; } } startFromDialog(false); };
+  $('#bFlip').onclick=()=>{ UI.flip=!UI.flip; renderAll(); };
+  const P_=()=>G && G.mode==='problem';
+  $('#bHint').onclick=()=>P_()?problemHint():doHint();
+  $('#bBack').onclick=()=>P_()?problemRestart():doTakeback();
+  $('#bDraw').onclick=()=>P_()?problemSolution(false):doDraw();
+  $('#bResign').onclick=()=>P_()?problemNext():doResign();
+  $('#bPgn').onclick=doPgn; $('#bProblems').onclick=problemsPage;
+  $('#nFirst').onclick=()=>nav('first'); $('#nPrev').onclick=()=>nav('prev'); $('#nNext').onclick=()=>nav('next'); $('#nLast').onclick=()=>nav('last');
+  document.addEventListener('keydown', e=>{
+    if (!$('#modal').hidden || e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA') return;
+    const k={ArrowLeft:'prev',ArrowRight:'next',Home:'first',End:'last'}[e.key];
+    if (k){ nav(k); e.preventDefault(); }
+    if (e.key==='Escape' && UI.promo){ UI.promo=null; renderBoard(); }
+  });
+  setInterval(tick, 100);
+  window.addEventListener('resize', ()=>renderBoard());
+  const saved=load(SAVE_KEY);
+  bootEngines();
+  if (saved && saved.v===1 && saved.ucis){
+    try { resume(saved); if (G.over || saved.ucis.length) { maybeEngineMove(); return; } } catch(e){ console.warn('could not resume', e); }
+  }
+  // show an empty board behind the dialog
+  G=null;
+  newGame(Object.assign({}, SET, {side:'w'})); G.gen++;   // placeholder position, engine idle
+  startFromDialog(true);
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
