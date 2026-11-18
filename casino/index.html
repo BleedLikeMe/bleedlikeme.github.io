@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Velvet Felt Casino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Cinzel+Decorative:wght@700;900&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#e5c26b; --gold2:#a87a2a; --gold3:#fff1bd; --ink:#f3e7c6; --mut:#b9a57a;
+  --velvet:#4a0b1a; --velvet2:#2a0510; --bar:56px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{color:var(--ink);font-family:Inter,system-ui,sans-serif;background:#0a0306;overflow-x:hidden}
+button{font:inherit;cursor:pointer}
+[hidden]{display:none!important}
+.gold-text{background:linear-gradient(180deg,#fff3c4 0%,#e5c26b 45%,#9c6b1e 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- velvet backdrop ---------- */
+.velvet{position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(ellipse at 50% -10%,rgba(255,200,120,.18),transparent 55%),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.25) 0 2px,transparent 2px 44px,rgba(255,255,255,.025) 44px 46px,transparent 46px 90px),
+    radial-gradient(ellipse at 50% 40%,#6b1024 0%,#3d0814 55%,#160207 100%)}
+.velvet::after{content:"";position:absolute;inset:0;background:
+  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><g fill='none' stroke='%23e5c26b' stroke-opacity='.07' stroke-width='1.2'><path d='M60 6 L114 60 L60 114 L6 60 Z'/><path d='M60 24 L96 60 L60 96 L24 60 Z'/><circle cx='60' cy='60' r='6'/></g></svg>");opacity:.9}
+
+/* ---------- entrance / login ---------- */
+#entrance{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 16px}
+.marquee{text-align:center;margin-bottom:26px;position:relative}
+.marquee .the{font:800 14px Cinzel;letter-spacing:.6em;color:var(--gold)}
+.marquee h1{margin:6px 0 4px;font:900 clamp(38px,7vw,78px)/1 "Cinzel Decorative",Cinzel,serif;letter-spacing:.06em;filter:drop-shadow(0 4px 18px rgba(229,194,107,.35))}
+.marquee .sub{font:600 13px Inter;letter-spacing:.5em;color:#d9b97a;text-transform:uppercase}
+.marquee .bulbs{display:flex;justify-content:center;gap:14px;margin:16px auto 0}
+.marquee .bulbs i{width:10px;height:10px;border-radius:50%;background:#ffe58a;box-shadow:0 0 10px #ffcf4a,0 0 22px rgba(255,200,80,.6);animation:bulb 1.2s infinite}
+.marquee .bulbs i:nth-child(even){animation-delay:.6s}
+@keyframes bulb{50%{background:#7a5a18;box-shadow:none}}
+.door{width:100%;max-width:440px;padding:26px 28px 24px;border-radius:22px;position:relative;
+  background:linear-gradient(170deg,rgba(30,10,14,.92),rgba(12,4,6,.96));border:1px solid rgba(229,194,107,.45);
+  box-shadow:0 30px 80px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,230,180,.12),0 0 0 6px rgba(229,194,107,.06)}
+.tabs{display:flex;gap:6px;margin-bottom:18px;background:rgba(0,0,0,.35);padding:4px;border-radius:12px}
+.tabs button{flex:1;padding:9px;border:none;border-radius:9px;background:none;color:var(--mut);font:800 12px Cinzel;letter-spacing:.18em}
+.tabs button.on{background:linear-gradient(180deg,#c9a24a,#8a6215);color:#1d1203}
+.field{display:block;margin-bottom:12px}
+.field span{display:block;font:700 10px Inter;letter-spacing:.24em;color:var(--mut);margin-bottom:5px;text-transform:uppercase}
+.field input{width:100%;padding:11px 13px;border-radius:10px;border:1px solid rgba(229,194,107,.3);background:#080304;color:var(--ink);font:500 15px Inter;outline:none}
+.field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(229,194,107,.18)}
+.remember{display:flex;align-items:center;gap:8px;font:500 13px Inter;color:var(--mut);margin:4px 0 16px}
+.remember input{accent-color:#c9a24a}
+.gbtn{width:100%;padding:13px;border-radius:12px;border:1px solid #ffe7a0;background:linear-gradient(180deg,#f1d37a,#b8862b 60%,#8a6215);color:#1d1203;
+  font:900 15px Cinzel;letter-spacing:.2em;box-shadow:0 5px 0 #4a2e05,0 10px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)}
+.gbtn:active{transform:translateY(3px);box-shadow:0 2px 0 #4a2e05}
+.gbtn:disabled{filter:grayscale(.6) brightness(.7);cursor:default}
+.err{min-height:20px;margin:10px 0 0;font:600 13px Inter;color:#ff9d93;text-align:center}
+.fine{margin-top:16px;font:400 11.5px/1.5 Inter;color:#8f7a52;text-align:center}
+
+/* ---------- top bar ---------- */
+#topbar{position:fixed;left:0;right:0;top:0;height:var(--bar);z-index:50;display:flex;align-items:center;gap:12px;padding:0 14px;
+  background:linear-gradient(180deg,#1f0910,#120407);border-bottom:1px solid rgba(229,194,107,.4);box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.logo{display:flex;align-items:baseline;gap:8px;cursor:pointer;white-space:nowrap}
+.logo b{font:900 19px "Cinzel Decorative",Cinzel;letter-spacing:.06em}
+.logo small{font:700 9px Inter;letter-spacing:.4em;color:var(--mut)}
+.where{display:flex;align-items:center;gap:10px;margin-left:8px}
+.where .back{padding:7px 14px;border-radius:9px;border:1px solid rgba(229,194,107,.5);background:linear-gradient(180deg,#3a1a20,#1d0a0e);color:var(--gold3);font:800 11px Cinzel;letter-spacing:.16em}
+.where .tname{font:800 14px Cinzel;letter-spacing:.2em;color:var(--gold)}
+.spacer{flex:1}
+.pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border-radius:20px;background:#070203;border:1px solid rgba(229,194,107,.3);box-shadow:inset 0 0 10px rgba(0,0,0,.8);white-space:nowrap}
+.pill label{font:700 8.5px Inter;letter-spacing:.24em;color:var(--mut)}
+.pill b{font:600 17px Oswald;color:#ffe07a;letter-spacing:.02em}
+.pill .ico{width:24px;height:24px;border-radius:50%;flex:none}
+.ico.chip{background:radial-gradient(circle,#c8152f 0 52%,transparent 53%),repeating-conic-gradient(#fff 0 15deg,#c8152f 15deg 45deg);box-shadow:0 1px 0 #6e0a18}
+.ico.bank{display:grid;place-items:center;background:linear-gradient(180deg,#e5c26b,#8a6215);color:#1d1203;font:900 12px Cinzel}
+.pill.flash b{animation:pillflash .8s}
+@keyframes pillflash{30%{color:#fff;text-shadow:0 0 12px #ffe07a}}
+.tbtn{padding:8px 14px;border-radius:10px;border:1px solid #ffe7a0;background:linear-gradient(180deg,#f1d37a,#b8862b 60%,#8a6215);color:#1d1203;font:900 11px Cinzel;letter-spacing:.16em;box-shadow:0 3px 0 #4a2e05}
+.user{position:relative}
+.user>button{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:20px;border:1px solid rgba(229,194,107,.3);background:#140508;color:var(--ink);font:600 13px Inter}
+.avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:800 13px Cinzel;color:#1d1203;background:radial-gradient(circle at 35% 30%,#fff3c4,#e5c26b 60%,#9c6b1e)}
+.menu{position:absolute;right:0;top:40px;min-width:200px;padding:6px;border-radius:12px;background:#1a080c;border:1px solid rgba(229,194,107,.35);box-shadow:0 14px 30px rgba(0,0,0,.6)}
+.menu button{display:block;width:100%;text-align:left;padding:9px 12px;border:none;border-radius:8px;background:none;color:var(--ink);font:500 13px Inter}
+.menu button:hover{background:rgba(229,194,107,.12)}
+
+/* ---------- lobby ---------- */
+#lobby{padding:calc(var(--bar) + 26px) 20px 40px;max-width:1320px;margin:0 auto}
+.welcome{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+.welcome h2{margin:0;font:900 clamp(26px,3.6vw,40px) Cinzel;letter-spacing:.08em}
+.welcome p{margin:6px 0 0;color:#d9c08a;font:500 14px Inter}
+.networth{display:flex;gap:10px;flex-wrap:wrap}
+.nw{padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(20,6,9,.9),rgba(8,2,4,.9));border:1px solid rgba(229,194,107,.3);min-width:120px}
+.nw label{display:block;font:700 9px Inter;letter-spacing:.26em;color:var(--mut)}
+.nw b{font:600 22px Oswald;color:#ffe07a}
+.nw.neg b{color:#ff9d93}
+.floor{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+.tile{position:relative;border-radius:20px;overflow:hidden;cursor:pointer;border:1px solid rgba(229,194,107,.35);background:#0b0405;
+  box-shadow:0 18px 40px rgba(0,0,0,.6);transition:transform .2s,box-shadow .2s,border-color .2s;display:flex;flex-direction:column}
+.tile:hover{transform:translateY(-5px);border-color:var(--gold);box-shadow:0 26px 50px rgba(0,0,0,.7),0 0 0 1px var(--gold),0 0 30px rgba(229,194,107,.25)}
+.tile .art{position:relative;height:178px;overflow:hidden;background:var(--felt);
+  background-image:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.14),transparent 65%),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .3 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  box-shadow:inset 0 -30px 40px rgba(0,0,0,.45),inset 0 0 0 6px rgba(60,30,10,.65),inset 0 0 0 8px rgba(229,194,107,.35)}
+.tile .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1;background:linear-gradient(180deg,#160609,#0a0304)}
+.tile h3{margin:0;font:900 20px Cinzel;letter-spacing:.12em;color:var(--gold3)}
+.tile p{margin:0;font:400 13px/1.5 Inter;color:#cdbb92;flex:1}
+.tile .meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.tile .meta span{font:600 11px Oswald;letter-spacing:.18em;color:var(--mut)}
+.tile .play{padding:7px 16px;border-radius:9px;border:1px solid #ffe7a0;background:linear-gradient(180deg,#f1d37a,#b8862b 60%,#8a6215);color:#1d1203;font:900 11px Cinzel;letter-spacing:.18em}
+.tile .badge{position:absolute;top:12px;left:12px;padding:3px 9px;border-radius:7px;background:rgba(0,0,0,.6);border:1px solid rgba(229,194,107,.5);font:700 9px Inter;letter-spacing:.24em;color:var(--gold)}
+.cashier-tile{--felt:#2a1a08}
+.side{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;margin-top:22px}
+.panel{padding:16px 18px;border-radius:18px;background:linear-gradient(180deg,rgba(22,7,10,.92),rgba(9,3,5,.95));border:1px solid rgba(229,194,107,.3);box-shadow:0 14px 30px rgba(0,0,0,.5)}
+.panel h4{margin:0 0 10px;font:800 12px Cinzel;letter-spacing:.28em;color:var(--gold)}
+.txlist{font:500 13px/1.4 Inter;color:#d9c9a0}
+.txlist div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid rgba(229,194,107,.1)}
+.txlist small{color:#8f7a52;font-size:11px;margin-right:8px}
+.pos{color:#9fe6a8}.neg{color:#ff9d93}
+
+/* art pieces */
+.mini-card{position:absolute;width:62px;height:88px;border-radius:7px;background:linear-gradient(160deg,#fffdf6,#efe7d3);box-shadow:0 6px 12px rgba(0,0,0,.5);border:1px solid #cfc6ae;
+  font-family:"Playfair Display",serif;color:#16161d}
+.mini-card.red{color:#c8102e}
+.mini-card .r{position:absolute;left:5px;top:4px;font:900 15px/1 "Playfair Display";text-align:center}
+.mini-card .r i{display:block;font-style:normal;font-size:12px}
+.mini-card .c{position:absolute;inset:0;display:grid;place-items:center;font-size:34px}
+.mini-card.back{background:repeating-linear-gradient(45deg,rgba(255,215,130,.3) 0 1.5px,transparent 1.5px 7px),repeating-linear-gradient(-45deg,rgba(255,215,130,.3) 0 1.5px,transparent 1.5px 7px),linear-gradient(160deg,#b3172a,#7a0c17);border:4px solid #f4ead2}
+.die{position:absolute;width:56px;height:56px;border-radius:11px;background:radial-gradient(circle at 30% 22%,#ff7a6a,#d01a22 48%,#8c0b12);box-shadow:0 10px 16px rgba(0,0,0,.55),inset 0 0 8px rgba(60,0,0,.6);
+  display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px}
+.die i{width:9px;height:9px;border-radius:50%;background:#fff;place-self:center;visibility:hidden;box-shadow:inset 0 1px 1px rgba(0,0,0,.4)}
+.die i.on{visibility:visible}
+.wheel{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;animation:spin 18s linear infinite;
+  box-shadow:0 0 0 10px #5a2e10,0 0 0 13px #e5c26b,0 12px 26px rgba(0,0,0,.6)}
+.wheel::after{content:"";position:absolute;inset:34%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff1bd,#c9962f 50%,#6e4a0c);box-shadow:0 0 0 6px #6b3a18}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tile:hover .wheel{animation-duration:4s}
+.chipstack{position:absolute;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,var(--b) 0 54%,transparent 55%),repeating-conic-gradient(#fff 0 15deg,var(--b) 15deg 45deg);box-shadow:0 3px 0 rgba(0,0,0,.45),0 6px 0 var(--b),0 9px 0 rgba(0,0,0,.45),0 12px 0 var(--b),0 14px 10px rgba(0,0,0,.5)}
+.slotcab{position:absolute;left:50%;top:18px;width:150px;height:150px;margin-left:-75px;border-radius:18px 18px 10px 10px;background:linear-gradient(180deg,#c8202c,#6a0810);box-shadow:0 0 0 3px #d7dbe2,0 12px 22px rgba(0,0,0,.6)}
+.slotcab .smarq{margin:8px 10px 0;padding:3px 0;border-radius:8px;background:#000;text-align:center;font:900 16px Cinzel;letter-spacing:.2em;color:#fff;text-shadow:0 0 6px #ff3a3a,0 0 14px #ff3a3a;border:2px dotted #ffd75e}
+.slotcab .sreels{display:flex;gap:4px;margin:10px 12px 0;padding:5px;border-radius:6px;background:linear-gradient(180deg,#e8ecf2,#8b939e)}
+.slotcab .sreels span{flex:1;height:62px;display:grid;place-items:center;border-radius:4px;background:linear-gradient(180deg,#c9c3b2,#fffdf4 30%,#fffdf4 70%,#c9c3b2);font:700 46px Oswald;color:#e01020;-webkit-text-stroke:1.5px #ffd75e}
+.slotcab .slever{position:absolute;right:-22px;top:40px;width:8px;height:70px;border-radius:4px;background:linear-gradient(90deg,#8b939e,#fff,#6f7782)}
+.slotcab .slever::before{content:"";position:absolute;left:-8px;top:-18px;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9a8f,#d01a22 50%,#6a0610)}
+.sporttv{position:absolute;left:50%;top:14px;width:230px;margin-left:-115px}
+.sporttv .scr{position:relative;height:104px;border-radius:10px;overflow:hidden;border:5px solid #1b2233;box-shadow:0 10px 20px rgba(0,0,0,.6);background:repeating-linear-gradient(90deg,#1f8a3a 0 22px,#1a7d34 22px 44px)}
+.sporttv .pitch{position:absolute;inset:10px;border:2px solid rgba(255,255,255,.7)}
+.sporttv .pitch::after{content:"";position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border:2px solid rgba(255,255,255,.7);border-radius:50%}
+.sporttv .sb{position:absolute;left:50%;top:8px;transform:translateX(-50%);padding:3px 8px;border-radius:5px;background:#0a0f18;font:700 12px Oswald;color:#fff;white-space:nowrap}
+.sporttv .sb b{color:#ffe07a}.sporttv .sb i{font-style:normal;color:#2bff88;margin-left:4px}
+.sporttv .lvb{position:absolute;left:8px;bottom:6px;z-index:2;padding:1px 6px;border-radius:4px;background:#e8182c;font:700 9px Inter;color:#fff;letter-spacing:.1em}
+.sporttv .oddsrow{display:flex;gap:6px;margin-top:8px}
+.sporttv .oddsrow span{flex:1;padding:4px;border-radius:7px;background:#0f1828;border:1px solid #2a3a58;text-align:center;font:600 10px Inter;color:#8a9ab5}
+.sporttv .oddsrow b{display:block;font:700 15px Oswald;color:#ffe07a}
+.led{position:absolute;left:50%;top:14px;transform:translateX(-50%);padding:4px 14px;border-radius:8px;background:#0a0202;border:2px solid #b8862b;font:700 18px Oswald;color:#ff4a3a;text-shadow:0 0 8px #ff2a1a;letter-spacing:.06em}
+
+/* ---------- table view ---------- */
+#tableView{position:fixed;left:0;right:0;top:var(--bar);bottom:0;background:#000}
+#tableView iframe{width:100%;height:100%;border:0;display:block;background:#050505}
+.curtain{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 40%,#3d0814,#0a0306);pointer-events:none;transition:opacity .5s}
+.curtain.gone{opacity:0}
+.curtain div{font:900 22px Cinzel;letter-spacing:.3em;color:var(--gold)}
+
+/* ---------- cashier ---------- */
+#cashier{position:fixed;inset:0;z-index:80;background:rgba(5,1,2,.78);display:flex;align-items:flex-start;justify-content:center;padding:calc(var(--bar) + 16px) 16px 30px;overflow:auto;backdrop-filter:blur(3px)}
+.cage{width:100%;max-width:1060px;border-radius:22px;overflow:hidden;border:1px solid rgba(229,194,107,.55);box-shadow:0 30px 80px rgba(0,0,0,.8);
+  background:linear-gradient(180deg,#1b0c08,#0b0503)}
+.cage .bars{height:64px;position:relative;display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(90deg,transparent 0 22px,rgba(229,194,107,.85) 22px 26px,#6e4a0c 26px 28px,transparent 28px 50px),linear-gradient(180deg,#3a2410,#140b04);border-bottom:2px solid var(--gold)}
+.cage .bars h2{margin:0;padding:6px 22px;border-radius:10px;background:#120804;border:1px solid var(--gold);font:900 20px Cinzel;letter-spacing:.24em;box-shadow:0 6px 16px rgba(0,0,0,.6)}
+.cage .x{position:absolute;right:14px;top:14px;width:36px;height:36px;border-radius:50%;border:1px solid var(--gold);background:#120804;color:var(--gold);font:700 18px Inter}
+.cage .content{padding:20px 22px 22px}
+.balances{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.bal{padding:14px 16px;border-radius:14px;background:linear-gradient(180deg,#0d0604,#050201);border:1px solid rgba(229,194,107,.3);box-shadow:inset 0 0 18px rgba(0,0,0,.8)}
+.bal label{display:block;font:700 9.5px Inter;letter-spacing:.26em;color:var(--mut)}
+.bal b{display:block;margin-top:4px;font:600 28px Oswald;color:#ffe07a}
+.bal small{font:500 12px Inter;color:#a8935f}
+.bal.card b{color:#ffb3a8}
+.cash-grid{display:grid;grid-template-columns:400px 1fr;gap:22px;align-items:start}
+.ccard{position:relative;width:100%;max-width:400px;aspect-ratio:1.586;border-radius:18px;padding:22px 24px;overflow:hidden;color:#f6ecd0;transform-style:preserve-3d;transition:transform .3s;
+  background:
+    radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.35),transparent 50%),
+    repeating-linear-gradient(115deg,rgba(255,255,255,.04) 0 2px,transparent 2px 6px),
+    linear-gradient(135deg,#2b2b30 0%,#5a5a62 30%,#1d1d22 55%,#43434b 80%,#16161a 100%);
+  box-shadow:0 20px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.12)}
+.ccard:hover{transform:rotateX(6deg) rotateY(-10deg)}
+.ccard .brand{font:900 17px "Cinzel Decorative",Cinzel;letter-spacing:.08em}
+.ccard .tier{position:absolute;right:24px;top:24px;font:800 11px Cinzel;letter-spacing:.32em;color:#e5e5ea}
+.ccard .emv{position:absolute;left:24px;top:64px;width:50px;height:38px;border-radius:7px;background:linear-gradient(135deg,#f6dd8a,#b98b2c 45%,#f1cf6e 60%,#9a6f1e);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.ccard .emv::before{content:"";position:absolute;inset:8px 0;border-top:1px solid rgba(0,0,0,.35);border-bottom:1px solid rgba(0,0,0,.35)}
+.ccard .emv::after{content:"";position:absolute;inset:0 18px;border-left:1px solid rgba(0,0,0,.35);border-right:1px solid rgba(0,0,0,.35)}
+.ccard .nfc{position:absolute;left:86px;top:70px;font:700 22px Inter;color:rgba(255,255,255,.7);transform:rotate(90deg)}
+.ccard .num{position:absolute;left:24px;top:118px;font:600 23px "Oswald";letter-spacing:.16em;text-shadow:0 1px 0 rgba(0,0,0,.6),0 -1px 0 rgba(255,255,255,.25)}
+.ccard .nm{position:absolute;left:24px;bottom:22px;font:600 14px Oswald;letter-spacing:.2em;text-transform:uppercase;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+.ccard .exp{position:absolute;left:220px;bottom:22px;font:600 14px Oswald;letter-spacing:.14em}
+.ccard .exp small{display:block;font:600 7px Inter;letter-spacing:.2em;opacity:.7}
+.ccard .holo{position:absolute;right:22px;bottom:18px;width:54px;height:40px;border-radius:7px;
+  background:conic-gradient(from 0deg,#ff9ad5,#9ad5ff,#b4ff9a,#fff19a,#ff9ad5);opacity:.75;filter:saturate(1.3);animation:holo 6s linear infinite}
+@keyframes holo{50%{filter:saturate(1.3) hue-rotate(160deg)}}
+.limit{margin-top:12px;font:500 12.5px/1.6 Inter;color:#cdbb92}
+.limit .meter{height:10px;border-radius:5px;background:#050201;border:1px solid rgba(229,194,107,.3);overflow:hidden;margin:6px 0}
+.limit .meter i{display:block;height:100%;background:linear-gradient(90deg,#e5c26b,#ff7a5a);transition:width .4s}
+.ctabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ctabs button{padding:9px 14px;border-radius:10px;border:1px solid rgba(229,194,107,.35);background:#120804;color:var(--mut);font:800 11px Cinzel;letter-spacing:.14em}
+.ctabs button.on{background:linear-gradient(180deg,#f1d37a,#b8862b 60%,#8a6215);color:#1d1203;border-color:#ffe7a0}
+.ctab{padding:16px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(229,194,107,.18)}
+.ctab p{margin:0 0 12px;font:400 13.5px/1.55 Inter;color:#d9c9a0}
+.amt{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.amt .inp{display:flex;align-items:center;flex:1;min-width:180px;border-radius:12px;border:1px solid rgba(229,194,107,.4);background:#050201;padding:0 12px}
+.amt .inp span{font:600 24px Oswald;color:var(--gold)}
+.amt input::-webkit-outer-spin-button,.amt input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.amt input{-moz-appearance:textfield;appearance:textfield;flex:1;width:100%;padding:10px 8px;border:none;background:none;color:#ffe07a;font:600 26px Oswald;outline:none}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.quick button{padding:6px 12px;border-radius:8px;border:1px solid rgba(229,194,107,.3);background:#1a0c06;color:var(--ink);font:600 12px Oswald;letter-spacing:.08em}
+.quick button:hover{border-color:var(--gold)}
+.summary{font:500 13px/1.6 Inter;color:#cdbb92;margin-bottom:12px;min-height:21px}
+.summary b{color:#ffe07a}
+.stmt{max-height:330px;overflow:auto}
+.stmt table{width:100%;border-collapse:collapse;font:13px Inter}
+.stmt th{position:sticky;top:0;background:#140a05;text-align:left;font:700 10px Inter;letter-spacing:.2em;color:var(--mut);padding:8px}
+.stmt td{padding:7px 8px;border-bottom:1px solid rgba(229,194,107,.1);color:#e2d4ad}
+.stmt td.n{text-align:right;font-family:Oswald;letter-spacing:.04em}
+.disclaimer{margin-top:16px;font:400 11.5px/1.5 Inter;color:#8f7a52;text-align:center}
+.notice{margin-bottom:12px;padding:10px 12px;border-radius:10px;background:rgba(255,157,147,.08);border:1px solid rgba(255,157,147,.35);font:500 13px Inter;color:#ffcbc4}
+
+/* dialogs & toast */
+#toast{position:fixed;left:50%;top:calc(var(--bar) + 12px);transform:translate(-50%,-20px);opacity:0;z-index:200;padding:11px 20px;border-radius:12px;max-width:calc(100vw - 32px);text-align:center;
+  background:#1a0a0c;border:1px solid var(--gold);color:#ffe9b0;font:600 14px Inter;box-shadow:0 10px 30px rgba(0,0,0,.6);transition:all .25s;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#dialog{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:16px}
+#dialog .box{max-width:440px;width:100%;padding:22px 24px;border-radius:18px;background:linear-gradient(180deg,#1f0b0e,#0c0406);border:1px solid var(--gold);box-shadow:0 30px 60px rgba(0,0,0,.7)}
+#dialog h3{margin:0 0 8px;font:900 18px Cinzel;letter-spacing:.14em;color:var(--gold3)}
+#dialog p{margin:0 0 16px;font:400 14px/1.55 Inter;color:#e2d4ad}
+#dialog .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+#dialog .row button{padding:9px 16px;border-radius:10px;border:1px solid rgba(229,194,107,.5);background:#1a0a0c;color:var(--ink);font:700 12px Inter;letter-spacing:.1em;text-transform:uppercase}
+#dialog .row button.primary{background:linear-gradient(180deg,#f1d37a,#b8862b 60%,#8a6215);color:#1d1203;border-color:#ffe7a0}
+
+@media (max-width:900px){
+  .cash-grid{grid-template-columns:1fr}
+  .side{grid-template-columns:1fr}
+  .balances{grid-template-columns:1fr}
+  .logo small,.pill label{display:none}
+  .where .tname{display:none}
+}
+@media (max-width:600px){ #topbar{gap:6px;padding:0 8px} .pill.bankp{display:none} .logo b{font-size:15px} }
+</style>
+</head>
+<body>
+<div class="velvet"></div>
+
+<!-- ============ ENTRANCE ============ -->
+<section id="entrance">
+  <div class="marquee">
+    <div class="the">THE</div>
+    <h1 class="gold-text">VELVET FELT</h1>
+    <div class="sub">Casino &amp; Card Room</div>
+    <div class="bulbs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  <div class="door">
+    <div class="tabs"><button id="tabIn" class="on">SIGN IN</button><button id="tabUp">JOIN THE CLUB</button></div>
+    <form id="formIn" autocomplete="on">
+      <label class="field"><span>Username</span><input id="inUser" autocomplete="username" required></label>
+      <label class="field"><span>Password</span><input id="inPass" type="password" autocomplete="current-password" required></label>
+      <label class="remember"><input type="checkbox" id="inRemember" checked> Keep me signed in on this device</label>
+      <button class="gbtn" type="submit">ENTER THE CASINO</button>
+    </form>
+    <form id="formUp" hidden autocomplete="off">
+      <label class="field"><span>Display name</span><input id="upName" maxlength="20" placeholder="How the dealers greet you" required></label>
+      <label class="field"><span>Username</span><input id="upUser" maxlength="16" placeholder="3–16 letters, numbers or _" autocomplete="username" required></label>
+      <label class="field"><span>Password</span><input id="upPass" type="password" autocomplete="new-password" placeholder="At least 6 characters" required></label>
+      <label class="field"><span>Confirm password</span><input id="upPass2" type="password" autocomplete="new-password" required></label>
+      <button class="gbtn" type="submit">OPEN MY ACCOUNT</button>
+    </form>
+    <div class="err" id="authErr"></div>
+    <div class="fine">New members get <b>$1,000</b> in their Velvet Felt bank account, <b>$500</b> in welcome chips and a Velvet Felt card with a $5,000 limit.<br>Play money only. Accounts are stored in this browser.</div>
+  </div>
+</section>
+
+<!-- ============ TOP BAR ============ -->
+<header id="topbar" hidden>
+  <div class="logo" id="logoBtn"><b class="gold-text">VELVET FELT</b><small>CASINO</small></div>
+  <div class="where" id="where" hidden><button class="back" id="backBtn">← LOBBY</button><span class="tname" id="tname"></span></div>
+  <div class="spacer"></div>
+  <div class="pill" id="chipPill" title="Chips in hand"><span class="ico chip"></span><label>CHIPS</label><b id="chipsVal">$0</b></div>
+  <div class="pill bankp" id="bankPill" title="Bank account"><span class="ico bank">$</span><label>BANK</label><b id="bankVal">$0</b></div>
+  <button class="tbtn" id="cashierBtn">CASHIER</button>
+  <div class="user">
+    <button id="userBtn"><span class="avatar" id="avatar">?</span><span id="userName"></span></button>
+    <div class="menu" id="userMenu" hidden>
+      <button id="mStatement">Bank statement</button>
+      <button id="mLobby">Casino floor</button>
+      <button id="mLogout">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ LOBBY ============ -->
+<main id="lobby" hidden>
+  <div class="welcome">
+    <div><h2 class="gold-text" id="greet">Good evening</h2><p id="greetSub">Choose a table. Your chips travel with you.</p></div>
+    <div class="networth">
+      <div class="nw"><label>CHIPS</label><b id="nwChips">$0</b></div>
+      <div class="nw"><label>BANK</label><b id="nwBank">$0</b></div>
+      <div class="nw neg"><label>CARD OWED</label><b id="nwOwed">$0</b></div>
+      <div class="nw"><label>NET WORTH</label><b id="nwTotal">$0</b></div>
+    </div>
+  </div>
+  <div class="floor" id="floor"></div>
+  <div class="side">
+    <div class="panel"><h4>RECENT ACTIVITY</h4><div class="txlist" id="recent"></div></div>
+    <div class="panel"><h4>HOUSE RULES</h4>
+      <div class="txlist" style="display:block;line-height:1.7">
+        Chips are your money at the tables. Buy them at the <b>Cashier</b> with money from your bank account, and cash them back in whenever you like.<br>
+        Short on funds? Take a <b>cash advance</b> on your Velvet Felt card (3% fee) and pay it back later.<br>
+        When you leave a table, bets that haven't been played yet are returned to you. Craps contract bets stay on the table until they're resolved.
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ TABLE ============ -->
+<section id="tableView" hidden>
+  <iframe id="frame" title="Casino table"></iframe>
+  <div class="curtain" id="curtain"><div>TAKING YOUR SEAT…</div></div>
+</section>
+
+<!-- ============ CASHIER ============ -->
+<section id="cashier" hidden>
+  <div class="cage">
+    <div class="bars"><h2><span class="gold-text">CASHIER'S CAGE</span></h2><button class="x" id="cashClose" title="Close">✕</button></div>
+    <div class="content">
+      <div class="notice" id="cashNotice" hidden></div>
+      <div class="balances">
+        <div class="bal"><label>CHIPS IN HAND</label><b id="cChips">$0</b><small id="cChipsSub">Spend at any table</small></div>
+        <div class="bal"><label>VELVET FELT BANK · ACCOUNT</label><b id="cBank">$0</b><small id="cAcct">Checking</small></div>
+        <div class="bal card"><label>VELVET FELT CARD · OWED</label><b id="cOwed">$0</b><small id="cAvail">Available credit</small></div>
+      </div>
+      <div class="cash-grid">
+        <div>
+          <div class="ccard" id="ccard">
+            <div class="brand">Velvet Felt</div><div class="tier">PLATINUM</div>
+            <div class="emv"></div><div class="nfc">)))</div>
+            <div class="num" id="ccNum">•••• •••• •••• ••••</div>
+            <div class="nm" id="ccName">MEMBER</div>
+            <div class="exp"><small>VALID THRU</small><span id="ccExp">--/--</span></div>
+            <div class="holo"></div>
+          </div>
+          <div class="limit">
+            Credit limit <b id="ccLimit">$5,000</b> · Cash advances carry a <b>3%</b> fee.
+            <div class="meter"><i id="ccMeter" style="width:0"></i></div>
+            <span id="ccUsed">0% used</span>
+          </div>
+        </div>
+        <div>
+          <div class="ctabs" id="ctabs">
+            <button data-t="buy" class="on">BUY CHIPS</button>
+            <button data-t="cash">CASH OUT</button>
+            <button data-t="advance">CARD ADVANCE</button>
+            <button data-t="pay">PAY CARD</button>
+            <button data-t="stmt">STATEMENT</button>
+          </div>
+          <div class="ctab" id="ctabForm">
+            <p id="cDesc"></p>
+            <div class="amt"><div class="inp"><span>$</span><input id="cAmt" type="number" min="1" step="1" inputmode="decimal" placeholder="0"></div></div>
+            <div class="quick" id="cQuick"></div>
+            <div class="summary" id="cSum"></div>
+            <button class="gbtn" id="cGo">CONFIRM</button>
+          </div>
+          <div class="ctab stmt" id="ctabStmt" hidden><table><thead><tr><th>DATE</th><th>DESCRIPTION</th><th style="text-align:right">AMOUNT</th><th style="text-align:right">BANK</th></tr></thead><tbody id="stmtBody"></tbody></table></div>
+        </div>
+      </div>
+      <div class="disclaimer">Play money only. The Velvet Felt card is a fictional card issued with your account. Never enter real card details anywhere in this game.</div>
+    </div>
+  </div>
+</section>
+
+<div id="dialog" hidden><div class="box"><h3 id="dlgT"></h3><p id="dlgB"></p><div class="row" id="dlgR"></div></div></div>
+<div id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const ACC_KEY = 'vf-casino-accounts-v1', SES_KEY = 'vf-casino-session';
+const ADV_FEE = .03, START_BANK = 1000, START_CHIPS = 500, CARD_LIMIT = 5000;
+const r2 = v => Math.round(v*100)/100;
+function fmt(v){ v = r2(v); const f = Math.abs(v%1) > .001; return (v<0?'-$':'$') + Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:f?2:0,maximumFractionDigits:2}); }
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const GAMES = [
+  {id:'craps', file:'craps.html', name:'Craps', felt:'#0f6a3a', badge:'DICE', meta:'$1 MINIMUM',
+   desc:'Pass line, come, odds, place, buy, lay, hardways, the field and every proposition bet.'},
+  {id:'roulette', file:'roulette.html', name:'Roulette', felt:'#0c5a35', badge:'WHEEL', meta:'EUROPEAN & AMERICAN',
+   desc:'Straight ups to six lines, outside bets, and French call bets on the racetrack.'},
+  {id:'blackjack', file:'blackjack.html', name:'Blackjack', felt:'#7a1426', badge:'CARDS', meta:'BLACKJACK PAYS 3:2',
+   desc:'Six-deck shoe. Double, split, surrender, insurance, Perfect Pairs and 21+3. Strategy hints if you want them.'},
+  {id:'punto-banco', file:'punto-banco.html', name:'Punto Banco', felt:'#123563', badge:'BACCARAT', meta:'8-DECK SHOE',
+   desc:'Player, Banker or Tie, with pairs, Dragon Bonus, Big & Small side bets, plus Bead Plate and Big Road scoreboards.'},
+  {id:'casino-stud', file:'casino-stud.html', name:'Casino Stud', felt:'#11625f', badge:'JACKPOT', meta:'$1 PROGRESSIVE',
+   desc:'Five-card stud against the dealer. Raise or fold, with a progressive jackpot for a royal flush.'},
+  {id:'slots', file:'slots.html', name:'Slot Parlour', felt:'#3a0d4a', badge:'SLOTS', meta:'3 MACHINES · JACKPOT',
+   desc:'Lucky Sevens with a progressive jackpot, Velvet Gems with free spins, and Lucky Clover with 243 ways and a Pot of Gold bonus.'},
+  {id:'sports', file:'sports.html', name:'Sports Lounge', felt:'#0b2a5a', badge:'LIVE', meta:'IN-PLAY · PARLAYS · CASH OUT',
+   desc:'Football, basketball, tennis and horse racing around the clock. Live odds, parlays, each-way and cash out, with every match on the big screen.'},
+  {id:'poker', file:'poker.html', name:'Poker Night', felt:'#1d6b46', badge:'CARD ROOM', meta:'BUY-IN FROM $100',
+   desc:"Hold'em, Omaha, Stud, Razz, Draw and more against computer players. Buy in from your chips and cash out your stack."},
+];
+function art(id){
+  const px = v => typeof v === 'number' ? v + 'px' : v;
+  const die = (n, x, y, rot) => { const P = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]}[n];
+    return `<div class="die" style="left:${px(x)};top:${px(y)};transform:rotate(${rot}deg)">${[...Array(9)].map((_,i) => `<i class="${P.includes(i)?'on':''}"></i>`).join('')}</div>`; };
+  const card = (r, s, x, y, rot) => `<div class="mini-card ${s==='♥'||s==='♦'?'red':''}" style="left:${px(x)};top:${px(y)};transform:rotate(${rot}deg)"><div class="r">${r}<i>${s}</i></div><div class="c">${s}</div></div>`;
+  const chip = (b, x, y) => `<div class="chipstack" style="--b:${b};left:${px(x)};top:${px(y)}"></div>`;
+  const wheel = () => {
+    const red = [32,19,21,25,34,27,36,30,23,5,16,1,14,9,18,7,12,3];
+    const order = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+    const seg = 360/37;
+    const stops = order.map((n,i) => `${n===0?'#0b8a42':red.includes(n)?'#b5121b':'#141414'} ${i*seg}deg ${(i+1)*seg}deg`).join(',');
+    return `<div class="wheel" style="background:conic-gradient(${stops})"></div>`;
+  };
+  switch(id){
+    case 'craps': return die(5, 'calc(50% - 70px)', 50, -14) + die(2, 'calc(50% + 6px)', 72, 18) + chip('#138a3c', '12%', 110) + chip('#1b1b1b', '80%', 100);
+    case 'roulette': return wheel();
+    case 'blackjack': return card('A','♠','calc(50% - 64px)',44,-10) + card('K','♥','calc(50% - 8px)',48,8) + chip('#c8152f','14%',104) + chip('#1b1b1b','78%',110);
+    case 'punto-banco': return card('9','♦','calc(50% - 98px)',46,-8) + card('K','♣','calc(50% - 46px)',52,4) + card('8','♥','calc(50% + 24px)',46,-4) + chip('#6b2b94','82%',110);
+    case 'casino-stud': return `<div class="led">$100,000</div>` + ['A','K','Q','J','10'].map((r,i) => card(r,'♠',`calc(50% - ${120 - i*42}px)`, 66 + Math.abs(i-2)*6, (i-2)*7)).join('');
+    case 'slots': return `<div class="slotcab"><div class="smarq">SLOTS</div><div class="sreels">${['7','7','7'].map(() => '<span>7</span>').join('')}</div><div class="slever"></div></div>`;
+    case 'sports': return `<div class="sporttv"><div class="scr"><span class="lvb">● LIVE</span><div class="pitch"></div><div class="sb">HAR <b>2 – 1</b> NOR <i>78'</i></div></div><div class="oddsrow"><span>1<b>1.45</b></span><span>X<b>4.20</b></span><span>2<b>7.50</b></span></div></div>`;
+    case 'poker': return card('A','♥','calc(50% - 60px)',40,-12) + card('A','♠','calc(50% - 10px)',44,10) + chip('#c8152f','10%',100) + chip('#1b1b1b','76%',96) + chip('#138a3c','84%',112);
+  }
+  return '';
+}
+
+/* ---------------- storage ---------------- */
+let DB;
+try { DB = JSON.parse(localStorage.getItem(ACC_KEY)) || {users:{}}; } catch(e){ DB = {users:{}}; }
+if (!DB.users) DB.users = {};
+const persist = () => { try { localStorage.setItem(ACC_KEY, JSON.stringify(DB)); } catch(e){ toast('Could not save: browser storage is unavailable.'); } };
+let me = null, cur = null;
+const A = () => DB.users[me];
+
+/* ---------------- crypto ---------------- */
+const enc = s => new TextEncoder().encode(s);
+const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+function randHex(n){ const a = new Uint8Array(n); crypto.getRandomValues(a); return hex(a); }
+async function hashPw(pw, salt){
+  if (window.crypto && crypto.subtle){
+    const k = await crypto.subtle.importKey('raw', enc(pw), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({name:'PBKDF2', salt:enc(salt), iterations:150000, hash:'SHA-256'}, k, 256);
+    return 'p2:' + hex(bits);
+  }
+  // fallback (non-secure contexts): iterated 53-bit hash
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57; const s = salt + ':' + pw;
+  for (let r=0; r<2000; r++) for (let i=0;i<s.length;i++){ const c = s.charCodeAt(i) + r; h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  return 'fb:' + (h2>>>0).toString(16) + (h1>>>0).toString(16);
+}
+function genCard(){
+  const d = []; d.push(9); for (let i=0;i<15;i++){ const a = new Uint8Array(1); crypto.getRandomValues(a); d.push(a[0] % 10); }
+  const now = new Date(); const y = (now.getFullYear() + 4) % 100, m = now.getMonth() + 1;
+  return {num:d.join(''), exp:String(m).padStart(2,'0') + '/' + String(y).padStart(2,'0'), limit:CARD_LIMIT, owed:0};
+}
+
+/* ---------------- auth ---------------- */
+const err = m => $('#authErr').textContent = m || '';
+$('#tabIn').onclick = () => { $('#tabIn').classList.add('on'); $('#tabUp').classList.remove('on'); $('#formIn').hidden = false; $('#formUp').hidden = true; err(); };
+$('#tabUp').onclick = () => { $('#tabUp').classList.add('on'); $('#tabIn').classList.remove('on'); $('#formUp').hidden = false; $('#formIn').hidden = true; err(); };
+$('#formUp').onsubmit = async e => {
+  e.preventDefault(); err();
+  const name = $('#upName').value.trim(), user = $('#upUser').value.trim().toLowerCase(), pw = $('#upPass').value, pw2 = $('#upPass2').value;
+  if (!name) return err('Please enter a display name.');
+  if (!/^[a-z0-9_]{3,16}$/.test(user)) return err('Username must be 3–16 letters, numbers or underscores.');
+  if (DB.users[user]) return err('That username is taken.');
+  if (pw.length < 6) return err('Password must be at least 6 characters.');
+  if (pw !== pw2) return err('Passwords do not match.');
+  const salt = randHex(16);
+  const hash = await hashPw(pw, salt);
+  DB.users[user] = {display:name, salt, hash, created:Date.now(), chips:START_CHIPS, bank:START_BANK, card:genCard(), tx:[]};
+  me = user;
+  tx('open', `Account opened · welcome deposit`, START_BANK);
+  tx('bonus', `Welcome chips (${fmt(START_CHIPS)})`, 0);
+  persist();
+  startSession(true);
+  toast(`Welcome to the Velvet Felt, ${name}!`);
+};
+$('#formIn').onsubmit = async e => {
+  e.preventDefault(); err();
+  const user = $('#inUser').value.trim().toLowerCase(), pw = $('#inPass').value;
+  const a = DB.users[user];
+  if (!a) return err('No account with that username.');
+  const h = await hashPw(pw, a.salt);
+  if (h !== a.hash) return err('Incorrect password.');
+  me = user; startSession($('#inRemember').checked);
+};
+function startSession(remember){
+  try {
+    sessionStorage.setItem(SES_KEY, me);
+    if (remember) localStorage.setItem(SES_KEY, me); else localStorage.removeItem(SES_KEY);
+  } catch(e){}
+  $('#entrance').hidden = true; $('#topbar').hidden = false;
+  $('#inPass').value = ''; $('#upPass').value = ''; $('#upPass2').value = '';
+  showLobby();
+}
+async function logout(){
+  if (cur && !(await leaveTable())) return;
+  try { localStorage.removeItem(SES_KEY); sessionStorage.removeItem(SES_KEY); } catch(e){}
+  me = null; $('#topbar').hidden = true; $('#lobby').hidden = true; $('#tableView').hidden = true; $('#cashier').hidden = true;
+  $('#entrance').hidden = false; $('#userMenu').hidden = true;
+}
+
+/* ---------------- ledger ---------------- */
+function tx(kind, desc, amt){
+  const a = A(); a.tx.unshift({t:Date.now(), kind, desc, amt:r2(amt), bank:r2(a.bank), chips:r2(a.chips), owed:r2(a.card.owed)});
+  a.tx = a.tx.slice(0, 300);
+}
+
+/* ---------------- wallet display ---------------- */
+let shown = {chips:null, bank:null};
+function renderWallet(){
+  const a = A(); if (!a) return;
+  for (const [k, id, pill] of [['chips','#chipsVal','#chipPill'],['bank','#bankVal','#bankPill']]){
+    if (shown[k] !== null && shown[k] !== a[k]){ const p = $(pill); p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash'); }
+    shown[k] = a[k]; $(id).textContent = fmt(a[k]);
+  }
+  $('#userName').textContent = a.display; $('#avatar').textContent = a.display[0].toUpperCase();
+  $('#nwChips').textContent = fmt(a.chips); $('#nwBank').textContent = fmt(a.bank); $('#nwOwed').textContent = fmt(a.card.owed);
+  const nw = a.chips + a.bank - a.card.owed;
+  $('#nwTotal').textContent = fmt(nw); $('#nwTotal').style.color = nw < 0 ? '#ff9d93' : '';
+  if (!$('#cashier').hidden) renderCashier();
+}
+
+/* ---------------- lobby ---------------- */
+function showLobby(){
+  $('#lobby').hidden = false; $('#tableView').hidden = true; $('#where').hidden = true;
+  const a = A(), h = new Date().getHours();
+  $('#greet').textContent = `${h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}, ${a.display}`;
+  $('#greetSub').textContent = a.chips < 1 ? 'You have no chips. Visit the Cashier to buy some.' : 'Choose a table. Your chips travel with you.';
+  $('#floor').innerHTML = GAMES.map(g => `
+    <div class="tile" data-g="${g.id}" style="--felt:${g.felt}">
+      <div class="art">${art(g.id)}<span class="badge">${g.badge}</span></div>
+      <div class="body"><h3>${g.name}</h3><p>${g.desc}</p><div class="meta"><span>${g.meta}</span><button class="play">PLAY</button></div></div>
+    </div>`).join('') + `
+    <div class="tile cashier-tile" data-g="cashier" style="--felt:#3a2410">
+      <div class="art" style="background-image:repeating-linear-gradient(90deg,transparent 0 22px,rgba(229,194,107,.8) 22px 26px,#6e4a0c 26px 28px,transparent 28px 50px),linear-gradient(180deg,#3a2410,#140b04)">
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 18px;border-radius:12px;background:#120804;border:1px solid #e5c26b;font:900 20px Cinzel;letter-spacing:.2em;color:#e5c26b;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.6)">THE BANK</div>
+        <span class="badge">CASHIER</span></div>
+      <div class="body"><h3>Cashier's Cage</h3><p>Buy chips, cash them in, take a card advance or pay off your Velvet Felt card. Your full statement is here too.</p><div class="meta"><span>OPEN ALL NIGHT</span><button class="play">VISIT</button></div></div>
+    </div>`;
+  renderRecent(); renderWallet();
+}
+function renderRecent(){
+  const a = A();
+  $('#recent').innerHTML = a.tx.slice(0, 8).map(t => {
+    const d = new Date(t.t), cls = t.amt > 0 ? 'pos' : t.amt < 0 ? 'neg' : '';
+    return `<div><span><small>${d.toLocaleDateString(undefined,{month:'short',day:'numeric'})} ${d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}</small>${esc(t.desc)}</span><b class="${cls}">${t.amt ? (t.amt > 0 ? '+' : '') + fmt(t.amt) : ''}</b></div>`;
+  }).join('') || '<div>No activity yet.</div>';
+}
+$('#floor').addEventListener('click', e => {
+  const t = e.target.closest('.tile'); if (!t) return;
+  if (t.dataset.g === 'cashier') return openCashier();
+  enterTable(GAMES.find(g => g.id === t.dataset.g));
+});
+
+/* ---------------- tables ---------------- */
+const waiting = {};
+function ask(type, extra={}, timeout=1500){
+  return new Promise(res => {
+    if (!cur || !cur.ready) return res(null);
+    const id = Math.random().toString(36).slice(2);
+    const t = setTimeout(() => { delete waiting[id]; res(null); }, timeout);
+    waiting[id] = m => { clearTimeout(t); res(m); };
+    $('#frame').contentWindow.postMessage({vf:type, id, ...extra}, '*');
+  });
+}
+window.addEventListener('message', e => {
+  if (!cur || e.source !== $('#frame').contentWindow) return;
+  const m = e.data || {};
+  if (m.vf === 'chips'){
+    cur.ready = true;
+    if (Number.isFinite(m.chips) && m.chips >= 0 && A()){ A().chips = r2(m.chips); persist(); renderWallet(); }
+    return;
+  }
+  if (m.id && waiting[m.id]){ waiting[m.id](m); delete waiting[m.id]; }
+});
+function enterTable(g){
+  const a = A();
+  if (a.chips < 1){
+    dialog('No chips', 'You need chips to sit down. Visit the Cashier to buy some with your bank balance or your Velvet Felt card.', [['Visit the Cashier', () => openCashier(), true], ['Cancel']]);
+    return;
+  }
+  cur = {g, entry:a.chips, ready:false, start:Date.now()};
+  $('#lobby').hidden = true; $('#tableView').hidden = false; $('#where').hidden = false; $('#tname').textContent = g.name.toUpperCase();
+  $('#curtain').classList.remove('gone');
+  const f = $('#frame');
+  f.onload = () => { if (cur) { cur.ready = true; setTimeout(() => $('#curtain').classList.add('gone'), 250); } };
+  f.src = `games/${g.file}?vfuser=${encodeURIComponent(me)}&vfchips=${a.chips}&vfname=${encodeURIComponent(a.display)}`;
+  a.lastGame = g.id; persist();
+}
+async function leaveTable(force=false){
+  if (!cur) return true;
+  if (!force){
+    const r = await ask('leave');
+    if (r && r.ok === false){
+      return new Promise(res => dialog('Hand in progress', `${esc(r.msg || 'A round is still being played.')} Wait for it to finish, or leave now and forfeit the chips currently in play.`,
+        [['Stay at the table', () => res(false), true], ['Leave anyway', async () => res(await leaveTable(true))]]));
+    }
+    if (r && Number.isFinite(r.chips)) A().chips = r2(r.chips);
+    if (r && r.msg) setTimeout(() => toast(r.msg), 300);
+  }
+  const net = r2(A().chips - cur.entry), mins = Math.max(1, Math.round((Date.now() - cur.start)/60000));
+  tx('session', `${cur.g.name} session · ${mins} min · ${net >= 0 ? 'won' : 'lost'} ${fmt(Math.abs(net))}`, 0);
+  A().tx[0].net = net;
+  persist();
+  cur = null;
+  const f = $('#frame'); f.onload = null; f.src = 'about:blank';
+  showLobby();
+  if (net) toast(`${net > 0 ? 'You won' : 'You lost'} ${fmt(Math.abs(net))} at that table.`);
+  return true;
+}
+$('#backBtn').onclick = () => leaveTable();
+$('#logoBtn').onclick = () => { if (cur) leaveTable(); else showLobby(); };
+$('#mLobby').onclick = () => { $('#userMenu').hidden = true; if (cur) leaveTable(); else showLobby(); };
+
+/* ---------------- cashier ---------------- */
+let ctab = 'buy', tableStatus = null;
+async function openCashier(tab){
+  $('#userMenu').hidden = true;
+  tableStatus = cur ? await ask('status') : null;
+  if (cur && !tableStatus) tableStatus = {busy:false, locked:0};
+  $('#cashier').hidden = false;
+  setTab(tab || ctab);
+}
+function closeCashier(){ $('#cashier').hidden = true; }
+$('#cashClose').onclick = closeCashier;
+$('#cashier').addEventListener('click', e => { if (e.target.id === 'cashier') closeCashier(); });
+$('#cashierBtn').onclick = () => openCashier();
+$('#chipPill').onclick = () => openCashier('buy');
+$('#bankPill').onclick = () => openCashier('cash');
+$('#mStatement').onclick = () => openCashier('stmt');
+document.querySelectorAll('#ctabs button').forEach(b => b.onclick = () => setTab(b.dataset.t));
+function limits(){
+  const a = A(), locked = tableStatus ? (tableStatus.locked || 0) : 0;
+  const chipsLocked = !!(tableStatus && tableStatus.busy);
+  const avail = r2(a.card.limit - a.card.owed);
+  return {
+    buy: chipsLocked ? 0 : Math.floor(a.bank),
+    cash: chipsLocked ? 0 : Math.floor(Math.max(0, a.chips - locked)*100)/100,
+    advance: Math.floor(Math.max(0, avail) / (1 + ADV_FEE)),
+    pay: r2(Math.min(a.bank, a.card.owed)),
+    chipsLocked, locked
+  };
+}
+const TABS = {
+  buy:{desc:'Exchange money from your bank account for chips. Chips go straight to your hand, even if you are sitting at a table.', btn:'BUY CHIPS'},
+  cash:{desc:'Cash your chips back into your bank account.', btn:'CASH OUT'},
+  advance:{desc:'Take a cash advance on your Velvet Felt card, paid into your bank account. A 3% fee is added to your card balance.', btn:'TAKE ADVANCE'},
+  pay:{desc:'Pay down your Velvet Felt card from your bank account.', btn:'MAKE PAYMENT'},
+};
+function setTab(t){
+  ctab = t;
+  document.querySelectorAll('#ctabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('#ctabStmt').hidden = t !== 'stmt'; $('#ctabForm').hidden = t === 'stmt';
+  if (t !== 'stmt'){
+    $('#cDesc').textContent = TABS[t].desc; $('#cGo').textContent = TABS[t].btn;
+    $('#cAmt').value = '';
+    const L = limits()[t];
+    const qs = [25, 100, 250, 500, 1000].filter(v => v <= L);
+    $('#cQuick').innerHTML = qs.map(v => `<button data-v="${v}">${fmt(v)}</button>`).join('') + (L > 0 ? `<button data-v="${L}">MAX ${fmt(L)}</button>` : '');
+  }
+  renderCashier();
+  if (t !== 'stmt') setTimeout(() => $('#cAmt').focus(), 50);
+}
+$('#cQuick').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $('#cAmt').value = b.dataset.v; renderCashier(); });
+$('#cAmt').addEventListener('input', renderCashier);
+$('#cAmt').addEventListener('keydown', e => { if (e.key === 'Enter') $('#cGo').click(); });
+function renderCashier(){
+  const a = A(); if (!a) return;
+  const L = limits();
+  $('#cChips').textContent = fmt(a.chips); $('#cBank').textContent = fmt(a.bank); $('#cOwed').textContent = fmt(a.card.owed);
+  $('#cChipsSub').textContent = cur ? (L.locked ? `${fmt(L.locked)} of it is your stack at the ${cur.g.name} table` : `Seated at ${cur.g.name}`) : 'Spend at any table';
+  $('#cAcct').textContent = `Account ${me.toUpperCase()} · ending ${a.card.num.slice(-4)}`;
+  const avail = r2(a.card.limit - a.card.owed);
+  $('#cAvail').textContent = `Available credit ${fmt(avail)}`;
+  $('#ccNum').textContent = a.card.num.replace(/(\d{4})(?=\d)/g, '$1 ').replace(/^(\d{4}) \d{4} \d{4}/, '$1 •••• ••••');
+  $('#ccName').textContent = a.display; $('#ccExp').textContent = a.card.exp; $('#ccLimit').textContent = fmt(a.card.limit);
+  const used = a.card.owed / a.card.limit * 100;
+  $('#ccMeter').style.width = Math.min(100, used) + '%'; $('#ccUsed').textContent = `${used.toFixed(1)}% used`;
+  const n = $('#cashNotice');
+  if (L.chipsLocked && (ctab === 'buy' || ctab === 'cash')){ n.hidden = false; n.textContent = `A round is in progress at ${cur.g.name}. Chip purchases and cash-outs open again when it finishes.`; }
+  else n.hidden = true;
+  if (ctab === 'stmt'){ renderStatement(); return; }
+  const v = r2(+$('#cAmt').value || 0), max = L[ctab];
+  let sum = '', ok = v > 0 && v <= max + 1e-9;
+  if (ctab === 'buy') sum = v ? `Bank ${fmt(a.bank)} → <b>${fmt(a.bank - v)}</b> · Chips ${fmt(a.chips)} → <b>${fmt(a.chips + v)}</b>` : `You can buy up to <b>${fmt(max)}</b> in chips.`;
+  if (ctab === 'cash') sum = v ? `Chips ${fmt(a.chips)} → <b>${fmt(a.chips - v)}</b> · Bank ${fmt(a.bank)} → <b>${fmt(a.bank + v)}</b>` : `You can cash out up to <b>${fmt(max)}</b>.`;
+  if (ctab === 'advance'){ const fee = r2(v*ADV_FEE); sum = v ? `Bank +${fmt(v)} · Card balance +${fmt(v + fee)} (includes ${fmt(fee)} fee)` : `Available for advance: <b>${fmt(max)}</b> (after fee).`; }
+  if (ctab === 'pay') sum = a.card.owed <= 0 ? 'Your card is paid in full.' : v ? `Card owed ${fmt(a.card.owed)} → <b>${fmt(a.card.owed - v)}</b> · Bank → <b>${fmt(a.bank - v)}</b>` : `You owe <b>${fmt(a.card.owed)}</b>. You can pay up to <b>${fmt(max)}</b> now.`;
+  if (v > max + 1e-9) sum = `<span class="neg">That's more than the ${fmt(max)} available.</span>`;
+  $('#cSum').innerHTML = sum;
+  $('#cGo').disabled = !ok;
+}
+function renderStatement(){
+  const a = A();
+  $('#stmtBody').innerHTML = a.tx.map(t => {
+    const d = new Date(t.t);
+    const amt = t.kind === 'session' ? (t.net ? `<span class="${t.net>0?'pos':'neg'}">${t.net>0?'+':''}${fmt(t.net)} chips</span>` : '—') : t.amt ? `<span class="${t.amt>0?'pos':'neg'}">${t.amt>0?'+':''}${fmt(t.amt)}</span>` : '';
+    return `<tr><td>${d.toLocaleDateString()} ${d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}</td><td>${esc(t.desc)}</td><td class="n">${amt}</td><td class="n">${fmt(t.bank)}</td></tr>`;
+  }).join('') || '<tr><td colspan="4">No transactions yet.</td></tr>';
+}
+let txBusy = false;
+$('#cGo').onclick = async () => {
+  if (txBusy) return;
+  const a = A(), L = limits(), v = r2(+$('#cAmt').value || 0);
+  if (!(v > 0) || v > L[ctab] + 1e-9) return;
+  txBusy = true; $('#cGo').disabled = true;
+  try {
+    if (ctab === 'buy' || ctab === 'cash'){
+      const newChips = r2(a.chips + (ctab === 'buy' ? v : -v));
+      if (cur){
+        const r = await ask('setchips', {chips:newChips});
+        if (r && r.ok === false){ toast('The table is mid-round. Try again when it finishes.'); tableStatus = await ask('status'); return; }
+        cur.entry = r2(cur.entry + (ctab === 'buy' ? v : -v));
+      }
+      a.chips = newChips;
+      if (ctab === 'buy'){ a.bank = r2(a.bank - v); tx('buy', `Chips purchased`, -v); toast(`${fmt(v)} in chips added to your hand.`); }
+      else { a.bank = r2(a.bank + v); tx('cash', `Chips cashed out`, v); toast(`${fmt(v)} deposited to your bank account.`); }
+    } else if (ctab === 'advance'){
+      const fee = r2(v*ADV_FEE);
+      a.bank = r2(a.bank + v); a.card.owed = r2(a.card.owed + v + fee);
+      tx('advance', `Velvet Felt card cash advance (fee ${fmt(fee)})`, v);
+      toast(`Cash advance of ${fmt(v)} paid into your bank account.`);
+    } else if (ctab === 'pay'){
+      a.bank = r2(a.bank - v); a.card.owed = r2(a.card.owed - v);
+      tx('pay', `Velvet Felt card payment`, -v);
+      toast(a.card.owed <= 0 ? 'Card paid in full. Thank you!' : `Payment of ${fmt(v)} received.`);
+    }
+    persist(); sfxChip();
+    setTab(ctab); renderWallet(); if (!$('#lobby').hidden) renderRecent();
+  } finally { txBusy = false; renderCashier(); }
+};
+
+/* ---------------- misc ui ---------------- */
+$('#userBtn').onclick = e => { e.stopPropagation(); $('#userMenu').hidden = !$('#userMenu').hidden; };
+document.addEventListener('click', e => { if (!e.target.closest('.user')) $('#userMenu').hidden = true; });
+$('#mLogout').onclick = logout;
+function dialog(title, body, buttons){
+  $('#dlgT').textContent = title; $('#dlgB').innerHTML = body;
+  const row = $('#dlgR'); row.innerHTML = '';
+  for (const [label, fn, primary] of buttons){
+    const b = document.createElement('button'); b.textContent = label; if (primary) b.className = 'primary';
+    b.onclick = () => { $('#dialog').hidden = true; fn && fn(); };
+    row.appendChild(b);
+  }
+  $('#dialog').hidden = false;
+}
+let toastT = 0;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3000); }
+let ac = null;
+function sfxChip(){
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    for (let k=0;k<3;k++){
+      const len = Math.floor(ac.sampleRate*.04), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+      for (let i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 3);
+      const s = ac.createBufferSource(); s.buffer = buf; const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200 + k*300; f.Q.value = 5;
+      const g = ac.createGain(); g.gain.value = .8; s.connect(f).connect(g).connect(ac.destination); s.start(ac.currentTime + k*.06);
+    }
+  } catch(e){}
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!$('#dialog').hidden) $('#dialog').hidden = true; else if (!$('#cashier').hidden) closeCashier(); } });
+
+/* ---------------- boot ---------------- */
+let saved = null;
+try { saved = sessionStorage.getItem(SES_KEY) || localStorage.getItem(SES_KEY); } catch(e){}
+if (saved && DB.users[saved]){ me = saved; startSession(!!localStorage.getItem(SES_KEY)); }
+})();
+</script>
+</body>
+</html>
