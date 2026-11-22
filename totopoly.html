@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TOTOPOLY</title>
+<title>Totopoly</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 :root{--baize:#1f4d2e;--baize2:#0f2717;--cream:#f4ecd8;--card:#fbf6ea;--ink:#2a2118;--muted:#7a6a55;--gold:#c9a227;--red:#a8322d;--green:#2f7a3b;--line:#d8c9a3;--wood:#6b4a26;--wood2:#3e2a14}
@@ -74,6 +74,7 @@ header button{background:transparent;color:var(--cream);border-color:#5d6f55;box
 .turnpill{font-weight:600;background:#fffd;padding:3px 14px;border-radius:14px;display:flex;align-items:center;gap:6px}
 .lastmove{background:rgba(0,0,0,.28);border-radius:6px;padding:6px 10px;font-size:13px;max-width:500px;text-align:left}
 .lastmove div{padding:2px 0}
+.formtab{font-size:13px;margin:4px 0 6px}.formtab td:first-child{white-space:nowrap;font-weight:600}
 .lastmove .throw{display:inline-block;min-width:20px;text-align:center;background:#f4ecd8;color:#222;border-radius:4px;margin-right:4px}
 .trainbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .trainbtns small{opacity:.8}
@@ -189,7 +190,7 @@ button,.lease,.sq{touch-action:manipulation}
 <body>
 <header>
   <svg class="crest" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#173f24" stroke="#c9a227" stroke-width="2"/><path d="M13 31 C12 22 16 13 25 11 C28 10 31 12 31 15 L28 16 C30 19 30 23 27 26 L24 25 L22 31 Z" fill="#f4ecd8"/><circle cx="26.5" cy="14.5" r="1" fill="#173f24"/><path d="M12 34 H32" stroke="#c9a227" stroke-width="2"/></svg>
-  <h1><span>TOTOPOLY<span></h1>
+  <h1>TOTOPOLY</h1>
   <div class="sub">A racehorse owners' board game</div>
   <div class="right"><span id="meet"></span><button onclick="confirmNew()">New game</button></div>
 </header>
@@ -201,7 +202,7 @@ button,.lease,.sq{touch-action:manipulation}
 <script>
 'use strict';
 // ── DATA ──────────────────────────────────────────────────────────────
-const START_CASH=700, LEN=48, LANES=6, ENTRY_FEE=25, MAX_ENTRIES=3, ADDED_MONEY=300, TOTE_TAKE=0.10, PUBLIC_MONEY=150;
+const START_CASH=1000, LEN=48, LANES=6, ENTRY_FEE=25, MAX_ENTRIES=3, ADDED_MONEY=300, TOTE_TAKE=0.10, PUBLIC_MONEY=150;
 // Race course: every lane has the same squares on the straights, but each bend gains BEND_EXTRA squares
 // per lane out from the rail, so the inside is the short way round. LEN is the distance on the rail.
 const HALF=7, BEND=12, BEND_EXTRA=1, OFF=2;
@@ -214,10 +215,10 @@ function mapPos(l,p,l2){ // the square level with lane l, position p, in lane l2
 const toGo=s=>FIN(s.lane)-s.pos;
 const onFinalBend=(l,p)=>p>=0&&kSeg(l,p+OFF+.5)[0]===3;   // segment 3 is the second (final) bend: no lane changes there
 const STABLES=[
-  {name:'Ashcombe',col:'#a8322d'},
-  {name:'Brackenhurst',col:'#24508a'},
-  {name:'Corrie Lodge',col:'#2f7a3b'},
-  {name:'Dunmore',col:'#b07d0b'}];
+  {name:'Warren Place',col:'#a8322d'},
+  {name:'Godolphin Stables',col:'#24508a'},
+  {name:'Freemason Lodge',col:'#2f7a3b'},
+  {name:'Coolmore',col:'#b07d0b'}];
 const CLASS=['C','B','A'];
 const HORSES=[ // name, stable, class (0=C 1=B 2=A), list price
   ['Copper Kettle',0,2,200],['Lantern Jaw',0,1,140],['Mistral Hope',0,0,90],
@@ -844,6 +845,16 @@ function viewAuction(){
      <p class="muted">Out: ${G.players.filter((x,i)=>A.out[i]).map(x=>esc(x.name)).join(', ')||'nobody yet'}</p>${ctl}</div></div>
    <h3>The string</h3>${horseTable(A.hid)}${bizTable(A.hid)}</div>`;
 }
+// Who holds a yard's three horses, for the yard and paddock tooltips, e.g. "Held by: You ×2, Bravo ×1 (Bank ×0)".
+function yardHolders(s){
+  const hs=G.horses.filter(h=>h.stable===s),by={};
+  hs.forEach(h=>{if(h.owner>=0)by[h.owner]=(by[h.owner]||0)+1});
+  const ps=Object.keys(by).map(Number).sort((a,b)=>by[b]-by[a]||a-b);
+  const bank=hs.filter(h=>h.owner<0).length;
+  if(!ps.length)return `${STABLES[s].name} yard: all three horses unowned, no fees.`;
+  const who=ps.map(o=>`${P(o).name} ×${by[o]}`).join(', ');
+  return `${STABLES[s].name} yard held by: ${who}${bank?`, unowned ×${bank}`:''}`+(ps.length===1&&by[ps[0]]===3?` (whole yard: others pay £75)`:` (others pay £15 per horse)`);
+}
 function sqPos(i){if(i<=8)return[9,9-i];if(i<=15)return[9-(i-8),1];if(i<=24)return[1,1+(i-16)];return[1+(i-24),9]}
 function viewTraining(){
   const landed=new Set(G.lastMoves.map(x=>x.sq));
@@ -852,7 +863,7 @@ function viewTraining(){
     const here=G.horses.filter(h=>h.owner>=0&&(h.trained?sq.t==='yard'&&sq.s===h.stable:ringPos(h)===i));
     const toks=here.map(h=>`<span class="tok ${h.trained?'home':''}" data-tok="${h.trained&&!G.anims.some(a=>a.hid===h.id)?'':h.id}" title="${esc(h.name)} (${esc(P(h.owner).name)})${h.trained?' – home':` – lap ${lapOf(h)} of ${LAPS}`}" style="--sc:${STABLES[h.stable].col};--pc:${P(h.owner).col}">${h.id+1}</span>`).join('');
     const bz=G.biz.find(b=>b.sq===sq.t),bo=bz?bz.owner:-1;
-    const tip=esc(sqName(i)+': '+info[2]+(bz?(bo>=0?` (to ${P(bo).name}, ${bz.name})`:` (to the Bank: ${bz.name} unowned)`):''));
+    const tip=esc(sqName(i)+': '+info[2]+(bz?(bo>=0?` (to ${P(bo).name}, ${bz.name})`:` (to the Bank: ${bz.name} unowned)`):'')+(st?'. '+yardHolders(sq.s):''));
     const mark=bo>=0?`<span class="sqown" style="background:${P(bo).col}" title="${esc(bz.name)}: ${esc(P(bo).name)}"></span>`:'';
     if(sq.t==='yard')return `<div class="sq corner ${landed.has(i)?'land':''}" data-i="${i}" style="grid-row:${r};grid-column:${c}" title="${tip}">${barn(st.col)}<div class="lbl">${esc(st.name)}</div><div class="toks ${here.length>4?'many':''}">${toks}</div></div>`;
     return `<div class="sq ${landed.has(i)?'land':''}" data-i="${i}" style="grid-row:${r};grid-column:${c};--bc:${st?st.col:info[3]}" title="${tip}">
@@ -956,6 +967,15 @@ function rulesHTML(){
   return `<details class="rules"><summary>How to play</summary>
   <p><b>1. Lease cards &amp; sales.</b> The horse cards are dealt into a hand for each owner and one for the auctioneer. Keep what you want at face value; everything else is auctioned. Horses live in four yards of three, and owning a whole yard makes other owners pay you more. Five business cards are in the pack too: the Auctioneer (5% commission on every sale), the Forage Merchant, Blacksmith and Veterinary Surgeon (they own the Feed Bill, Farrier and Vet squares, so those payments come to you, and your own horses pay nothing there), and the Bookmaker (10% of all stakes on every race).</p>
   <p><b>2. Training.</b> On your turn each of your horses still out has its own throw of two dice, in the order you choose. Each starts at its own yard and goes three times round the ring. Squares win or cost money, change form (−10 to +10), or give Trainer's Report cards for the race. Landing on another yard or paddock costs stable fees.</p>
+  <p><b>Form</b> runs from −10 to +10. In training: Fast Work +2, Farrier +1, own yard's paddock +1, walking straight into its own box at the end +1, Knock −2, Water Trough −1; Trainer's Report cards Sharp Gallop +2, Flew Up the Gallops +3, Off Colour −2, Coughing −3. In the race, every move adds a form bonus averaging form ÷ 8 (negative form takes lengths off; a horse always moves at least 1):</p>
+  <div class="tscroll"><table class="list formtab"><tr><th>Form</th><th>Bonus each move</th><th>Over a race</th></tr>
+   <tr><td>+1 to +3</td><td>+1 one move in eight per point (⅛ to ⅜)</td><td>about 2–5 lengths</td></tr>
+   <tr><td>+4</td><td>+1 half the time</td><td>about 6–7 lengths</td></tr>
+   <tr><td>+6</td><td>+1 three times in four</td><td>about 9–10 lengths</td></tr>
+   <tr><td>+8</td><td>+1 every move</td><td>about 12–14 lengths</td></tr>
+   <tr><td>+10</td><td>+1 every move, +2 a quarter of the time</td><td>about 15–17 lengths</td></tr>
+   <tr><td>−4 / −8</td><td>the same, taken off</td><td>about 6 / 13 lengths lost</td></tr></table></div>
+  <p class="muted" style="font-size:13px">The course is ${LEN} lengths and a race is about 12–14 moves. Form is halved (towards zero) between meetings, and the Tote's forecast counts it too.</p>
   <p><b>3. Declarations &amp; the Tote.</b> Enter up to three horses (${fmt(ENTRY_FEE)} each). Bets go into the Tote pool; it keeps ${TOTE_TAKE*100}% and the rest goes to those who backed the winner.</p>
   <p><b>4. The race.</b> ${LEN} lengths round the oval on the rail, six lanes; each lane out adds a square on each of the two bends, so the outside lane runs ${FIN(LANES-1)}. Each horse throws a die (plus form, class and card bonuses) and may first move one lane in or out if two lengths clear, except on the final bend, where horses keep their own lane. Blocked horses are baulked. Landing on your own yard's colours sends you on 3 more; Stumble squares put you down until you throw a six; Heavy Going costs a move. Purse ${fmt(ADDED_MONEY)} plus entrance money, split ½, ¼, ¼.</p>
   <p><b>No borrowing.</b> An owner in debt after training or a race must sell horses back to the Bank (60% of list), weakest first.</p>
