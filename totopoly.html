@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Totopoly</title>
+<title>TOTOPOLY</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 :root{--baize:#1f4d2e;--baize2:#0f2717;--cream:#f4ecd8;--card:#fbf6ea;--ink:#2a2118;--muted:#7a6a55;--gold:#c9a227;--red:#a8322d;--green:#2f7a3b;--line:#d8c9a3;--wood:#6b4a26;--wood2:#3e2a14}
@@ -74,6 +74,9 @@ header button{background:transparent;color:var(--cream);border-color:#5d6f55;box
 .turnpill{font-weight:600;background:#fffd;padding:3px 14px;border-radius:14px;display:flex;align-items:center;gap:6px}
 .lastmove{background:rgba(0,0,0,.28);border-radius:6px;padding:6px 10px;font-size:13px;max-width:500px;text-align:left}
 .lastmove div{padding:2px 0}
+.lastmove .throw{display:inline-block;min-width:20px;text-align:center;background:#f4ecd8;color:#222;border-radius:4px;margin-right:4px}
+.trainbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.trainbtns small{opacity:.8}
 /* tables */
 table.list{width:100%;border-collapse:collapse;font-size:14px}
 table.list th,table.list td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
@@ -186,7 +189,7 @@ button,.lease,.sq{touch-action:manipulation}
 <body>
 <header>
   <svg class="crest" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#173f24" stroke="#c9a227" stroke-width="2"/><path d="M13 31 C12 22 16 13 25 11 C28 10 31 12 31 15 L28 16 C30 19 30 23 27 26 L24 25 L22 31 Z" fill="#f4ecd8"/><circle cx="26.5" cy="14.5" r="1" fill="#173f24"/><path d="M12 34 H32" stroke="#c9a227" stroke-width="2"/></svg>
-  <h1>Totopoly</h1>
+  <h1><span>TOTOPOLY<span></h1>
   <div class="sub">A racehorse owners' board game</div>
   <div class="right"><span id="meet"></span><button onclick="confirmNew()">New game</button></div>
 </header>
@@ -241,12 +244,12 @@ const SQINFO={ // icon, label, help, band colour
   paddock:['🐎','','Pay the yard\'s owners: £15 per horse they keep there, £75 if one owner has all three. A horse from that yard gets +1 form','#000'],
   gallops:['🂠','Trainer\'s Report','Draw a Trainer\'s Report card','#c9a227'],
   feed:['🌾','Feed Bill £20','Pay £20','#a8322d'],
-  work:['💪','Fast Work','+1 form','#24508a'],
+  work:['💪','Fast Work','+2 form','#24508a'],
   trial:['🏆','Trial Win £40','Collect £40','#2f7a3b'],
-  rest:['💧','Water Trough','Rest: nothing happens','#7a6a55'],
+  rest:['💧','Water Trough','Eased off: −1 form','#7a6a55'],
   farrier:['🔨','Farrier £15','Pay £15, +1 form','#24508a'],
   vet:['💉','Vet £30','Pay £30','#a8322d'],
-  lame:['🤕','Knock','−1 form','#7d201a'],
+  lame:['🤕','Knock','−2 form','#7d201a'],
   bar:['🍺',"Owners' Bar",'Collect £20','#2f7a3b']};
 // Business lease cards, dealt and auctioned alongside the horses. Square-owning businesses collect the
 // payment when any other owner's horse lands on their squares; the owner's own horses pay nothing.
@@ -266,8 +269,10 @@ const CARDS=[
   {id:'clumsy',n:'Clumsy', d:'Heavy Going brings it down too (held till a six)', v:-1.1},
   {id:'heavy', n:'Hates Heavy Going', d:'−1 a move for the first 12 lengths', v:-1},
   {id:'fades', n:'Fades Late', d:'−1 a move in the last 12 lengths', v:-1.2},
-  {id:'sharp', n:'Sharp Gallop', d:'+1 form', form:1},
-  {id:'off',   n:'Off Colour', d:'−1 form', form:-1},
+  {id:'sharp', n:'Sharp Gallop', d:'+2 form', form:2},
+  {id:'off',   n:'Off Colour', d:'−2 form', form:-2},
+  {id:'flew',  n:'Flew Up the Gallops', d:'+3 form', form:3},
+  {id:'cough', n:'Coughing', d:'−3 form', form:-3},
   {id:'bonus', n:"Owner's Bonus", d:'Owner collects £30', cash:30},
   {id:'fee',   n:"Jockey's Fee", d:'Owner pays £25', cash:-25}];
 const CARD=Object.fromEntries(CARDS.map(c=>[c.id,c]));
@@ -309,9 +314,11 @@ function payBiz(pi,amt,key){
   return `pays £${amt}`;
 }
 const has=(h,c)=>h.cards.includes(c);
-const clampForm=f=>Math.max(-3,Math.min(3,f));
+const FORM_MAX=10,clampForm=f=>Math.max(-FORM_MAX,Math.min(FORM_MAX,f));
+// Race bonus from form, per move: on average form/8 (so +8 is +1 a move, +10 sometimes +2), never a sharp step.
+function formBonus(h){const e=Math.abs(h.form)/8,b=Math.floor(e)+(Math.random()<e%1?1:0);return h.form<0?-b:b}
 function log(html){G.log.unshift(html);if(G.log.length>150)G.log.pop()}
-function strength(h){return h.cls*0.9+h.form*0.6+h.cards.reduce((a,c)=>a+(CARD[c].v||0),0)}
+function strength(h){return h.cls*0.9+h.form*0.2+h.cards.reduce((a,c)=>a+(CARD[c].v||0),0)}
 function chips(h){return h.cards.map(c=>`<span class="chip ${CARD[c].v>0?'good':'bad'}" title="${esc(CARD[c].d)}">${esc(CARD[c].n)}</span>`).join('')}
 function formTag(h){return `<span class="form ${h.form>0?'up':h.form<0?'down':''}" title="Form">${h.form>0?'+':''}${h.form}</span>`}
 function sqName(i){const s=SQ[i];return s.t==='yard'?STABLES[s.s].name+' Yard':s.t==='paddock'?STABLES[s.s].name+' Paddock':SQINFO[s.t][1]}
@@ -465,36 +472,51 @@ function aiAuction(){
   if(m<=v&&m<=P(pi).cash-40){let b=m;if(v-m>70&&Math.random()<.4)b=m+20;auctionAct(b)}else auctionAct(null);
 }
 
-// Training: one throw per owner per turn moves every one of that owner's horses still out.
+// Training: on an owner's turn each of their horses still out has its own throw of two dice.
+// The owner chooses the order (G.turnMoved = horses already thrown for this turn).
 const trainees=pi=>G.horses.filter(h=>h.owner===pi&&!h.trained);
+const waiting=()=>trainees(G.cur).filter(h=>!G.turnMoved.includes(h.id));
 function startTraining(){
-  G.phase='training';G.dice=null;G.lastMoves=[];G.lastRoller=-1;
+  G.phase='training';G.dice=null;G.lastMoves=[];G.lastRoller=-1;G.turnMoved=[];
   G.horses.forEach(h=>{h.prog=0;h.trained=h.owner<0});
   G.cur=(G.meeting-1+NP()-1)%NP();
   log(`<i>Meeting ${G.meeting}: the string leaves the yards for the training ring.</i>`);
   nextTrainer();
 }
 function nextTrainer(){
+  G.turnMoved=[];
   for(let k=1;k<=NP();k++){const j=(G.cur+k)%NP();if(trainees(j).length){G.cur=j;return}}
   G.trainingDone=true;
 }
-function rollTraining(){
-  if(G.trainingDone)return;
+function throwFor(hid){
+  const h=H(hid);
+  if(G.trainingDone||!h||h.owner!==G.cur||h.trained||G.turnMoved.includes(hid))return;
+  if(!G.turnMoved.length){G.lastMoves=[];G.anims=[]}
   G.dice=[d6(),d6()];G.lastRoller=G.cur;UI.rolled=true;
-  const roll=G.dice[0]+G.dice[1];G.lastMoves=[];G.anims=[];
-  trainees(G.cur).forEach(h=>{
-    const from=h.prog,path=[];
-    for(let k=1;k<=roll&&from+k<=TRAIN_LEN;k++)path.push((8*h.stable+from+k)%SQ.length);
-    h.prog=Math.min(TRAIN_LEN,from+roll);let msg;
-    if(h.prog>=TRAIN_LEN){h.trained=true;h.prog=TRAIN_LEN;
-      if(from+roll===TRAIN_LEN){h.form=clampForm(h.form+1);msg=`${hn(h)} walks straight into its own box: a good feed, +1 form.`}
-      else msg=`${hn(h)} completes its ${LAPS} laps and is back in its box.`}
-    else if(h.prog%LAP_LEN===0)msg=`${hn(h)} stops in at its own yard and sets off on lap ${lapOf(h)} of ${LAPS}.`;
-    else{msg=resolveSquare(h);if(Math.floor(from/LAP_LEN)<Math.floor(h.prog/LAP_LEN))msg+=` <span class="muted">(lap ${lapOf(h)} of ${LAPS})</span>`}
-    G.lastMoves.push({hid:h.id,sq:ringPos(h),msg});G.anims.push({hid:h.id,path});
-    log(`${pn(h.owner)} (${roll}): ${msg}`);
-  });
-  nextTrainer();render();
+  const roll=G.dice[0]+G.dice[1];
+  const from=h.prog,path=[];
+  for(let k=1;k<=roll&&from+k<=TRAIN_LEN;k++)path.push((8*h.stable+from+k)%SQ.length);
+  h.prog=Math.min(TRAIN_LEN,from+roll);let msg;
+  if(h.prog>=TRAIN_LEN){h.trained=true;h.prog=TRAIN_LEN;
+    if(from+roll===TRAIN_LEN){h.form=clampForm(h.form+1);msg=`${hn(h)} walks straight into its own box: a good feed, +1 form.`}
+    else msg=`${hn(h)} completes its ${LAPS} laps and is back in its box.`}
+  else if(h.prog%LAP_LEN===0)msg=`${hn(h)} stops in at its own yard and sets off on lap ${lapOf(h)} of ${LAPS}.`;
+  else{msg=resolveSquare(h);if(Math.floor(from/LAP_LEN)<Math.floor(h.prog/LAP_LEN))msg+=` <span class="muted">(lap ${lapOf(h)} of ${LAPS})</span>`}
+  G.lastMoves.push({hid:h.id,sq:ringPos(h),msg,roll});G.anims.push({hid:h.id,path});
+  log(`${pn(h.owner)} (${roll}): ${msg}`);
+  G.turnMoved.push(h.id);
+  if(!waiting().length)nextTrainer();
+}
+function rollTraining(hid){if(G.trainingDone)return;throwFor(hid);render()}
+// Computer owners send the horse furthest round first (it is nearest home).
+const aiPickTrainee=w=>w.reduce((a,b)=>b.prog>a.prog?b:a);
+// One horse per call when the table is all computers (so it can be watched), or a whole turn
+// at once when a human clicks "Next".
+function aiTrain(whole){
+  if(G.trainingDone)return;
+  const n=whole?waiting().length:1;
+  for(let k=0;k<n;k++){const w=waiting();if(!w.length)break;throwFor(aiPickTrainee(w).id)}
+  render();
 }
 function stableFees(h,s){
   const p=P(h.owner),inYard=G.horses.filter(x=>x.stable===s&&x.owner>=0),bits=[];
@@ -519,12 +541,12 @@ function resolveSquare(h){
       else h.cards.push(c.id);
       return pre+t+'.';}
     case 'feed':return pre+payBiz(h.owner,20,'forage')+'.';
-    case 'work':h.form=clampForm(h.form+1);return pre+'+1 form.';
+    case 'work':h.form=clampForm(h.form+2);return pre+'+2 form.';
     case 'trial':p.cash+=40;return pre+'wins a trial, collects £40.';
-    case 'rest':return pre+'a quiet drink.';
+    case 'rest':h.form=clampForm(h.form-1);return pre+'eased off for a drink, −1 form.';
     case 'farrier':h.form=clampForm(h.form+1);return pre+payBiz(h.owner,15,'smith')+', +1 form.';
     case 'vet':return pre+payBiz(h.owner,30,'vet')+'.';
-    case 'lame':h.form=clampForm(h.form-1);return pre+'takes a knock, −1 form.';
+    case 'lame':h.form=clampForm(h.form-2);return pre+'takes a knock, −2 form.';
     case 'bar':p.cash+=20;return pre+'collects £20.';
   }
   return pre+'nothing.';
@@ -639,7 +661,7 @@ function moveHorse(id){
   if(s.moves===0&&has(h,'nervy')){s.moves++;s.note='nervy, missed the break';log(`${hn(h)} is nervy and misses the break.`);return}
   const die=d6();let m=die;const bits=[];
   if(s.moves===0&&has(h,'flyer')){m+=2;bits.push('flying start +2')}
-  if(h.form>=2){m++;bits.push('form +1')}else if(h.form<=-2){m--;bits.push('form −1')}
+  {const b=formBonus(h);if(b){m+=b;bits.push(`form ${b>0?'+':'−'}${Math.abs(b)}`)}}
   if(Math.random()<[0,.25,.5][h.cls]){m++;bits.push('class +1')}
   if(s.pos<12&&has(h,'heavy')){m--;bits.push('heavy going −1')}
   if(toGo(s)<=12&&has(h,'finish')){m++;bits.push('finishing +1')}
@@ -757,7 +779,7 @@ function schedule(){
   const cpu=i=>i>=0&&i<NP()&&!P(i).human;
   if(G.phase==='lots'&&cpu(G.cur))fn=aiKeep;
   else if(G.phase==='auction'&&G.auction&&cpu(G.auction.turn))fn=aiAuction;
-  else if(G.phase==='training'&&!G.trainingDone&&cpu(G.cur)&&G.players.every(p=>!p.human)){fn=rollTraining;d=1300}
+  else if(G.phase==='training'&&!G.trainingDone&&cpu(G.cur)&&G.players.every(p=>!p.human)){fn=()=>aiTrain(false);d=1300}
   else if(G.phase==='training'&&G.trainingDone&&G.players.every(p=>!p.human)){fn=endTraining;d=1300}
   else if(G.phase==='entries'&&cpu(G.cur))fn=aiEntries;
   else if(G.phase==='betting'&&cpu(G.cur))fn=aiBet;
@@ -840,14 +862,17 @@ function viewTraining(){
   if(G.dice)ctr+=`<div class="dice">${dieSVG(G.dice[0],UI.rolled?'roll':'')}${dieSVG(G.dice[1],UI.rolled?'roll':'')}</div>`;
   UI.rolled=false;
   const top=ctr;ctr='';
-  if(G.lastMoves.length)ctr+=`<div class="lastmove"><div class="muted" style="color:#cdbf98">${esc(P(G.lastRoller).name)} threw ${G.dice[0]+G.dice[1]}:</div>${G.lastMoves.map(x=>`<div>${x.msg}</div>`).join('')}</div>`;
+  if(G.lastMoves.length)ctr+=`<div class="lastmove"><div class="muted" style="color:#cdbf98">${esc(P(G.lastRoller).name)} threw:</div>${G.lastMoves.map(x=>`<div><b class="throw">${x.roll}</b> ${x.msg}</div>`).join('')}</div>`;
   if(G.trainingDone){
     ctr+=`<div class="note">Every horse is back in its box.</div><button class="go" onclick="endTraining()">To the racecourse →</button>`;
   }else{
-    const p=P(G.cur),t=trainees(G.cur);
-    ctr+=`<div class="turnpill" style="color:${p.col}">${silks(p.col,'#f4ecd8',22)} ${p.name==='You'?'Your':esc(p.name)+"'s"} throw</div>`;
-    if(p.human)ctr+=`<button class="go" onclick="rollTraining()">🎲 Throw the dice</button><div class="note">One throw moves all ${t.length===1?'your horse':`${t.length} of your horses`} still out (${t.map(h=>esc(h.name)).join(', ')}). Each sets out from its own yard and goes ${LAPS} times round the ring.</div>`;
-    else if(G.players.some(q=>q.human))ctr+=`<button class="go" onclick="rollTraining()">Next: ${esc(p.name)}'s throw →</button>`;
+    const p=P(G.cur),w=waiting();
+    ctr+=`<div class="turnpill" style="color:${p.col}">${silks(p.col,'#f4ecd8',22)} ${p.name==='You'?'Your':esc(p.name)+"'s"} throw${G.turnMoved.length?'s (continued)':''}</div>`;
+    if(p.human){
+      ctr+=`<div class="trainbtns">${w.map(h=>`<button class="go" onclick="rollTraining(${h.id})" title="${esc(sqName(ringPos(h)))}, lap ${lapOf(h)} of ${LAPS}">🎲 ${esc(h.name)} <small>(lap ${lapOf(h)}, ${esc(sqName(ringPos(h)))})</small></button>`).join('')}</div>`;
+      ctr+=`<div class="note">${w.length===1?`Throw for ${esc(w[0].name)}.`:`Each of your horses has its own throw this turn. Choose which goes ${G.turnMoved.length?'next':'first'}.`} Each sets out from its own yard and goes ${LAPS} times round the ring.</div>`;
+    }
+    else if(G.players.some(q=>q.human))ctr+=`<button class="go" onclick="aiTrain(true)">Next: ${esc(p.name)}'s throw${w.length>1?`s (${w.length} horses)`:''} →</button>`;
     else ctr+=`<div class="note">shaking the dice…</div>`;
   }
   const left=G.horses.filter(h=>h.owner>=0&&!h.trained).length;
@@ -930,7 +955,7 @@ function viewEnd(){
 function rulesHTML(){
   return `<details class="rules"><summary>How to play</summary>
   <p><b>1. Lease cards &amp; sales.</b> The horse cards are dealt into a hand for each owner and one for the auctioneer. Keep what you want at face value; everything else is auctioned. Horses live in four yards of three, and owning a whole yard makes other owners pay you more. Five business cards are in the pack too: the Auctioneer (5% commission on every sale), the Forage Merchant, Blacksmith and Veterinary Surgeon (they own the Feed Bill, Farrier and Vet squares, so those payments come to you, and your own horses pay nothing there), and the Bookmaker (10% of all stakes on every race).</p>
-  <p><b>2. Training.</b> One throw of two dice moves all of your horses still out. Each starts at its own yard and goes three times round the ring. Squares win or cost money, change form (−3 to +3), or give Trainer's Report cards for the race. Landing on another yard or paddock costs stable fees.</p>
+  <p><b>2. Training.</b> On your turn each of your horses still out has its own throw of two dice, in the order you choose. Each starts at its own yard and goes three times round the ring. Squares win or cost money, change form (−10 to +10), or give Trainer's Report cards for the race. Landing on another yard or paddock costs stable fees.</p>
   <p><b>3. Declarations &amp; the Tote.</b> Enter up to three horses (${fmt(ENTRY_FEE)} each). Bets go into the Tote pool; it keeps ${TOTE_TAKE*100}% and the rest goes to those who backed the winner.</p>
   <p><b>4. The race.</b> ${LEN} lengths round the oval on the rail, six lanes; each lane out adds a square on each of the two bends, so the outside lane runs ${FIN(LANES-1)}. Each horse throws a die (plus form, class and card bonuses) and may first move one lane in or out if two lengths clear, except on the final bend, where horses keep their own lane. Blocked horses are baulked. Landing on your own yard's colours sends you on 3 more; Stumble squares put you down until you throw a six; Heavy Going costs a move. Purse ${fmt(ADDED_MONEY)} plus entrance money, split ½, ¼, ¼.</p>
   <p><b>No borrowing.</b> An owner in debt after training or a race must sell horses back to the Bank (60% of list), weakest first.</p>
