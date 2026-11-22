@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Totopoly</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--baize:#1f4d2e;--baize2:#0f2717;--cream:#f4ecd8;--card:#fbf6ea;--ink:#2a2118;--muted:#7a6a55;--gold:#c9a227;--red:#a8322d;--green:#2f7a3b;--line:#d8c9a3;--wood:#6b4a26;--wood2:#3e2a14}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font-family:Lora,Georgia,serif;min-height:100vh;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.018) 0 2px,transparent 2px 5px),radial-gradient(ellipse at 50% 25%,#2d6a43,var(--baize2) 78%);background-color:var(--baize2);background-attachment:fixed}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:10px 16px;background:linear-gradient(#10281a,#0a1c11);color:var(--cream);border-bottom:3px solid var(--gold);box-shadow:0 3px 10px rgba(0,0,0,.5)}
+header .crest{width:44px;height:44px;flex:none}
+header h1{font-family:'Playfair Display',serif;margin:0;font-size:28px;letter-spacing:1px;font-weight:900}
+header h1 span{color:var(--gold);font-style:italic}
+header .sub{color:#cdbf98;font-size:13px;font-style:italic}
+header .right{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:14px}
+button{font-family:inherit;font-size:14px;border:1px solid #6b5636;background:linear-gradient(#fff8e6,#e9dcb8);color:var(--ink);padding:7px 14px;border-radius:6px;cursor:pointer;box-shadow:0 2px 0 #8a7448}
+button:hover:not(:disabled){background:linear-gradient(#fffdf4,#f1e5c4)}
+button:active:not(:disabled){transform:translateY(1px);box-shadow:0 1px 0 #8a7448}
+button:disabled{opacity:.45;cursor:default}
+button.go{background:linear-gradient(#3d8a4c,#2a6436);color:#fff;border-color:#1c4524;box-shadow:0 2px 0 #163a1e}
+button.warn{background:linear-gradient(#c24a42,#962f28);color:#fff;border-color:#6d211c;box-shadow:0 2px 0 #5a1b17}
+button.small{padding:3px 8px;font-size:12px}
+header button{background:transparent;color:var(--cream);border-color:#5d6f55;box-shadow:none}
+#app{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;padding:14px;max-width:1480px;margin:0 auto}
+@media(max-width:980px){#app{grid-template-columns:1fr}}
+.panel{background:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,0) 40%),var(--cream);border-radius:8px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.45);border:1px solid var(--line)}
+.panel h2{font-family:'Playfair Display',serif;margin:0 0 8px;font-size:23px}
+.panel h3{font-family:'Playfair Display',serif;margin:12px 0 6px;font-size:17px}
+.muted{color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#side{display:flex;flex-direction:column;gap:14px}
+.pl{border:1px solid var(--line);border-left:6px solid var(--pc);border-radius:6px;padding:8px;margin-bottom:8px;background:var(--card)}
+.pl.cur{box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(201,162,39,.5)}
+.plh{display:flex;align-items:center;gap:6px;font-weight:600}
+.plh .cash{margin-left:auto;font-variant-numeric:tabular-nums;font-family:'Playfair Display',serif;font-size:17px}
+.neg{color:var(--red)}
+.ph{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:13px;margin-top:4px}
+.num{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;font-weight:700;background:var(--sc);border:2px solid var(--pc,#fff);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.form{font-size:11px;padding:0 4px;border-radius:3px;background:#e5dcc4}
+.form.up{background:#cfe8cf;color:#1d5a26}.form.down{background:#f2d0cc;color:#7d201a}
+.chip{font-size:10px;padding:1px 5px;border-radius:8px;border:1px solid;cursor:help;white-space:nowrap}
+.chip.good{background:#e3f2e1;border-color:#7fb07a;color:#245c22}
+.chip.bad{background:#f8e2df;border-color:#d08b84;color:#842a22}
+.hname{border-bottom:3px solid var(--sc)}
+.silks{vertical-align:middle;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+#log{max-height:340px;overflow:auto;font-size:13px}
+#log div{padding:3px 0;border-bottom:1px dotted var(--line)}
+/* training board */
+.boardwrap{background:linear-gradient(135deg,var(--wood),var(--wood2));padding:10px;border-radius:12px;box-shadow:inset 0 0 0 2px #8d6a3d,0 4px 12px rgba(0,0,0,.4);max-width:820px;margin:0 auto}
+.board{display:grid;grid-template-columns:1.35fr repeat(7,1fr) 1.35fr;grid-template-rows:1.35fr repeat(7,1fr) 1.35fr;aspect-ratio:1;width:100%;gap:3px;background:#0b2012;padding:4px;border-radius:6px}
+.sq{background:linear-gradient(#fffaf0,#f1e6cc);position:relative;display:flex;flex-direction:column;align-items:center;padding:0 2px 2px;overflow:hidden;text-align:center;line-height:1.05;font-size:clamp(7px,1vw,11px);border-radius:3px}
+.sq .band{height:15%;min-height:5px;align-self:stretch;margin:0 -2px 2px;background:var(--bc)}
+.sq .ic{width:clamp(16px,2.6vw,30px);height:clamp(16px,2.6vw,30px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(10px,1.6vw,17px);background:radial-gradient(circle at 35% 30%,#fff,#e8dbbb);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15);margin-bottom:1px}
+.sq .lbl{font-weight:600}
+.sq.corner{background:linear-gradient(160deg,#f6e9c6,#e3cf9c);font-size:clamp(8px,1.1vw,12px)}
+.sq.corner .barn{width:58%;margin-top:6%}
+.sq.corner .lbl{font-family:'Playfair Display',serif}
+.sq.land{box-shadow:inset 0 0 0 3px var(--gold),0 0 10px var(--gold);z-index:1}
+.sq .toks{display:flex;flex-wrap:wrap;gap:1px;justify-content:center;margin-top:auto}
+.toks.many .tok{width:clamp(9px,1.3vw,14px);height:clamp(9px,1.3vw,14px);font-size:clamp(6px,.7vw,8px);border-width:1px}
+.tok{display:inline-flex;align-items:center;justify-content:center;width:clamp(12px,1.9vw,20px);height:clamp(12px,1.9vw,20px);border-radius:50%;color:#fff;font-size:clamp(7px,.9vw,10px);font-weight:700;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.45),transparent 55%),var(--sc);border:2px solid var(--pc);box-shadow:0 2px 3px rgba(0,0,0,.45);position:relative;z-index:3}
+.tok.home{opacity:.55;filter:saturate(.6)}
+.center{grid-row:2/9;grid-column:2/9;background:radial-gradient(ellipse at 50% 40%,#2c6b40,#173f24);border-radius:6px;color:var(--cream);padding:clamp(8px,2vw,22px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;overflow:auto;box-shadow:inset 0 0 30px rgba(0,0,0,.5)}
+.center h2{font-family:'Playfair Display',serif;margin:0;font-size:clamp(16px,2.6vw,30px);letter-spacing:1px}
+.center .emblem{width:clamp(60px,12vw,130px)}
+.dice{display:flex;gap:12px}
+.die{filter:drop-shadow(0 3px 2px rgba(0,0,0,.5))}
+.die.roll{animation:roll .5s ease-out}
+@keyframes roll{0%{transform:rotate(-200deg) scale(.6) translateY(-20px)}70%{transform:rotate(15deg) scale(1.08)}100%{transform:none}}
+.center .note{font-size:13px;color:#d9cfae;max-width:460px}
+.turnpill{font-weight:600;background:#fffd;padding:3px 14px;border-radius:14px;display:flex;align-items:center;gap:6px}
+.lastmove{background:rgba(0,0,0,.28);border-radius:6px;padding:6px 10px;font-size:13px;max-width:500px;text-align:left}
+.lastmove div{padding:2px 0}
+/* tables */
+table.list{width:100%;border-collapse:collapse;font-size:14px}
+table.list th,table.list td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+table.list th{font-family:'Playfair Display',serif;font-size:13px;color:var(--muted)}
+table.list tr.hi td{background:#fff3c9}
+input[type=number],input[type=text],select{font-family:inherit;font-size:14px;padding:5px;border:1px solid #b9a77f;border-radius:5px;background:#fffdf6}
+input[type=number]{width:80px}
+/* lease cards */
+.hand{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0}
+.lease{width:170px;background:var(--card);border:1px solid #b9a77f;border-radius:10px;overflow:hidden;box-shadow:0 3px 6px rgba(0,0,0,.25);cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative}
+.lease:hover{transform:translateY(-3px)}
+.lease.kept{box-shadow:0 0 0 3px var(--green),0 6px 10px rgba(0,0,0,.3)}
+.lease .top{background:var(--sc);color:#fff;padding:5px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between}
+.lease .body{padding:8px;text-align:center}
+.lease .hn{font-family:'Playfair Display',serif;font-size:18px;margin:4px 0}
+.lease .price{font-family:'Playfair Display',serif;font-size:20px}
+.lease .stamp{position:absolute;top:34px;right:6px;transform:rotate(12deg);border:2px solid var(--green);color:var(--green);font-weight:700;font-size:11px;padding:1px 6px;border-radius:4px;background:#fffc}
+.lot{display:flex;gap:18px;flex-wrap:wrap;align-items:stretch}
+.horsecard{background:var(--card);border:2px solid var(--sc);border-radius:10px;padding:14px 18px;min-width:250px;box-shadow:0 3px 0 rgba(0,0,0,.15);display:flex;gap:14px;align-items:center}
+.horsecard .hn{font-family:'Playfair Display',serif;font-size:26px}
+.horsecard .st{display:inline-block;background:var(--sc);color:#fff;border-radius:4px;padding:1px 8px;font-size:13px}
+.bidbox{flex:1;min-width:240px}
+.bigbid{font-family:'Playfair Display',serif;font-size:36px}
+.gavel{display:inline-block;animation:gav 1.2s ease-in-out infinite;transform-origin:80% 80%}
+@keyframes gav{0%,100%{transform:rotate(0)}50%{transform:rotate(-25deg)}}
+/* race */
+.track{border-radius:10px;border:4px solid var(--wood);background:#1d4a27;overflow:hidden;box-shadow:inset 0 0 0 2px #8d6a3d}
+.track svg{display:block;width:100%;height:auto}
+.rt{transition:none}
+.runners{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;margin-top:10px}
+.runner{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--sc);border-radius:6px;padding:5px 8px;font-size:12px}
+.runner.lastm{box-shadow:0 0 0 2px var(--gold)}
+.runner .nm{font-weight:600;font-size:13px}
+.runner .pos{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.decide{background:#173f24;color:var(--cream);border-radius:8px;padding:10px 14px;margin:10px 0;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.decide .opts{display:flex;gap:8px;flex-wrap:wrap}
+.decide .opts button{min-width:150px;text-align:left;line-height:1.25}
+.decide .opts button small{display:block;opacity:.8}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.legend i{display:inline-block;width:16px;height:12px;border-radius:2px;border:1px solid rgba(0,0,0,.3)}
+.placings{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.place{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:160px;display:flex;gap:8px;align-items:center}
+.place .pos{font-family:'Playfair Display',serif;font-size:24px;color:var(--gold)}
+details.rules{font-size:14px}
+details.rules summary{cursor:pointer;font-weight:600;font-family:'Playfair Display',serif;font-size:17px}
+.setup{max-width:660px;margin:20px auto}
+.setup .prow{display:grid;grid-template-columns:24px 34px 1fr 140px;gap:8px;align-items:center;margin:6px 0}
+.tote td.div{font-family:'Playfair Display',serif}
+.bizname{border-bottom:3px solid #5b4630}
+.bizchip{font-size:11px;padding:1px 6px;border-radius:8px;background:#efe3c6;border:1px solid #b9a77f;cursor:help;white-space:nowrap}
+.lease.biz{background:linear-gradient(#fbf6ea,#f1e6cc)}
+.bizicon{font-size:38px;line-height:1.1}
+.sqown{position:absolute;top:18%;right:3px;width:clamp(7px,1vw,11px);height:clamp(7px,1vw,11px);border-radius:50%;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+button,.lease,.sq{touch-action:manipulation}
+.center .rest{display:contents}
+.mobrest{display:none;flex-direction:column;align-items:center;gap:8px;margin-top:8px;text-align:center;background:radial-gradient(ellipse at 50% 30%,#2c6b40,#173f24);color:var(--cream);border-radius:8px;padding:10px}
+.mobrest .note{font-size:13px;color:#d9cfae}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);max-width:min(92vw,420px);background:#0f2717;color:var(--cream);border:1px solid var(--gold);border-radius:8px;padding:8px 12px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.5);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+/* phones */
+@media(max-width:700px){
+  #app{padding:8px;gap:10px}
+  header{padding:7px 10px;gap:4px 10px}
+  header h1{font-size:21px}
+  header .sub{display:none}
+  header .crest{width:34px;height:34px}
+  header .right{font-size:12px;gap:6px}
+  .panel{padding:10px}
+  .panel h2{font-size:19px}
+  button{min-height:38px}
+  button.small{min-height:30px}
+  .boardwrap{padding:5px;border-radius:8px}
+  .board{gap:2px;padding:2px}
+  .sq{padding:0 1px 1px}
+  .sq:not(.corner) .lbl{display:none}
+  .sq .ic{width:68%;height:auto;aspect-ratio:1;font-size:clamp(9px,3.4vw,16px);margin-top:1px}
+  .sq.corner .lbl{font-size:7px;line-height:1;overflow-wrap:anywhere}
+  .sqown{top:14%;right:1px;width:7px;height:7px;border-width:1px}
+  .sq.corner .barn{width:48%;margin-top:3%}
+  .tok,.toks.many .tok{width:13px;height:13px;font-size:7.5px;border-width:1.5px}
+  .center{padding:6px;gap:4px}
+  .center .emblem{display:none}
+  .center h2{font-size:15px}
+  .center .rest{display:none}
+  .mobrest{display:flex}
+  .die{width:40px;height:40px}
+  .hand{gap:8px}
+  .lease{width:calc(50% - 4px)}
+  .lease .hn{font-size:16px}
+  .horsecard{min-width:0;width:100%}
+  .bidbox{min-width:0}
+  .bigbid{font-size:30px}
+  .runners{grid-template-columns:1fr}
+  .racectl{position:sticky;bottom:0;z-index:5;background:var(--cream);margin:0 -10px;padding:2px 10px 4px;box-shadow:0 -4px 10px rgba(0,0,0,.25)}
+  .racectl .decide{margin:6px 0;padding:8px;gap:8px}
+  .racectl .decide .die{width:34px;height:34px}
+  .decide .opts{width:100%;flex-wrap:nowrap;gap:5px}
+  .decide .opts button{min-width:0;flex:1 1 0;padding:5px 6px;font-size:13px}
+  .decide .opts button small{font-size:11px}
+  .racectl .row{margin:6px 0!important;gap:5px}
+  .racectl .row button{padding:6px 9px;font-size:13px}
+  .setup .prow{grid-template-columns:22px 30px 1fr 104px;gap:6px}
+  table.list{font-size:13px}
+  table.list th,table.list td{padding:4px}
+}
+</style>
+</head>
+<body>
+<header>
+  <svg class="crest" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#173f24" stroke="#c9a227" stroke-width="2"/><path d="M13 31 C12 22 16 13 25 11 C28 10 31 12 31 15 L28 16 C30 19 30 23 27 26 L24 25 L22 31 Z" fill="#f4ecd8"/><circle cx="26.5" cy="14.5" r="1" fill="#173f24"/><path d="M12 34 H32" stroke="#c9a227" stroke-width="2"/></svg>
+  <h1>Totopoly</h1>
+  <div class="sub">A racehorse owners' board game</div>
+  <div class="right"><span id="meet"></span><button onclick="confirmNew()">New game</button></div>
+</header>
+<div id="toast"></div>
+<div id="app">
+  <main id="main"></main>
+  <aside id="side"></aside>
+</div>
+<script>
+'use strict';
+// ── DATA ──────────────────────────────────────────────────────────────
+const START_CASH=700, LEN=48, LANES=6, ENTRY_FEE=25, MAX_ENTRIES=3, ADDED_MONEY=300, TOTE_TAKE=0.10, PUBLIC_MONEY=150;
+// Race course: every lane has the same squares on the straights, but each bend gains BEND_EXTRA squares
+// per lane out from the rail, so the inside is the short way round. LEN is the distance on the rail.
+const HALF=7, BEND=12, BEND_EXTRA=1, OFF=2;
+const FIN=l=>LEN+2*l*BEND_EXTRA;                       // lengths to the post in lane l
+const segLens=l=>[HALF,BEND+l*BEND_EXTRA,2*HALF,BEND+l*BEND_EXTRA,HALF];
+function kSeg(l,k){const S=segLens(l);let c=k;for(let i=0;i<5;i++){if(c<S[i]||i===4)return[i,c/S[i]];c-=S[i]}}
+function mapPos(l,p,l2){ // the square level with lane l, position p, in lane l2
+  if(l===l2)return p;const[i,t]=kSeg(l,p+OFF+.5),S=segLens(l2);let k=-.5;for(let j=0;j<i;j++)k+=S[j];
+  return Math.round(k+t*S[i])-OFF}
+const toGo=s=>FIN(s.lane)-s.pos;
+const onFinalBend=(l,p)=>p>=0&&kSeg(l,p+OFF+.5)[0]===3;   // segment 3 is the second (final) bend: no lane changes there
+const STABLES=[
+  {name:'Ashcombe',col:'#a8322d'},
+  {name:'Brackenhurst',col:'#24508a'},
+  {name:'Corrie Lodge',col:'#2f7a3b'},
+  {name:'Dunmore',col:'#b07d0b'}];
+const CLASS=['C','B','A'];
+const HORSES=[ // name, stable, class (0=C 1=B 2=A), list price
+  ['Copper Kettle',0,2,200],['Lantern Jaw',0,1,140],['Mistral Hope',0,0,90],
+  ['Harbour Light',1,2,210],['Saltmarsh',1,1,130],['Tin Whistle',1,0,80],
+  ['Bramble Jig',2,1,150],["Weaver's Lad",2,2,190],['Kelpie Run',2,0,100],
+  ['Gilded Sparrow',3,0,90],['Northern Ember',3,2,220],['Peat Smoke',3,1,140]];
+const PCOLS=['#e67e22','#8e44ad','#17a589','#34495e'];
+const BANKCOL='#9a9a9a';
+// Training ring: 32 squares. The four corners are the yards; each horse sets out from its own yard
+// and makes LAPS full circuits back to it.
+const SQ=[
+  {t:'yard',s:0},
+  {t:'gallops'},{t:'work'},{t:'paddock',s:1},{t:'feed'},{t:'gallops'},{t:'trial'},{t:'lame'},
+  {t:'yard',s:1},
+  {t:'gallops'},{t:'farrier'},{t:'paddock',s:2},{t:'vet'},{t:'gallops'},{t:'rest'},{t:'work'},
+  {t:'yard',s:2},
+  {t:'gallops'},{t:'bar'},{t:'paddock',s:3},{t:'lame'},{t:'gallops'},{t:'trial'},{t:'feed'},
+  {t:'yard',s:3},
+  {t:'gallops'},{t:'work'},{t:'paddock',s:0},{t:'vet'},{t:'gallops'},{t:'farrier'},{t:'rest'}];
+const LAPS=3,LAP_LEN=SQ.length,TRAIN_LEN=LAPS*LAP_LEN;
+const lapOf=h=>Math.min(LAPS,Math.floor(h.prog/LAP_LEN)+1);
+const SQINFO={ // icon, label, help, band colour
+  yard:['','','Its own horses start and finish their laps here (a quiet stop between laps). Other owners\' horses pay stable fees: £15 per horse kept here, £75 if one owner has all three','#000'],
+  paddock:['🐎','','Pay the yard\'s owners: £15 per horse they keep there, £75 if one owner has all three. A horse from that yard gets +1 form','#000'],
+  gallops:['🂠','Trainer\'s Report','Draw a Trainer\'s Report card','#c9a227'],
+  feed:['🌾','Feed Bill £20','Pay £20','#a8322d'],
+  work:['💪','Fast Work','+1 form','#24508a'],
+  trial:['🏆','Trial Win £40','Collect £40','#2f7a3b'],
+  rest:['💧','Water Trough','Rest: nothing happens','#7a6a55'],
+  farrier:['🔨','Farrier £15','Pay £15, +1 form','#24508a'],
+  vet:['💉','Vet £30','Pay £30','#a8322d'],
+  lame:['🤕','Knock','−1 form','#7d201a'],
+  bar:['🍺',"Owners' Bar",'Collect £20','#2f7a3b']};
+// Business lease cards, dealt and auctioned alongside the horses. Square-owning businesses collect the
+// payment when any other owner's horse lands on their squares; the owner's own horses pay nothing.
+const BUSINESSES=[
+  {key:'auct',  name:'Auctioneer',         icon:'📣',price:70, desc:'Takes 5% commission on every sale in the sales ring'},
+  {key:'forage',name:'Forage Merchant',    icon:'🌾',price:190,sq:'feed',   desc:'Owns the two Feed Bill squares: £20 to you'},
+  {key:'smith', name:'Blacksmith',         icon:'🔨',price:140,sq:'farrier',desc:'Owns the two Farrier squares: £15 to you'},
+  {key:'vet',   name:'Veterinary Surgeon', icon:'💉',price:240,sq:'vet',    desc:'Owns the two Vet squares: £30 to you'},
+  {key:'book',  name:'Bookmaker',          icon:'🎩',price:100, desc:'Takes 10% of all the stakes on every race'}];
+const COMMISSION=0.05;
+const CARDS=[
+  {id:'flyer', n:'Flying Start', d:'+2 on its first race move', v:1},
+  {id:'sure',  n:'Sure-Footed', d:'Ignores Stumble and Heavy Going squares', v:1.2},
+  {id:'wind',  n:'Second Wind', d:'+3 once, past halfway', v:1},
+  {id:'finish',n:'Strong Finisher', d:'+1 a move in the last 12 lengths', v:1.3},
+  {id:'nervy', n:'Nervy at the Gate', d:'Misses its first race move', v:-1.2},
+  {id:'clumsy',n:'Clumsy', d:'Heavy Going brings it down too (held till a six)', v:-1.1},
+  {id:'heavy', n:'Hates Heavy Going', d:'−1 a move for the first 12 lengths', v:-1},
+  {id:'fades', n:'Fades Late', d:'−1 a move in the last 12 lengths', v:-1.2},
+  {id:'sharp', n:'Sharp Gallop', d:'+1 form', form:1},
+  {id:'off',   n:'Off Colour', d:'−1 form', form:-1},
+  {id:'bonus', n:"Owner's Bonus", d:'Owner collects £30', cash:30},
+  {id:'fee',   n:"Jockey's Fee", d:'Owner pays £25', cash:-25}];
+const CARD=Object.fromEntries(CARDS.map(c=>[c.id,c]));
+const RACES=['Kelvinside','Ardgowan','Lomond Vale','Carrick','Strathblane','Campsie','Glenorchard','Inverkip','Machars','Bothwell Bank'];
+
+// Race-course squares (landing only). Fixed layout from a seeded generator so every race uses the same course.
+const SPEC=(()=>{
+  let a=1745;const r=()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const m={};
+  for(let p=3;p<=FIN(LANES-1)-2;p++){let n=0;for(let l=0;l<LANES;l++){if(p>FIN(l)-2)continue;if(n<3&&r()<0.2){n++;const x=r();
+    m[l+','+p]=x<0.6?'y'+Math.floor(x/0.15):x<0.75?'fall':'heavy'}}}
+  return m})();
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+let G=null, UI={sel:{},keep:{},rolled:false}, aiTimer=null;
+const rnd=n=>Math.floor(Math.random()*n), d6=()=>1+rnd(6);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+const fmt=n=>(n<0?'−£':'£')+Math.abs(Math.round(n));
+const r10=n=>Math.max(10,Math.round(n/10)*10);
+const r5=n=>Math.round(n/5)*5;
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+const P=i=>G.players[i], H=i=>G.horses[i], NP=()=>G.players.length;
+const pcol=i=>i<0?BANKCOL:P(i).col;
+const pn=i=>i<0?'<i>the Bank</i>':`<b style="color:${P(i).col}">${esc(P(i).name)}</b>`;
+const hn=h=>`<b class="hname" style="--sc:${STABLES[h.stable].col}">${esc(h.name)}</b>`;
+const numBadge=h=>`<span class="num" style="--sc:${STABLES[h.stable].col};--pc:${pcol(h.owner)}">${h.id+1}</span>`;
+const owned=pi=>G.horses.filter(h=>h.owner===pi);
+// Lease-card ids: horses 0..11, businesses 100+.
+const isBiz=c=>c>=100, BZ=c=>G.biz[c-100], item=c=>isBiz(c)?BZ(c):H(c);
+const bizOf=key=>G.biz.find(b=>b.key===key);
+const ownedBiz=pi=>G.biz.filter(b=>b.owner===pi);
+const bn=b=>`<b class="bizname">${b.icon} ${esc(b.name)}</b>`;
+const cardName=c=>isBiz(c)?bn(BZ(c)):hn(H(c));
+// A payment for a business square: to the business's owner if someone holds it, else to the Bank.
+function payBiz(pi,amt,key){
+  const o=bizOf(key).owner,b=bizOf(key);
+  if(o===pi)return `own ${esc(b.name)}, nothing to pay`;
+  P(pi).cash-=amt;if(o>=0){P(o).cash+=amt;return `pays ${pn(o)} £${amt} (${esc(b.name)})`}
+  return `pays £${amt}`;
+}
+const has=(h,c)=>h.cards.includes(c);
+const clampForm=f=>Math.max(-3,Math.min(3,f));
+function log(html){G.log.unshift(html);if(G.log.length>150)G.log.pop()}
+function strength(h){return h.cls*0.9+h.form*0.6+h.cards.reduce((a,c)=>a+(CARD[c].v||0),0)}
+function chips(h){return h.cards.map(c=>`<span class="chip ${CARD[c].v>0?'good':'bad'}" title="${esc(CARD[c].d)}">${esc(CARD[c].n)}</span>`).join('')}
+function formTag(h){return `<span class="form ${h.form>0?'up':h.form<0?'down':''}" title="Form">${h.form>0?'+':''}${h.form}</span>`}
+function sqName(i){const s=SQ[i];return s.t==='yard'?STABLES[s.s].name+' Yard':s.t==='paddock'?STABLES[s.s].name+' Paddock':SQINFO[s.t][1]}
+function drawGallop(){if(!G.deck.length)G.deck=shuffle(CARDS.flatMap(c=>[c.id,c.id]));return G.deck.pop()}
+const oddsTxt=o=>o===1?'Evens':o+'/1';
+const ringPos=h=>(8*h.stable+h.prog)%SQ.length;
+
+// ── GRAPHICS ──────────────────────────────────────────────────────────
+function silks(body,cap,sz=28){
+  return `<svg class="silks" width="${sz}" height="${sz}" viewBox="0 0 40 40"><path d="M7 24 L13 17 Q20 15 27 17 L33 24 L29.5 29 L27 26.5 L27 38 L13 38 L13 26.5 L10.5 29 Z" fill="${body}" stroke="#2a2118" stroke-width="1.4" stroke-linejoin="round"/><path d="M15.5 17.3 L26.5 37" stroke="#fff" stroke-width="3.2" opacity=".85"/><path d="M12.5 11.5 A7.5 7 0 0 1 27.5 11.5 L31 13 L12.5 13 Z" fill="${cap}" stroke="#2a2118" stroke-width="1.3" stroke-linejoin="round"/><circle cx="20" cy="4.6" r="1.6" fill="${cap}" stroke="#2a2118" stroke-width=".8"/></svg>`}
+const hSilks=(h,sz)=>silks(pcol(h.owner),STABLES[h.stable].col,sz);
+function barn(col){return `<svg class="barn" viewBox="0 0 40 32"><path d="M3 14 L20 3 L37 14 V31 H3Z" fill="${col}" stroke="#3a2a18" stroke-width="1.5" stroke-linejoin="round"/><path d="M1 15 L20 2 L39 15" fill="none" stroke="#3a2a18" stroke-width="2.5" stroke-linecap="round"/><rect x="13" y="17" width="14" height="14" fill="#f4ecd8" stroke="#3a2a18"/><path d="M13 17 L27 31 M27 17 L13 31" stroke="${col}" stroke-width="2"/><rect x="17" y="8" width="6" height="5" fill="#f4ecd8" stroke="#3a2a18" stroke-width=".8"/></svg>`}
+function dieSVG(n,cls=''){
+  const P={1:[[2,2]],2:[[1,1],[3,3]],3:[[1,1],[2,2],[3,3]],4:[[1,1],[3,1],[1,3],[3,3]],5:[[1,1],[3,1],[2,2],[1,3],[3,3]],6:[[1,1],[3,1],[1,2],[3,2],[1,3],[3,3]]}[n]||[];
+  return `<svg class="die ${cls}" width="52" height="52" viewBox="0 0 52 52"><rect x="2" y="2" width="48" height="48" rx="10" fill="#fdfbf4" stroke="#bfb39a" stroke-width="2"/><rect x="5" y="5" width="42" height="42" rx="8" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/>${P.map(([x,y])=>`<circle cx="${x*13}" cy="${y*13}" r="4.6" fill="${n===1?'#a8322d':'#2a2118'}"/>`).join('')}</svg>`}
+const EMBLEM=`<svg class="emblem" viewBox="0 0 120 80"><ellipse cx="60" cy="40" rx="56" ry="34" fill="none" stroke="#f4ecd8" stroke-width="5" opacity=".9"/><ellipse cx="60" cy="40" rx="44" ry="23" fill="#2f7a3b" stroke="#f4ecd8" stroke-width="2"/><path d="M42 50 C41 41 45 31 55 29 C58 28 61 30 61 33 L58 34 C60 37 60 41 57 44 L54 43 L52 50 Z" fill="#f4ecd8"/><path d="M75 25 V55" stroke="#c9a227" stroke-width="2.5"/><circle cx="75" cy="25" r="4" fill="#c9a227"/></svg>`;
+
+// Race course geometry: a stadium-shaped oval, lane 0 on the inside rail.
+const TR={cx:500,cy:282,L:232,R0:118,W:22};
+function trackPt(f,rad){
+  const S=2*TR.L,B=Math.PI*TR.R0,T=2*S+2*B;let d=((f*T+TR.L)%T+T)%T;
+  if(d<S)return[TR.cx-TR.L+d,TR.cy+rad];
+  if(d<S+B){const a=(d-S)/B*Math.PI;return[TR.cx+TR.L+rad*Math.sin(a),TR.cy+rad*Math.cos(a)]}
+  if(d<2*S+B)return[TR.cx+TR.L-(d-S-B),TR.cy-rad];
+  const a=(d-2*S-B)/B*Math.PI;return[TR.cx-TR.L-rad*Math.sin(a),TR.cy-rad*Math.cos(a)];
+}
+function segPt(i,t,rad){const{cx,cy,L}=TR,a=t*Math.PI;
+  return i===0?[cx+t*L,cy+rad]:i===1?[cx+L+rad*Math.sin(a),cy+rad*Math.cos(a)]:i===2?[cx+L-t*2*L,cy-rad]
+    :i===3?[cx-L-rad*Math.sin(a),cy-rad*Math.cos(a)]:[cx-L+t*L,cy+rad]}
+const lanePt=(l,k,rad)=>{const[i,t]=kSeg(l,k);return segPt(i,t,rad)};
+const cellXY=(lane,pos)=>lanePt(lane,Math.min(pos,FIN(lane)+1)+OFF+.5,TR.R0+(lane+.5)*TR.W).map(v=>+v.toFixed(1));
+function cellPoly(l,c){
+  const r1=TR.R0+l*TR.W,r2=r1+TR.W,pts=[],n=kSeg(l,c+.5)[0]%2?4:1;
+  for(let k=0;k<=n;k++)pts.push(lanePt(l,c+k/n,r1));
+  for(let k=n;k>=0;k--)pts.push(lanePt(l,c+k/n,r2));
+  return pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+}
+function railPath(rad){const pts=[];for(let k=0;k<=240;k++)pts.push(trackPt(k/240,rad).map(v=>v.toFixed(1)).join(','));return 'M'+pts.join(' L')+'Z'}
+let COURSE_SVG=null;
+// Phones held upright get the course turned on its side (taller than wide), with every label turned back upright.
+const portrait=()=>matchMedia('(max-width:700px) and (orientation:portrait)').matches;
+const tokT=(x,y)=>`translate(${x}px,${y}px)${UI.rot?' rotate(-90deg)':''}`;
+const uprightText=svg=>svg.replace(/<text x="([-\d.]+)" y="([-\d.]+)"/g,(m,x,y)=>`<text transform="rotate(-90 ${x} ${y})" x="${x}" y="${y}"`);
+function courseSVG(){ // static part of the race course, built once
+  if(COURSE_SVG)return COURSE_SVG;
+  let s=`<defs><pattern id="heavy" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#7a5a2e"/><circle cx="2" cy="2" r="1.2" fill="#4e3517"/><circle cx="5" cy="5" r="1" fill="#9a7440"/></pattern>
+   <radialGradient id="infield" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#3c8a4c"/><stop offset="1" stop-color="#256237"/></radialGradient></defs>
+   <rect width="1000" height="620" fill="#1f5230"/>`;
+  for(let i=0;i<30;i++){const x=(i*137)%1000,y=i%2?12+(i*31)%14:600-(i*17)%12;s+=`<circle cx="${x}" cy="${y}" r="${9+i%5}" fill="#174226"/>`}
+  s+=`<path d="${railPath(TR.R0-2)}" fill="url(#infield)"/>`;
+  s+=`<ellipse cx="${TR.cx-110}" cy="${TR.cy-10}" rx="70" ry="34" fill="#3d77a8" stroke="#2a5a85" stroke-width="3"/><ellipse cx="${TR.cx-120}" cy="${TR.cy-16}" rx="30" ry="9" fill="#fff" opacity=".18"/>`;
+  [[TR.cx+90,TR.cy-50],[TR.cx+130,TR.cy-30],[TR.cx+105,TR.cy-15],[TR.cx-230,TR.cy+40],[TR.cx-250,TR.cy+20],[TR.cx+200,TR.cy+50]].forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y+4}" r="17" fill="#163d22" opacity=".5"/><circle cx="${x}" cy="${y}" r="16" fill="#2b6e37"/><circle cx="${x-4}" cy="${y-5}" r="7" fill="#3f8a4a"/>`);
+  for(let l=0;l<LANES;l++)for(let c=0;c<FIN(l)+2*OFF;c++){
+    const pos=c-OFF,sp=SPEC[l+','+pos];
+    let fill=(c+l)%2?'#3f8f4d':'#378245';
+    if(sp)fill=sp[0]==='y'?STABLES[+sp[1]].col:sp==='fall'?'#5a1d1a':'url(#heavy)';
+    s+=`<polygon points="${cellPoly(l,c)}" fill="${fill}" stroke="rgba(255,255,255,.22)" stroke-width=".8"/>`;
+    if(sp){const [x,y]=cellXY(l,pos);s+=sp[0]==='y'?`<text x="${x}" y="${y+4}" font-size="11" text-anchor="middle" fill="#fff" opacity=".9">+3</text>`:sp==='fall'?`<text x="${x}" y="${y+5}" font-size="14" text-anchor="middle" fill="#ffb3a8" font-weight="700">✕</text>`:''}
+  }
+  s+=`<path d="${railPath(TR.R0)}" fill="none" stroke="#fff" stroke-width="3"/><path d="${railPath(TR.R0+LANES*TR.W)}" fill="none" stroke="#fff" stroke-width="3.5"/>`;
+  // lengths-to-go posts
+  for(let p=8;p<LEN;p+=8){const [x,y]=lanePt(0,p+OFF,TR.R0-13);s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="#fff" stroke="#a8322d" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(y+3.5).toFixed(1)}" font-size="9.5" text-anchor="middle" font-weight="700" fill="#a8322d">${LEN-p}</text>`}
+  // start and winning post
+  const line=(c,col,w,dash)=>{const a=lanePt(0,c,TR.R0),b=lanePt(0,c,TR.R0+LANES*TR.W);return `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width="${w}" ${dash?'stroke-dasharray="4 3"':''}/>`};
+  s+=line(OFF-1,'#fff',2,true);
+  const fx=lanePt(0,LEN+OFF,0)[0];
+  s+=line(LEN+OFF,'#fff',4)+line(LEN+OFF,'#a8322d',4,true);
+  const pb=TR.cy+TR.R0+LANES*TR.W;
+  s+=`<rect x="${fx-2}" y="${pb}" width="4" height="34" fill="#fff" stroke="#333" stroke-width=".6"/><circle cx="${fx}" cy="${pb+2}" r="9" fill="#fff" stroke="#a8322d" stroke-width="3"/><circle cx="${fx}" cy="${pb+2}" r="3" fill="#a8322d"/>`;
+  const sx=lanePt(0,OFF-1,0)[0];s+=`<text x="${sx+6}" y="${pb+16}" font-size="11" fill="#fff" font-style="italic">start</text>`;
+  // grandstand
+  const gx=fx-260,gy=pb+20;
+  s+=`<rect x="${gx}" y="${gy+8}" width="230" height="40" fill="#e9dcb8" stroke="#3a2a18"/><path d="M${gx-6} ${gy+10} L${gx+10} ${gy} H${gx+220} L${gx+236} ${gy+10}Z" fill="#7a1f1a" stroke="#3a2a18"/>`;
+  for(let i=0;i<46;i++)s+=`<circle cx="${gx+6+(i%23)*9.6}" cy="${gy+18+Math.floor(i/23)*10}" r="3.2" fill="${['#a8322d','#24508a','#2a2118','#c9a227','#f4ecd8','#555'][i*7%6]}"/>`;
+  s+=`<rect x="${fx+40}" y="${gy+8}" width="70" height="40" fill="#f4ecd8" stroke="#3a2a18"/><text x="${fx+75}" y="${gy+32}" font-size="11" text-anchor="middle" font-weight="700" fill="#2a2118">TOTE</text>`;
+  // final bend: dashed marks where it starts and ends, and a note in the infield
+  {const S=segLens(0);[S[0]+S[1]+S[2],S[0]+S[1]+S[2]+S[3]].forEach(k=>{const a=lanePt(0,k,TR.R0),b=[a[0],a[1]+(a[1]<TR.cy?-1:1)*LANES*TR.W];
+     s+=`<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="#ffe27a" stroke-width="2" stroke-dasharray="4 3"/>`});
+   const x=TR.cx-TR.L-TR.R0+62,y=TR.cy-52;
+   s+=`<text x="${x}" y="${y}" font-size="13" text-anchor="middle" fill="#ffe27a" font-style="italic">final bend<tspan x="${x}" dy="14" font-size="10.5" font-style="normal" fill="#fff">hold your lane</tspan></text>`}
+  s+=`<text x="${TR.cx+30}" y="${TR.cy+70}" font-family="Playfair Display,serif" font-size="22" text-anchor="middle" fill="#f4ecd8" opacity=".85" font-style="italic">Paddock &amp; Post</text>`;
+  return COURSE_SVG=s;
+}
+
+// ── GAME FLOW ─────────────────────────────────────────────────────────
+function newGame(cfg){
+  G={players:cfg.players.map((p,i)=>({name:p.name,human:p.human,col:PCOLS[i],cash:START_CASH})),
+    horses:HORSES.map((x,i)=>({id:i,name:x[0],stable:x[1],cls:x[2],price:x[3],owner:-1,form:0,cards:[],prog:0,trained:true,wins:0})),
+    meeting:1,meetings:cfg.meetings,phase:'lots',cur:0,log:[],deck:[],dice:null,lastMoves:[],anims:[],
+    biz:BUSINESSES.map((b,i)=>({...b,id:100+i,owner:-1})),
+    auction:null,race:null,bets:[],pool:{},odds:{},results:null};
+  // Lease cards are dealt round the table into one hand per owner plus a spare hand for the auctioneer.
+  const deck=shuffle([...G.horses.map(h=>h.id),...G.biz.map(b=>b.id)]);G.hands=Array.from({length:NP()+1},()=>[]);
+  deck.forEach((id,k)=>G.hands[k%(NP()+1)].push(id));
+  log(`<i>The lease cards are dealt: a hand for each owner and one for the auctioneer.</i>`);
+  UI.keep={};render();
+}
+function confirmKeep(ids){
+  const p=P(G.cur);let cost=0;
+  ids.forEach(id=>{const h=item(id);h.owner=G.cur;cost+=h.price});p.cash-=cost;
+  const rej=G.hands[G.cur].filter(id=>!ids.includes(id));
+  log(`${pn(G.cur)} keeps ${ids.map(cardName).join(', ')||'nothing'}${cost?` (${fmt(cost)})`:''}${rej.length?` and sends ${rej.length} to auction`:''}.`);
+  G.cur++;UI.keep={};
+  if(G.cur>=NP())startAuction();
+  render();
+}
+function aiKeep(){
+  const worth=c=>isBiz(c)?1.25:(H(c).cls*60+100)/H(c).price;
+  const p=P(G.cur),hand=[...G.hands[G.cur]].sort((a,b)=>worth(b)-worth(a)+Math.random()*.1-.05);
+  const keep=[];let cash=p.cash,horses=0;
+  for(const id of hand){const h=item(id),biz=isBiz(id);
+    if((biz||horses<3)&&cash-h.price>=(keep.length?280:150)&&(biz||horses<3)){keep.push(id);cash-=h.price;if(!biz)horses++}}
+  confirmKeep(keep);
+}
+
+// Auction
+function startAuction(){
+  const q=shuffle([...G.horses.filter(h=>h.owner<0).map(h=>h.id),...G.biz.filter(b=>b.owner<0).map(b=>b.id)]);
+  if(!q.length){startTraining();return}
+  const o=bizOf('auct').owner;
+  G.phase='auction';G.auction={q,i:-1};log(`<i>The sales ring opens: ${q.length} lots under the hammer${o>=0?`, with ${pn(o)} on the rostrum`:''}.</i>`);nextLot();
+}
+function aiValue(pi,c){
+  const p=P(pi),mine=owned(pi),h=item(c);
+  if(isBiz(c))return Math.min(h.price*(0.9+Math.random()*0.5),p.cash-150);
+  let v=h.price*(0.8+Math.random()*0.4)+mine.filter(x=>x.stable===h.stable).length*35;
+  if(!mine.length)v+=30;
+  if(mine.length>=3)v*=0.7;
+  return Math.min(v,p.cash-150);
+}
+function nextLot(){
+  const A=G.auction;A.i++;
+  if(A.i>=A.q.length){G.auction=null;startTraining();return}
+  const c=A.q[A.i],h=item(c);
+  Object.assign(A,{hid:c,bid:0,bidder:-1,reserve:r10(h.price*0.5),out:G.players.map(()=>false),turn:(G.meeting+A.i)%NP(),vals:G.players.map((p,pi)=>aiValue(pi,c))});
+}
+const minNext=()=>G.auction.bidder<0?G.auction.reserve:G.auction.bid+10;
+function auctionAct(amount){ // amount=null → pass
+  const A=G.auction,pi=A.turn;
+  if(amount==null||amount>P(pi).cash){A.out[pi]=true}
+  else{A.bid=amount;A.bidder=pi}
+  for(let k=1;k<=NP();k++){const j=(pi+k)%NP();if(!A.out[j]&&j!==A.bidder){A.turn=j;render();return}}
+  const h=item(A.hid),nm=cardName(A.hid);
+  if(A.bidder>=0){h.owner=A.bidder;P(A.bidder).cash-=A.bid;log(`🔨 ${nm} knocked down to ${pn(A.bidder)} for ${fmt(A.bid)}.`);
+    const o=bizOf('auct').owner;if(o>=0){const c=Math.max(5,r5(A.bid*COMMISSION));P(o).cash+=c;log(`📣 ${pn(o)} takes ${fmt(c)} commission.`)}}
+  else log(`${nm} fails to reach its reserve and stays with the Bank.`);
+  nextLot();render();
+}
+function aiAuction(){
+  const A=G.auction,pi=A.turn,m=minNext(),v=A.vals[pi];
+  if(m<=v&&m<=P(pi).cash-40){let b=m;if(v-m>70&&Math.random()<.4)b=m+20;auctionAct(b)}else auctionAct(null);
+}
+
+// Training: one throw per owner per turn moves every one of that owner's horses still out.
+const trainees=pi=>G.horses.filter(h=>h.owner===pi&&!h.trained);
+function startTraining(){
+  G.phase='training';G.dice=null;G.lastMoves=[];G.lastRoller=-1;
+  G.horses.forEach(h=>{h.prog=0;h.trained=h.owner<0});
+  G.cur=(G.meeting-1+NP()-1)%NP();
+  log(`<i>Meeting ${G.meeting}: the string leaves the yards for the training ring.</i>`);
+  nextTrainer();
+}
+function nextTrainer(){
+  for(let k=1;k<=NP();k++){const j=(G.cur+k)%NP();if(trainees(j).length){G.cur=j;return}}
+  G.trainingDone=true;
+}
+function rollTraining(){
+  if(G.trainingDone)return;
+  G.dice=[d6(),d6()];G.lastRoller=G.cur;UI.rolled=true;
+  const roll=G.dice[0]+G.dice[1];G.lastMoves=[];G.anims=[];
+  trainees(G.cur).forEach(h=>{
+    const from=h.prog,path=[];
+    for(let k=1;k<=roll&&from+k<=TRAIN_LEN;k++)path.push((8*h.stable+from+k)%SQ.length);
+    h.prog=Math.min(TRAIN_LEN,from+roll);let msg;
+    if(h.prog>=TRAIN_LEN){h.trained=true;h.prog=TRAIN_LEN;
+      if(from+roll===TRAIN_LEN){h.form=clampForm(h.form+1);msg=`${hn(h)} walks straight into its own box: a good feed, +1 form.`}
+      else msg=`${hn(h)} completes its ${LAPS} laps and is back in its box.`}
+    else if(h.prog%LAP_LEN===0)msg=`${hn(h)} stops in at its own yard and sets off on lap ${lapOf(h)} of ${LAPS}.`;
+    else{msg=resolveSquare(h);if(Math.floor(from/LAP_LEN)<Math.floor(h.prog/LAP_LEN))msg+=` <span class="muted">(lap ${lapOf(h)} of ${LAPS})</span>`}
+    G.lastMoves.push({hid:h.id,sq:ringPos(h),msg});G.anims.push({hid:h.id,path});
+    log(`${pn(h.owner)} (${roll}): ${msg}`);
+  });
+  nextTrainer();render();
+}
+function stableFees(h,s){
+  const p=P(h.owner),inYard=G.horses.filter(x=>x.stable===s&&x.owner>=0),bits=[];
+  const owners=[...new Set(inYard.map(x=>x.owner))];
+  if(owners.length===1&&inYard.length===3&&owners[0]!==h.owner){
+    const o=owners[0];p.cash-=75;P(o).cash+=75;bits.push(`pays ${pn(o)} £75 (whole yard)`);
+  }else owners.forEach(o=>{if(o===h.owner)return;const n=inYard.filter(x=>x.owner===o).length*15;p.cash-=n;P(o).cash+=n;bits.push(`pays ${pn(o)} £${n}`)});
+  return bits;
+}
+function resolveSquare(h){
+  const i=ringPos(h),sq=SQ[i],p=P(h.owner),pre=`${hn(h)} → <b>${sqName(i)}</b>: `;
+  switch(sq.t){
+    case 'yard':case 'paddock':{
+      const bits=stableFees(h,sq.s);
+      if(sq.t==='paddock'&&h.stable===sq.s){h.form=clampForm(h.form+1);bits.push('home ground, +1 form')}
+      return pre+(bits.join('; ')||'no fees to pay')+'.';}
+    case 'gallops':{
+      const c=CARD[drawGallop()];let t=`report: <b>${c.n}</b> (${c.d})`;
+      if(c.form){h.form=clampForm(h.form+c.form)}
+      else if(c.cash){p.cash+=c.cash}
+      else if(has(h,c.id))t+=', but it already has that';
+      else h.cards.push(c.id);
+      return pre+t+'.';}
+    case 'feed':return pre+payBiz(h.owner,20,'forage')+'.';
+    case 'work':h.form=clampForm(h.form+1);return pre+'+1 form.';
+    case 'trial':p.cash+=40;return pre+'wins a trial, collects £40.';
+    case 'rest':return pre+'a quiet drink.';
+    case 'farrier':h.form=clampForm(h.form+1);return pre+payBiz(h.owner,15,'smith')+', +1 form.';
+    case 'vet':return pre+payBiz(h.owner,30,'vet')+'.';
+    case 'lame':h.form=clampForm(h.form-1);return pre+'takes a knock, −1 form.';
+    case 'bar':p.cash+=20;return pre+'collects £20.';
+  }
+  return pre+'nothing.';
+}
+function endTraining(){G.trainingDone=false;startEntries();render()}
+
+// Entries
+// No borrowing: an owner in debt must sell horses back to the Bank (60% of list), weakest first, then businesses.
+function settleDebts(){
+  G.players.forEach((p,pi)=>{while(p.cash<0&&(owned(pi).length||ownedBiz(pi).length)){
+    const h=owned(pi).sort((a,b)=>strength(a)-strength(b))[0]||ownedBiz(pi).sort((a,b)=>a.price-b.price)[0],amt=r10(h.price*0.6);
+    p.cash+=amt;h.owner=-1;log(`⚖️ ${pn(pi)} is in debt and must sell ${cardName(h.id)} to the Bank for ${fmt(amt)}.`)}});
+}
+function startEntries(){G.phase='entries';G.entries=[];G.cur=-1;settleDebts();log('<i>Training is over. Owners declare their runners.</i>');nextEntrant()}
+function nextEntrant(){
+  for(let j=G.cur+1;j<NP();j++){if(owned(j).length){G.cur=j;
+    UI.sel={};owned(j).sort((a,b)=>strength(b)-strength(a)).slice(0,maxEntries(j)).forEach(h=>UI.sel[h.id]=true);return}}
+  buildField();
+}
+const maxEntries=pi=>Math.max(0,Math.min(MAX_ENTRIES,Math.floor(P(pi).cash/ENTRY_FEE)));
+function confirmEntries(ids){
+  ids=ids.slice(0,maxEntries(G.cur));
+  ids.forEach(id=>{G.entries.push(id);P(G.cur).cash-=ENTRY_FEE});
+  log(`${pn(G.cur)} declares ${ids.map(id=>hn(H(id))).join(', ')||'no runners'}${ids.length?` (${fmt(ids.length*ENTRY_FEE)} entrance)`:''}.`);
+  nextEntrant();render();
+}
+function aiEntries(){const n=Math.min(maxEntries(G.cur),Math.max(1,Math.floor((P(G.cur).cash-20)/ENTRY_FEE)));confirmEntries(owned(G.cur).sort((a,b)=>strength(b)-strength(a)).slice(0,n).map(h=>h.id))}
+function buildField(){
+  const field=[...G.entries],bank=shuffle(G.horses.filter(h=>h.owner<0).map(h=>h.id));
+  while(field.length<6&&bank.length){const id=bank.pop();field.push(id);log(`The Bank runs ${hn(H(id))} to make up the field.`)}
+  G.field=shuffle(field);G.fees=G.entries.length*ENTRY_FEE;startBetting();
+}
+
+// Betting on the Tote: all stakes go in one pool, a tenth is taken, and the rest is shared among those who backed the winner.
+function startBetting(){
+  G.phase='betting';G.bets=[];G.pool={};
+  const w=G.field.map(id=>Math.exp(strength(H(id))*0.55)),S=w.reduce((a,b)=>a+b,0);
+  G.odds={};G.field.forEach((id,i)=>{G.odds[id]=Math.max(1,Math.min(33,Math.round(0.82*S/w[i]-1)));G.pool[id]=Math.max(5,r5(PUBLIC_MONEY*w[i]/S))});
+  G.cur=-1;nextBettor();
+}
+const poolTotal=()=>Object.values(G.pool).reduce((a,b)=>a+b,0);
+const dividend=id=>poolTotal()*(1-TOTE_TAKE)/G.pool[id];
+function nextBettor(){if(++G.cur>=NP()){startRace();return}}
+function placeBet(hid,stake){
+  const p=P(G.cur);stake=Math.floor(stake);
+  if(!(stake>0)||stake>p.cash)return false;
+  p.cash-=stake;G.pool[hid]+=stake;G.bets.push({p:G.cur,h:hid,stake});
+  log(`${pn(G.cur)} puts ${fmt(stake)} on the Tote for ${hn(H(hid))}.`);return true;
+}
+function doneBetting(){nextBettor();render()}
+function aiBet(){
+  const p=P(G.cur);
+  if(p.cash>80){
+    const mine=G.field.filter(id=>H(id).owner===G.cur).sort((a,b)=>strength(H(b))-strength(H(a)));
+    const fav=[...G.field].sort((a,b)=>G.odds[a]-G.odds[b]);
+    const pick=(mine.length&&Math.random()<.65)?mine[0]:fav[rnd(Math.min(3,fav.length))];
+    placeBet(pick,r10(p.cash*(0.08+Math.random()*0.12)));
+  }
+  doneBetting();
+}
+
+// Race: one die per horse; a horse may move one lane in or out first (only if two clear lengths
+// ahead of anything in that lane), is baulked by a horse in its path, and obeys only the square it lands on.
+function startRace(){
+  G.phase='race';
+  const st={};G.field.forEach((id,i)=>st[id]={pos:-Math.floor(i/LANES),lane:i%LANES,moves:0,held:false,lose:false,done:false,wind:false,finRound:0,note:'under orders'});
+  G.race={st,idx:0,round:1,placed:[],auto:false,speed:420,over:false,last:-1,pending:null,fast:false,anims:[]};
+  log(`<i>They're under starter's orders… and they're off!</i>`);
+}
+function laneFree(lane,from,to,excl){const R=G.race;return !G.field.some(o=>o!==excl&&!R.st[o].done&&R.st[o].lane===lane&&R.st[o].pos>=from&&R.st[o].pos<=to)}
+function runPath(id,lane,pos,m){
+  const path=[];let p=pos,b=false;
+  for(let k=1;k<=m;k++){if(!laneFree(lane,p+1,p+1,id)){b=true;break}p++;path.push([lane,p])}
+  return{pos:p,path,baulked:b};
+}
+function raceOptions(id,m){
+  const s=G.race.st[id];
+  return [-1,0,1].map(dl=>{
+    const lane=s.lane+dl,o={dl,ok:false};
+    if(lane<0){o.why='already on the rail';return o}
+    if(lane>=LANES){o.why='widest lane';return o}
+    if(dl&&onFinalBend(s.lane,s.pos)){o.why='keeps its lane on the final bend';return o}
+    const np=mapPos(s.lane,s.pos,lane);
+    if(dl&&!laneFree(lane,np-2,np,id)){o.why='not two lengths clear';return o}
+    const r=runPath(id,lane,np,m);
+    return {dl,ok:true,lane,pos:r.pos,baulked:r.baulked,path:[[s.lane,s.pos],...(dl?[[lane,np]]:[]),...r.path],sq:(!r.baulked&&r.pos<FIN(lane))?SPEC[lane+','+r.pos]||null:null};
+  });
+}
+function sqEffect(h,sq){
+  if(!sq)return 0;
+  if(sq[0]==='y')return +sq[1]===h.stable?3:0;
+  if(has(h,'sure'))return 0;
+  if(sq==='fall'||has(h,'clumsy'))return -6;
+  return -3.5;
+}
+function sqLabel(h,sq){
+  if(!sq)return '';
+  if(sq[0]==='y')return +sq[1]===h.stable?'own colours, +3!':`${STABLES[+sq[1]].name} colours (no use)`;
+  if(has(h,'sure'))return (sq==='fall'?'Stumble':'Heavy Going')+' (sure-footed)';
+  return sq==='fall'?'Stumble: held till a six':has(h,'clumsy')?'Heavy Going: falls (clumsy)':'Heavy Going: loses a move';
+}
+function aiPick(h,opts){
+  let best=null,bs=-1e9;
+  opts.filter(o=>o.ok).forEach(o=>{const sc=o.pos-FIN(o.lane)+sqEffect(h,o.sq)-(o.baulked?.6:0)+(o.dl?-.1:0)+Math.random()*.3;if(sc>bs){bs=sc;best=o}});
+  return best;
+}
+function moveHorse(id){
+  const R=G.race,h=H(id),s=R.st[id],own=h.owner>=0?P(h.owner):null;
+  R.last=id;
+  if(s.lose){s.lose=false;s.moves++;s.note='blowing after the heavy going, loses the move';return}
+  if(s.held){const r=d6();s.moves++;if(r===6){s.held=false;s.note='throws a six and is back on its feet'}else s.note=`down, needs a six (threw ${r})`;return}
+  if(s.moves===0&&has(h,'nervy')){s.moves++;s.note='nervy, missed the break';log(`${hn(h)} is nervy and misses the break.`);return}
+  const die=d6();let m=die;const bits=[];
+  if(s.moves===0&&has(h,'flyer')){m+=2;bits.push('flying start +2')}
+  if(h.form>=2){m++;bits.push('form +1')}else if(h.form<=-2){m--;bits.push('form −1')}
+  if(Math.random()<[0,.25,.5][h.cls]){m++;bits.push('class +1')}
+  if(s.pos<12&&has(h,'heavy')){m--;bits.push('heavy going −1')}
+  if(toGo(s)<=12&&has(h,'finish')){m++;bits.push('finishing +1')}
+  if(toGo(s)<=12&&has(h,'fades')){m--;bits.push('fading −1')}
+  if(!s.wind&&s.pos>=FIN(s.lane)/2&&has(h,'wind')){m+=3;s.wind=true;bits.push('second wind +3')}
+  m=Math.max(1,m);
+  if(own&&own.human&&!R.fast){R.pending={id,die,m,bits};return}
+  doMove(id,aiPick(h,raceOptions(id,m)),die,m,bits);
+}
+function doMove(id,o,die,m,bits){
+  const R=G.race,h=H(id),s=R.st[id];
+  let note=`threw ${die}${bits.length?' ('+bits.join(', ')+')':''} → ${m}`;
+  if(!o){s.moves++;s.note=note+', boxed in';return}
+  if(o.dl)note+=o.dl<0?', moves in':', moves out';
+  s.lane=o.lane;s.pos=o.pos;const path=o.path.slice();
+  if(o.baulked)note+=', baulked';
+  else if(s.pos<FIN(s.lane)&&o.sq){
+    const sq=o.sq;
+    if(sq[0]==='y'){if(+sq[1]===h.stable){const r=runPath(id,s.lane,s.pos,3);s.pos=r.pos;path.push(...r.path);note+=', on its own colours: surges on';log(`${hn(h)} hits its own colours and surges on!`)}}
+    else if(has(h,'sure'))note+=', sure-footed through the rough';
+    else if(sq==='fall'||has(h,'clumsy')){s.held=true;note+=', STUMBLES and goes down';log(`💥 ${hn(h)} stumbles and goes down! It needs a six to get going again.`)}
+    else{s.lose=true;note+=', bogged in heavy going'}
+  }
+  s.moves++;s.note=note;
+  if(s.pos>=FIN(s.lane)){s.done=true;s.finRound=R.round}
+  R.anims.push({id,path});
+}
+function chooseLane(dl){
+  const R=G.race,pd=R.pending;if(!pd)return;
+  const o=raceOptions(pd.id,pd.m).find(x=>x.dl===dl&&x.ok);if(!o)return;
+  R.pending=null;R.anims=[];doMove(pd.id,o,pd.die,pd.m,pd.bits);
+  if(R.idx>=G.field.length)endRound();
+  render();
+}
+function endRound(){
+  const R=G.race;
+  const fin=G.field.filter(id=>R.st[id].done&&R.st[id].finRound===R.round).sort((a,b)=>toGo(R.st[a])-toGo(R.st[b])||Math.random()-.5);
+  fin.forEach(id=>{R.placed.push(id);const n=R.placed.length;if(n<=3)log(`${['🥇','🥈','🥉'][n-1]} ${hn(H(id))} passes the post ${['first','second','third'][n-1]}!`)});
+  R.round++;R.idx=0;
+  if(R.placed.length>=3||!G.field.some(id=>!R.st[id].done))finishRace();
+}
+function step(){
+  const R=G.race;if(R.pending)return;
+  for(let g=0;g<200&&!R.over;g++){
+    if(R.idx>=G.field.length){endRound();continue}
+    const id=G.field[R.idx++],s=R.st[id];
+    if(s.done)continue;
+    moveHorse(id);
+    if(!R.pending&&R.idx>=G.field.length)endRound();
+    break;
+  }
+}
+function raceStep(){G.race.anims=[];step();render()}
+function raceRound(){const R=G.race,r=R.round;R.anims=[];while(!R.over&&!R.pending&&R.round===r)step();render()}
+function raceToEnd(){const R=G.race;R.anims=[];R.fast=true;
+  if(R.pending){const pd=R.pending;R.pending=null;doMove(pd.id,aiPick(H(pd.id),raceOptions(pd.id,pd.m)),pd.die,pd.m,pd.bits);if(R.idx>=G.field.length)endRound()}
+  while(!R.over)step();R.anims=[];render()}
+function toggleAuto(){G.race.auto=!G.race.auto;render()}
+function finishRace(){
+  const R=G.race;R.over=true;R.auto=false;R.pending=null;
+  const purse=ADDED_MONEY+G.fees*0.9,prizes=[r5(purse/2),r5(purse/4),r5(purse/4)];
+  const res={placed:R.placed.slice(0,3),prizes:[],bets:[],purse:prizes,div:0};
+  res.placed.forEach((id,i)=>{const h=H(id);if(i===0)h.wins++;if(h.owner>=0){P(h.owner).cash+=prizes[i];res.prizes.push({p:h.owner,h:id,amt:prizes[i],pos:i})}});
+  const win=res.placed[0],bk=bizOf('book').owner;
+  if(bk>=0){res.take=Math.round(poolTotal()*TOTE_TAKE);P(bk).cash+=res.take;log(`🎩 ${pn(bk)}, the bookmaker, takes ${fmt(res.take)} (10% of the stakes).`)}
+  if(win!=null){res.div=dividend(win);G.bets.forEach(b=>{const ret=b.h===win?Math.round(b.stake*res.div):0;if(ret)P(b.p).cash+=ret;res.bets.push({...b,ret})})}
+  else G.bets.forEach(b=>res.bets.push({...b,ret:0}));
+  res.prizes.forEach(x=>log(`${pn(x.p)} collects ${fmt(x.amt)} prize money for ${hn(H(x.h))}.`));
+  if(win!=null)log(`The Tote pays ${fmt(res.div*10)} for a £10 stake.`);
+  res.bets.filter(b=>b.ret).forEach(b=>log(`💰 ${pn(b.p)} collects ${fmt(b.ret)} from the Tote.`));
+  G.results=res;
+}
+function nextMeeting(){
+  if(G.meeting>=G.meetings){G.phase='end';log('<i>The season is over.</i>');render();return}
+  G.meeting++;G.race=null;G.results=null;G.bets=[];settleDebts();
+  G.horses.forEach(h=>{h.form=Math.trunc(h.form/2);h.cards=[]});
+  log(`<i>— Meeting ${G.meeting} of ${G.meetings} —</i>`);
+  startAuction();render();
+}
+function sellHorse(hid){
+  const h=item(hid),amt=r10(h.price*0.6);
+  if(!confirm(`Sell ${h.name} back to the Bank for £${amt}?`))return;
+  P(h.owner).cash+=amt;log(`${pn(h.owner)} sells ${cardName(hid)} to the Bank for ${fmt(amt)}.`);h.owner=-1;delete UI.sel[hid];render();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function render(){
+  UI.rot=portrait();
+  if(!G){renderSetup();return}
+  document.getElementById('meet').textContent=G.phase==='end'?'Season over':`Meeting ${G.meeting} of ${G.meetings}`;
+  const m=document.getElementById('main');
+  m.innerHTML=({lots:viewLots,auction:viewAuction,training:viewTraining,entries:viewEntries,betting:viewBetting,race:viewRace,end:viewEnd})[G.phase]();
+  renderSide();playAnims();schedule();
+}
+function playAnims(){
+  if(G.phase==='training'&&G.anims.length){
+    const ctr=i=>{const e=document.querySelector(`.sq[data-i="${i}"]`);if(!e)return null;const r=e.getBoundingClientRect();return[r.left+r.width/2,r.top+r.height/2]};
+    let delay=0;
+    G.anims.forEach(a=>{const el=document.querySelector(`[data-tok="${a.hid}"]`);if(!el||!a.path.length)return;
+      const end=ctr(a.path[a.path.length-1]),from=ctr((a.path[0]-1+SQ.length)%SQ.length);if(!end||!from)return;
+      const pts=[from,...a.path.map(ctr)].filter(Boolean);
+      const kf=pts.map((p,k)=>({transform:`translate(${p[0]-end[0]}px,${p[1]-end[1]}px)${k&&k<pts.length-1?' scale(1.25)':''}`}));
+      const dur=pts.length*110;el.animate(kf,{duration:dur,delay,easing:'linear',fill:'backwards'});delay+=dur*.6});
+    G.anims=[];
+  }
+  if(G.phase==='race'&&G.race&&G.race.anims.length){
+    G.race.anims.forEach(a=>{const el=document.getElementById('rt'+a.id);if(!el||a.path.length<2)return;
+      const kf=a.path.map(([l,p])=>{const [x,y]=cellXY(l,p);return{transform:tokT(x,y)}});
+      el.animate(kf,{duration:Math.min(G.race.speed-40,a.path.length*70),easing:'ease-out'})});
+    G.race.anims=[];
+  }
+}
+function schedule(){
+  clearTimeout(aiTimer);let fn=null,d=550;
+  const cpu=i=>i>=0&&i<NP()&&!P(i).human;
+  if(G.phase==='lots'&&cpu(G.cur))fn=aiKeep;
+  else if(G.phase==='auction'&&G.auction&&cpu(G.auction.turn))fn=aiAuction;
+  else if(G.phase==='training'&&!G.trainingDone&&cpu(G.cur)&&G.players.every(p=>!p.human)){fn=rollTraining;d=1300}
+  else if(G.phase==='training'&&G.trainingDone&&G.players.every(p=>!p.human)){fn=endTraining;d=1300}
+  else if(G.phase==='entries'&&cpu(G.cur))fn=aiEntries;
+  else if(G.phase==='betting'&&cpu(G.cur))fn=aiBet;
+  else if(G.phase==='race'&&G.race.auto&&!G.race.over&&!G.race.pending){fn=raceStep;d=G.race.speed}
+  if(fn)aiTimer=setTimeout(fn,d);
+}
+function renderSide(){
+  const cur=G.phase==='auction'&&G.auction?G.auction.turn:G.cur;
+  const pls=G.players.map((p,pi)=>`<div class="pl ${pi===cur&&!['race','end'].includes(G.phase)?'cur':''}" style="--pc:${p.col}">
+    <div class="plh">${silks(p.col,'#f4ecd8',26)} ${esc(p.name)} <small class="muted">${p.human?'':'(CPU)'}</small><span class="cash ${p.cash<0?'neg':''}">${fmt(p.cash)}</span></div>
+    ${owned(pi).map(h=>`<div class="ph">${numBadge(h)} ${esc(h.name)} <small class="muted">${CLASS[h.cls]}</small> ${formTag(h)} ${chips(h)}</div>`).join('')||'<div class="ph muted">No horses</div>'}
+    ${ownedBiz(pi).length?`<div class="ph">${ownedBiz(pi).map(b=>`<span class="bizchip" title="${esc(b.desc)}">${b.icon} ${esc(b.name)}</span>`).join('')}</div>`:''}
+  </div>`).join('');
+  document.getElementById('side').innerHTML=`<div class="panel"><h2>Owners</h2>${pls}</div>
+   <div class="panel"><h2>Race Card &amp; Gossip</h2><div id="log">${G.log.map(l=>`<div>${l}</div>`).join('')}</div></div>
+   <div class="panel">${rulesHTML()}</div>`;
+}
+function horseTable(hi){
+  return `<div class="tscroll"><table class="list"><tr><th>#</th><th>Horse</th><th>Yard</th><th>Class</th><th>List</th><th>Owner</th></tr>
+  ${G.horses.map(h=>`<tr class="${h.id===hi?'hi':''}"><td>${numBadge(h)}</td><td>${esc(h.name)}</td><td><span style="color:${STABLES[h.stable].col}">■</span> ${STABLES[h.stable].name}</td><td>${CLASS[h.cls]}</td><td>${fmt(h.price)}</td><td>${pn(h.owner)}</td></tr>`).join('')}</table></div>`;
+}
+function bizTable(hi){
+  return `<h3>The businesses</h3><div class="tscroll"><table class="list"><tr><th></th><th>Business</th><th>What it does</th><th>List</th><th>Owner</th></tr>
+  ${G.biz.map(b=>`<tr class="${b.id===hi?'hi':''}"><td>${b.icon}</td><td>${esc(b.name)}</td><td style="font-size:13px">${esc(b.desc)}</td><td>${fmt(b.price)}</td><td>${pn(b.owner)}</td></tr>`).join('')}</table></div>`;
+}
+function leaseCard(h,kept,click){
+  const sc=STABLES[h.stable].col;
+  return `<div class="lease ${kept?'kept':''}" style="--sc:${sc}" ${click?`onclick="${click}"`:''}><div class="top"><span>${STABLES[h.stable].name}</span><span>No. ${h.id+1}</span></div>
+    <div class="body">${silks(BANKCOL,sc,44)}<div class="hn">${esc(h.name)}</div><div class="muted">Class ${CLASS[h.cls]}</div><div class="price">${fmt(h.price)}</div></div>${kept?'<div class="stamp">KEPT</div>':''}</div>`;
+}
+function bizCard(b,kept,click){
+  return `<div class="lease biz ${kept?'kept':''}" style="--sc:#5b4630" ${click?`onclick="${click}"`:''}><div class="top"><span>Business</span><span>${b.icon}</span></div>
+    <div class="body"><div class="bizicon">${b.icon}</div><div class="hn">${esc(b.name)}</div><div class="muted" style="font-size:12px">${esc(b.desc)}</div><div class="price">${fmt(b.price)}</div></div>${kept?'<div class="stamp">KEPT</div>':''}</div>`;
+}
+const anyCard=(c,kept,click)=>isBiz(c)?bizCard(BZ(c),kept,click):leaseCard(H(c),kept,click);
+function viewLots(){
+  const p=P(G.cur),hand=G.hands[G.cur].map(item);
+  const dummy=`<p class="muted" style="font-size:13px">The auctioneer's hand (${G.hands[NP()].length} cards) and every card an owner turns down go to the sales ring.</p>`;
+  if(!p.human)return `<div class="panel"><h2>The Lease Cards</h2><p class="muted">${esc(p.name)} is studying a hand of ${hand.length}…</p>${dummy}</div>`;
+  const kept=hand.filter(h=>UI.keep[h.id]),cost=kept.reduce((a,h)=>a+h.price,0);
+  return `<div class="panel"><h2>The Lease Cards: ${esc(p.name)}</h2>
+   <p>You have ${fmt(p.cash)}. The pack holds the twelve horses and five businesses. Keep any cards you like at face value; the rest go under the hammer, where they may sell cheaper, or dearer. Click a card to keep it.</p>
+   <div class="hand">${hand.map(h=>anyCard(h.id,UI.keep[h.id],`UI.keep[${h.id}]=!UI.keep[${h.id}];render()`)).join('')}</div>
+   <p class="row"><button class="go" ${cost>p.cash?'disabled':''} onclick="confirmKeep(G.hands[G.cur].filter(id=>UI.keep[id]))">Keep ${kept.length} (${fmt(cost)}) →</button>${cost>p.cash?'<span class="neg">You can\'t afford all of those.</span>':''}</p>${dummy}</div>`;
+}
+function viewAuction(){
+  const A=G.auction,h=item(A.hid),biz=isBiz(A.hid),pi=A.turn,p=P(pi),m=minNext(),sc=biz?'#5b4630':STABLES[h.stable].col;
+  const yard=biz?'':G.horses.filter(x=>x.stable===h.stable&&x.id!==h.id).map(x=>`${esc(x.name)} (${x.owner<0?'unsold':esc(P(x.owner).name)})`).join(', ');
+  let ctl;
+  if(p.human){
+    const can=m<=p.cash;
+    ctl=`<p><b style="color:${p.col}">${esc(p.name)}</b>, your bid. You have ${fmt(p.cash)}.</p>
+     <div class="row"><button class="go" ${can?'':'disabled'} onclick="auctionAct(${m})">Bid ${fmt(m)}</button>
+     <button ${m+40<=p.cash?'':'disabled'} onclick="auctionAct(${m+40})">Bid ${fmt(m+40)}</button>
+     <button ${m+90<=p.cash?'':'disabled'} onclick="auctionAct(${m+90})">Bid ${fmt(m+90)}</button>
+     <button class="warn" onclick="auctionAct(null)">Pass</button></div>`;
+  }else ctl=`<p class="muted">${esc(p.name)} is considering…</p>`;
+  return `<div class="panel"><h2><span class="gavel">🔨</span> The Sales Ring</h2><p class="muted">Lot ${A.i+1} of ${A.q.length}. Bidding goes round the owners; once you pass you're out for this lot.</p>
+   <div class="lot"><div class="horsecard" style="--sc:${sc}">${biz?`<div class="bizicon" style="font-size:56px">${h.icon}</div>`:silks(pcol(A.bidder),sc,72)}<div><div class="muted">Lot ${A.i+1}</div><div class="hn">${esc(h.name)}</div>
+     ${biz?`<span class="st">Business</span><p style="font-size:14px">${esc(h.desc)}</p>`:`<span class="st">${STABLES[h.stable].name}</span> &nbsp;Class <b>${CLASS[h.cls]}</b>`}<p>List price ${fmt(h.price)} · reserve ${fmt(A.reserve)}</p>${biz?'':`<p class="muted" style="font-size:13px">Yard mates: ${yard}</p>`}</div></div>
+    <div class="bidbox"><div class="muted">Current bid</div><div class="bigbid">${A.bidder<0?'No bids':fmt(A.bid)}</div><div>${A.bidder<0?'':'by '+pn(A.bidder)}</div>
+     <p class="muted">Out: ${G.players.filter((x,i)=>A.out[i]).map(x=>esc(x.name)).join(', ')||'nobody yet'}</p>${ctl}</div></div>
+   <h3>The string</h3>${horseTable(A.hid)}${bizTable(A.hid)}</div>`;
+}
+function sqPos(i){if(i<=8)return[9,9-i];if(i<=15)return[9-(i-8),1];if(i<=24)return[1,1+(i-16)];return[1+(i-24),9]}
+function viewTraining(){
+  const landed=new Set(G.lastMoves.map(x=>x.sq));
+  const cells=SQ.map((sq,i)=>{
+    const [r,c]=sqPos(i),info=SQINFO[sq.t],st=sq.s!=null?STABLES[sq.s]:null;
+    const here=G.horses.filter(h=>h.owner>=0&&(h.trained?sq.t==='yard'&&sq.s===h.stable:ringPos(h)===i));
+    const toks=here.map(h=>`<span class="tok ${h.trained?'home':''}" data-tok="${h.trained&&!G.anims.some(a=>a.hid===h.id)?'':h.id}" title="${esc(h.name)} (${esc(P(h.owner).name)})${h.trained?' – home':` – lap ${lapOf(h)} of ${LAPS}`}" style="--sc:${STABLES[h.stable].col};--pc:${P(h.owner).col}">${h.id+1}</span>`).join('');
+    const bz=G.biz.find(b=>b.sq===sq.t),bo=bz?bz.owner:-1;
+    const tip=esc(sqName(i)+': '+info[2]+(bz?(bo>=0?` (to ${P(bo).name}, ${bz.name})`:` (to the Bank: ${bz.name} unowned)`):''));
+    const mark=bo>=0?`<span class="sqown" style="background:${P(bo).col}" title="${esc(bz.name)}: ${esc(P(bo).name)}"></span>`:'';
+    if(sq.t==='yard')return `<div class="sq corner ${landed.has(i)?'land':''}" data-i="${i}" style="grid-row:${r};grid-column:${c}" title="${tip}">${barn(st.col)}<div class="lbl">${esc(st.name)}</div><div class="toks ${here.length>4?'many':''}">${toks}</div></div>`;
+    return `<div class="sq ${landed.has(i)?'land':''}" data-i="${i}" style="grid-row:${r};grid-column:${c};--bc:${st?st.col:info[3]}" title="${tip}">
+      <div class="band"></div>${mark}<div class="ic">${info[0]}</div><div class="lbl">${esc(st?st.name+' Paddock':info[1])}</div><div class="toks ${here.length>4?'many':''}">${toks}</div></div>`;
+  }).join('');
+  let ctr=`${EMBLEM}<h2>The Training Ring</h2>`;
+  if(G.dice)ctr+=`<div class="dice">${dieSVG(G.dice[0],UI.rolled?'roll':'')}${dieSVG(G.dice[1],UI.rolled?'roll':'')}</div>`;
+  UI.rolled=false;
+  const top=ctr;ctr='';
+  if(G.lastMoves.length)ctr+=`<div class="lastmove"><div class="muted" style="color:#cdbf98">${esc(P(G.lastRoller).name)} threw ${G.dice[0]+G.dice[1]}:</div>${G.lastMoves.map(x=>`<div>${x.msg}</div>`).join('')}</div>`;
+  if(G.trainingDone){
+    ctr+=`<div class="note">Every horse is back in its box.</div><button class="go" onclick="endTraining()">To the racecourse →</button>`;
+  }else{
+    const p=P(G.cur),t=trainees(G.cur);
+    ctr+=`<div class="turnpill" style="color:${p.col}">${silks(p.col,'#f4ecd8',22)} ${p.name==='You'?'Your':esc(p.name)+"'s"} throw</div>`;
+    if(p.human)ctr+=`<button class="go" onclick="rollTraining()">🎲 Throw the dice</button><div class="note">One throw moves all ${t.length===1?'your horse':`${t.length} of your horses`} still out (${t.map(h=>esc(h.name)).join(', ')}). Each sets out from its own yard and goes ${LAPS} times round the ring.</div>`;
+    else if(G.players.some(q=>q.human))ctr+=`<button class="go" onclick="rollTraining()">Next: ${esc(p.name)}'s throw →</button>`;
+    else ctr+=`<div class="note">shaking the dice…</div>`;
+  }
+  const left=G.horses.filter(h=>h.owner>=0&&!h.trained).length;
+  if(left)ctr+=`<div class="note">${left} horse${left===1?'':'s'} still out on the gallops.</div>`;
+  return `<div class="panel"><div class="boardwrap"><div class="board">${cells}<div class="center">${top}<div class="rest">${ctr}</div></div></div></div><div class="mobrest">${ctr}</div></div>`;
+}
+function viewEntries(){
+  const p=P(G.cur);
+  if(!p.human)return `<div class="panel"><h2>Declarations</h2><p class="muted">${esc(p.name)} is choosing runners…</p></div>`;
+  const mine=owned(G.cur);
+  return `<div class="panel"><h2>Declarations: ${esc(p.name)}</h2><p>Enter up to ${MAX_ENTRIES} horses at ${fmt(ENTRY_FEE)} entrance each. Horses left out miss the race (and their Trainer's Report cards are lost).</p>
+   <div class="tscroll"><table class="list"><tr><th></th><th></th><th>#</th><th>Horse</th><th>Class</th><th>Form</th><th>Cards</th></tr>
+   ${mine.map(h=>`<tr><td><input type="checkbox" ${UI.sel[h.id]?'checked':''} onchange="UI.sel[${h.id}]=this.checked;render()"></td><td>${hSilks(h,26)}</td><td>${numBadge(h)}</td><td>${hn(h)}</td><td>${CLASS[h.cls]}</td><td>${formTag(h)}</td><td>${chips(h)||'<span class="muted">none</span>'}</td></tr>`).join('')}</table></div>
+   ${(()=>{const n=mine.filter(h=>UI.sel[h.id]).length,mx=maxEntries(G.cur);return `<p class="row" style="margin-top:10px"><button class="go" ${n>mx?'disabled':''} onclick="confirmEntries(owned(G.cur).filter(h=>UI.sel[h.id]).map(h=>h.id))">Declare ${n} runner${n===1?'':'s'}${n?` (${fmt(n*ENTRY_FEE)})`:''}</button>${n>mx?`<span class="neg">${mx<MAX_ENTRIES?`You can only pay for ${mx}`:`Too many: max ${MAX_ENTRIES}`}</span>`:''}</p>`})()}
+   <h3>Sell a horse or business?</h3><p class="muted" style="font-size:13px">The Bank buys back at 60% of list price.</p><div class="row">${[...mine,...ownedBiz(G.cur)].map(h=>`<button class="small" onclick="sellHorse(${h.id})">Sell ${isBiz(h.id)?h.icon+' ':''}${esc(h.name)} (${fmt(r10(h.price*.6))})</button>`).join('')}</div></div>`;
+}
+function fieldTable(extra){
+  return `<div class="tscroll"><table class="list tote"><tr><th></th><th>#</th><th>Horse</th><th>Owner</th><th>Cl.</th><th>Form</th><th>Cards</th><th>Forecast</th><th>Tote pool</th><th>Pays per £10</th>${extra?'<th>Stake</th>':''}</tr>
+  ${G.field.map(id=>{const h=H(id);return `<tr><td>${hSilks(h,24)}</td><td>${numBadge(h)}</td><td>${hn(h)}</td><td>${pn(h.owner)}</td><td>${CLASS[h.cls]}</td><td>${formTag(h)}</td><td>${chips(h)}</td><td class="muted">${oddsTxt(G.odds[id])}</td><td>${fmt(G.pool[id])}</td><td class="div"><b>${fmt(dividend(id)*10)}</b></td>${extra?extra(id):''}</tr>`}).join('')}</table></div>
+  <p class="muted" style="font-size:13px">Total pool ${fmt(poolTotal())}. The Tote keeps ${TOTE_TAKE*100}% and shares the rest among those holding tickets on the winner, so the dividend shifts as money goes on.</p>`;
+}
+function viewBetting(){
+  const p=P(G.cur);
+  const myBets=G.bets.filter(b=>b.p===G.cur);
+  if(!p.human)return `<div class="panel"><h2>The Tote</h2><p class="muted">${esc(p.name)} is studying the form…</p>${fieldTable()}</div>`;
+  return `<div class="panel"><h2>The Tote: ${esc(p.name)}</h2><p>You have ${fmt(p.cash)}. Win bets only.</p>
+   ${fieldTable(id=>`<td><div class="row"><input type="number" min="10" step="10" id="stake${id}" placeholder="£"><button class="small" onclick="betFrom(${id})">Bet</button></div></td>`)}
+   <p>${myBets.map(b=>`${fmt(b.stake)} on ${hn(H(b.h))}`).join(' · ')||'<span class="muted">No bets yet.</span>'}</p>
+   <button class="go" onclick="doneBetting()">${myBets.length?'Done betting':'No bet, thanks'} →</button></div>`;
+}
+function betFrom(id){const v=+document.getElementById('stake'+id).value;if(!placeBet(id,v)){alert('Enter a stake you can afford.');return}render()}
+function viewRace(){
+  const R=G.race,pd=R.pending;
+  let svg=courseSVG();
+  if(pd){const h=H(pd.id);raceOptions(pd.id,pd.m).filter(o=>o.ok).forEach(o=>{const [x,y]=cellXY(o.lane,o.pos);
+    svg+=`<circle cx="${x}" cy="${y}" r="12" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="2" stroke-dasharray="3 2"/><text x="${x}" y="${y-15}" font-size="11" text-anchor="middle" fill="#fff" font-weight="700">${o.dl<0?'in':o.dl>0?'out':'on'}</text>`})}
+  const order=[...G.field].sort((a,b)=>(a===R.last)-(b===R.last));
+  order.forEach(id=>{const h=H(id),s=R.st[id],[x,y]=cellXY(s.lane,s.pos),sc=STABLES[h.stable].col,oc=pcol(h.owner);
+    svg+=`<g class="rt" id="rt${id}" style="transform:${tokT(x,y)}"><title>${esc(h.name)}</title>
+      ${id===R.last||pd&&pd.id===id?`<circle r="15" fill="none" stroke="#ffe27a" stroke-width="2.5"><animate attributeName="r" values="12;16;12" dur="1.2s" repeatCount="indefinite"/></circle>`:''}
+      <ellipse cx="1.5" cy="3" rx="10.5" ry="9" fill="rgba(0,0,0,.35)"/>
+      <circle r="10.5" fill="${s.held?'#888':sc}" stroke="${oc}" stroke-width="3.5"/><circle cx="-3" cy="-3.5" r="3.5" fill="#fff" opacity=".3"/>
+      <text y="${UI.rot?4.5:4}" font-size="${UI.rot?13:11}" font-weight="700" text-anchor="middle" fill="#fff">${s.held?'!':h.id+1}</text></g>`});
+  const rank=[...G.field].sort((a,b)=>{const A=R.st[a],B=R.st[b],pa=R.placed.indexOf(a),pb=R.placed.indexOf(b);
+    if(pa>=0||pb>=0)return(pa<0?99:pa)-(pb<0?99:pb);return toGo(A)-toGo(B)});
+  const runners=rank.map(id=>{const h=H(id),s=R.st[id],plc=R.placed.indexOf(id);
+    const pos=plc>=0?`<b>${['1st','2nd','3rd'][plc]||'finished'}</b>`:s.held?'<b class="neg">down</b>':`${Math.max(0,toGo(s))} to go`;
+    return `<div class="runner ${R.last===id?'lastm':''}" style="--sc:${STABLES[h.stable].col}">${hSilks(h,30)}<div><div class="nm">${h.id+1}. ${esc(h.name)}</div><div class="muted">${h.owner>=0?esc(P(h.owner).name):'Bank'} · lane ${s.lane+1}</div><div style="font-size:11px">${esc(s.note)}</div></div><div class="pos">${pos}</div></div>`}).join('');
+  let ctl='';
+  if(pd){
+    const h=H(pd.id),opts=raceOptions(pd.id,pd.m);
+    ctl=`<div class="decide">${dieSVG(pd.die,'roll')}<div><b>${esc(h.name)}</b> (${pn(h.owner)}) moves <b>${pd.m}</b>${pd.bits.length?` <small>(${esc(pd.bits.join(', '))})</small>`:''}.<br><small>Which way, jockey?</small></div>
+      <div class="opts">${opts.map(o=>{const lab=o.dl<0?'◀ Move in':o.dl>0?'Move out ▶':'▲ Hold lane';
+        if(!o.ok)return `<button disabled>${lab}<small>${o.why}</small></button>`;
+        const info=o.baulked?'baulked':sqLabel(h,o.sq);
+        return `<button onclick="chooseLane(${o.dl})">${lab}<small>to ${o.pos>=FIN(o.lane)?'the post!':FIN(o.lane)-o.pos+' to go'}${info?' · '+esc(info):''}</small></button>`}).join('')}</div></div>`;
+  }
+  if(!R.over){
+    ctl+=`<div class="row" style="margin:10px 0"><button class="go" ${pd?'disabled':''} onclick="raceStep()">Next horse</button><button ${pd?'disabled':''} onclick="raceRound()">Whole round</button>
+    <button ${pd?'disabled':''} onclick="toggleAuto()">${R.auto?'⏸ Pause':'▶ Auto-run'}</button><button onclick="raceToEnd()" title="Your horses ride themselves">⏭ To the finish</button>
+    <span class="muted">Round ${R.round}</span></div>`;
+  }else{
+    const r=G.results;
+    ctl+=`<h3>Result</h3><div class="placings">${r.placed.map((id,i)=>{const h=H(id);return `<div class="place">${hSilks(h,40)}<div><div class="pos">${['1st','2nd','3rd'][i]}</div>${hn(h)}<br>${pn(h.owner)}${h.owner>=0?' +'+fmt(r.purse[i]):''}</div></div>`}).join('')||'<p>No finishers!</p>'}</div>
+    ${r.placed.length?`<p>Tote dividend: <b>${fmt(r.div*10)}</b> to a £10 stake.</p>`:''}
+    ${r.bets.length?`<div class="tscroll"><table class="list"><tr><th>Bettor</th><th>Horse</th><th>Stake</th><th>Return</th></tr>${r.bets.map(b=>`<tr><td>${pn(b.p)}</td><td>${hn(H(b.h))}</td><td>${fmt(b.stake)}</td><td>${b.ret?'<b>'+fmt(b.ret)+'</b>':'lost'}</td></tr>`).join('')}</table></div>`:''}
+    <p class="row" style="margin-top:12px"><button class="go" onclick="nextMeeting()">${G.meeting>=G.meetings?'Final standings →':'On to the next meeting →'}</button></p>`;
+  }
+  const legend=`<div class="legend">${STABLES.map(s=>`<span><i style="background:${s.col}"></i>${esc(s.name)} colours (+3 for its horses)</span>`).join('')}<span><i style="background:#5a1d1a"></i>Stumble: down till a six</span><span><i style="background:repeating-linear-gradient(45deg,#7a5a2e 0 3px,#4e3517 3px 5px)"></i>Heavy Going: lose a move</span></div>`;
+  return `<div class="panel"><h2>Race Day: The ${RACES[(G.meeting-1)%RACES.length]} Stakes <small class="muted" style="font-size:14px">· ${LEN} lengths on the rail · purse ${fmt(ADDED_MONEY+G.fees*.9)}</small></h2>
+   <div class="track">${UI.rot?`<svg viewBox="0 0 620 1000"><g transform="translate(620 0) rotate(90)">${uprightText(svg)}</g></svg>`:`<svg viewBox="0 0 1000 620">${svg}</svg>`}</div>${R.over?ctl:`<div class="racectl">${ctl}</div>`}<div class="runners">${runners}</div>${legend}
+   <p class="muted" style="font-size:13px">Each horse throws one die. Before moving it may step one lane in or out, but only if it is two clear lengths ahead of anything in that lane, and never on the final bend, where every horse keeps its own lane until the straight. A horse in the way baulks it, and only the square a horse lands on counts. Each lane out has one more square on each bend, so the rail is the short way round.</p></div>`;
+}
+function viewEnd(){
+  const order=G.players.map((p,i)=>({p,i})).sort((a,b)=>b.p.cash-a.p.cash);
+  return `<div class="panel"><h2>Season's End</h2><p>The owner with the most cash takes the championship.</p>
+   <div class="tscroll"><table class="list"><tr><th></th><th></th><th>Owner</th><th>Cash</th><th>Horses</th></tr>${order.map((o,k)=>`<tr class="${k===0?'hi':''}"><td>${k===0?'🏆':k+1}</td><td>${silks(o.p.col,'#f4ecd8',30)}</td><td>${pn(o.i)}</td><td>${fmt(o.p.cash)}</td><td>${[...owned(o.i).map(h=>esc(h.name)+(h.wins?` (${h.wins} win${h.wins>1?'s':''})`:'')),...ownedBiz(o.i).map(b=>b.icon+' '+esc(b.name))].join(', ')}</td></tr>`).join('')}</table></div>
+   <p style="margin-top:12px"><button class="go" onclick="G=null;render()">New season</button></p></div>`;
+}
+function rulesHTML(){
+  return `<details class="rules"><summary>How to play</summary>
+  <p><b>1. Lease cards &amp; sales.</b> The horse cards are dealt into a hand for each owner and one for the auctioneer. Keep what you want at face value; everything else is auctioned. Horses live in four yards of three, and owning a whole yard makes other owners pay you more. Five business cards are in the pack too: the Auctioneer (5% commission on every sale), the Forage Merchant, Blacksmith and Veterinary Surgeon (they own the Feed Bill, Farrier and Vet squares, so those payments come to you, and your own horses pay nothing there), and the Bookmaker (10% of all stakes on every race).</p>
+  <p><b>2. Training.</b> One throw of two dice moves all of your horses still out. Each starts at its own yard and goes three times round the ring. Squares win or cost money, change form (−3 to +3), or give Trainer's Report cards for the race. Landing on another yard or paddock costs stable fees.</p>
+  <p><b>3. Declarations &amp; the Tote.</b> Enter up to three horses (${fmt(ENTRY_FEE)} each). Bets go into the Tote pool; it keeps ${TOTE_TAKE*100}% and the rest goes to those who backed the winner.</p>
+  <p><b>4. The race.</b> ${LEN} lengths round the oval on the rail, six lanes; each lane out adds a square on each of the two bends, so the outside lane runs ${FIN(LANES-1)}. Each horse throws a die (plus form, class and card bonuses) and may first move one lane in or out if two lengths clear, except on the final bend, where horses keep their own lane. Blocked horses are baulked. Landing on your own yard's colours sends you on 3 more; Stumble squares put you down until you throw a six; Heavy Going costs a move. Purse ${fmt(ADDED_MONEY)} plus entrance money, split ½, ¼, ¼.</p>
+  <p><b>No borrowing.</b> An owner in debt after training or a race must sell horses back to the Bank (60% of list), weakest first.</p>
+  <p><b>Winning.</b> After the last meeting, most cash wins. Form halves and cards are lost between meetings.</p></details>`;
+}
+function renderSetup(){
+  document.getElementById('meet').textContent='';
+  document.getElementById('side').innerHTML=`<div class="panel">${rulesHTML().replace('<details','<details open')}</div>`;
+  const names=['You','Lady Fenwick','The Colonel','Mrs Abernethy'];
+  document.getElementById('main').innerHTML=`<div class="panel setup"><div style="text-align:center">${EMBLEM.replace('class="emblem"','class="emblem" style="width:160px"')}</div><h2>A New Season</h2>
+   <p>Take up your lease cards, train your horses round the ring, then race them and back them on the Tote. Most money after the last meeting wins.</p>
+   <h3>Owners</h3>
+   ${[0,1,2,3].map(i=>`<div class="prow"><input type="checkbox" id="on${i}" ${i<3?'checked':''} ${i<2?'disabled':''}>${silks(PCOLS[i],'#f4ecd8',30)}<input type="text" id="nm${i}" value="${names[i]}" maxlength="18"><select id="ty${i}"><option value="h" ${i===0?'selected':''}>Human</option><option value="c" ${i>0?'selected':''}>Computer</option></select></div>`).join('')}
+   <h3>Season length</h3><select id="mtg">${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${i===2?'selected':''}>${i+1} meeting${i?'s':''}</option>`).join('')}</select>
+   <p style="margin-top:16px"><button class="go" onclick="startFromSetup()">Deal the lease cards →</button></p></div>`;
+}
+function startFromSetup(){
+  const players=[];
+  for(let i=0;i<4;i++)if(document.getElementById('on'+i).checked)players.push({name:document.getElementById('nm'+i).value.trim()||'Owner '+(i+1),human:document.getElementById('ty'+i).value==='h'});
+  newGame({players,meetings:+document.getElementById('mtg').value});
+}
+function confirmNew(){if(!G||confirm('Abandon this season and start again?')){clearTimeout(aiTimer);G=null;render()}}
+
+// Touch screens have no hover, so tapping anything with a tooltip (squares, cards, tokens) shows it.
+let toastT=null;
+document.addEventListener('click',e=>{
+  if(!matchMedia('(hover:none)').matches)return;
+  const t=e.target.closest('[title]');if(!t||t.closest('button,input,select'))return;
+  const el=document.getElementById('toast');el.textContent=t.getAttribute('title');el.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2600);
+});
+addEventListener('resize',()=>{if(G&&G.phase==='race'&&portrait()!==UI.rot)render()});
+
+// Demo: #cpu starts an all-computer season (handy for testing)
+if(location.hash==='#cpu'){newGame({players:[{name:'Alpha',human:false},{name:'Bravo',human:false},{name:'Charlie',human:false}],meetings:1})}
+else render();
+</script>
+</body>
+</html>
