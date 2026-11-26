@@ -229,6 +229,7 @@ const ICON = {
   basket:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#f07a20" stroke="#5a2a00" stroke-width="1.2"/><path d="M2 12 H22 M12 2 V22 M5 4.5 C9 8 9 16 5 19.5 M19 4.5 C15 8 15 16 19 19.5" stroke="#5a2a00" stroke-width="1.2" fill="none"/></svg>`,
   tennis:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#d8ff3a" stroke="#6a7a10" stroke-width="1.2"/><path d="M4 6 C10 9 10 15 4 18 M20 6 C14 9 14 15 20 18" stroke="#fff" stroke-width="1.6" fill="none"/></svg>`,
   racing:`<svg viewBox="0 0 24 24"><path d="M6 3 C1 9 3 20 12 21 C21 20 23 9 18 3" stroke="#e5c26b" stroke-width="3.4" fill="none" stroke-linecap="round"/><circle cx="5" cy="9" r="1" fill="#5a3a00"/><circle cx="19" cy="9" r="1" fill="#5a3a00"/><circle cx="7" cy="15" r="1" fill="#5a3a00"/><circle cx="17" cy="15" r="1" fill="#5a3a00"/></svg>`,
+  hounds:`<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="6" fill="none" stroke="#e5c26b" stroke-width="2"/><rect x="4.5" y="8.5" width="15" height="7" rx="3.5" fill="#3a8a3a"/><circle cx="16" cy="8.5" r="1.8" fill="#fff"/></svg>`,
   live:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#2bff88"/><circle cx="12" cy="12" r="9" fill="none" stroke="#2bff88" stroke-width="1.5" opacity=".5"/></svg>`,
   all:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="#3aa0ff"/><rect x="13" y="3" width="8" height="8" rx="2" fill="#e5c26b"/><rect x="3" y="13" width="8" height="8" rx="2" fill="#2bff88"/><rect x="13" y="13" width="8" height="8" rx="2" fill="#ff5a6a"/></svg>`,
 };
@@ -550,6 +551,7 @@ let filter = 'all', expanded = new Set(), watching = null, lastListSig = '', P =
 function listEvents(t){
   const out = [];
   for (const sp of Object.keys(SPORT)){
+    if (sp === 'racing') continue;   // racing now runs at Clydeside Park and Kelvin Park (see buildNav); kept only to settle old bets
     const per = SPORT[sp].period, off = SPORT[sp].offset;
     const n0 = Math.floor((t - LOOKBACK - EPOCH - off)/per), n1 = Math.floor((t + HORIZON - EPOCH - off)/per);
     for (let n=n0; n<=n1; n++){
@@ -1041,10 +1043,20 @@ function renderTicker(evs, t){
   if (renderTicker.last !== html && (!renderTicker.at || t - renderTicker.at > 15000)){ $('#ticker').innerHTML = html; renderTicker.last = html; renderTicker.at = t; }
 }
 function buildNav(){
-  const items = [['all','All sports'],['live','In play'],['soccer','Football'],['basket','Basketball'],['tennis','Tennis'],['racing','Horse Racing']];
+  const items = [['all','All sports'],['live','In play'],['soccer','Football'],['basket','Basketball'],['tennis','Tennis']];
+  const races = [['horses.html','racing','Horse Racing','Clydeside Park'],['hounds.html','hounds','Greyhounds','Kelvin Park']];
   $('#nav').innerHTML = items.map(([k, n]) => `<button data-f="${k}" class="${filter === k ? 'on' : ''}">${ICON[k]}<span>${n}</span><span class="ct ${k === 'live' ? 'lv' : ''}">0</span></button>`).join('') +
-    `<div class="note">Fixtures run around the clock in speeded-up time: a football match lasts about 3 minutes, a race under a minute. Bets left open when you go settle automatically, and winnings are paid next time you visit the lounge.</div>`;
-  $('#nav').onclick = e => { const b = e.target.closest('button[data-f]'); if (!b) return; filter = b.dataset.f; document.querySelectorAll('#nav button').forEach(x => x.classList.toggle('on', x === b)); renderList(true); };
+    races.map(([f, ic, n, at]) => `<button data-go="${f}" title="Go to ${at}">${ICON[ic]}<span>${n}<br><small style="font:500 11px Inter;color:var(--mut)">${at}</small></span><span class="ct">GO ▸</span></button>`).join('') +
+    `<div class="note">Fixtures run around the clock in speeded-up time: a football match lasts about 3 minutes. Horse and greyhound races run at Clydeside Park and Kelvin Park whenever you're ready. Bets left open when you go settle automatically, and winnings are paid next time you visit the lounge.</div>`;
+  $('#nav').onclick = e => { const g = e.target.closest('button[data-go]'); if (g) return goRacing(g.dataset.go); const b = e.target.closest('button[data-f]'); if (!b) return; filter = b.dataset.f; document.querySelectorAll('#nav button').forEach(x => x.classList.toggle('on', x === b)); renderList(true); };
+}
+// Horse and greyhound racing live in their own pages at the site root. Pass the current chip count so the casino wallet follows.
+function goRacing(file){
+  save();
+  const q = new URLSearchParams(location.search);
+  if (window.VF) q.set('vfchips', String(fl(S.bank)));
+  const qs = q.toString();
+  location.href = '../../' + file + (qs ? '?' + qs : '');
 }
 function ui(){
   $('#bank').textContent = fmt(S.bank);
