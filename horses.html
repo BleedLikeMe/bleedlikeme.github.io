@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Clydeside Park Racing</title>
+<script src="casino/games/vf-bridge.js"></script>
 <style>
 :root{--bg:#0b111b;--panel:#141e2d;--panel2:#1b2840;--ink:#e8eef6;--mute:#8fa1b8;--line:#28384f;--accent:#f5c542;--win:#4ade80;--lose:#f87171;}
 *{box-sizing:border-box}
@@ -142,7 +143,7 @@ body.watching .o3,body.watching .o4,body.watching .o5{opacity:.4;pointer-events:
       <div id="raceName" class="rname"></div>
       <div class="modeRow"><span>Race types</span>
         <div class="seg"><button data-mode="mix">Flat &amp; jumps</button><button data-mode="F">Flat only</button><button data-mode="J">Jumps only</button></div></div>
-      <div class="stakeRow">Stake £<input id="stake" type="number" min="1" step="1" value="10">
+      <div class="stakeRow">Stake <span id="cur">£</span><input id="stake" type="number" min="1" step="1" value="10">
         <button data-chip="5">5</button><button data-chip="10">10</button><button data-chip="25">25</button><button data-chip="50">50</button><button data-chip="100">100</button>
       </div>
       <div id="card"></div>
@@ -170,7 +171,8 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const shuffled = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
-const money = n => (n < -0.004 ? '-' : '') + '£' + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const CUR = window.VF ? '$' : '£';   // casino chips are dollars
+const money = n => (n < -0.004 ? '-' : '') + CUR + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const smooth = x => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
 const lerp = (a, b, k) => a + (b - a) * k;
 const ORD = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
@@ -281,7 +283,7 @@ const fmtWt = lb => `${Math.floor(lb / 14)}-${lb % 14}`;
 const fmtTime = s => `${Math.floor(s / 60)}m ${(s % 60).toFixed(2).padStart(5, '0')}s`;
 
 // ── SAVE ──
-const SAVE_KEY = 'horseSave';
+const SAVE_KEY = 'horseSave' + (window.VF ? ':' + VF.user : '');
 // ── STABLES ──
 // The same 48 horses (24 on the Flat, 24 over jumps) race again and again. Each has a hidden rating `r`
 // that drifts a little after every run, plus a best trip and a ground preference. A horse's true chance in
@@ -380,12 +382,16 @@ const isNum = p => typeof p === 'number';
 function fresh() { return { stable: seedStable(), bank: 1000, raceNo: 1, going: 3, mode: 'mix', history: [], bankHist: [1000], stats: { races: 0, bets: 0, staked: 0, returned: 0, winners: 0 } }; }
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && typeof s.bank === 'number' && s.stable) return s; } catch (e) {} return null; }
 function save() {
+  if (window.VF) VF.report(S.bank);
   for (;;) {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); return; }
     catch (e) { if (!S.archive || !S.archive.length) return; S.archive = S.archive.slice(0, Math.floor(S.archive.length / 2)); }
   }
 }
 let S = load() || fresh();
+// In the Velvet Felt casino the bank is the player's chip count, and P/L counts from when they sat down
+const BASE = window.VF ? VF.chips : 1000;
+if (window.VF) { S.bank = VF.chips; S.bankHist = [S.bank]; }
 
 // ── RACE CARD ──
 let card, slip = [], race, phase = 'betting', speedMode = 'normal', settledBets = null;
@@ -457,6 +463,7 @@ function startRace() {
   const cost = slipCost();
   if (cost > S.bank + 1e-9) return;
   S.bank -= cost;
+  if (window.VF) VF.report(S.bank);
   const hs = card.horses, D = card.D, going = goingOf(card.going);
   // Finishing order drawn from the true chances (Plackett–Luce): the winner exactly per the prices,
   // then each later place proportionally among the horses still left.
@@ -823,7 +830,7 @@ const silk = g => `<img class="silk" src="${silkImg(g.silk)}" alt="">`;
 function renderHeader() {
   const avail = S.bank - ((held ? held.phase : phase) === 'betting' ? slipCost() : 0);
   $('bank').textContent = money(avail);
-  const pl = S.bank - 1000;
+  const pl = S.bank - BASE;
   $('pl').textContent = (pl >= 0 ? '+' : '') + money(pl);
   $('pl').className = pl >= 0 ? 'pos' : 'neg';
 }
@@ -1060,14 +1067,14 @@ function renderHistory() {
     <div class="stat"><small>Return on stake</small><b class="${pl >= 0 ? 'pos' : 'neg'}">${st.staked ? ((st.returned / st.staked) * 100).toFixed(1) + '%' : '–'}</b></div></div>`;
   const hb = S.bankHist;
   if (hb.length > 1) {
-    const W = 600, H = 90, lo = Math.min(0, ...hb, 1000), hi = Math.max(...hb, 1000) * 1.05;
+    const W = 600, H = 90, lo = Math.min(0, ...hb, BASE), hi = Math.max(...hb, BASE) * 1.05;
     const X = i => i / (hb.length - 1) * W, Y = v => H - 6 - (v - lo) / (hi - lo || 1) * (H - 12);
     const pts = hb.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
     const end = hb[hb.length - 1];
     $('spark').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="display:block;margin-bottom:8px">
-      <line x1="0" x2="${W}" y1="${Y(1000)}" y2="${Y(1000)}" stroke="#8fa1b8" stroke-dasharray="4 4" stroke-width="1" vector-effect="non-scaling-stroke"/>
-      <polyline points="${pts}" fill="none" stroke="${end >= 1000 ? '#4ade80' : '#f87171'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
-      <div class="note" style="margin:-4px 0 8px">Bank after each race (dashed line = £1,000 start)</div>`;
+      <line x1="0" x2="${W}" y1="${Y(BASE)}" y2="${Y(BASE)}" stroke="#8fa1b8" stroke-dasharray="4 4" stroke-width="1" vector-effect="non-scaling-stroke"/>
+      <polyline points="${pts}" fill="none" stroke="${end >= BASE ? '#4ade80' : '#f87171'}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+      <div class="note" style="margin:-4px 0 8px">Bank after each race (dashed line = ${money(BASE)} start)</div>`;
   } else $('spark').innerHTML = '';
   const can = new Set((S.archive || []).map(a => a.race)), busy = phase === 'running' || race.replay;
   $('hist').innerHTML = S.history.length ? `<table><tr><th>Race</th><th>Winner</th><th class="r">Staked</th><th class="r">P/L</th><th></th></tr>` +
@@ -1729,6 +1736,37 @@ window.addEventListener('resize', () => { resize(); if (phase === 'result' || ph
 newCard(true);
 resize();
 requestAnimationFrame(frame);
+</script>
+<script>
+// ── VELVET FELT CASINO ── when opened from the casino's Sports Lounge, play with casino chips
+if (window.VF) (function () {
+  const running = () => (held ? held.phase : phase) === 'running';
+  $('reset').style.display = 'none';
+  $('cur').textContent = '$';
+  const back = document.createElement('button');
+  back.textContent = '◀ Sports Lounge';
+  back.title = 'Back to the Sports Lounge';
+  back.onclick = () => {
+    if (running() && !confirm('A race is running. Leave now and lose the stakes on it?')) return;
+    save();
+    const q = new URLSearchParams(location.search);
+    q.set('vfchips', String(Math.round(S.bank * 100) / 100));
+    location.href = 'casino/games/sports.html?' + q;
+  };
+  $('reset').parentNode.insertBefore(back, $('reset'));
+  window.__vf = {
+    busy: running,
+    bank: () => S.bank,
+    onTable: () => 0,
+    setBank: v => {
+      S.bank = v;
+      if (slipCost() > S.bank + 1e-9) slip = [];
+      save(); renderSlip(); renderHeader();
+    },
+    leave: () => running() ? { ok: false, msg: 'A race is running.' } : (save(), { ok: true }),
+  };
+  save();   // tell the casino the chip count straight away
+})();
 </script>
 </body>
 </html>
